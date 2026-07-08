@@ -443,7 +443,7 @@ Append to `Session2/test_bpe_tokenizer.py`:
 ```python
 def test_fertility_counts_tokens_per_word():
     tok = BalancedBPETokenizer([" ", "a", "b"], [(2, 3)])  # "ab" -> one token
-    assert tok.fertility("ab ab") == 1.0          # 2 tokens / 2 words
+    assert tok.fertility("ab ab") == 1.5          # units "ab", " ab" -> 1 + 2 tokens
     assert tok.fertility("ba ba") == 2.5          # units "ba", " ba" -> 2 + 3 tokens
 
 
