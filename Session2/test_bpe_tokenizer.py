@@ -92,3 +92,20 @@ def test_merge_loop_helps_worst_language_first():
     # all 4 merges must have gone to the worst language ("long")
     assert tok.fertility(corpora["long"]) < base.fertility(corpora["long"])
     assert tok.fertility(corpora["short"]) == base.fertility(corpora["short"])
+
+
+def test_fertility_counts_tokens_per_word():
+    tok = BalancedBPETokenizer([" ", "a", "b"], [(2, 3)])  # "ab" -> one token
+    assert tok.fertility("ab ab") == 1.5          # 3 tokens / 2 words
+    assert tok.fertility("ba ba") == 2.5          # units "ba", " ba" -> 2 + 3 tokens
+
+
+def test_save_load_identity(tmp_path):
+    tok = BalancedBPETokenizer.train(TINY, vocab_size=1 + TINY_BASE + 10)
+    path = tmp_path / "tok.json"
+    tok.save(path)
+    tok2 = BalancedBPETokenizer.load(path)
+    sample = "the cat sat aba"
+    assert tok2.encode(sample) == tok.encode(sample)
+    assert tok2.vocab_size == tok.vocab_size
+    assert tok2.merges == tok.merges

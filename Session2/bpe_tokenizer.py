@@ -6,6 +6,7 @@ per-language compression ratios close together.
 """
 from __future__ import annotations
 
+import json
 import re
 from collections import Counter
 
@@ -119,6 +120,18 @@ class BalancedBPETokenizer:
     def fertility(self, text: str) -> float:
         """Tokens per whitespace-separated word."""
         return len(self.encode(text)) / max(len(text.split()), 1)
+
+    def save(self, path) -> None:
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump({"base_chars": self.base_chars,
+                       "merges": [list(m) for m in self.merges]},
+                      f, ensure_ascii=False)
+
+    @classmethod
+    def load(cls, path) -> "BalancedBPETokenizer":
+        with open(path, encoding="utf-8") as f:
+            d = json.load(f)
+        return cls(d["base_chars"], [tuple(m) for m in d["merges"]])
 
     @classmethod
     def train(cls, corpora: dict[str, str], vocab_size: int = 10000,
