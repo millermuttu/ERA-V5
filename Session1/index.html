@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ERA · Interactive proofs</title>
+<style>
+  :root {
+    --bg: #f5f7fa;
+    --surface: #ffffff;
+    --border: #dde3ea;
+    --text: #1c2530;
+    --text-2: #5a6b7d;
+    --text-3: #8a99a8;
+    --accent: #2563a8;
+    --green: #1d9e75;
+    --coral: #d85a30;
+    --radius: 8px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12161b;
+      --surface: #1b222a;
+      --border: #2c3742;
+      --text: #e8edf2;
+      --text-2: #a3b1bf;
+      --text-3: #6e7d8c;
+      --accent: #5a94d6;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 2.5rem 1rem 3rem; }
+  h1 { font-size: 24px; font-weight: 600; margin: 0 0 4px; }
+  .sub { font-size: 15px; color: var(--text-2); margin: 0 0 2rem; }
+  .sec {
+    font-size: 12px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--text-3);
+    margin: 1.5rem 0 10px;
+  }
+  .cards { display: grid; gap: 12px; }
+  a.card {
+    display: block;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.15s;
+  }
+  a.card:hover { border-color: var(--accent); }
+  .card .tag {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .card h2 { font-size: 16px; font-weight: 600; margin: 2px 0 4px; }
+  .card p { font-size: 14px; color: var(--text-2); margin: 0; }
+  .card .proof { font-size: 13px; color: var(--text-3); margin-top: 6px; }
+  .card .proof b { color: var(--green); font-weight: 600; }
+  .footer {
+    margin-top: 2rem;
+    font-size: 13px;
+    color: var(--text-3);
+    border-top: 1px solid var(--border);
+    padding-top: 1rem;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>ERA · Interactive proofs</h1>
+  <p class="sub">Small self-contained widgets, one claim each. Every model trains live in your
+  browser in plain JavaScript &mdash; no libraries, no server, nothing precomputed. Hit
+  <b>Train</b> and watch the claim become true.</p>
+
+  <div class="sec">Session 1 &mdash; why networks are built the way they are</div>
+  <div class="cards">
+    <a class="card" href="s1-1_linear_vs_relu_rings.html">
+      <span class="tag">S1-1</span>
+      <h2>Activations exist for a reason</h2>
+      <p>A model with no nonlinearity can only draw a straight boundary, so it can never separate
+      a ring inside a ring. One ReLU hidden layer wraps it.</p>
+      <span class="proof">Proof: two boundary maps &mdash; a stuck straight line vs a closed curve, <b>~55% vs ~99%</b>.</span>
+    </a>
+    <a class="card" href="s1-2_depth_without_nonlinearity.html">
+      <span class="tag">S1-2</span>
+      <h2>Depth without nonlinearity is a lie</h2>
+      <p>Five stacked linear layers collapse to a single matrix, so they tie with one layer exactly
+      &mdash; until ReLU between the same five layers breaks the tie.</p>
+      <span class="proof">Proof: multiply the five trained matrices live &mdash; <b>max difference 0.000</b> vs the 1-layer model.</span>
+    </a>
+    <a class="card" href="s1-3_embeddings_from_next_token.html">
+      <span class="tag">S1-3</span>
+      <h2>Embeddings learn similarity from nothing but next-token</h2>
+      <p>Trained only to predict the next token of a toy language, the embedding table clusters
+      animals, fruits, and verbs &mdash; similarity was never supplied.</p>
+      <span class="proof">Proof: live PCA scatter + cosine heatmap &mdash; <b>9/9 nearest neighbors same-category</b>.</span>
+    </a>
+    <a class="card" href="s1-4_memorization_vs_generalization.html">
+      <span class="tag">S1-4</span>
+      <h2>Memorization vs generalization, and data closes the gap</h2>
+      <p>An over-parameterized net on 20 examples drives train loss to zero while held-out loss
+      climbs; the same net on 2000 examples can no longer cheat.</p>
+      <span class="proof">Proof: generalization-gap bars at n = 20 / 200 / 2000 &mdash; <b>huge &rarr; small &rarr; ~zero</b>.</span>
+    </a>
+  </div>
+
+  <div class="footer">
+    Each page is a single HTML file with the full model, data generation, and training loop inline
+    &mdash; view source to see everything. Light and dark theme follow your system setting.
+  </div>
+</div>
+</body>
+</html>

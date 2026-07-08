@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>S1-3 · Embeddings learn similarity from nothing but next-token</title>
+<style>
+  :root {
+    --bg: #f5f7fa;
+    --surface: #ffffff;
+    --border: #dde3ea;
+    --text: #1c2530;
+    --text-2: #5a6b7d;
+    --text-3: #8a99a8;
+    --accent: #2563a8;
+    --green: #1d9e75;
+    --coral: #d85a30;
+    --radius: 8px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12161b;
+      --surface: #1b222a;
+      --border: #2c3742;
+      --text: #e8edf2;
+      --text-2: #a3b1bf;
+      --text-3: #6e7d8c;
+      --accent: #5a94d6;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 2rem 1rem 3rem; }
+  h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
+  .sub { font-size: 14px; color: var(--text-2); margin: 0 0 1.25rem; }
+  .intro {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0.9rem 1.1rem;
+    font-size: 14px;
+    color: var(--text-2);
+    margin-bottom: 1.25rem;
+  }
+  .intro b { color: var(--text); }
+  .controls {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    margin-bottom: 1.25rem;
+  }
+  button {
+    font: inherit; font-size: 14px;
+    padding: 6px 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+  }
+  button:hover { border-color: var(--accent); }
+  button.primary { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  label { font-size: 13px; color: var(--text-2); }
+  input[type=range] { width: 120px; accent-color: var(--accent); }
+  input[type=number] {
+    font: inherit; font-size: 14px;
+    width: 80px;
+    padding: 5px 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+  }
+  input[type=number]:focus { outline: none; border-color: var(--accent); }
+  .val { font-size: 13px; font-weight: 600; min-width: 20px; }
+  .corpus {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+  }
+  .corpus .name {
+    font-size: 12px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--text-3);
+    display: block; margin-bottom: 2px;
+  }
+  .corpus .mono {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12.5px;
+    color: var(--text-2);
+    line-height: 1.7;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 14px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+  }
+  .card-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 8px;
+  }
+  .card-head .name { font-size: 13px; color: var(--text-2); }
+  .card-head .acc { font-size: 20px; font-weight: 600; }
+  canvas { width: 100%; height: auto; border-radius: var(--radius); display: block; }
+  .note { font-size: 12px; color: var(--text-3); margin: 8px 0 0; }
+  .legend {
+    display: flex; gap: 18px; align-items: center; flex-wrap: wrap;
+    margin-top: 12px; font-size: 13px; color: var(--text-2);
+  }
+  .dot {
+    display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+    vertical-align: -1px; margin-right: 5px;
+  }
+  .swatch {
+    display: inline-block; width: 10px; height: 10px; border-radius: 2px;
+    vertical-align: -1px; margin-right: 5px;
+  }
+  .tip {
+    position: fixed;
+    pointer-events: none;
+    background: var(--text);
+    color: var(--bg);
+    font-size: 12px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    display: none;
+    z-index: 10;
+    white-space: nowrap;
+  }
+  .footer {
+    margin-top: 1.25rem;
+    font-size: 13px;
+    color: var(--text-2);
+    border-top: 1px solid var(--border);
+    padding-top: 0.9rem;
+  }
+  code {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.9em;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 5px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>S1-3 · Embeddings learn similarity from nothing but next-token</h1>
+  <p class="sub">A tiny language, a tiny model, one objective: guess the next token. Nobody ever says which words are alike.</p>
+
+  <div class="intro">
+    The model below is just an embedding table and a softmax: look up the current token&rsquo;s
+    vector, predict the next token. The training data never labels categories &mdash; it is only
+    sentences. But <code>cat</code>, <code>dog</code>, <code>cow</code> appear in the same slots, so they
+    need the same predictions, and the cheapest way to give identical predictions is
+    <b>identical embeddings</b>. Similarity falls out of the objective; it was never supplied.
+  </div>
+
+  <div class="controls">
+    <button id="btnTrain" class="primary">Train</button>
+    <button id="btnReset">Reset</button>
+    <label for="dimSlider">Embedding dim</label>
+    <input type="range" id="dimSlider" min="2" max="16" step="1" value="8">
+    <span class="val" id="dimOut">8</span>
+    <label for="stepsInput">Max steps</label>
+    <input type="number" id="stepsInput" min="1" max="10000" step="1" value="2000">
+    <label>Step</label>
+    <span class="val" id="stepOut" style="min-width:40px;">0</span>
+  </div>
+
+  <div class="corpus">
+    <span class="name">The training data &mdash; a slice of all the model ever sees</span>
+    <span class="mono" id="corpusOut"></span>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="card-head">
+        <span class="name" id="lblP">Embeddings, PCA&rsquo;d from 8-d to 2-d</span>
+        <span class="acc" id="lossOut">&ndash;</span>
+      </div>
+      <canvas id="cvP" width="340" height="340"></canvas>
+      <p class="note">Loss shown above (uniform guessing = 2.20). The model never sees these axes &mdash; PCA just reveals what training built.</p>
+      <div class="legend">
+        <span><span class="dot" style="background:var(--coral);"></span>animals</span>
+        <span><span class="dot" style="background:var(--green);"></span>fruits</span>
+        <span><span class="dot" style="background:var(--accent);"></span>verbs</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <span class="name" id="lblH">Cosine similarity in the full 8-d space</span>
+        <span class="acc" id="nnOut">&ndash;</span>
+      </div>
+      <canvas id="cvH" width="340" height="340"></canvas>
+      <p class="note">Hover a cell for the pair&rsquo;s value. Three warm blocks on the diagonal = three categories the model invented.</p>
+      <div class="legend">
+        <span><span class="swatch" id="swNeg"></span>&minus;1 opposite</span>
+        <span><span class="swatch" id="swZero"></span>0 unrelated</span>
+        <span><span class="swatch" id="swPos"></span>+1 same direction</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Vocabulary of 9 tokens, ~200 three-word sentences (<code>ANIMAL VERB OBJECT</code>), full-batch
+    gradient descent on next-token cross-entropy, learning rate 0.5, default 2000 steps. The badge
+    on the right counts how many tokens&rsquo; nearest neighbors (by cosine, in the full embedding
+    space) share their category &mdash; it reaches 9/9 well before the loss flattens. Change the
+    embedding dim or hit Reset: the clusters re-emerge every time, in every dimension.
+  </div>
+</div>
+<div class="tip" id="tip"></div>
+
+<script>
+(function () {
+  var VOCAB = ['cat', 'dog', 'cow', 'apple', 'mango', 'banana', 'eat', 'chase', 'see'];
+  var CATEG = [0, 0, 0, 1, 1, 1, 2, 2, 2]; // animal, fruit, verb
+  var CATNAME = ['animal', 'fruit', 'verb'];
+  var V = 9, NSENT = 200;
+  var W = 340, H = 340;
+
+  var dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  // categorical palette (validated): coral / green / blue; blue lightened in dark mode
+  var CATCOL = ['#d85a30', '#1d9e75', dark ? '#5a94d6' : '#2563a8'];
+  // diverging endpoints for cosine heatmap: coral (+1) <- neutral -> blue (-1)
+  var NEUTRAL = dark ? [58, 69, 80] : [232, 236, 240];
+  var POS = [216, 90, 48];
+  var NEG = dark ? [90, 148, 214] : [37, 99, 168];
+
+  function gauss() {
+    var u = 0, v = 0;
+    while (u === 0) u = Math.random();
+    while (v === 0) v = Math.random();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  }
+  function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+  var toks = [], pairs = [];
+  function genCorpus() {
+    var animals = [0, 1, 2], fruits = [3, 4, 5], verbs = [6, 7, 8];
+    var objects = animals.concat(fruits);
+    toks = [];
+    for (var s = 0; s < NSENT; s++) {
+      toks.push(pick(animals), pick(verbs), pick(objects));
+    }
+    pairs = [];
+    for (var i = 0; i + 1 < toks.length; i++) pairs.push([toks[i], toks[i + 1]]);
+    var sample = [];
+    for (var s2 = 0; s2 < 12; s2++) {
+      sample.push(VOCAB[toks[s2 * 3]] + ' ' + VOCAB[toks[s2 * 3 + 1]] + ' ' + VOCAB[toks[s2 * 3 + 2]]);
+    }
+    document.getElementById('corpusOut').textContent = sample.join(' · ') + ' · …';
+  }
+
+  var D = 8, E = [], U = [], b = [];
+  function initModel() {
+    E = []; U = []; b = new Array(V).fill(0);
+    for (var t = 0; t < V; t++) { E.push([]); for (var k = 0; k < D; k++) E[t].push(gauss() * 0.3); }
+    for (var k2 = 0; k2 < D; k2++) { U.push([]); for (var j = 0; j < V; j++) U[k2].push(gauss() * 0.3); }
+  }
+
+  var lastLoss = null;
+  function trainStep(lr) {
+    var gE = E.map(function (r) { return r.map(function () { return 0; }); });
+    var gU = U.map(function (r) { return r.map(function () { return 0; }); });
+    var gb = new Array(V).fill(0);
+    var loss = 0, M = pairs.length;
+    for (var p = 0; p < M; p++) {
+      var tk = pairs[p][0], nx = pairs[p][1];
+      var logits = [], mx = -1e9, j, k;
+      for (j = 0; j < V; j++) {
+        var z = b[j];
+        for (k = 0; k < D; k++) z += E[tk][k] * U[k][j];
+        logits.push(z);
+        if (z > mx) mx = z;
+      }
+      var Z = 0, probs = [];
+      for (j = 0; j < V; j++) { probs.push(Math.exp(logits[j] - mx)); Z += probs[j]; }
+      for (j = 0; j < V; j++) probs[j] /= Z;
+      loss -= Math.log(probs[nx] + 1e-12);
+      for (j = 0; j < V; j++) {
+        var dl = (probs[j] - (j === nx ? 1 : 0)) / M;
+        gb[j] += dl;
+        for (k = 0; k < D; k++) {
+          gU[k][j] += E[tk][k] * dl;
+          gE[tk][k] += U[k][j] * dl;
+        }
+      }
+    }
+    var t2, k3, j2;
+    for (t2 = 0; t2 < V; t2++) for (k3 = 0; k3 < D; k3++) E[t2][k3] -= lr * gE[t2][k3];
+    for (k3 = 0; k3 < D; k3++) for (j2 = 0; j2 < V; j2++) U[k3][j2] -= lr * gU[k3][j2];
+    for (j2 = 0; j2 < V; j2++) b[j2] -= lr * gb[j2];
+    lastLoss = loss / M;
+  }
+
+  function cos(a, bv) {
+    var d = 0, na = 0, nb = 0;
+    for (var k = 0; k < a.length; k++) { d += a[k] * bv[k]; na += a[k] * a[k]; nb += bv[k] * bv[k]; }
+    return d / (Math.sqrt(na * nb) + 1e-12);
+  }
+
+  function nnScore() {
+    var ok = 0;
+    for (var t = 0; t < V; t++) {
+      var best = -2, bi = -1;
+      for (var o = 0; o < V; o++) {
+        if (o === t) continue;
+        var c = cos(E[t], E[o]);
+        if (c > best) { best = c; bi = o; }
+      }
+      if (CATEG[bi] === CATEG[t]) ok++;
+    }
+    return ok;
+  }
+
+  // PCA to 2-d; principal vectors persist across renders (warm start) so the
+  // projection doesn't flip between animation frames.
+  var pv1 = null, pv2 = null;
+  function pca2() {
+    var mean = new Array(D).fill(0), t, k, i, r;
+    for (t = 0; t < V; t++) for (k = 0; k < D; k++) mean[k] += E[t][k] / V;
+    var X = E.map(function (row) { return row.map(function (v2, ix) { return v2 - mean[ix]; }); });
+    var C = [];
+    for (r = 0; r < D; r++) C.push(new Array(D).fill(0));
+    for (t = 0; t < V; t++) for (r = 0; r < D; r++) for (k = 0; k < D; k++) C[r][k] += X[t][r] * X[t][k];
+    function power(Cm, seed) {
+      var v = seed && seed.length === D ? seed.slice() : (function () {
+        var s = []; for (var q = 0; q < D; q++) s.push(gauss()); return s;
+      })();
+      for (var it = 0; it < 50; it++) {
+        var nv = new Array(D).fill(0), n = 0;
+        for (r = 0; r < D; r++) for (i = 0; i < D; i++) nv[r] += Cm[r][i] * v[i];
+        for (i = 0; i < D; i++) n += nv[i] * nv[i];
+        n = Math.sqrt(n) + 1e-12;
+        for (i = 0; i < D; i++) v[i] = nv[i] / n;
+      }
+      return v;
+    }
+    pv1 = power(C, pv1);
+    var lam = 0, Cv = new Array(D).fill(0);
+    for (r = 0; r < D; r++) for (i = 0; i < D; i++) Cv[r] += C[r][i] * pv1[i];
+    for (i = 0; i < D; i++) lam += pv1[i] * Cv[i];
+    for (r = 0; r < D; r++) for (i = 0; i < D; i++) C[r][i] -= lam * pv1[r] * pv1[i];
+    pv2 = power(C, pv2);
+    return X.map(function (x) {
+      var px = 0, py = 0;
+      for (var i2 = 0; i2 < D; i2++) { px += x[i2] * pv1[i2]; py += x[i2] * pv2[i2]; }
+      return [px, py];
+    });
+  }
+
+  var cvP = document.getElementById('cvP'), cvH = document.getElementById('cvH');
+
+  function drawScatter() {
+    var ctx = cvP.getContext('2d');
+    ctx.clearRect(0, 0, W, H);
+    var P = pca2();
+    var m = 0.001, i;
+    for (i = 0; i < V; i++) {
+      m = Math.max(m, Math.abs(P[i][0]), Math.abs(P[i][1]));
+    }
+    var pad = 56, scale = (W / 2 - pad) / m;
+    // faint axes through origin
+    ctx.strokeStyle = dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, H / 2); ctx.lineTo(W, H / 2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(W / 2, 0); ctx.lineTo(W / 2, H); ctx.stroke();
+    ctx.font = '11px ui-sans-serif, system-ui, sans-serif';
+    // pass 1: dots (so no dot ever overdraws a label)
+    for (i = 0; i < V; i++) {
+      var x = W / 2 + P[i][0] * scale;
+      var y = H / 2 - P[i][1] * scale;
+      ctx.beginPath();
+      ctx.arc(x, y, 5, 0, 7);
+      ctx.fillStyle = CATCOL[CATEG[i]];
+      ctx.fill();
+      ctx.strokeStyle = dark ? '#1b222a' : '#ffffff'; // 2px surface ring for overlaps
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+    // pass 2: labels to the right of each dot, with a greedy vertical
+    // de-collision pass — clustered tokens read as a tidy stacked column
+    var labs = [];
+    for (i = 0; i < V; i++) {
+      var x2 = W / 2 + P[i][0] * scale;
+      var y2 = H / 2 - P[i][1] * scale;
+      var w2 = ctx.measureText(VOCAB[i]).width;
+      labs.push({ i: i, x: Math.min(x2 + 9, W - w2 - 2), y: y2 + 4, w: w2 });
+    }
+    labs.sort(function (a, bq) { return a.y - bq.y; });
+    for (var pass = 0; pass < 3; pass++) {
+      for (var a3 = 0; a3 < labs.length; a3++) {
+        for (var b3 = a3 + 1; b3 < labs.length; b3++) {
+          var A = labs[a3], B = labs[b3];
+          if (A.x < B.x + B.w && B.x < A.x + A.w && Math.abs(A.y - B.y) < 13) {
+            B.y = A.y + 13;
+          }
+        }
+      }
+    }
+    for (i = 0; i < labs.length; i++) {
+      var Lq = labs[i];
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = dark ? 'rgba(27,34,42,0.85)' : 'rgba(255,255,255,0.85)';
+      ctx.strokeText(VOCAB[Lq.i], Lq.x, Lq.y);
+      ctx.fillStyle = dark ? '#e8edf2' : '#1c2530';
+      ctx.fillText(VOCAB[Lq.i], Lq.x, Lq.y);
+    }
+  }
+
+  function lerp3(a, bv, t) {
+    return 'rgb(' + Math.round(a[0] + (bv[0] - a[0]) * t) + ',' +
+                    Math.round(a[1] + (bv[1] - a[1]) * t) + ',' +
+                    Math.round(a[2] + (bv[2] - a[2]) * t) + ')';
+  }
+  function divColor(c) { // c in [-1, 1]
+    return c >= 0 ? lerp3(NEUTRAL, POS, Math.min(1, c)) : lerp3(NEUTRAL, NEG, Math.min(1, -c));
+  }
+
+  var hmLeft = 62, hmTop = 34, hmGap = 2;
+  function drawHeatmap() {
+    var ctx = cvH.getContext('2d');
+    ctx.clearRect(0, 0, W, H);
+    var cell = (W - hmLeft - 6 - hmGap * (V - 1)) / V;
+    ctx.font = '11px ui-sans-serif, system-ui, sans-serif';
+    var ink = dark ? '#a3b1bf' : '#5a6b7d';
+    for (var r = 0; r < V; r++) {
+      var cy = hmTop + r * (cell + hmGap);
+      // row label + category dot
+      ctx.fillStyle = CATCOL[CATEG[r]];
+      ctx.beginPath(); ctx.arc(10, cy + cell / 2, 3, 0, 7); ctx.fill();
+      ctx.fillStyle = ink;
+      ctx.textAlign = 'left';
+      ctx.fillText(VOCAB[r], 17, cy + cell / 2 + 4);
+      for (var c = 0; c < V; c++) {
+        var cx = hmLeft + c * (cell + hmGap);
+        ctx.fillStyle = divColor(cos(E[r], E[c]));
+        ctx.fillRect(cx, cy, cell, cell);
+      }
+    }
+    // column labels, rotated
+    for (var c2 = 0; c2 < V; c2++) {
+      var cx2 = hmLeft + c2 * (cell + hmGap) + cell / 2;
+      ctx.save();
+      ctx.translate(cx2, hmTop - 8);
+      ctx.rotate(-Math.PI / 4);
+      ctx.fillStyle = ink;
+      ctx.textAlign = 'left';
+      ctx.fillText(VOCAB[c2], 0, 3);
+      ctx.restore();
+      ctx.fillStyle = CATCOL[CATEG[c2]];
+      ctx.beginPath(); ctx.arc(cx2, hmTop - 5, 2.5, 0, 7); ctx.fill();
+    }
+    ctx.textAlign = 'left';
+  }
+
+  // hover tooltip on heatmap cells
+  var tip = document.getElementById('tip');
+  cvH.addEventListener('mousemove', function (ev) {
+    var rect = cvH.getBoundingClientRect();
+    var sx = W / rect.width, sy = H / rect.height;
+    var mx = (ev.clientX - rect.left) * sx, my = (ev.clientY - rect.top) * sy;
+    var cell = (W - hmLeft - 6 - hmGap * (V - 1)) / V;
+    var c = Math.floor((mx - hmLeft) / (cell + hmGap));
+    var r = Math.floor((my - hmTop) / (cell + hmGap));
+    if (r >= 0 && r < V && c >= 0 && c < V && mx >= hmLeft && my >= hmTop) {
+      tip.style.display = 'block';
+      tip.style.left = (ev.clientX + 12) + 'px';
+      tip.style.top = (ev.clientY - 28) + 'px';
+      tip.textContent = 'cos(' + VOCAB[r] + ', ' + VOCAB[c] + ') = ' + cos(E[r], E[c]).toFixed(2);
+    } else {
+      tip.style.display = 'none';
+    }
+  });
+  cvH.addEventListener('mouseleave', function () { tip.style.display = 'none'; });
+
+  var stepOut = document.getElementById('stepOut'),
+      btnTrain = document.getElementById('btnTrain'),
+      dimSlider = document.getElementById('dimSlider'),
+      stepsInput = document.getElementById('stepsInput'),
+      running = false, step = 0, LR = 0.5;
+
+  function maxSteps() {
+    var v = parseInt(stepsInput.value, 10);
+    if (!isFinite(v)) v = 2000;
+    return Math.min(10000, Math.max(1, v));
+  }
+
+  function render() {
+    drawScatter();
+    drawHeatmap();
+    document.getElementById('lossOut').textContent = lastLoss === null ? '–' : lastLoss.toFixed(3);
+    document.getElementById('nnOut').textContent = nnScore() + '/9';
+    stepOut.textContent = step;
+  }
+
+  function loop() {
+    if (!running) return;
+    var limit = maxSteps();
+    for (var k = 0; k < 15 && step < limit; k++) {
+      trainStep(LR);
+      step++;
+    }
+    render();
+    if (step < limit) requestAnimationFrame(loop);
+    else { running = false; btnTrain.textContent = 'Train'; }
+  }
+
+  function reset() {
+    running = false;
+    step = 0;
+    lastLoss = null;
+    pv1 = null; pv2 = null;
+    D = parseInt(dimSlider.value, 10);
+    document.getElementById('dimOut').textContent = D;
+    document.getElementById('lblP').textContent = D === 2
+      ? 'Embeddings, 2-d plotted directly (PCA-aligned)'
+      : 'Embeddings, PCA’d from ' + D + '-d to 2-d';
+    document.getElementById('lblH').textContent = 'Cosine similarity in the full ' + D + '-d space';
+    btnTrain.textContent = 'Train';
+    genCorpus();
+    initModel();
+    render();
+  }
+
+  btnTrain.onclick = function () {
+    if (running) { running = false; btnTrain.textContent = 'Train'; return; }
+    if (step >= maxSteps()) reset();
+    running = true;
+    btnTrain.textContent = 'Pause';
+    loop();
+  };
+  document.getElementById('btnReset').onclick = reset;
+  dimSlider.oninput = reset;
+  stepsInput.onchange = function () { stepsInput.value = maxSteps(); };
+
+  // legend swatches for the diverging scale
+  document.getElementById('swNeg').style.background = divColor(-1);
+  document.getElementById('swZero').style.background = divColor(0);
+  document.getElementById('swPos').style.background = divColor(1);
+
+  reset();
+})();
+</script>
+</body>
+</html>

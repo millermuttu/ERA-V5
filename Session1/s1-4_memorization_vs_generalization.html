@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>S1-4 · Memorization vs generalization, and data closes the gap</title>
+<style>
+  :root {
+    --bg: #f5f7fa;
+    --surface: #ffffff;
+    --border: #dde3ea;
+    --text: #1c2530;
+    --text-2: #5a6b7d;
+    --text-3: #8a99a8;
+    --accent: #2563a8;
+    --green: #1d9e75;
+    --coral: #d85a30;
+    --radius: 8px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12161b;
+      --surface: #1b222a;
+      --border: #2c3742;
+      --text: #e8edf2;
+      --text-2: #a3b1bf;
+      --text-3: #6e7d8c;
+      --accent: #5a94d6;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 2rem 1rem 3rem; }
+  h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
+  .sub { font-size: 14px; color: var(--text-2); margin: 0 0 1.25rem; }
+  .intro {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0.9rem 1.1rem;
+    font-size: 14px;
+    color: var(--text-2);
+    margin-bottom: 1.25rem;
+  }
+  .intro b { color: var(--text); }
+  .controls {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    margin-bottom: 1.25rem;
+  }
+  button {
+    font: inherit; font-size: 14px;
+    padding: 6px 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+  }
+  button:hover { border-color: var(--accent); }
+  button.primary { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  label { font-size: 13px; color: var(--text-2); }
+  input[type=range] { width: 120px; accent-color: var(--accent); }
+  input[type=number] {
+    font: inherit; font-size: 14px;
+    width: 80px;
+    padding: 5px 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+  }
+  input[type=number]:focus { outline: none; border-color: var(--accent); }
+  .val { font-size: 13px; font-weight: 600; min-width: 20px; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+  }
+  .card-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 2px;
+  }
+  .card-head .name { font-size: 13px; color: var(--text-2); }
+  .stats { font-size: 13px; color: var(--text-2); margin: 0 0 8px; }
+  .stats b { font-size: 15px; color: var(--text); }
+  canvas { width: 100%; height: auto; border-radius: var(--radius); display: block; }
+  .spark { margin-top: 8px; }
+  .note { font-size: 12px; color: var(--text-3); margin: 8px 0 0; }
+  .gapcard { margin-top: 14px; }
+  .legend {
+    display: flex; gap: 18px; align-items: center; flex-wrap: wrap;
+    margin-top: 12px; font-size: 13px; color: var(--text-2);
+  }
+  .dot {
+    display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+    vertical-align: -1px; margin-right: 5px;
+  }
+  .line {
+    display: inline-block; width: 18px; height: 0;
+    border-top: 2px solid var(--accent);
+    vertical-align: 3px; margin-right: 6px;
+  }
+  .line.dashed { border-top-style: dashed; }
+  .tip {
+    position: fixed;
+    pointer-events: none;
+    background: var(--text);
+    color: var(--bg);
+    font-size: 12px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    display: none;
+    z-index: 10;
+    white-space: nowrap;
+  }
+  .footer {
+    margin-top: 1.25rem;
+    font-size: 13px;
+    color: var(--text-2);
+    border-top: 1px solid var(--border);
+    padding-top: 0.9rem;
+  }
+  code {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.9em;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 5px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>S1-4 · Memorization vs generalization, and data closes the gap</h1>
+  <p class="sub">One over-parameterized network, three dataset sizes. The only thing that changes below is how much data the model gets.</p>
+
+  <div class="intro">
+    The task has irreducible noise: two overlapping point clouds, so even a perfect model tops out
+    near ~88% on held-out data. A network with over a thousand parameters given only <b>20 examples</b>
+    does something cheaper than learning the rule &mdash; it <b>memorizes</b>: train loss crashes to
+    zero while held-out loss climbs. Give the very same network <b>2000 examples</b> and memorizing
+    stops being cheap; the honest rule is now the easiest thing to learn, and the gap closes.
+    <b>Data is the regularizer.</b>
+  </div>
+
+  <div class="controls">
+    <button id="btnTrain" class="primary">Train</button>
+    <button id="btnReset">Reset</button>
+    <label for="hidSlider">Hidden units</label>
+    <input type="range" id="hidSlider" min="4" max="64" step="4" value="32">
+    <span class="val" id="hidOut">32</span>
+    <label for="stepsInput">Max steps</label>
+    <input type="number" id="stepsInput" min="1" max="10000" step="1" value="3000">
+    <label>Step</label>
+    <span class="val" id="stepOut" style="min-width:40px;">0</span>
+  </div>
+
+  <div class="grid" id="cards"></div>
+
+  <div class="card gapcard">
+    <div class="card-head">
+      <span class="name">The generalization gap (held-out loss &minus; train loss) vs dataset size</span>
+    </div>
+    <canvas id="cvGap" width="780" height="170"></canvas>
+    <p class="note">Same architecture, same optimizer, same steps in every column &mdash; only the amount of data differs.</p>
+  </div>
+
+  <div class="legend">
+    <span><span class="dot" style="background:var(--coral);"></span>class 0</span>
+    <span><span class="dot" style="background:var(--green);"></span>class 1</span>
+    <span><span class="line dashed"></span>train loss</span>
+    <span><span class="line"></span>held-out loss</span>
+  </div>
+
+  <div class="footer">
+    Two Gaussian classes with heavy overlap (Bayes-optimal &asymp; 88%), a fixed held-out set of 500
+    points, and three copies of a <span id="parCount">2&rarr;32&rarr;32&rarr;1</span> ReLU network
+    trained by minibatch SGD (batch 64, lr 0.3, logistic loss, default 3000 steps). Train points are
+    drawn on each map; the held-out points are never shown to the models. Watch n=20: the boundary
+    grows islands around individual points, train hits 100%, and the held-out curve <em>rises</em>
+    while train loss falls &mdash; that is memorization. More width (slider) makes the small-data gap
+    worse, more data makes it vanish.
+  </div>
+</div>
+<div class="tip" id="tip"></div>
+
+<script>
+(function () {
+  var SIZES = [20, 200, 2000], TEST_N = 500, BATCH = 64, LR = 0.3;
+  var BW = 300, BH = 300, SW = 300, SH = 84;
+  var GW = 780, GH = 170;
+
+  var dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  var ACCENT = dark ? '#5a94d6' : '#2563a8';
+  var INK = dark ? '#e8edf2' : '#1c2530';
+  var INK2 = dark ? '#a3b1bf' : '#5a6b7d';
+  var GRIDLN = dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)';
+
+  function gauss() {
+    var u = 0, v = 0;
+    while (u === 0) u = Math.random();
+    while (v === 0) v = Math.random();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  }
+  function sig(z) { return 1 / (1 + Math.exp(-z)); }
+
+  // two overlapping blobs; balanced classes
+  function sample(n) {
+    var pts = [];
+    for (var i = 0; i < n; i++) {
+      var c = i % 2;
+      pts.push({ x: (c ? 1 : -1) + gauss(), y: (c ? 0.6 : -0.6) + gauss(), c: c });
+    }
+    return pts;
+  }
+
+  var Hn = 32;
+  function makeNet() {
+    function mat(r, cc, s) {
+      var m = [];
+      for (var i = 0; i < r; i++) { m.push([]); for (var j = 0; j < cc; j++) m[i].push(gauss() * s); }
+      return m;
+    }
+    return {
+      W1: mat(Hn, 2, 1), b1: new Array(Hn).fill(0),
+      W2: mat(Hn, Hn, Math.sqrt(2 / Hn)), b2: new Array(Hn).fill(0),
+      W3: mat(1, Hn, Math.sqrt(2 / Hn)), b3: [0]
+    };
+  }
+
+  function fwd(net, x, y, cache) {
+    var z1 = [], a1 = [], z2 = [], a2 = [], i, j, s;
+    for (i = 0; i < Hn; i++) {
+      s = net.W1[i][0] * x + net.W1[i][1] * y + net.b1[i];
+      z1.push(s); a1.push(s > 0 ? s : 0);
+    }
+    for (i = 0; i < Hn; i++) {
+      s = net.b2[i];
+      for (j = 0; j < Hn; j++) s += net.W2[i][j] * a1[j];
+      z2.push(s); a2.push(s > 0 ? s : 0);
+    }
+    s = net.b3[0];
+    for (j = 0; j < Hn; j++) s += net.W3[0][j] * a2[j];
+    if (cache) { cache.z1 = z1; cache.a1 = a1; cache.z2 = z2; cache.a2 = a2; }
+    return sig(s);
+  }
+
+  function trainStep(net, data) {
+    var i, j, k;
+    var gW1 = [], gb1 = new Array(Hn).fill(0),
+        gW2 = [], gb2 = new Array(Hn).fill(0),
+        gW3 = new Array(Hn).fill(0), gb3 = 0;
+    for (i = 0; i < Hn; i++) { gW1.push([0, 0]); gW2.push(new Array(Hn).fill(0)); }
+    var B = Math.min(BATCH, data.length);
+    var full = data.length <= BATCH;
+    for (k = 0; k < B; k++) {
+      var p = full ? data[k] : data[Math.floor(Math.random() * data.length)];
+      var cache = {};
+      var out = fwd(net, p.x, p.y, cache);
+      var e = (out - p.c) / B;
+      gb3 += e;
+      var d2 = [];
+      for (i = 0; i < Hn; i++) {
+        gW3[i] += e * cache.a2[i];
+        d2.push(cache.z2[i] > 0 ? e * net.W3[0][i] : 0);
+      }
+      var d1 = new Array(Hn).fill(0);
+      for (i = 0; i < Hn; i++) {
+        if (d2[i] === 0) continue;
+        gb2[i] += d2[i];
+        for (j = 0; j < Hn; j++) {
+          gW2[i][j] += d2[i] * cache.a1[j];
+          d1[j] += d2[i] * net.W2[i][j];
+        }
+      }
+      for (j = 0; j < Hn; j++) {
+        if (cache.z1[j] <= 0) continue;
+        gb1[j] += d1[j];
+        gW1[j][0] += d1[j] * p.x;
+        gW1[j][1] += d1[j] * p.y;
+      }
+    }
+    for (i = 0; i < Hn; i++) {
+      net.W1[i][0] -= LR * gW1[i][0]; net.W1[i][1] -= LR * gW1[i][1]; net.b1[i] -= LR * gb1[i];
+      net.b2[i] -= LR * gb2[i];
+      for (j = 0; j < Hn; j++) net.W2[i][j] -= LR * gW2[i][j];
+      net.W3[0][i] -= LR * gW3[i];
+    }
+    net.b3[0] -= LR * gb3;
+  }
+
+  function evalSet(net, data) {
+    var loss = 0, ok = 0;
+    for (var i = 0; i < data.length; i++) {
+      var p = data[i], o = fwd(net, p.x, p.y);
+      loss -= p.c === 1 ? Math.log(o + 1e-9) : Math.log(1 - o + 1e-9);
+      if ((o > 0.5 ? 1 : 0) === p.c) ok++;
+    }
+    return { loss: loss / data.length, acc: Math.round(100 * ok / data.length) };
+  }
+
+  // ---- build the three model cards ----
+  var cards = document.getElementById('cards');
+  var models = SIZES.map(function (n, m) {
+    var card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML =
+      '<div class="card-head"><span class="name">n = ' + n + ' examples</span></div>' +
+      '<p class="stats">train <b id="tr' + m + '">–</b> · held-out <b id="te' + m + '">–</b></p>' +
+      '<canvas id="cvB' + m + '" width="' + BW + '" height="' + BH + '"></canvas>' +
+      '<canvas id="cvS' + m + '" class="spark" width="' + SW + '" height="' + SH + '"></canvas>';
+    cards.appendChild(card);
+    return { n: n };
+  });
+  models.forEach(function (M, m) {
+    M.cvB = document.getElementById('cvB' + m);
+    M.cvS = document.getElementById('cvS' + m);
+    M.trEl = document.getElementById('tr' + m);
+    M.teEl = document.getElementById('te' + m);
+  });
+
+  var test = [], range = 4;
+
+  function drawBoundary(M) {
+    var ctx = M.cvB.getContext('2d');
+    ctx.clearRect(0, 0, BW, BH);
+    var g = 40, cell = BW / g;
+    for (var gy = 0; gy < g; gy++) {
+      for (var gx = 0; gx < g; gx++) {
+        var x = (gx + 0.5) / g * 2 * range - range;
+        var y = range - (gy + 0.5) / g * 2 * range;
+        var p = fwd(M.net, x, y);
+        var t = Math.min(1, Math.abs(p - 0.5) * 2) * 0.55 + 0.1;
+        ctx.fillStyle = p > 0.5
+          ? 'rgba(29,158,117,' + t.toFixed(2) + ')'
+          : 'rgba(216,90,48,'  + t.toFixed(2) + ')';
+        // exact tiling — overlapping alpha fills would draw grid seams
+        var x0 = Math.round(gx * cell), y0 = Math.round(gy * cell);
+        ctx.fillRect(x0, y0, Math.round((gx + 1) * cell) - x0, Math.round((gy + 1) * cell) - y0);
+      }
+    }
+    // train points only — the held-out set stays invisible, like it should
+    var rad = M.n > 500 ? 1.6 : 3.2;
+    for (var i = 0; i < M.train.length; i++) {
+      var q = M.train[i];
+      var px = (q.x + range) / (2 * range) * BW;
+      var py = (range - q.y) / (2 * range) * BH;
+      if (px < 0 || px > BW || py < 0 || py > BH) continue;
+      ctx.beginPath();
+      ctx.arc(px, py, rad, 0, 7);
+      if (dark) ctx.fillStyle = q.c === 1 ? '#9fe1cb' : '#f5c4b3';
+      else      ctx.fillStyle = q.c === 1 ? '#04342c' : '#4a1b0c';
+      ctx.fill();
+      if (M.n <= 500) {
+        ctx.strokeStyle = q.c === 1 ? '#1d9e75' : '#d85a30';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
+    }
+  }
+
+  function drawSpark(M) {
+    var ctx = M.cvS.getContext('2d');
+    ctx.clearRect(0, 0, SW, SH);
+    var hist = M.hist;
+    var padL = 4, padR = 50, padT = 12, padB = 6;
+    var ymax = 1;
+    for (var i = 0; i < hist.length; i++) {
+      ymax = Math.max(ymax, Math.min(3, hist[i].te), Math.min(3, hist[i].tr));
+    }
+    ymax *= 1.05;
+    var xmax = Math.max(1, hist.length - 1);
+    function X(i2) { return padL + i2 / xmax * (SW - padL - padR); }
+    function Y(v) { return padT + (1 - Math.min(v, ymax) / ymax) * (SH - padT - padB); }
+    // baseline
+    ctx.strokeStyle = GRIDLN;
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(padL, Y(0)); ctx.lineTo(SW - padR, Y(0)); ctx.stroke();
+    if (hist.length < 2) {
+      ctx.fillStyle = INK2;
+      ctx.font = '11px ui-sans-serif, system-ui, sans-serif';
+      ctx.fillText('loss curves appear here', padL + 4, SH / 2);
+      return;
+    }
+    function line(key, dashed) {
+      ctx.strokeStyle = ACCENT;
+      ctx.lineWidth = 2;
+      ctx.setLineDash(dashed ? [4, 3] : []);
+      ctx.beginPath();
+      for (var i3 = 0; i3 < hist.length; i3++) {
+        var xx = X(i3), yy = Y(hist[i3][key]);
+        if (i3 === 0) ctx.moveTo(xx, yy); else ctx.lineTo(xx, yy);
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+      return Y(hist[hist.length - 1][key]) + 3;
+    }
+    var yTe = line('te', false);
+    var yTr = line('tr', true);
+    // direct labels at line ends, pushed apart when the curves converge
+    if (Math.abs(yTe - yTr) < 11) {
+      var mid = (yTe + yTr) / 2;
+      yTe = mid - 5.5; yTr = mid + 5.5;
+    }
+    ctx.fillStyle = INK2;
+    ctx.font = '10px ui-sans-serif, system-ui, sans-serif';
+    ctx.fillText('held-out', SW - padR + 3, Math.max(9, Math.min(SH - 2, yTe)));
+    ctx.fillText('train', SW - padR + 3, Math.max(9, Math.min(SH - 2, yTr)));
+  }
+
+  var cvGap = document.getElementById('cvGap');
+  function drawGap() {
+    var ctx = cvGap.getContext('2d');
+    ctx.clearRect(0, 0, GW, GH);
+    var padL = 30, padB = 26, padT = 24;
+    var base = GH - padB;
+    var gmax = 0.5, m;
+    for (m = 0; m < 3; m++) gmax = Math.max(gmax, models[m].gap || 0);
+    gmax *= 1.1;
+    ctx.strokeStyle = GRIDLN;
+    ctx.beginPath(); ctx.moveTo(padL, base); ctx.lineTo(GW - 10, base); ctx.stroke();
+    var bw = 90, slotW = (GW - padL - 20) / 3;
+    ctx.font = '12px ui-sans-serif, system-ui, sans-serif';
+    for (m = 0; m < 3; m++) {
+      var gap = Math.max(0, models[m].gap || 0);
+      var hpx = gap / gmax * (base - padT);
+      var x = padL + slotW * m + (slotW - bw) / 2;
+      ctx.fillStyle = ACCENT;
+      // 4px rounded data-end, flat baseline
+      var r = Math.min(4, hpx);
+      ctx.beginPath();
+      ctx.moveTo(x, base);
+      ctx.lineTo(x, base - hpx + r);
+      ctx.arcTo(x, base - hpx, x + r, base - hpx, r);
+      ctx.lineTo(x + bw - r, base - hpx);
+      ctx.arcTo(x + bw, base - hpx, x + bw, base - hpx + r, r);
+      ctx.lineTo(x + bw, base);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = INK;
+      ctx.textAlign = 'center';
+      ctx.fillText(gap.toFixed(2), x + bw / 2, base - hpx - 6);
+      ctx.fillStyle = INK2;
+      ctx.fillText('n = ' + SIZES[m], x + bw / 2, base + 17);
+    }
+    ctx.save();
+    ctx.translate(10, GH / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillStyle = INK2;
+    ctx.font = '11px ui-sans-serif, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('gap', 0, 0);
+    ctx.restore();
+    ctx.textAlign = 'left';
+  }
+
+  // hover tooltips: sparklines + gap bars
+  var tip = document.getElementById('tip');
+  function hideTip() { tip.style.display = 'none'; }
+  models.forEach(function (M) {
+    M.cvS.addEventListener('mousemove', function (ev) {
+      if (M.hist.length < 2) return;
+      var rect = M.cvS.getBoundingClientRect();
+      var fx = (ev.clientX - rect.left) / rect.width * SW;
+      var i = Math.round((fx - 4) / (SW - 38) * (M.hist.length - 1));
+      i = Math.max(0, Math.min(M.hist.length - 1, i));
+      var hh = M.hist[i];
+      tip.style.display = 'block';
+      tip.style.left = (ev.clientX + 12) + 'px';
+      tip.style.top = (ev.clientY - 28) + 'px';
+      tip.textContent = 'step ' + hh.s + ' · train ' + hh.tr.toFixed(3) + ' · held-out ' + hh.te.toFixed(3);
+    });
+    M.cvS.addEventListener('mouseleave', hideTip);
+  });
+  cvGap.addEventListener('mousemove', function (ev) {
+    var rect = cvGap.getBoundingClientRect();
+    var fx = (ev.clientX - rect.left) / rect.width * GW;
+    var slotW = (GW - 50) / 3;
+    var m = Math.floor((fx - 30) / slotW);
+    if (m >= 0 && m < 3 && models[m].gap !== undefined) {
+      tip.style.display = 'block';
+      tip.style.left = (ev.clientX + 12) + 'px';
+      tip.style.top = (ev.clientY - 28) + 'px';
+      tip.textContent = 'n = ' + SIZES[m] + ' · held-out − train = ' + models[m].gap.toFixed(3);
+    } else hideTip();
+  });
+  cvGap.addEventListener('mouseleave', hideTip);
+
+  var stepOut = document.getElementById('stepOut'),
+      btnTrain = document.getElementById('btnTrain'),
+      hidSlider = document.getElementById('hidSlider'),
+      stepsInput = document.getElementById('stepsInput'),
+      running = false, step = 0;
+
+  function maxSteps() {
+    var v = parseInt(stepsInput.value, 10);
+    if (!isFinite(v)) v = 3000;
+    return Math.min(10000, Math.max(1, v));
+  }
+
+  function render() {
+    models.forEach(function (M) {
+      var tr = evalSet(M.net, M.train), te = evalSet(M.net, test);
+      M.gap = te.loss - tr.loss;
+      if (step > 0) M.hist.push({ s: step, tr: tr.loss, te: te.loss });
+      M.trEl.textContent = tr.acc + '%';
+      M.teEl.textContent = te.acc + '%';
+      drawBoundary(M);
+      drawSpark(M);
+    });
+    drawGap();
+    stepOut.textContent = step;
+  }
+
+  function loop() {
+    if (!running) return;
+    var limit = maxSteps();
+    for (var k = 0; k < 10 && step < limit; k++) {
+      models.forEach(function (M) { trainStep(M.net, M.train); });
+      step++;
+    }
+    render();
+    if (step < limit) requestAnimationFrame(loop);
+    else { running = false; btnTrain.textContent = 'Train'; }
+  }
+
+  function reset() {
+    running = false;
+    step = 0;
+    Hn = parseInt(hidSlider.value, 10);
+    document.getElementById('hidOut').textContent = Hn;
+    document.getElementById('parCount').textContent = '2→' + Hn + '→' + Hn + '→1';
+    btnTrain.textContent = 'Train';
+    test = sample(TEST_N);
+    models.forEach(function (M) {
+      M.train = sample(M.n);
+      M.net = makeNet();
+      M.hist = [];
+      M.gap = undefined;
+    });
+    render();
+  }
+
+  btnTrain.onclick = function () {
+    if (running) { running = false; btnTrain.textContent = 'Train'; return; }
+    if (step >= maxSteps()) reset();
+    running = true;
+    btnTrain.textContent = 'Pause';
+    loop();
+  };
+  document.getElementById('btnReset').onclick = reset;
+  hidSlider.oninput = reset;
+  stepsInput.onchange = function () { stepsInput.value = maxSteps(); };
+
+  reset();
+})();
+</script>
+</body>
+</html>
