@@ -48,3 +48,47 @@ def test_unknown_char_maps_to_unk():
 def test_round_trip_no_merges():
     tok = BalancedBPETokenizer(sorted(set("hello world")), [])
     assert tok.decode(tok.encode("hello world")) == "hello world"
+
+
+TINY = {
+    "en": "the cat sat on the mat the cat sat " * 20,
+    "xx": "aba abb aba abb aba " * 20,
+}
+TINY_BASE = len(set(TINY["en"] + TINY["xx"]))  # unique codepoints across corpora
+
+
+def test_train_reaches_exact_vocab_size():
+    target = 1 + TINY_BASE + 10
+    tok = BalancedBPETokenizer.train(TINY, vocab_size=target)
+    assert tok.vocab_size == target
+
+
+def test_train_round_trip_on_training_text():
+    tok = BalancedBPETokenizer.train(TINY, vocab_size=1 + TINY_BASE + 10)
+    for text in TINY.values():
+        assert tok.decode(tok.encode(text)) == text
+
+
+def test_merges_reduce_token_count():
+    tok = BalancedBPETokenizer.train(TINY, vocab_size=1 + TINY_BASE + 10)
+    base = BalancedBPETokenizer(tok.base_chars, [])
+    text = TINY["en"]
+    assert len(tok.encode(text)) < len(base.encode(text))
+
+
+def test_vocab_size_must_exceed_base_charset():
+    with pytest.raises(ValueError):
+        BalancedBPETokenizer.train(TINY, vocab_size=5)
+
+
+def test_merge_loop_helps_worst_language_first():
+    corpora = {
+        "short": "a b c d " * 50,               # fertility ~2 (space+char units)
+        "long": "qqqqqqqq rrrrrrrr " * 50,      # fertility ~9, clearly worst
+    }
+    n_base = len(set(corpora["short"] + corpora["long"]))
+    tok = BalancedBPETokenizer.train(corpora, vocab_size=1 + n_base + 4)
+    base = BalancedBPETokenizer(tok.base_chars, [])
+    # all 4 merges must have gone to the worst language ("long")
+    assert tok.fertility(corpora["long"]) < base.fertility(corpora["long"])
+    assert tok.fertility(corpora["short"]) == base.fertility(corpora["short"])
