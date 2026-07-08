@@ -603,7 +603,8 @@ for lang, (lo, hi) in ranges.items():
     text = Path(f"Session2/data/{lang}_india.txt").read_text(encoding="utf-8")
     in_script = sum(lo <= ord(c) <= hi for c in text) / len(text)
     print(f"{lang}: {len(text):,} chars, {in_script:.0%} in native script")
-    assert len(text) > 10_000, f"{lang} corpus suspiciously small"
+    assert len(text) > 5_000, f"{lang} corpus suspiciously small"
+    # (kn's real article is ~7.7k chars of plaintext — citation-heavy wikitext)
     assert in_script > 0.3, f"{lang} corpus not mostly in expected script"
 print("OK")
 EOF
