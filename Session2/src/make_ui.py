@@ -1,6 +1,7 @@
 """Generate the self-contained tokenizer playground HTML from the trained
 artifact. Reads tokenizer_10k.json + results.json, injects them (and Python
-parity fixtures) into tokenizer_ui_template.html, writes tokenizer_ui.html."""
+parity fixtures) into tokenizer_ui_template.html, writes ../index.html
+(the Session2 web entry point, e.g. for Netlify)."""
 import json
 import sys
 from pathlib import Path
@@ -11,7 +12,7 @@ HERE = Path(__file__).parent
 TEMPLATE_PATH = HERE / "tokenizer_ui_template.html"
 TOKENIZER_PATH = HERE / "tokenizer_10k.json"
 RESULTS_PATH = HERE / "results.json"
-OUTPUT_PATH = HERE / "tokenizer_ui.html"
+OUTPUT_PATH = HERE.parent / "index.html"  # Session2/index.html — the Netlify entry point
 
 # Parity fixtures: one per language (from the corpora) + edge cases.
 FIXTURES = [

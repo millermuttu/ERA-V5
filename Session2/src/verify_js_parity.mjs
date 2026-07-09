@@ -6,7 +6,7 @@
 // self-test badge on every load. Exit 0 = parity holds, 1 = mismatch.
 import { readFileSync } from 'node:fs';
 
-const html = readFileSync(new URL('./tokenizer_ui.html', import.meta.url), 'utf8');
+const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 
 function blob(id) {
   const re = new RegExp(

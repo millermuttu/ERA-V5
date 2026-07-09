@@ -3,6 +3,11 @@
 **Date:** 2026-07-09
 **Status:** Approved
 
+> **Restructure (2026-07-09, approved):** `Session2/` is now web-only for
+> Netlify upload — the generated page is `Session2/index.html`, and all
+> sources, tests, notebook, data, and artifacts live under `Session2/src/`
+> (paths below read accordingly; `make_ui.py` writes `../index.html`).
+
 ## Goal
 
 A single, self-contained HTML playground for the Session 2 balanced BPE
