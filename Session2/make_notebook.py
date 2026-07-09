@@ -28,7 +28,7 @@ nb.cells = [
        "articles the fertility floor at 10k vocab is ≈ 1.46 — measured, not\n"
        "guessed — so X ≤ 1.2 is infeasible; at 2,000 words per language all\n"
        "four X land around 1.03."),
-    code("import json, subprocess, sys\n"
+    code("import subprocess, sys\n"
          "from pathlib import Path\n"
          "from bpe_tokenizer import BalancedBPETokenizer\n"
          "from train_and_evaluate import WORD_CAP, load_corpora\n"
@@ -50,10 +50,12 @@ nb.cells = [
          "          f'{len(text):>12,}{len(set(text)):>14,}')"),
     md("## Train (or load) the tokenizer\n"
        "\n"
-       "Training takes a few minutes, so the committed artifact\n"
-       "`tokenizer_10k.json` is loaded by default. Set `RETRAIN = True` to\n"
-       "reproduce it from scratch (equivalent to `python3 train_and_evaluate.py`)."),
-    code("RETRAIN = False\n"
+       "Training takes only a few seconds on these capped corpora, so the\n"
+       "notebook trains the tokenizer live by default (`RETRAIN = True`),\n"
+       "reproducing the committed artifact `tokenizer_10k.json`\n"
+       "deterministically. Set `RETRAIN = False` to load the committed\n"
+       "artifact instead (equivalent to `python3 train_and_evaluate.py`)."),
+    code("RETRAIN = True\n"
          "if RETRAIN or not Path('tokenizer_10k.json').exists():\n"
          "    tok = BalancedBPETokenizer.train(corpora, vocab_size=10_000,\n"
          "                                     verbose=True)\n"
@@ -95,6 +97,8 @@ nb.cells = [
          "    print(f'{LANGS[l]}: {len(s.split())} words -> {len(ids)} tokens')\n"
          "    print('  ', pieces, '\\n')"),
 ]
+
+nb.metadata["kernelspec"] = {"name": "python3", "display_name": "Python 3", "language": "python"}
 
 nbf.write(nb, "Session2_BPE_Tokenizer.ipynb")
 print("wrote Session2_BPE_Tokenizer.ipynb")
