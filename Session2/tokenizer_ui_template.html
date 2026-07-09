@@ -1,8 +1,294 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><title>BPE Tokenizer Playground</title></head>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BPE Tokenizer Playground</title>
+<style>
+:root {
+  --bg: #f6f6f2;
+  --card: #ffffff;
+  --ink: #1c1e21;
+  --muted: #6b7075;
+  --border: #e2e2db;
+  --accent: #3b4fc4;
+  --ok-bg: #d9f2e0; --ok-ink: #14663a;
+  --bad-bg: #ffd9d9; --bad-ink: #a11a1a;
+  --c0-bg: #dde5ff; --c0-ink: #2c3e78;
+  --c1-bg: #d5f0e0; --c1-ink: #1d5c42;
+  --c2-bg: #fdeacb; --c2-ink: #7a4d10;
+  --c3-bg: #ecdff7; --c3-ink: #5b3a80;
+  --c4-bg: #d3edf7; --c4-ink: #175a75;
+  --unk-bg: #ffd9d9; --unk-ink: #a11a1a;
+  --bar: #8fa3e8;
+  --mono: ui-monospace, "Cascadia Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans",
+          "Noto Sans Devanagari", "Noto Sans Telugu", "Noto Sans Kannada", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #101318;
+    --card: #181c23;
+    --ink: #e7e9ec;
+    --muted: #9aa1ab;
+    --border: #2a2f38;
+    --accent: #8ea2ff;
+    --ok-bg: #1e4630; --ok-ink: #8fd8ac;
+    --bad-bg: #4e1f1f; --bad-ink: #f1a0a0;
+    --c0-bg: #2a3554; --c0-ink: #b9c8f5;
+    --c1-bg: #1e3d30; --c1-ink: #9fd8bb;
+    --c2-bg: #46351a; --c2-ink: #ecc98a;
+    --c3-bg: #3a2b4e; --c3-ink: #d3b9ef;
+    --c4-bg: #173947; --c4-ink: #9cd3e8;
+    --unk-bg: #4e1f1f; --unk-ink: #f1a0a0;
+    --bar: #4d5f9e;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.55 var(--sans);
+}
+.wrap { max-width: 880px; margin: 0 auto; padding: 32px 20px 64px; }
+a { color: var(--accent); }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* header */
+header { margin-bottom: 28px; }
+.topline { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.eyebrow {
+  font: 600 11px/1 var(--mono);
+  letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
+}
+.badge {
+  font: 600 12px/1 var(--mono); padding: 6px 10px; border-radius: 999px;
+  white-space: nowrap;
+}
+.badge.ok  { background: var(--ok-bg);  color: var(--ok-ink); }
+.badge.bad { background: var(--bad-bg); color: var(--bad-ink); }
+h1 { font-size: 30px; font-weight: 750; letter-spacing: -0.02em; margin: 10px 0 6px; }
+.tchip {
+  display: inline-block; padding: 0 6px; border-radius: 7px; margin: 0 1px;
+}
+.sub { color: var(--muted); margin: 0; max-width: 60ch; }
+
+/* cards + section labels */
+.card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+  padding: 20px; margin-bottom: 22px;
+}
+.card h2 {
+  font: 700 12px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase;
+  color: var(--muted); margin: 0 0 14px;
+}
+
+/* playground */
+.samplebar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.samplebar .spacer { flex: 1; }
+.pill {
+  background: var(--bg); border: 1px solid var(--border); border-radius: 999px;
+  padding: 6px 14px; font-size: 14px; transition: border-color .12s ease;
+}
+.pill:hover { border-color: var(--accent); }
+textarea {
+  width: 100%; min-height: 130px; resize: vertical;
+  background: var(--bg); color: var(--ink);
+  border: 1px solid var(--border); border-radius: 10px;
+  padding: 12px 14px; font: 15px/1.6 var(--sans);
+}
+textarea:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
+
+.statrow {
+  display: flex; flex-wrap: wrap; gap: 10px 34px; align-items: flex-end;
+  margin: 16px 2px 14px;
+}
+.stat .v { font: 600 18px/1.2 var(--mono); }
+.stat.hero .v { font-size: 26px; font-weight: 700; }
+.stat .l {
+  font: 600 10px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase;
+  color: var(--muted); margin-top: 4px;
+}
+.statrow .spacer { flex: 1; }
+.seg {
+  display: inline-flex; border: 1px solid var(--border); border-radius: 9px;
+  overflow: hidden; background: var(--bg);
+}
+.seg button {
+  border: 0; background: transparent; padding: 6px 14px; font-size: 13px;
+  color: var(--muted);
+}
+.seg button.active { background: var(--card); color: var(--ink); font-weight: 600;
+  box-shadow: inset 0 0 0 1px var(--border); }
+
+.chips {
+  display: flex; flex-wrap: wrap; gap: 4px; align-content: flex-start;
+  min-height: 110px; padding: 12px; border: 1px dashed var(--border);
+  border-radius: 10px;
+}
+.chips .empty { color: var(--muted); font-size: 13px; }
+.chip {
+  padding: 2px 7px; border-radius: 7px; font-size: 14.5px; line-height: 1.45;
+  white-space: pre-wrap; word-break: break-all;
+  transition: transform .1s ease;
+}
+.chip:hover { transform: translateY(-1px); }
+.chip.ids { font-family: var(--mono); font-size: 13px; }
+.c0 { background: var(--c0-bg); color: var(--c0-ink); }
+.c1 { background: var(--c1-bg); color: var(--c1-ink); }
+.c2 { background: var(--c2-bg); color: var(--c2-ink); }
+.c3 { background: var(--c3-bg); color: var(--c3-ink); }
+.c4 { background: var(--c4-bg); color: var(--c4-ink); }
+.unk { background: var(--unk-bg); color: var(--unk-ink); font-weight: 700; }
+.truncnote { color: var(--muted); font-size: 12px; margin-top: 8px; }
+
+/* score widget */
+.scoreline { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 14px; margin-bottom: 16px; }
+.scoreline .formula { font: 500 14px/1.4 var(--mono); color: var(--muted); }
+.scoreline .num { font: 700 30px/1.1 var(--mono); letter-spacing: -0.01em; }
+table.langs { width: 100%; border-collapse: collapse; font-size: 14px; }
+table.langs th {
+  text-align: left; font: 600 10px/1 var(--mono); letter-spacing: .1em;
+  text-transform: uppercase; color: var(--muted); padding: 6px 10px 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+table.langs td { padding: 8px 10px 8px 0; border-bottom: 1px solid var(--border); }
+table.langs td.num { font-family: var(--mono); }
+table.langs td.barcell { width: 34%; }
+.bartrack { background: var(--bg); border-radius: 5px; height: 12px; overflow: hidden; }
+.barfill { background: var(--bar); height: 100%; border-radius: 5px; }
+.sorted { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 16px 0 6px; }
+.sorted .sx {
+  font: 500 13px/1 var(--mono); background: var(--bg);
+  border: 1px solid var(--border); border-radius: 999px; padding: 6px 12px;
+}
+.sorted .tag { font-weight: 700; color: var(--accent); margin-left: 6px; }
+.sorted .arrow { color: var(--muted); }
+.spread { font: 500 13px/1.5 var(--mono); color: var(--muted); }
+.note { color: var(--muted); font-size: 12.5px; margin-top: 12px; }
+
+/* vocab explorer */
+.vocabbar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.vocabbar input {
+  flex: 1; min-width: 220px; background: var(--bg); color: var(--ink);
+  border: 1px solid var(--border); border-radius: 9px; padding: 8px 12px;
+  font: 14px var(--sans);
+}
+.vlist { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.vrow {
+  display: grid; grid-template-columns: 72px 76px 1fr; gap: 10px;
+  padding: 5px 12px; border-bottom: 1px solid var(--border);
+  font-size: 13.5px; align-items: baseline;
+}
+.vrow:last-child { border-bottom: 0; }
+.vrow:nth-child(even) { background: color-mix(in srgb, var(--bg) 55%, transparent); }
+.vid { font-family: var(--mono); color: var(--muted); text-align: right; }
+.vtype { font: 600 10px/1.6 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.vtype.special { color: var(--bad-ink); }
+.vtype.base { color: var(--accent); }
+.vtype.merge { color: var(--muted); }
+.vtok { font-family: var(--mono); white-space: pre-wrap; word-break: break-all; }
+.pager {
+  display: flex; align-items: center; gap: 12px; margin-top: 12px;
+  font: 500 13px/1 var(--mono); color: var(--muted);
+}
+.pager .spacer { flex: 1; }
+.pager button:disabled { opacity: .4; cursor: default; }
+
+footer { color: var(--muted); font-size: 12.5px; text-align: center; margin-top: 8px; }
+
+@media (max-width: 560px) {
+  h1 { font-size: 24px; }
+  .scoreline .num { font-size: 24px; }
+  table.langs td.barcell { width: 24%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+  .chip:hover { transform: none; }
+}
+</style>
+</head>
 <body>
-<div id="app">building…</div>
+<div class="wrap">
+
+<header>
+  <div class="topline">
+    <div class="eyebrow">ERA &middot; Session 2 &middot; Balanced BPE</div>
+    <div id="selftest" class="badge" aria-live="polite">self-test &hellip;</div>
+  </div>
+  <h1>The <span id="title-tok">Tokenizer</span> Playground</h1>
+  <p class="sub">A 10,000-token vocabulary trained to treat English, Hindi, Telugu
+  and Kannada as equals. Type anything below and watch it split.</p>
+</header>
+
+<section class="card" aria-label="Playground">
+  <h2>Playground</h2>
+  <div class="samplebar" id="samplebar">
+    <button class="pill" data-lang="en" lang="en">English</button>
+    <button class="pill" data-lang="hi" lang="hi">हिन्दी</button>
+    <button class="pill" data-lang="te" lang="te">తెలుగు</button>
+    <button class="pill" data-lang="kn" lang="kn">ಕನ್ನಡ</button>
+    <span class="spacer"></span>
+    <button class="pill" id="clear-btn">Clear</button>
+  </div>
+  <textarea id="input" spellcheck="false"
+    placeholder="Type or paste text in any script&hellip;"></textarea>
+  <div class="statrow">
+    <div class="stat hero"><div class="v" id="st-tokens">0</div><div class="l">Tokens</div></div>
+    <div class="stat"><div class="v" id="st-chars">0</div><div class="l">Characters</div></div>
+    <div class="stat"><div class="v" id="st-words">0</div><div class="l">Words</div></div>
+    <div class="stat hero"><div class="v" id="st-x">&mdash;</div><div class="l">Fertility X</div></div>
+    <span class="spacer"></span>
+    <div class="seg" role="group" aria-label="Chip content">
+      <button id="mode-text" class="active" aria-pressed="true">Text</button>
+      <button id="mode-ids" aria-pressed="false">Token IDs</button>
+    </div>
+  </div>
+  <div class="chips" id="chips"><span class="empty">Tokens appear here.</span></div>
+  <div class="truncnote" id="truncnote" hidden></div>
+</section>
+
+<section class="card" aria-label="Balance score">
+  <h2>Balance score</h2>
+  <div class="scoreline">
+    <span class="formula">Score = 1000 / (X<sub>max</sub> &minus; X<sub>min</sub>) =</span>
+    <span class="num" id="score-num"></span>
+  </div>
+  <table class="langs">
+    <thead><tr><th>Language</th><th>Words</th><th>Tokens</th><th>X = tokens/words</th><th></th></tr></thead>
+    <tbody id="score-body"></tbody>
+  </table>
+  <div class="sorted" id="sorted-x"></div>
+  <div class="spread" id="spread"></div>
+  <p class="note">Fertility X computed on the first 2,000 words per language.
+  Near-equal bars mean the tokenizer compresses every language alike.</p>
+</section>
+
+<section class="card" aria-label="Vocabulary explorer">
+  <h2>Vocabulary &middot; 10,000 tokens</h2>
+  <div class="vocabbar">
+    <input id="vsearch" type="search"
+      placeholder="Search by exact id or substring &mdash; try &#x0930;&#x093E; or 4096"
+      aria-label="Search vocabulary">
+    <button class="pill" id="dl-json">Download JSON</button>
+    <button class="pill" id="dl-csv">Download CSV</button>
+  </div>
+  <div class="vlist" id="vlist"></div>
+  <div class="pager">
+    <button class="pill" id="vprev">&larr; Prev</button>
+    <button class="pill" id="vnext">Next &rarr;</button>
+    <span class="spacer"></span>
+    <span id="vcount"></span>
+  </div>
+</section>
+
+<footer>Single file &middot; no network &middot; encoder mirrors
+<span style="font-family:var(--mono)">bpe_tokenizer.py</span> exactly.</footer>
+
+</div>
+
 <script id="vocab-data" type="application/json">/*__VOCAB_ROWS__*/</script>
 <script id="merges-data" type="application/json">/*__MERGES__*/</script>
 <script id="base-chars-data" type="application/json">/*__BASE_CHARS__*/</script>
@@ -11,11 +297,322 @@
 <script id="raw-json-data" type="application/json">/*__RAW_JSON__*/</script>
 <script id="samples-data" type="application/json">/*__SAMPLES__*/</script>
 <script>
-// Task 2 fills in the encoder + UI. For now, mark that data parsed.
-const VOCAB = JSON.parse(document.getElementById('vocab-data').textContent);
-const MERGES = JSON.parse(document.getElementById('merges-data').textContent);
-document.getElementById('app').textContent =
-  'vocab ' + VOCAB.length + ' merges ' + MERGES.length;
+'use strict';
+// ---------- data ----------
+const $ = (id) => document.getElementById(id);
+const jd = (id) => JSON.parse($(id).textContent);
+const VOCAB = jd('vocab-data');
+const MERGES = jd('merges-data');
+const BASE_CHARS = jd('base-chars-data');
+const FIXTURES = jd('fixtures-data');
+const RESULTS = jd('results-data');
+const RAW_JSON = jd('raw-json-data');
+const SAMPLES = jd('samples-data');
+
+// ---------- encoder: exact mirror of bpe_tokenizer.py ----------
+const UNK = 0, UNK_STR = '\u{FFFD}';
+const charToId = new Map(BASE_CHARS.map((c, i) => [c, i + 1]));
+const idToStr = [UNK_STR, ...BASE_CHARS];
+const rank = new Map();
+for (const [a, b] of MERGES) {
+  rank.set(a + ',' + b, idToStr.length);
+  idToStr.push(idToStr[a] + idToStr[b]);
+}
+function pretok(text) {
+  // optional leading whitespace + one word; trailing whitespace is its own unit
+  const units = text.match(/\s*\S+/gu) || [];
+  const consumed = units.reduce((n, u) => n + u.length, 0);
+  if (consumed < text.length) units.push(text.slice(consumed));
+  return units;
+}
+const _unitCache = new Map();
+function encodeUnit(u) {
+  const hit = _unitCache.get(u);
+  if (hit !== undefined) return hit;
+  let seq = [...u].map((ch) => charToId.get(ch) ?? UNK);
+  while (seq.length > 1) {
+    let best = Infinity, at = -1;
+    for (let i = 0; i < seq.length - 1; i++) {
+      const r = rank.get(seq[i] + ',' + seq[i + 1]);
+      if (r !== undefined && r < best) { best = r; at = i; }
+    }
+    if (at < 0) break;
+    seq.splice(at, 2, best);
+  }
+  _unitCache.set(u, seq);
+  return seq;
+}
+function encode(text) { return pretok(text).flatMap(encodeUnit); }
+
+// ---------- self-test ----------
+function runSelfTest() {
+  let passed = 0, firstFail = null;
+  for (const fx of FIXTURES) {
+    const got = encode(fx.text);
+    if (JSON.stringify(got) === JSON.stringify(fx.ids)) passed++;
+    else if (!firstFail) firstFail = { text: fx.text, expected: fx.ids, got };
+  }
+  return { passed, total: FIXTURES.length, firstFail };
+}
+
+// ---------- helpers ----------
+function visible(s) {
+  return [...s].map((ch) =>
+    ch === ' ' ? '·' : ch === '\n' ? '⏎' : ch === '\t' ? '⇥'
+    : /\s/u.test(ch) ? '␣' : ch).join('');
+}
+const fmtInt = (n) => n.toLocaleString('en-US');
+
+// ---------- playground ----------
+const inputEl = $('input'), chipsEl = $('chips'), truncEl = $('truncnote');
+const MAX_CHIPS = 4000;
+let mode = 'text';
+let lastIds = [];
+
+function renderChips() {
+  chipsEl.textContent = '';
+  if (!lastIds.length) {
+    const e = document.createElement('span');
+    e.className = 'empty';
+    e.textContent = 'Tokens appear here.';
+    chipsEl.appendChild(e);
+    truncEl.hidden = true;
+    return;
+  }
+  const frag = document.createDocumentFragment();
+  const n = Math.min(lastIds.length, MAX_CHIPS);
+  for (let i = 0; i < n; i++) {
+    const id = lastIds[i];
+    const s = idToStr[id];
+    const chip = document.createElement('span');
+    chip.className = 'chip ' + (id === UNK ? 'unk' : 'c' + (i % 5)) +
+      (mode === 'ids' ? ' ids' : '');
+    chip.textContent = mode === 'ids' ? String(id) : visible(s);
+    chip.title = id + ' · ' + JSON.stringify(s);
+    frag.appendChild(chip);
+  }
+  chipsEl.appendChild(frag);
+  truncEl.hidden = lastIds.length <= MAX_CHIPS;
+  if (lastIds.length > MAX_CHIPS) {
+    truncEl.textContent = 'Showing the first ' + fmtInt(MAX_CHIPS) + ' of ' +
+      fmtInt(lastIds.length) + ' tokens. Counts above include everything.';
+  }
+}
+
+function update() {
+  const text = inputEl.value;
+  lastIds = encode(text);
+  const chars = [...text].length;
+  const words = (text.match(/\S+/gu) || []).length;
+  $('st-tokens').textContent = fmtInt(lastIds.length);
+  $('st-chars').textContent = fmtInt(chars);
+  $('st-words').textContent = fmtInt(words);
+  $('st-x').textContent = words ? (lastIds.length / words).toFixed(2) : '—';
+  renderChips();
+}
+
+let debounceTimer = null;
+inputEl.addEventListener('input', () => {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(update, 150);
+});
+
+$('samplebar').addEventListener('click', (ev) => {
+  const lang = ev.target.dataset && ev.target.dataset.lang;
+  if (!lang) return;
+  inputEl.value = SAMPLES[lang] || '';
+  update();
+});
+$('clear-btn').addEventListener('click', () => { inputEl.value = ''; update(); });
+
+function setMode(m) {
+  mode = m;
+  $('mode-text').classList.toggle('active', m === 'text');
+  $('mode-ids').classList.toggle('active', m === 'ids');
+  $('mode-text').setAttribute('aria-pressed', String(m === 'text'));
+  $('mode-ids').setAttribute('aria-pressed', String(m === 'ids'));
+  renderChips();
+}
+$('mode-text').addEventListener('click', () => setMode('text'));
+$('mode-ids').addEventListener('click', () => setMode('ids'));
+
+// ---------- score widget ----------
+function buildScore() {
+  const LANG_NAMES = { en: 'English', hi: 'हिन्दी Hindi',
+    te: 'తెలుగు Telugu', kn: 'ಕನ್ನಡ Kannada' };
+  const langs = ['en', 'hi', 'te', 'kn'].filter((l) => RESULTS.per_language[l]);
+  const xs = langs.map((l) => ({ lang: l, ...RESULTS.per_language[l] }));
+  const xMax = Math.max(...xs.map((r) => r.X));
+  const xMin = Math.min(...xs.map((r) => r.X));
+
+  $('score-num').textContent = RESULTS.score.toLocaleString('en-US',
+    { maximumFractionDigits: RESULTS.score >= 1000 ? 0 : 2 });
+
+  const tbody = $('score-body');
+  for (const r of xs) {
+    const tr = document.createElement('tr');
+    const cells = [
+      [LANG_NAMES[r.lang] || r.lang, ''],
+      [fmtInt(r.words), 'num'],
+      [fmtInt(r.tokens), 'num'],
+      [r.X.toFixed(4), 'num'],
+    ];
+    for (const [txt, cls] of cells) {
+      const td = document.createElement('td');
+      if (cls) td.className = cls;
+      td.textContent = txt;
+      tr.appendChild(td);
+    }
+    const barTd = document.createElement('td');
+    barTd.className = 'barcell';
+    const track = document.createElement('div');
+    track.className = 'bartrack';
+    const fill = document.createElement('div');
+    fill.className = 'barfill';
+    fill.style.width = (r.X / xMax * 100).toFixed(2) + '%';
+    track.title = r.lang + ' X = ' + r.X;
+    track.appendChild(fill);
+    barTd.appendChild(track);
+    tr.appendChild(barTd);
+    tbody.appendChild(tr);
+  }
+
+  const sortedEl = $('sorted-x');
+  const label = document.createElement('span');
+  label.className = 'spread';
+  label.textContent = 'X sorted ↑';
+  sortedEl.appendChild(label);
+  const sorted = [...xs].sort((a, b) => a.X - b.X);
+  sorted.forEach((r, i) => {
+    if (i > 0) {
+      const arrow = document.createElement('span');
+      arrow.className = 'arrow';
+      arrow.textContent = '→';
+      sortedEl.appendChild(arrow);
+    }
+    const pill = document.createElement('span');
+    pill.className = 'sx';
+    pill.textContent = r.lang + ' ' + r.X.toFixed(4);
+    if (i === 0) {
+      const t = document.createElement('span');
+      t.className = 'tag'; t.textContent = 'min';
+      pill.appendChild(t);
+    }
+    if (i === sorted.length - 1) {
+      const t = document.createElement('span');
+      t.className = 'tag'; t.textContent = 'max';
+      pill.appendChild(t);
+    }
+    sortedEl.appendChild(pill);
+  });
+  $('spread').textContent =
+    'X_max − X_min = ' + (xMax - xMin).toPrecision(3);
+}
+
+// ---------- vocabulary explorer ----------
+const PAGE = 200;
+let vQuery = '', vPage = 0, vFiltered = VOCAB;
+
+function vFilter() {
+  const q = vQuery;
+  vFiltered = q === '' ? VOCAB
+    : VOCAB.filter((r) => String(r.id) === q || r.s.includes(q));
+  vPage = 0;
+  renderVocab();
+}
+function renderVocab() {
+  const pages = Math.max(1, Math.ceil(vFiltered.length / PAGE));
+  vPage = Math.min(vPage, pages - 1);
+  const list = $('vlist');
+  list.textContent = '';
+  const frag = document.createDocumentFragment();
+  const start = vPage * PAGE;
+  for (const r of vFiltered.slice(start, start + PAGE)) {
+    const row = document.createElement('div');
+    row.className = 'vrow';
+    const idEl = document.createElement('span');
+    idEl.className = 'vid'; idEl.textContent = r.id;
+    const typeEl = document.createElement('span');
+    typeEl.className = 'vtype ' + r.type; typeEl.textContent = r.type;
+    const tokEl = document.createElement('span');
+    tokEl.className = 'vtok'; tokEl.textContent = visible(r.s);
+    tokEl.title = r.id + ' · ' + JSON.stringify(r.s);
+    row.append(idEl, typeEl, tokEl);
+    frag.appendChild(row);
+  }
+  if (!vFiltered.length) {
+    const row = document.createElement('div');
+    row.className = 'vrow';
+    row.textContent = 'No tokens match. Try a shorter substring or an id like 4096.';
+    frag.appendChild(row);
+  }
+  list.appendChild(frag);
+  $('vcount').textContent = fmtInt(vFiltered.length) + ' tokens · page ' +
+    (vPage + 1) + '/' + pages;
+  $('vprev').disabled = vPage === 0;
+  $('vnext').disabled = vPage >= pages - 1;
+}
+$('vsearch').addEventListener('input', (ev) => {
+  vQuery = ev.target.value;
+  vFilter();
+});
+$('vprev').addEventListener('click', () => { vPage--; renderVocab(); });
+$('vnext').addEventListener('click', () => { vPage++; renderVocab(); });
+
+function download(name, blobj) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blobj);
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+$('dl-json').addEventListener('click', () => {
+  download('tokenizer_10k.json',
+    new Blob([JSON.stringify(RAW_JSON)], { type: 'application/json' }));
+});
+$('dl-csv').addEventListener('click', () => {
+  const lines = ['id,type,token'];
+  for (const r of VOCAB) lines.push(r.id + ',' + r.type + ',' + JSON.stringify(r.s));
+  download('vocab.csv', new Blob([lines.join('\n')], { type: 'text/csv' }));
+});
+
+// ---------- header signature: the title, tokenized by this very encoder ----------
+function renderTitleChips() {
+  const el = $('title-tok');
+  const ids = encode('Tokenizer');
+  if (!ids.length || ids.length > 6) return; // keep plain text fallback
+  el.textContent = '';
+  ids.forEach((id, i) => {
+    const s = document.createElement('span');
+    s.className = 'tchip ' + (id === UNK ? 'unk' : 'c' + (i % 5));
+    s.textContent = idToStr[id];
+    s.title = id + ' · ' + JSON.stringify(idToStr[id]);
+    el.appendChild(s);
+  });
+}
+
+// ---------- boot ----------
+(function boot() {
+  const st = runSelfTest();
+  const badge = $('selftest');
+  if (st.firstFail) {
+    badge.className = 'badge bad';
+    badge.textContent = 'self-test ' + st.passed + '/' + st.total + ' ✗ first fail: ' +
+      JSON.stringify(st.firstFail.text);
+  } else {
+    badge.className = 'badge ok';
+    badge.textContent = 'self-test ' + st.passed + '/' + st.total + ' ✓';
+  }
+  renderTitleChips();
+  buildScore();
+  renderVocab();
+  inputEl.value = SAMPLES.en || '';
+  update();
+})();
+
+if (typeof module !== 'undefined') { module.exports = { encode, idToStr, runSelfTest }; }
 </script>
 </body>
 </html>
