@@ -16,6 +16,7 @@
 - Score reported as `1000 / (X_max − X_min)`.
 - Round-trip `decode(encode(text)) == text` must hold exactly on every full corpus.
 - Downloaded corpora are committed under `Session2/data/` for offline reproducibility.
+- Training/evaluation corpora are the **first 2,000 words** of each article (`WORD_CAP = 2000`; kn's full article is only 1,019 words so it is used whole). Decision made after measurement: with the full articles the fertility floor at 10k vocab is ≈ 1.46 regardless of merge strategy, so X ≤ 1.2 is infeasible; capping at 2,000 words yields X ≈ 1.03 for all four languages.
 - Spec: `docs/superpowers/specs/2026-07-08-balanced-bpe-tokenizer-design.md`.
 - Working directory for all commands: repo root `/home/muttu/Desktop/ERA`.
 
@@ -644,15 +645,27 @@ import json
 import time
 from pathlib import Path
 
-from bpe_tokenizer import BalancedBPETokenizer
+from bpe_tokenizer import BalancedBPETokenizer, pretokenize
 
 HERE = Path(__file__).parent
 LANGS = ["en", "hi", "te", "kn"]
 VOCAB_SIZE = 10_000
+# First 2,000 words of each article (kn's whole article is 1,019 words).
+# With the full articles the fertility floor at 10k vocab is ~1.46, so
+# X <= 1.2 is infeasible; at 2,000 words all four X land around 1.03.
+WORD_CAP = 2_000
+
+
+def cap_words(text: str, n: int) -> str:
+    """First n words of text, preserving original whitespace."""
+    units = pretokenize(text)  # each unit is one word with its leading whitespace
+    return "".join(units[:n]) if len(units) > n else text
 
 
 def load_corpora() -> dict:
-    return {lang: (HERE / "data" / f"{lang}_india.txt").read_text(encoding="utf-8")
+    return {lang: cap_words(
+                (HERE / "data" / f"{lang}_india.txt").read_text(encoding="utf-8"),
+                WORD_CAP)
             for lang in LANGS}
 
 
@@ -694,10 +707,10 @@ if __name__ == "__main__":
 
 - [ ] **Step 2: Run the full training**
 
-Run: `cd Session2 && python3 train_and_evaluate.py` (expect a few minutes; verbose prints fertility every 1000 merges — the four values should visibly converge toward each other and end ≤ 1.2).
-Expected: table of four rows, all `X ≤ 1.2`, all four X values within ~0.01 of each other, a large score, no assertion failures.
+Run: `cd Session2 && python3 train_and_evaluate.py` (training takes seconds to a couple of minutes; verbose prints fertility every 1000 merges — the four values should visibly converge toward each other).
+Expected: table of four rows, all `X ≈ 1.03` (≤ 1.2), all four X values within ~0.001 of each other, a large score, no assertion failures.
 
-If any `X > 1.2` after 10k vocab: the corpora are too small/diverse for the budget — investigate corpus sizes before changing any code (this is not expected with full Wikipedia articles).
+If any `X > 1.2`: stop and investigate corpus capping before changing any code.
 
 - [ ] **Step 3: Verify the saved artifact reloads**
 
@@ -762,10 +775,17 @@ nb.cells = [
        "Design: codepoint-level BPE, whitespace attached to the following word,\n"
        "and a *balanced merge loop* — every merge is taken from whichever\n"
        "language currently has the worst fertility, which greedily minimizes\n"
-       "$X_{max} - X_{min}$ at every step."),
+       "$X_{max} - X_{min}$ at every step.\n"
+       "\n"
+       "**Corpus size:** each language uses the first **2,000 words** of its\n"
+       "article (Kannada's whole article is 1,019 words). With the full\n"
+       "articles the fertility floor at 10k vocab is ≈ 1.46 — measured, not\n"
+       "guessed — so X ≤ 1.2 is infeasible; at 2,000 words per language all\n"
+       "four X land around 1.03."),
     code("import json, subprocess, sys\n"
          "from pathlib import Path\n"
          "from bpe_tokenizer import BalancedBPETokenizer\n"
+         "from train_and_evaluate import WORD_CAP, load_corpora\n"
          "\n"
          "LANGS = {'en': 'English', 'hi': 'Hindi', 'te': 'Telugu', 'kn': 'Kannada'}\n"
          "DATA = Path('data')\n"
@@ -774,12 +794,14 @@ nb.cells = [
          "if not all((DATA / f'{l}_india.txt').exists() for l in LANGS):\n"
          "    subprocess.run([sys.executable, 'download_data.py'], check=True)\n"
          "\n"
-         "corpora = {l: (DATA / f'{l}_india.txt').read_text(encoding='utf-8')\n"
-         "           for l in LANGS}\n"
-         "print(f\"{'lang':<10}{'chars':>12}{'words':>10}{'unique chars':>15}\")\n"
+         "corpora = load_corpora()  # capped at WORD_CAP words per language\n"
+         "print('word cap per language:', WORD_CAP)\n"
+         "print(f\"{'lang':<10}{'full words':>12}{'used words':>12}\"\n"
+         "      f\"{'used chars':>12}{'unique chars':>14}\")\n"
          "for l, text in corpora.items():\n"
-         "    print(f'{LANGS[l]:<10}{len(text):>12,}{len(text.split()):>10,}'\n"
-         "          f'{len(set(text)):>15,}')"),
+         "    full = (DATA / f'{l}_india.txt').read_text(encoding='utf-8')\n"
+         "    print(f'{LANGS[l]:<10}{len(full.split()):>12,}{len(text.split()):>12,}'\n"
+         "          f'{len(text):>12,}{len(set(text)):>14,}')"),
     md("## Train (or load) the tokenizer\n"
        "\n"
        "Training takes a few minutes, so the committed artifact\n"

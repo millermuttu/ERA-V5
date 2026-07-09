@@ -53,6 +53,13 @@ Titles are resolved per-wiki (the script follows language links from the English
 article rather than hard-coding translated titles). Downloaded files are
 committed so results are reproducible offline.
 
+**Corpus cap (added 2026-07-09, approved):** training and evaluation use the
+**first 2,000 words** of each article (Kannada's whole article is 1,019 words).
+Measured with the full articles, the fertility floor at 10k vocab is ≈ 1.46 for
+every language regardless of merge strategy (also tested: merges across word
+boundaries — slightly worse), so X ≤ 1.2 is infeasible at full size. At 2,000
+words per language all four X land around 1.03 with spread ≈ 0.0005.
+
 ## Components
 
 | File | Purpose |
