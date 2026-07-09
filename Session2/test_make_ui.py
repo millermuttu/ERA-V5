@@ -50,3 +50,33 @@ def test_main_writes_output(tmp_path, monkeypatch):
     monkeypatch.setattr(make_ui, "OUTPUT_PATH", out)
     make_ui.main()
     assert out.exists() and out.stat().st_size > 100_000
+
+
+def test_missing_tokenizer_file_exits(tmp_path, monkeypatch):
+    monkeypatch.setattr(make_ui, "TOKENIZER_PATH", tmp_path / "nope.json")
+    with pytest.raises(SystemExit):
+        make_ui.load_tokenizer()
+
+
+def test_wrong_vocab_size_exits(tmp_path, monkeypatch):
+    bad = tmp_path / "bad.json"
+    bad.write_text(json.dumps({"base_chars": ["a", "b"], "merges": []}))
+    monkeypatch.setattr(make_ui, "TOKENIZER_PATH", bad)
+    with pytest.raises(SystemExit):
+        make_ui.load_tokenizer()
+
+
+def test_malformed_merge_tuple_exits_cleanly(tmp_path, monkeypatch):
+    bad = tmp_path / "bad.json"
+    bad.write_text(json.dumps({"base_chars": ["a", "b"], "merges": [[1, 2, 3]]}))
+    monkeypatch.setattr(make_ui, "TOKENIZER_PATH", bad)
+    with pytest.raises(SystemExit):
+        make_ui.load_tokenizer()
+
+
+def test_missing_results_keys_exits(tmp_path, monkeypatch):
+    bad = tmp_path / "bad_results.json"
+    bad.write_text(json.dumps({"per_language": {}}))  # no "score"
+    monkeypatch.setattr(make_ui, "RESULTS_PATH", bad)
+    with pytest.raises(SystemExit):
+        make_ui.load_results()

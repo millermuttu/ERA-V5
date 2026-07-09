@@ -35,7 +35,7 @@ def load_tokenizer() -> BalancedBPETokenizer:
         _fail(f"missing {TOKENIZER_PATH.name}; run train_and_evaluate.py first")
     try:
         tok = BalancedBPETokenizer.load(TOKENIZER_PATH)
-    except (json.JSONDecodeError, KeyError, TypeError) as e:
+    except (json.JSONDecodeError, KeyError, TypeError, ValueError, IndexError) as e:
         _fail(f"could not load {TOKENIZER_PATH.name}: {e}")
     if tok.vocab_size != 10_000:
         _fail(f"expected vocab_size 10000, got {tok.vocab_size}")
