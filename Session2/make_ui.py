@@ -45,9 +45,16 @@ def load_tokenizer() -> BalancedBPETokenizer:
 def load_results() -> dict:
     if not RESULTS_PATH.exists():
         _fail(f"missing {RESULTS_PATH.name}; run train_and_evaluate.py first")
-    data = json.loads(RESULTS_PATH.read_text(encoding="utf-8"))
+    try:
+        data = json.loads(RESULTS_PATH.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        _fail(f"could not load {RESULTS_PATH.name}: {e}")
     if "per_language" not in data or "score" not in data:
         _fail(f"{RESULTS_PATH.name} missing per_language/score")
+    for lang in ["en", "hi", "te", "kn"]:
+        row = data["per_language"].get(lang)
+        if not isinstance(row, dict) or not {"words", "tokens", "X"} <= row.keys():
+            _fail(f"{RESULTS_PATH.name} per_language.{lang} missing words/tokens/X")
     return data
 
 
@@ -80,7 +87,7 @@ def build_html() -> str:
     template = TEMPLATE_PATH.read_text(encoding="utf-8")
 
     def dump(obj) -> str:
-        return json.dumps(obj, ensure_ascii=False)
+        return json.dumps(obj, ensure_ascii=False).replace("</", "<\\/")
 
     replacements = {
         "/*__VOCAB_ROWS__*/": dump(build_vocab_rows(tok)),

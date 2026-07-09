@@ -262,7 +262,7 @@ footer { color: var(--muted); font-size: 12.5px; text-align: center; margin-top:
   </table>
   <div class="sorted" id="sorted-x"></div>
   <div class="spread" id="spread"></div>
-  <p class="note">Fertility X computed on the first 2,000 words per language.
+  <p class="note">Fertility X computed on up to 2,000 words per language (Kannada's full article is fewer).
   Near-equal bars mean the tokenizer compresses every language alike.</p>
 </section>
 
@@ -574,7 +574,10 @@ $('dl-json').addEventListener('click', () => {
 });
 $('dl-csv').addEventListener('click', () => {
   const lines = ['id,type,token'];
-  for (const r of VOCAB) lines.push(r.id + ',' + r.type + ',' + JSON.stringify(r.s));
+  for (const r of VOCAB) {
+    const field = '"' + r.s.replace(/"/g, '""') + '"';
+    lines.push(r.id + ',' + r.type + ',' + field);
+  }
   download('vocab.csv', new Blob([lines.join('\n')], { type: 'text/csv' }));
 });
 

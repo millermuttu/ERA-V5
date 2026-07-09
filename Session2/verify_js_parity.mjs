@@ -1,6 +1,9 @@
-// Verifies the generated page's JS encoder reproduces the Python ids for every
-// embedded fixture. Loads tokenizer_ui.html, extracts injected data + the
-// encoder, runs it under Node. Exit 0 = parity holds, 1 = mismatch.
+// Loads the generated page's injected data (base_chars, merges, fixtures) and
+// verifies that an INDEPENDENT reference reimplementation of the encoder
+// (built here, in Node) reproduces the Python ids for every fixture — a
+// cross-check of the fixtures and data injection, not of the page's live
+// encoder. The page's own live encoder is separately covered by the in-page
+// self-test badge on every load. Exit 0 = parity holds, 1 = mismatch.
 import { readFileSync } from 'node:fs';
 
 const html = readFileSync(new URL('./tokenizer_ui.html', import.meta.url), 'utf8');

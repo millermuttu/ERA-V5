@@ -80,3 +80,7 @@ def test_missing_results_keys_exits(tmp_path, monkeypatch):
     monkeypatch.setattr(make_ui, "RESULTS_PATH", bad)
     with pytest.raises(SystemExit):
         make_ui.load_results()
+
+
+def test_committed_html_matches_fresh_build():
+    assert make_ui.build_html() == make_ui.OUTPUT_PATH.read_text(encoding="utf-8")
