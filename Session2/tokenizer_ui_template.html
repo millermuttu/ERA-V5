@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>BPE Tokenizer Playground</title></head>
+<body>
+<div id="app">building…</div>
+<script id="vocab-data" type="application/json">/*__VOCAB_ROWS__*/</script>
+<script id="merges-data" type="application/json">/*__MERGES__*/</script>
+<script id="base-chars-data" type="application/json">/*__BASE_CHARS__*/</script>
+<script id="fixtures-data" type="application/json">/*__FIXTURES__*/</script>
+<script id="results-data" type="application/json">/*__RESULTS__*/</script>
+<script id="raw-json-data" type="application/json">/*__RAW_JSON__*/</script>
+<script id="samples-data" type="application/json">/*__SAMPLES__*/</script>
+<script>
+// Task 2 fills in the encoder + UI. For now, mark that data parsed.
+const VOCAB = JSON.parse(document.getElementById('vocab-data').textContent);
+const MERGES = JSON.parse(document.getElementById('merges-data').textContent);
+document.getElementById('app').textContent =
+  'vocab ' + VOCAB.length + ' merges ' + MERGES.length;
+</script>
+</body>
+</html>
