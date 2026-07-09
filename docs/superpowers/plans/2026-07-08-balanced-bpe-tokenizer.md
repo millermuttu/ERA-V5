@@ -802,12 +802,13 @@ nb.cells = [
          "    full = (DATA / f'{l}_india.txt').read_text(encoding='utf-8')\n"
          "    print(f'{LANGS[l]:<10}{len(full.split()):>12,}{len(text.split()):>12,}'\n"
          "          f'{len(text):>12,}{len(set(text)):>14,}')"),
-    md("## Train (or load) the tokenizer\n"
+    md("## Train the tokenizer\n"
        "\n"
-       "Training takes a few minutes, so the committed artifact\n"
-       "`tokenizer_10k.json` is loaded by default. Set `RETRAIN = True` to\n"
-       "reproduce it from scratch (equivalent to `python3 train_and_evaluate.py`)."),
-    code("RETRAIN = False\n"
+       "Training takes only a few seconds on these capped corpora, so the\n"
+       "notebook trains live by default (`RETRAIN = True`), reproducing\n"
+       "`tokenizer_10k.json` deterministically. Set `RETRAIN = False` to load\n"
+       "the committed artifact instead (equivalent to `python3 train_and_evaluate.py`)."),
+    code("RETRAIN = True\n"
          "if RETRAIN or not Path('tokenizer_10k.json').exists():\n"
          "    tok = BalancedBPETokenizer.train(corpora, vocab_size=10_000,\n"
          "                                     verbose=True)\n"
