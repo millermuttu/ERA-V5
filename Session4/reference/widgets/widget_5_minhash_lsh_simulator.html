@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MinHash + LSH Simulator</title>
+<style>
+:root{
+--bg:#f6f8fb; --surface:#ffffff; --surface-alt:#fbfdff;
+--ink:#102338; --ink-body:#1f3850; --ink-muted:#60768d; --muted-2:#7d90a5;
+--rule:#e2e9f0; --rule-strong:#cfdbe6;
+--accent:#00a7d8; --accent-soft:#eafaff; --accent-ink:#0f6e8c;
+--green:#24b36b; --green-soft:#e7fff2; --green-ink:#19824e;
+--amber:#d99a13; --amber-soft:#fff7df; --amber-ink:#8a5c06;
+--violet:#7b61ff; --violet-soft:#eeeaff; --violet-ink:#5a44c8;
+--red:#e05f6e; --red-soft:#ffeef0; --red-ink:#c0455a;
+--shadow-soft:0 8px 22px rgba(16,35,56,.05);
+--font-sans:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+--font-mono:"SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;overflow-x:hidden;background:linear-gradient(180deg,#f8fafc,#f2f5f9);color:var(--ink);font-family:var(--font-sans)}
+body{padding:14px}
+.s4mh-app{max-width:1480px;margin:auto}
+.s4mh-topbar{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:10px}
+.s4mh-topbar h1{margin:0;font-size:clamp(23px,2.6vw,34px);letter-spacing:-.035em;line-height:1.05}
+.s4mh-subtitle{margin-top:7px;max-width:1050px;color:var(--ink-muted);line-height:1.5;font-size:13.5px}
+.s4mh-badge{border:1px solid #d9e9f3;background:#f4fbfe;color:var(--accent-ink);padding:8px 12px;border-radius:999px;font-size:12px;font-weight:800;white-space:nowrap}
+.s4mh-layout{display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:12px}
+.s4mh-stage,.s4mh-side{background:var(--surface);border:1px solid var(--rule);border-radius:18px;box-shadow:var(--shadow-soft);overflow:hidden}
+.s4mh-stage{padding:11px}
+.s4mh-side{padding:10px}
+.s4mh-stage-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:12px}
+.s4mh-stage-title{font-weight:800;font-size:15px}
+.s4mh-stage-note{font-size:11.5px;color:var(--ink-muted)}
+.s4mh-examples{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-bottom:8px;padding:7px 8px;border:1px solid var(--rule);border-radius:12px;background:var(--surface-alt)}
+.s4mh-ex-lab{font-size:9.5px;letter-spacing:.13em;font-weight:800;color:var(--muted-2);margin-right:2px}
+.s4mh-exchip{border:1px solid var(--rule-strong);background:#fff;color:#536b82;border-radius:999px;padding:4px 9px;font-size:10.5px;font-weight:700;cursor:pointer;transition:.15s;line-height:1.15}
+.s4mh-exchip:hover{transform:translateY(-1px);border-color:var(--accent)}
+.s4mh-exchip.s4mh-exon{background:var(--accent-soft);border-color:#8ddff5;color:var(--accent-ink);box-shadow:0 0 0 2px #e3f9ff inset}
+.s4mh-exchip .s4mh-exj{color:var(--muted-2);font-weight:800;font-variant-numeric:tabular-nums}
+.s4mh-exchip.s4mh-exon .s4mh-exj{color:var(--accent-ink)}
+.s4mh-exsel{font-family:var(--font-sans);font-size:12px;font-weight:700;color:var(--ink-body);border:1px solid var(--rule-strong);border-radius:9px;padding:5px 9px;background:#fff;cursor:pointer;min-width:230px}
+.s4mh-exsel:focus{outline:none;border-color:#8ddff5;box-shadow:0 0 0 2px #e3f9ff}
+.s4mh-exhint{font-size:11px;color:var(--accent-ink);font-weight:800;background:var(--accent-soft);border:1px solid #cceefb;border-radius:999px;padding:3px 9px;white-space:nowrap}
+
+.s4mh-docs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.s4mh-doc{border:1px solid var(--rule);border-radius:13px;background:var(--surface-alt);padding:8px}
+.s4mh-doc-cap{font-size:10px;letter-spacing:.14em;font-weight:800;color:var(--muted-2);display:flex;justify-content:space-between;align-items:center}
+.s4mh-doc-cap b{color:var(--accent-ink);letter-spacing:0;font-size:11px}
+.s4mh-ta{width:100%;height:150px;resize:none;margin-top:5px;border:1px solid var(--rule-strong);border-radius:9px;background:#fff;color:var(--ink-body);font-family:var(--font-sans);font-size:12px;line-height:1.4;padding:6px 8px}
+.s4mh-ta:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+
+.s4mh-shrow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:9px}
+.s4mh-stat{border:1px solid var(--rule);border-radius:11px;background:var(--surface-alt);padding:7px 9px;text-align:center}
+.s4mh-stat .s4mh-k{font-size:9.5px;letter-spacing:.1em;font-weight:800;color:var(--muted-2)}
+.s4mh-stat .s4mh-v{font-size:18px;font-weight:800;margin-top:2px;font-variant-numeric:tabular-nums}
+.s4mh-jac{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}
+.s4mh-jacbox{border-radius:12px;padding:8px 11px;border:1px solid}
+.s4mh-jac-true{background:var(--accent-soft);border-color:#bfeefa}
+.s4mh-jac-est{background:var(--green-soft);border-color:#bff0d4}
+.s4mh-jac-cap{font-size:10px;letter-spacing:.1em;font-weight:800}
+.s4mh-jac-true .s4mh-jac-cap{color:var(--accent-ink)}
+.s4mh-jac-est .s4mh-jac-cap{color:var(--green-ink)}
+.s4mh-jac-val{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.05;margin-top:1px}
+.s4mh-jac-true .s4mh-jac-val{color:var(--accent-ink)}
+.s4mh-jac-est .s4mh-jac-val{color:var(--green-ink)}
+.s4mh-jac-sub{font-size:11px;color:var(--ink-muted);margin-top:1px}
+
+.s4mh-sig-wrap{margin-top:10px;border:1px solid var(--rule);border-radius:13px;background:var(--surface-alt);padding:9px}
+.s4mh-sig-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.s4mh-sig-head .s4mh-t{font-size:11.5px;font-weight:800;color:var(--ink-body)}
+.s4mh-sig-head .s4mh-legend{font-size:10.5px;color:var(--ink-muted);display:flex;gap:10px;align-items:center}
+.s4mh-chip{display:inline-flex;align-items:center;gap:4px}
+.s4mh-sw{width:9px;height:9px;border-radius:3px;display:inline-block}
+.s4mh-sig-row{display:flex;align-items:center;gap:6px;margin-top:5px}
+.s4mh-sig-lab{width:44px;flex:none;font-size:10px;font-weight:800;color:var(--muted-2)}
+.s4mh-bands{display:flex;flex-wrap:wrap;gap:6px;min-width:0}
+.s4mh-band{display:flex;gap:2px;padding:2px;border-radius:7px;border:1px dashed var(--rule-strong)}
+.s4mh-band.s4mh-bandmatch{border:1px solid var(--green);background:var(--green-soft)}
+.s4mh-cell{min-width:30px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:10.5px;font-weight:600;border:1px solid rgba(16,35,56,.06);padding:0 3px}
+.s4mh-cell.s4mh-match{background:var(--green-soft);color:var(--green-ink);border-color:#bff0d4}
+.s4mh-cell.s4mh-miss{background:var(--amber-soft);color:var(--amber-ink);border-color:#f0e0af}
+.s4mh-more{font-size:10px;color:var(--muted-2);align-self:center;font-weight:700;padding-left:2px}
+.s4mh-bandnote{font-size:10.5px;color:var(--ink-muted);margin-top:6px}
+.s4mh-bandnote b{color:var(--green-ink)}
+
+.s4mh-curve-wrap{margin-top:10px;border:1px solid var(--rule);border-radius:13px;background:var(--surface-alt);padding:9px}
+.s4mh-curve-head{display:flex;justify-content:space-between;align-items:baseline}
+.s4mh-curve-head .s4mh-t{font-size:11.5px;font-weight:800}
+.s4mh-curve-head .s4mh-eq{font-family:var(--font-mono);font-size:11px;color:var(--accent-ink)}
+.s4mh-curve-legend{display:flex;gap:14px;font-size:10.5px;color:var(--ink-muted);margin-top:4px;flex-wrap:wrap}
+canvas{width:100%;height:150px;display:block;margin-top:4px}
+
+.s4mh-panel-title{font-weight:800;font-size:13px;margin-bottom:7px}
+.s4mh-ctrl{margin-bottom:11px}
+.s4mh-ctrl-top{display:flex;justify-content:space-between;align-items:baseline;font-size:12px}
+.s4mh-ctrl-top .s4mh-cn{font-weight:800;color:var(--ink-body)}
+.s4mh-ctrl-top .s4mh-cv{font-family:var(--font-mono);font-weight:800;color:var(--accent-ink);font-size:13px}
+.s4mh-ctrl-sub{font-size:10.5px;color:var(--ink-muted);margin-top:1px;line-height:1.3}
+input[type=range]{width:100%;margin-top:6px;accent-color:var(--accent);height:4px}
+.s4mh-ctrl.s4mh-vio input[type=range]{accent-color:var(--violet)}
+.s4mh-nbox{border:1px solid #d9cffb;background:var(--violet-soft);border-radius:11px;padding:8px 10px;margin-bottom:11px;display:flex;justify-content:space-between;align-items:center}
+.s4mh-nbox .s4mh-nl{font-size:11px;font-weight:800;color:var(--violet-ink)}
+.s4mh-nbox .s4mh-nv{font-family:var(--font-mono);font-size:13px;font-weight:800;color:var(--violet-ink)}
+
+.s4mh-read{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px}
+.s4mh-read div{border:1px solid var(--rule);border-radius:10px;background:var(--surface-alt);padding:6px 8px}
+.s4mh-read .s4mh-rk{font-size:9.5px;letter-spacing:.08em;font-weight:800;color:var(--muted-2)}
+.s4mh-read .s4mh-rv{font-size:14px;font-weight:800;font-variant-numeric:tabular-nums;margin-top:1px}
+
+.s4mh-verdict{border-radius:13px;padding:11px 12px;margin-bottom:11px;border:1px solid;text-align:center}
+.s4mh-verdict .s4mh-vh{font-size:10px;letter-spacing:.14em;font-weight:800;opacity:.8}
+.s4mh-verdict .s4mh-vt{font-size:19px;font-weight:800;margin-top:3px}
+.s4mh-verdict .s4mh-vs{font-size:11px;margin-top:3px;line-height:1.4}
+.s4mh-verdict.s4mh-dup{background:var(--green-soft);border-color:#bff0d4;color:var(--green-ink)}
+.s4mh-verdict.s4mh-keep{background:var(--amber-soft);border-color:#f0e0af;color:var(--amber-ink)}
+
+button{border:1px solid var(--rule-strong);background:#fff;color:var(--ink);border-radius:12px;padding:9px 10px;font-weight:800;cursor:pointer;font-family:var(--font-sans);width:100%}
+button.s4mh-primary{background:linear-gradient(180deg,#f3fcff,#e9f9ff);border-color:#bcefff;color:var(--accent-ink)}
+button:hover{transform:translateY(-1px)}
+.s4mh-side-card{border:1px solid var(--rule);background:var(--surface-alt);padding:10px;border-radius:13px;margin-top:11px}
+.s4mh-side-card .s4mh-kick{font-size:10px;letter-spacing:.14em;color:var(--red-ink);font-weight:800}
+.s4mh-side-card h2{font-size:14px;margin:5px 0 4px}
+.s4mh-side-card p{margin:0;color:var(--ink-muted);line-height:1.5;font-size:12px}
+.s4mh-side-card p b{color:var(--ink-body)}
+.s4mh-flow{display:grid;gap:6px;margin-top:9px}
+.s4mh-fstep{display:grid;grid-template-columns:20px 1fr;gap:8px;align-items:start}
+.s4mh-fnum{width:20px;height:20px;border-radius:6px;background:var(--accent-soft);color:var(--accent-ink);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900}
+.s4mh-fcopy{font-size:11px;line-height:1.35;color:var(--ink-muted)}
+.s4mh-fcopy b{color:var(--ink)}
+.s4mh-footer{font-size:11px;color:var(--muted-2);line-height:1.5;margin-top:11px}
+@media(max-width:1100px){.s4mh-layout{grid-template-columns:1fr}.s4mh-docs{grid-template-columns:1fr}}
+@media(max-width:640px){.s4mh-shrow{grid-template-columns:repeat(2,1fr)}.s4mh-topbar{display:block}.s4mh-badge{display:inline-block;margin-top:9px}}
+</style>
+</head>
+<body>
+<div class="s4mh-app">
+ <div class="s4mh-topbar">
+  <div>
+   <h1>MinHash + LSH Simulator</h1>
+   <div class="s4mh-subtitle">Near-duplicate detection from the ground up: turn each document into shingles, compress those into a MinHash signature that estimates Jaccard similarity, then use LSH banding to flag candidate pairs without comparing everything to everything. This is the exact stage V4's Indic crawl skipped.</div>
+  </div>
+  <div class="s4mh-badge">Interactive · shingles + MinHash + LSH, all computed live</div>
+ </div>
+ <div class="s4mh-layout">
+  <main class="s4mh-stage">
+   <div class="s4mh-stage-head">
+    <div class="s4mh-stage-title">Two documents &rarr; shingle sets &rarr; MinHash signatures &rarr; LSH verdict</div>
+    <div class="s4mh-stage-note">Pick an example or edit either document &mdash; everything recomputes live</div>
+   </div>
+   <div class="s4mh-examples"><span class="s4mh-ex-lab">EXAMPLE PAIR</span><select class="s4mh-exsel" id="s4mh-exsel"></select><span class="s4mh-exhint" id="s4mh-exhint"></span></div>
+   <div class="s4mh-docs">
+    <div class="s4mh-doc">
+     <div class="s4mh-doc-cap"><span>DOCUMENT A</span><b id="s4mh-wa">0 words</b></div>
+     <textarea class="s4mh-ta" id="s4mh-docA" spellcheck="false"></textarea>
+    </div>
+    <div class="s4mh-doc">
+     <div class="s4mh-doc-cap"><span>DOCUMENT B</span><b id="s4mh-wb">0 words</b></div>
+     <textarea class="s4mh-ta" id="s4mh-docB" spellcheck="false"></textarea>
+    </div>
+   </div>
+
+   <div class="s4mh-shrow">
+    <div class="s4mh-stat"><div class="s4mh-k">SHINGLES A</div><div class="s4mh-v" id="s4mh-sa">0</div></div>
+    <div class="s4mh-stat"><div class="s4mh-k">SHINGLES B</div><div class="s4mh-v" id="s4mh-sb">0</div></div>
+    <div class="s4mh-stat"><div class="s4mh-k">&cap; INTERSECTION</div><div class="s4mh-v" id="s4mh-si" style="color:var(--green-ink)">0</div></div>
+    <div class="s4mh-stat"><div class="s4mh-k">&cup; UNION</div><div class="s4mh-v" id="s4mh-su">0</div></div>
+   </div>
+
+   <div class="s4mh-jac">
+    <div class="s4mh-jacbox s4mh-jac-true">
+     <div class="s4mh-jac-cap">TRUE JACCARD &middot; |A&cap;B| / |A&cup;B|</div>
+     <div class="s4mh-jac-val" id="s4mh-jtrue">0.00</div>
+     <div class="s4mh-jac-sub">exact, from the full shingle sets</div>
+    </div>
+    <div class="s4mh-jacbox s4mh-jac-est">
+     <div class="s4mh-jac-cap">MINHASH ESTIMATE &middot; matches / n</div>
+     <div class="s4mh-jac-val" id="s4mh-jest">0.00</div>
+     <div class="s4mh-jac-sub" id="s4mh-jestsub">from n signature slots &mdash; no set intersection needed</div>
+    </div>
+   </div>
+
+   <div class="s4mh-sig-wrap">
+    <div class="s4mh-sig-head">
+     <div class="s4mh-t">MinHash signatures &mdash; n slots, grouped into b bands of r</div>
+     <div class="s4mh-legend">
+      <span class="s4mh-chip"><span class="s4mh-sw" style="background:var(--green)"></span>slot matches</span>
+      <span class="s4mh-chip"><span class="s4mh-sw" style="background:var(--amber)"></span>slot differs</span>
+     </div>
+    </div>
+    <div class="s4mh-sig-row"><div class="s4mh-sig-lab">sig A</div><div class="s4mh-bands" id="s4mh-sigA"></div></div>
+    <div class="s4mh-sig-row"><div class="s4mh-sig-lab">sig B</div><div class="s4mh-bands" id="s4mh-sigB"></div></div>
+    <div class="s4mh-bandnote" id="s4mh-bandnote"></div>
+   </div>
+
+   <div class="s4mh-curve-wrap">
+    <div class="s4mh-curve-head">
+     <div class="s4mh-t">LSH S-curve &mdash; probability a pair becomes a candidate</div>
+     <div class="s4mh-eq">P(s) = 1 &minus; (1 &minus; s^r)^b</div>
+    </div>
+    <div class="s4mh-curve-legend">
+     <span class="s4mh-chip"><span class="s4mh-sw" style="background:var(--accent)"></span>P(candidate) vs similarity s</span>
+     <span class="s4mh-chip"><span class="s4mh-sw" style="background:var(--violet)"></span>threshold &asymp; (1/b)^(1/r)</span>
+     <span class="s4mh-chip"><span class="s4mh-sw" style="background:var(--green)"></span>this pair's Jaccard</span>
+    </div>
+    <canvas id="s4mh-canvas" width="760" height="300"></canvas>
+   </div>
+  </main>
+
+  <aside class="s4mh-side">
+   <div class="s4mh-panel-title">Controls</div>
+   <div class="s4mh-ctrl">
+    <div class="s4mh-ctrl-top"><span class="s4mh-cn">Shingle size k</span><span class="s4mh-cv" id="s4mh-kv">5 words</span></div>
+    <input type="range" id="s4mh-k" min="1" max="8" step="1" value="5">
+    <div class="s4mh-ctrl-sub">Word-level k-grams. Bigger k = stricter overlap, fewer accidental matches.</div>
+   </div>
+   <div class="s4mh-ctrl">
+    <div class="s4mh-ctrl-top"><span class="s4mh-cn">Bands b</span><span class="s4mh-cv" id="s4mh-bv">6</span></div>
+    <input type="range" id="s4mh-b" min="1" max="32" step="1" value="6">
+    <div class="s4mh-ctrl-sub">A pair is a candidate if ALL r slots match in ANY one band. More bands = more chances to catch = lower threshold.</div>
+   </div>
+   <div class="s4mh-ctrl s4mh-vio">
+    <div class="s4mh-ctrl-top"><span class="s4mh-cn">Rows per band r</span><span class="s4mh-cv" id="s4mh-rv" style="color:var(--violet-ink)">4</span></div>
+    <input type="range" id="s4mh-r" min="1" max="16" step="1" value="4">
+    <div class="s4mh-ctrl-sub">Slots that must all agree inside a band. More rows = stricter band = higher threshold.</div>
+   </div>
+   <div class="s4mh-nbox"><span class="s4mh-nl">Permutations n = b &times; r</span><span class="s4mh-nv" id="s4mh-nv">24</span></div>
+
+   <div class="s4mh-read">
+    <div><div class="s4mh-rk">MATCHING SLOTS</div><div class="s4mh-rv" id="s4mh-rm" style="color:var(--green-ink)">0 / 24</div></div>
+    <div><div class="s4mh-rk">LSH THRESHOLD</div><div class="s4mh-rv" id="s4mh-rt" style="color:var(--violet-ink)">0.64</div></div>
+    <div><div class="s4mh-rk">MATCHING BANDS</div><div class="s4mh-rv" id="s4mh-rb">0 / 6</div></div>
+    <div><div class="s4mh-rk">P(CANDIDATE)</div><div class="s4mh-rv" id="s4mh-rp" style="color:var(--accent-ink)">0.00</div></div>
+   </div>
+
+   <div class="s4mh-verdict s4mh-keep" id="s4mh-verdict">
+    <div class="s4mh-vh">LSH VERDICT FOR THIS PAIR</div>
+    <div class="s4mh-vt" id="s4mh-vtext">kept</div>
+    <div class="s4mh-vs" id="s4mh-vsub">no band matched &mdash; treated as distinct</div>
+   </div>
+
+   <button class="s4mh-primary" id="s4mh-preset">Load FineWeb default (k=5, 112 hashes = 14&times;8, target ~0.75)</button>
+
+   <div class="s4mh-side-card">
+    <div class="s4mh-kick">V4 REALITY</div>
+    <h2>The stage that was missing</h2>
+    <p><b>Sangraha, our Indic web crawl, had ZERO deduplication.</b> Near-identical pages were memorized instead of learned from. This machine &mdash; shingle, MinHash, band &mdash; is exactly the stage that was skipped.</p>
+   </div>
+
+   <div class="s4mh-side-card">
+    <div class="s4mh-kick" style="color:var(--accent-ink)">HOW THE MACHINE WORKS</div>
+    <div class="s4mh-flow">
+     <div class="s4mh-fstep"><span class="s4mh-fnum">1</span><div class="s4mh-fcopy"><b>Shingle:</b> slide a k-word window over each doc to build a set of overlapping k-grams.</div></div>
+     <div class="s4mh-fstep"><span class="s4mh-fnum">2</span><div class="s4mh-fcopy"><b>MinHash:</b> n hash functions; each slot keeps the minimum hash over the doc's shingles. P(slot matches) equals the true Jaccard.</div></div>
+     <div class="s4mh-fstep"><span class="s4mh-fnum">3</span><div class="s4mh-fcopy"><b>Band:</b> split n slots into b bands of r. Any exact band match makes the pair a candidate &mdash; no all-pairs comparison.</div></div>
+    </div>
+   </div>
+
+   <div class="s4mh-footer">Shingles, MinHash signatures, and the LSH curve are all computed live in your browser. The FineWeb default shown (112 hashes = 14&times;8 rows, 5-word shingles, ~0.75 Jaccard) is from the FineWeb paper, arXiv:2406.17557.</div>
+  </aside>
+ </div>
+</div>
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const DEFAULT_A="Our web crawler pulls millions of raw pages from the open internet every single day and then stores each document straight to disk without ever checking whether the very same article has already appeared somewhere else inside the rapidly growing collection we keep for training.";
+const DEFAULT_B="Our web crawler pulls millions of raw pages from the open internet every single day and then stores each document straight to disk without ever verifying whether the very same article has already appeared somewhere else inside the rapidly growing collection we keep for training.";
+
+let k=5, b=6, r=4;                 // n = b*r
+const MAX_CELLS=48;                // cap on rendered signature slots
+
+// ---- deterministic FNV-1a with per-slot seed ----
+function fnv1a(str, seed){
+ let h=(2166136261 ^ (seed>>>0))>>>0;
+ for(let i=0;i<str.length;i++){ h^=str.charCodeAt(i); h=Math.imul(h,16777619)>>>0; }
+ // extra avalanche so small strings spread well
+ h^=h>>>13; h=Math.imul(h,0x5bd1e995)>>>0; h^=h>>>15;
+ return h>>>0;
+}
+function slotSeed(i){ return (Math.imul(i+1,2654435761)^0x9e3779b9)>>>0; }
+
+// ---- shingles: word-level k-grams as a Set ----
+function tokenize(t){
+ return (t||"").toLowerCase().replace(/[^\p{L}\p{N}\s]/gu," ").split(/\s+/).filter(Boolean);
+}
+function shingleSet(text,k){
+ const w=tokenize(text), s=new Set();
+ if(w.length===0) return {set:s,words:0};
+ if(w.length<k){ s.add(w.join(" ")); return {set:s,words:w.length}; }
+ for(let i=0;i+k<=w.length;i++) s.add(w.slice(i,i+k).join(" "));
+ return {set:s,words:w.length};
+}
+function jaccard(A,B){
+ if(A.size===0&&B.size===0) return {j:0,inter:0,uni:0};
+ let inter=0; const small=A.size<B.size?A:B, big=A.size<B.size?B:A;
+ small.forEach(x=>{ if(big.has(x)) inter++; });
+ const uni=A.size+B.size-inter;
+ return {j:uni?inter/uni:0,inter,uni};
+}
+// ---- MinHash signature: min hash over shingles for each of n slots ----
+function minhash(set,n){
+ const sig=new Array(n).fill(0xffffffff);
+ if(set.size===0) return sig;
+ const arr=[...set];
+ for(let i=0;i<n;i++){
+  const seed=slotSeed(i); let m=0xffffffff;
+  for(let a=0;a<arr.length;a++){ const h=fnv1a(arr[a],seed); if(h<m) m=h; }
+  sig[i]=m>>>0;
+ }
+ return sig;
+}
+function short(v){ return (v%100000).toString().padStart(5,"0"); }
+
+function compute(){
+ const n=b*r;
+ const A=shingleSet($("s4mh-docA").value,k);
+ const B=shingleSet($("s4mh-docB").value,k);
+ const jc=jaccard(A.set,B.set);
+ const sigA=minhash(A.set,n), sigB=minhash(B.set,n);
+
+ // matching slots + estimate
+ let matches=0; const eq=new Array(n);
+ const bothEmpty=A.set.size===0&&B.set.size===0;
+ for(let i=0;i<n;i++){ eq[i]=!bothEmpty&&sigA[i]===sigB[i]; if(eq[i]) matches++; }
+ const est=n?matches/n:0;
+
+ // bands: candidate if any band has all r slots equal
+ let matchBands=0, candidate=false;
+ for(let bi=0;bi<b;bi++){
+  let all=true;
+  for(let ri=0;ri<r;ri++){ if(!eq[bi*r+ri]){ all=false; break; } }
+  if(all){ matchBands++; candidate=true; }
+ }
+ const threshold=Math.pow(1/b,1/r);
+ const s=jc.j;
+ const pCand=1-Math.pow(1-Math.pow(s,r),b);
+
+ render({A,B,jc,sigA,sigB,eq,matches,est,n,matchBands,candidate,threshold,pCand,s});
+}
+
+function makeCell(txt,isMatch){
+ const c=document.createElement("div");
+ c.className="s4mh-cell "+(isMatch?"s4mh-match":"s4mh-miss");
+ c.textContent=txt; return c;
+}
+function renderSig(el,sig,eq,shown){
+ el.innerHTML="";
+ let idx=0;
+ for(let bi=0;bi<b && idx<shown;bi++){
+  const band=document.createElement("div");
+  band.className="s4mh-band";
+  let bandAll=true;
+  for(let ri=0;ri<r && idx<shown;ri++){
+   const i=bi*r+ri;
+   band.appendChild(makeCell(short(sig[i]),eq[i]));
+   if(!eq[i]) bandAll=false;
+  }
+  if(bandAll && (bi+1)*r<=shown) band.classList.add("s4mh-bandmatch");
+  el.appendChild(band);
+  idx=Math.min(shown,(bi+1)*r);
+ }
+ if(shown<sig.length){
+  const m=document.createElement("span");
+  m.className="s4mh-more";
+  m.textContent="+"+(sig.length-shown)+" more slots";
+  el.appendChild(m);
+ }
+}
+
+function render(d){
+ $("s4mh-wa").textContent=d.A.words+" words";
+ $("s4mh-wb").textContent=d.B.words+" words";
+ $("s4mh-sa").textContent=d.A.set.size;
+ $("s4mh-sb").textContent=d.B.set.size;
+ $("s4mh-si").textContent=d.jc.inter;
+ $("s4mh-su").textContent=d.jc.uni;
+ $("s4mh-jtrue").textContent=d.jc.j.toFixed(3);
+ $("s4mh-jest").textContent=d.est.toFixed(3);
+ const gap=Math.abs(d.est-d.jc.j);
+ $("s4mh-jestsub").textContent="off true by "+gap.toFixed(3)+" using "+d.n+" slots";
+
+ const shown=Math.min(d.n,MAX_CELLS);
+ renderSig($("s4mh-sigA"),d.sigA,d.eq,shown);
+ renderSig($("s4mh-sigB"),d.sigB,d.eq,shown);
+ $("s4mh-bandnote").innerHTML=d.candidate
+  ? "<b>"+d.matchBands+" band"+(d.matchBands>1?"s":"")+" matched exactly</b> &mdash; one full-band match is enough to flag the pair as a candidate."
+  : "No band matched all "+r+" of its slots &mdash; the pair is not flagged as a candidate at this banding.";
+
+ $("s4mh-rm").textContent=d.matches+" / "+d.n;
+ $("s4mh-rt").textContent=d.threshold.toFixed(3);
+ $("s4mh-rb").textContent=d.matchBands+" / "+b;
+ $("s4mh-rp").textContent=d.pCand.toFixed(3);
+ $("s4mh-nv").textContent=d.n;
+
+ const v=$("s4mh-verdict");
+ if(d.candidate){
+  v.className="s4mh-verdict s4mh-dup";
+  $("s4mh-vtext").textContent="DUPLICATE — dropped";
+  $("s4mh-vsub").textContent="a band matched, so LSH proposes this pair and dedup removes one copy";
+ }else{
+  v.className="s4mh-verdict s4mh-keep";
+  $("s4mh-vtext").textContent="kept";
+  $("s4mh-vsub").textContent="no band matched — both documents survive this stage";
+ }
+ drawCurve(d);
+}
+
+function drawCurve(d){
+ const cv=$("s4mh-canvas"), ctx=cv.getContext("2d"), W=cv.width, H=cv.height;
+ const padL=42,padR=14,padT=14,padB=26, w=W-padL-padR, h=H-padT-padB;
+ ctx.clearRect(0,0,W,H);
+ const X=s=>padL+s*w, Y=p=>padT+(1-p)*h;
+ // grid
+ ctx.strokeStyle="#e6edf3"; ctx.lineWidth=1; ctx.fillStyle="#8fa2b5"; ctx.font="10px Inter,sans-serif";
+ for(let i=0;i<=5;i++){
+  const gx=padL+i*w/5, gy=padT+i*h/5;
+  ctx.beginPath();ctx.moveTo(padL,gy);ctx.lineTo(padL+w,gy);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(gx,padT);ctx.lineTo(gx,padT+h);ctx.stroke();
+  ctx.textAlign="center"; ctx.fillText((i/5).toFixed(1),gx,H-9);
+  ctx.textAlign="right"; ctx.fillText((1-i/5).toFixed(1),padL-6,gy+3);
+ }
+ ctx.textAlign="center"; ctx.fillStyle="#60768d";
+ ctx.fillText("similarity  s  (Jaccard)",padL+w/2,H-0.5);
+ // threshold line (violet)
+ const tx=X(d.threshold);
+ ctx.strokeStyle="#7b61ff"; ctx.lineWidth=1.6; ctx.setLineDash([5,4]);
+ ctx.beginPath();ctx.moveTo(tx,padT);ctx.lineTo(tx,padT+h);ctx.stroke();
+ ctx.setLineDash([]);
+ ctx.fillStyle="#5a44c8"; ctx.textAlign="left"; ctx.font="700 10px Inter,sans-serif";
+ const lab="thr "+d.threshold.toFixed(2);
+ ctx.fillText(lab, Math.min(tx+5,padL+w-52), padT+11);
+ // S-curve (cyan)
+ ctx.strokeStyle="#00a7d8"; ctx.lineWidth=3; ctx.beginPath();
+ for(let i=0;i<=240;i++){
+  const s=i/240, p=1-Math.pow(1-Math.pow(s,r),b);
+  const x=X(s),y=Y(p);
+  i?ctx.lineTo(x,y):ctx.moveTo(x,y);
+ }
+ ctx.stroke();
+ // this pair's dot at (s, P(s))
+ const dx=X(d.s), dy=Y(d.pCand);
+ ctx.beginPath(); ctx.arc(dx,dy,6,0,Math.PI*2);
+ ctx.fillStyle=d.candidate?"#24b36b":"#e05f6e";
+ ctx.fill(); ctx.lineWidth=2; ctx.strokeStyle="#fff"; ctx.stroke();
+ ctx.beginPath(); ctx.moveTo(dx,padT+h); ctx.lineTo(dx,dy);
+ ctx.strokeStyle=d.candidate?"rgba(36,179,107,.35)":"rgba(224,95,110,.35)"; ctx.lineWidth=1.4; ctx.stroke();
+}
+
+// ---- controls ----
+function syncN(){ $("s4mh-nv").textContent=b*r; }
+$("s4mh-k").addEventListener("input",e=>{ k=+e.target.value; $("s4mh-kv").textContent=k+(k===1?" word":" words"); compute(); });
+$("s4mh-b").addEventListener("input",e=>{ b=+e.target.value; $("s4mh-bv").textContent=b; syncN(); compute(); });
+$("s4mh-r").addEventListener("input",e=>{ r=+e.target.value; $("s4mh-rv").textContent=r; syncN(); compute(); });
+$("s4mh-docA").addEventListener("input",compute);
+$("s4mh-docB").addEventListener("input",compute);
+$("s4mh-preset").addEventListener("click",()=>{
+ // FineWeb/datatrove near-dup defaults: k=5 word shingles, 112 hashes = 14 bands x 8 rows, target Jaccard ~0.75 (arXiv:2406.17557).
+ k=5; b=14; r=8;                  // n = 112 hashes (FineWeb: 14 bands x 8 rows); curve midpoint ~0.72, design target 0.75
+ $("s4mh-k").value=5; $("s4mh-kv").textContent="5 words";
+ $("s4mh-b").value=14; $("s4mh-bv").textContent="14";
+ $("s4mh-r").value=8; $("s4mh-rv").textContent="8";
+ syncN(); compute();
+});
+
+// ---- example pairs (span the full similarity range) ----
+const PAIRS=[
+ {label:"Near-identical repost", hint:"~0.8", a:DEFAULT_A, b:DEFAULT_B},
+ {label:"Exact duplicate", hint:"1.0", a:DEFAULT_A, b:DEFAULT_A},
+ {label:"Boilerplate only", hint:"low",
+  a:"Accept all cookies to continue. Home About Contact Privacy Terms. Subscribe to our newsletter for weekly updates. The monsoon this year arrived nearly two weeks early across the western coast, flooding several low-lying districts and forcing thousands of families to move into relief camps almost overnight.",
+  b:"Accept all cookies to continue. Home About Contact Privacy Terms. Subscribe to our newsletter for weekly updates. Researchers this week described a new battery chemistry that charges to eighty percent in under ten minutes and holds its capacity across far more cycles than a conventional lithium cell."},
+ {label:"Same topic, rewritten", hint:"rewrite",
+  a:"Green plants turn sunlight into chemical energy, using chlorophyll to combine carbon dioxide and water into glucose while releasing oxygen into the air.",
+  b:"Through photosynthesis, green plants turn sunlight into chemical energy, using chlorophyll to combine carbon dioxide and water into glucose, then releasing oxygen into the air as waste."},
+ {label:"Unrelated docs", hint:"~0",
+  a:"def merge_sort(items): if len(items) <= 1: return items; mid = len(items) // 2; left = merge_sort(items[:mid]); right = merge_sort(items[mid:]); return merge(left, right)",
+  b:"To make a simple dal, first rinse the lentils, then boil them gently with turmeric and salt until they turn soft, and finally temper cumin seeds and garlic in hot ghee before pouring the sizzling mixture over the pot."},
+ {label:"Code near-duplicate", hint:"high · code",
+  a:"function applyDiscount(cart, rate) { let subtotal = 0; for (const item of cart) { subtotal += item.price * item.qty; } const discount = subtotal * rate; const grandTotal = subtotal - discount; return { subtotal: subtotal, discount: discount, total: grandTotal }; }",
+  b:"function applyDiscount(cart, rate) { let subtotal = 0; for (const item of cart) { subtotal += item.price * item.qty; } const discount = subtotal * rate; const finalTotal = subtotal - discount; return { subtotal: subtotal, discount: discount, total: finalTotal }; } // v2: renamed one variable"},
+];
+let curPair=0;
+function loadPair(i){ curPair=i; const p=PAIRS[i]; $("s4mh-docA").value=p.a; $("s4mh-docB").value=p.b; const h=$("s4mh-exhint"); if(h) h.textContent="expected ≈ "+p.hint; compute(); }
+function buildExamples(){ const sel=$("s4mh-exsel"); PAIRS.forEach((p,idx)=>{ const o=document.createElement("option"); o.value=String(idx); o.textContent=p.label; sel.appendChild(o); }); sel.addEventListener("change",e=>loadPair(+e.target.value)); }
+
+// init
+buildExamples();
+$("s4mh-exsel").value="0";
+loadPair(0);
+</script>
+</body>
+</html>

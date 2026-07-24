@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lineage Manifest Builder</title>
+<style>
+:root{
+--bg:#f6f8fb; --surface:#ffffff; --surface-alt:#fbfdff;
+--ink:#102338; --ink-body:#1f3850; --ink-muted:#60768d; --muted-2:#7d90a5;
+--rule:#e2e9f0; --rule-strong:#cfdbe6;
+--accent:#00a7d8; --accent-soft:#eafaff; --accent-ink:#0f6e8c;
+--green:#24b36b; --green-soft:#e7fff2; --green-ink:#19824e;
+--amber:#d99a13; --amber-soft:#fff7df; --amber-ink:#8a5c06;
+--violet:#7b61ff; --violet-soft:#eeeaff; --violet-ink:#5a44c8;
+--red:#e05f6e; --red-soft:#ffeef0; --red-ink:#c0455a;
+--shadow-soft:0 8px 22px rgba(16,35,56,.05);
+--font-sans:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+--font-mono:"SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;overflow-x:hidden;background:linear-gradient(180deg,#f8fafc,#f2f5f9);color:var(--ink);font-family:var(--font-sans)}
+body{padding:14px}
+.s4lm-app{max-width:1480px;margin:auto}
+.s4lm-topbar{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:9px}
+.s4lm-topbar h1{margin:0;font-size:clamp(22px,2.5vw,32px);letter-spacing:-.035em}
+.s4lm-subtitle{margin-top:6px;max-width:1040px;color:var(--ink-muted);line-height:1.5;font-size:13.5px}
+.s4lm-badge{border:1px solid #d9e9f3;background:#f4fbfe;color:#157ca2;padding:8px 12px;border-radius:999px;font-size:12px;font-weight:800;white-space:nowrap}
+.s4lm-layout{display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:12px}
+.s4lm-stage,.s4lm-side{background:var(--surface);border:1px solid var(--rule);border-radius:18px;box-shadow:var(--shadow-soft)}
+.s4lm-stage{padding:11px}
+.s4lm-side{padding:9px}
+.s4lm-stage-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.s4lm-stage-title{font-weight:800;font-size:14px}
+.s4lm-stage-note{font-size:11.5px;color:var(--ink-muted)}
+.s4lm-split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:11px}
+.s4lm-panel{border:1px solid var(--rule);border-radius:14px;background:var(--surface-alt);padding:10px}
+.s4lm-cap{font-size:10px;letter-spacing:.14em;font-weight:800;color:var(--muted-2)}
+.s4lm-form{display:grid;gap:7px;margin-top:7px}
+.s4lm-field{display:grid;grid-template-columns:112px 1fr;gap:8px;align-items:center}
+.s4lm-flabel{font-size:11px;font-weight:800;color:var(--ink-body)}
+.s4lm-flabel small{display:block;font-weight:600;color:var(--muted-2);font-size:9.5px;letter-spacing:.02em}
+.s4lm-input,.s4lm-select,.s4lm-area{width:100%;border:1px solid var(--rule-strong);border-radius:9px;padding:6px 8px;font-family:var(--font-mono);font-size:11px;color:var(--ink);background:#fff;transition:.16s}
+.s4lm-input:focus,.s4lm-select:focus,.s4lm-area:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.s4lm-select{font-family:var(--font-sans);font-weight:700}
+.s4lm-area{resize:none;height:44px;line-height:1.4}
+.s4lm-auto{background:#f3f7fa;border-style:dashed;color:var(--ink-muted);cursor:default}
+.s4lm-hashcell{display:flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:10.5px}
+.s4lm-hashcell .s4lm-input{flex:1}
+.s4lm-langrow{display:grid;grid-template-columns:1fr 58px 1fr 58px;gap:5px}
+.s4lm-tag{font-size:9px;font-weight:800;letter-spacing:.1em;padding:2px 6px;border-radius:999px;text-transform:uppercase}
+.s4lm-tag.s4lm-c{background:var(--accent-soft);color:var(--accent-ink)}
+.s4lm-tag.s4lm-a{background:var(--amber-soft);color:var(--amber-ink)}
+.s4lm-tag.s4lm-v{background:var(--violet-soft);color:var(--violet-ink)}
+.s4lm-json{margin-top:7px;background:#0f1c2b;border-radius:12px;padding:10px 11px;font-family:var(--font-mono);font-size:11px;line-height:1.62;color:#cde3f2;height:322px;overflow:auto;white-space:pre;word-break:break-all}
+.s4lm-json .s4lm-k{color:#7cc6e8}
+.s4lm-json .s4lm-s{color:#a7e6c4}
+.s4lm-json .s4lm-n{color:#e6c98a}
+.s4lm-json .s4lm-bad{color:#ff9aa8;font-weight:700}
+.s4lm-json .s4lm-good{color:#9be6c0;font-weight:700}
+.s4lm-banner{margin-top:9px;border-radius:13px;padding:10px 12px;display:flex;align-items:center;gap:11px;border:1px solid}
+.s4lm-banner .s4lm-bico{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;flex:none}
+.s4lm-banner .s4lm-btitle{font-weight:900;font-size:14px}
+.s4lm-banner .s4lm-bsub{font-size:11px;line-height:1.4;margin-top:2px}
+.s4lm-banner.admit{background:var(--green-soft);border-color:#bde9cf}
+.s4lm-banner.admit .s4lm-bico{background:var(--green);color:#fff}
+.s4lm-banner.admit .s4lm-btitle{color:var(--green-ink)}
+.s4lm-banner.admit .s4lm-bsub{color:#2f6f4f}
+.s4lm-banner.block{background:var(--red-soft);border-color:#f6ccd2}
+.s4lm-banner.block .s4lm-bico{background:var(--red);color:#fff}
+.s4lm-banner.block .s4lm-btitle{color:var(--red-ink)}
+.s4lm-banner.block .s4lm-bsub{color:#a54859}
+.s4lm-side-card{border:1px solid var(--rule);background:var(--surface-alt);padding:10px;border-radius:14px;margin-bottom:8px}
+.s4lm-side-card:last-child{margin-bottom:0}
+.s4lm-kicker{font-size:10px;letter-spacing:.15em;font-weight:800;color:var(--accent-ink)}
+.s4lm-side-card h2{font-size:14.5px;margin:4px 0 5px}
+.s4lm-side-card p{margin:0;color:var(--ink-muted);line-height:1.48;font-size:12px}
+.s4lm-statusline{display:flex;align-items:center;gap:8px;margin-top:6px}
+.s4lm-statusdot{width:10px;height:10px;border-radius:50%;flex:none}
+.s4lm-statustxt{font-size:12px;font-weight:800}
+.s4lm-missing{margin-top:6px;font-size:11px;color:var(--red-ink);line-height:1.5}
+.s4lm-missing.s4lm-ok{color:var(--green-ink)}
+button{border:1px solid var(--rule-strong);background:#fff;color:var(--ink);border-radius:11px;padding:7px 10px;font-weight:800;font-size:12px;cursor:pointer;transition:.16s}
+button:hover{transform:translateY(-1px)}
+.s4lm-rerun{width:100%;background:linear-gradient(180deg,#f4f0ff,#ece7ff);border-color:#d5cbff;color:var(--violet-ink);margin-top:8px}
+.s4lm-det-row{display:grid;grid-template-columns:70px 1fr;gap:7px;align-items:center;margin-top:7px;font-size:10.5px}
+.s4lm-det-label{font-weight:800;color:var(--violet-ink);font-size:10px;letter-spacing:.04em}
+.s4lm-det-val{font-family:var(--font-mono);font-size:10px;background:#fff;border:1px solid var(--rule);border-radius:8px;padding:5px 7px;color:var(--ink-body);word-break:break-all}
+.s4lm-det-match{margin-top:8px;padding:7px 9px;border-radius:10px;font-size:11px;font-weight:800;text-align:center;background:var(--violet-soft);color:var(--violet-ink);border:1px solid #d8cfff}
+.s4lm-v4{margin-top:8px;padding:8px 9px;border-radius:10px;background:var(--amber-soft);border:1px solid #f0dfae;color:var(--amber-ink);font-size:11px;line-height:1.45}
+.s4lm-v4 strong{color:#6f4a05}
+.s4lm-note-violet{background:var(--violet-soft);border:1px solid #d8cfff}
+.s4lm-note-violet .s4lm-kicker{color:var(--violet-ink)}
+.s4lm-note-violet h2{color:var(--violet-ink)}
+.s4lm-note-violet p{color:#5a44c8}
+.s4lm-footer{font-size:11px;color:var(--muted-2);line-height:1.5;margin-top:9px}
+@media(max-width:1100px){.s4lm-layout{grid-template-columns:1fr}.s4lm-split{grid-template-columns:1fr}.s4lm-json{height:auto;max-height:260px}}
+</style>
+</head>
+<body>
+<div class="s4lm-app">
+ <div class="s4lm-topbar">
+  <div>
+   <h1>Lineage Manifest Builder</h1>
+   <div class="s4lm-subtitle">Every shard that enters the corpus must ship a provenance manifest. Assemble one below and the gating rule decides in real time whether the shard is admitted or blocked. The sha256 and the content-based id are computed live, so the same shard text always produces the same manifest.</div>
+  </div>
+  <div class="s4lm-badge">Interactive · real SHA-256</div>
+ </div>
+ <div class="s4lm-layout">
+  <main class="s4lm-stage">
+   <div class="s4lm-stage-head">
+    <div class="s4lm-stage-title">One shard in, one manifest out</div>
+    <div class="s4lm-stage-note">edit the form &rarr; the manifest emits live</div>
+   </div>
+   <div class="s4lm-split">
+    <section class="s4lm-panel">
+     <div class="s4lm-cap">SHARD MANIFEST · FORM</div>
+     <div class="s4lm-form">
+      <div class="s4lm-field">
+       <div class="s4lm-flabel">source_url</div>
+       <input class="s4lm-input" id="s4lm-src" placeholder="https://…" value="https://commoncrawl.org/hi-2026-13" />
+      </div>
+      <div class="s4lm-field">
+       <div class="s4lm-flabel">license_class <span class="s4lm-tag s4lm-c">gated</span></div>
+       <select class="s4lm-select" id="s4lm-lic">
+        <option value="">— choose —</option>
+        <option>MIT</option>
+        <option>Apache-2.0</option>
+        <option selected>CC-BY</option>
+        <option>CC-BY-SA</option>
+        <option>unknown</option>
+        <option>unsafe</option>
+       </select>
+      </div>
+      <div class="s4lm-field">
+       <div class="s4lm-flabel">contributor_id</div>
+       <input class="s4lm-input" id="s4lm-contrib" placeholder="cohort handle" value="era5-anjali" />
+      </div>
+      <div class="s4lm-field">
+       <div class="s4lm-flabel">cleaning_script <span class="s4lm-tag s4lm-a">hash</span></div>
+       <select class="s4lm-select" id="s4lm-script">
+        <option value="">— choose —</option>
+        <option value="a1b2c3d4e5f60718293a4b5c6d7e8f90112233445566778899aabbccddeeff00">dedup_v3.py</option>
+        <option value="9f8e7d6c5b4a39281706f5e4d3c2b1a0ffeeddccbbaa998877665544332211ff">pii_scrub_v2.py</option>
+        <option value="00ffeeddccbbaa11223344556677889900aabbccddeeff1122334455667788">lang_filter_v5.py</option>
+       </select>
+      </div>
+      <div class="s4lm-field">
+       <div class="s4lm-flabel">cleaning_hash <small>auto from script</small></div>
+       <input class="s4lm-input s4lm-auto" id="s4lm-scripthash" readonly value="" placeholder="select a script above" />
+      </div>
+      <div class="s4lm-field">
+       <div class="s4lm-flabel">ingest_ts <small>auto</small></div>
+       <input class="s4lm-input s4lm-auto" id="s4lm-ts" readonly value="" />
+      </div>
+      <div class="s4lm-field" style="grid-template-columns:112px 1fr;align-items:start">
+       <div class="s4lm-flabel">shard_text <small>hashed live</small></div>
+       <textarea class="s4lm-area" id="s4lm-text" placeholder="paste the shard's raw text…">नमस्ते दुनिया। यह एक साफ किया हुआ हिंदी टेक्स्ट शार्ड है।</textarea>
+      </div>
+      <div class="s4lm-field">
+       <div class="s4lm-flabel">sha256 <small>crypto.subtle</small></div>
+       <div class="s4lm-hashcell"><input class="s4lm-input s4lm-auto" id="s4lm-sha" readonly value="computing…" /></div>
+      </div>
+      <div class="s4lm-field">
+       <div class="s4lm-flabel">token_count <small>derived from text</small></div>
+       <input class="s4lm-input s4lm-auto" id="s4lm-tokens" readonly value="0" />
+      </div>
+      <div class="s4lm-field" style="align-items:start">
+       <div class="s4lm-flabel">lang_distribution</div>
+       <div class="s4lm-langrow">
+        <input class="s4lm-input" id="s4lm-l1k" value="hi" />
+        <input class="s4lm-input" id="s4lm-l1v" type="number" min="0" max="100" value="82" />
+        <input class="s4lm-input" id="s4lm-l2k" value="en" />
+        <input class="s4lm-input" id="s4lm-l2v" type="number" min="0" max="100" value="18" />
+       </div>
+      </div>
+     </div>
+    </section>
+    <section class="s4lm-panel">
+     <div class="s4lm-cap">EMITTED MANIFEST · shard.manifest.json</div>
+     <pre class="s4lm-json" id="s4lm-jsonout"></pre>
+    </section>
+   </div>
+   <div class="s4lm-banner" id="s4lm-banner">
+    <div class="s4lm-bico" id="s4lm-bico">✓</div>
+    <div>
+     <div class="s4lm-btitle" id="s4lm-btitle">ADMITTED</div>
+     <div class="s4lm-bsub" id="s4lm-bsub">Manifest is complete and the license is on the allow-list. This shard may enter the corpus.</div>
+    </div>
+   </div>
+   <div class="s4lm-footer">sha256 is computed live via the Web Crypto API (<span style="font-family:var(--font-mono)">window.crypto.subtle.digest('SHA-256', …)</span>). Field list per the ERA V5 lineage-manifest spec.</div>
+  </main>
+  <aside class="s4lm-side">
+   <div class="s4lm-side-card" id="s4lm-statuscard">
+    <div class="s4lm-kicker">GATING RULE · LIVE</div>
+    <h2>Admit or block</h2>
+    <div class="s4lm-statusline"><span class="s4lm-statusdot" id="s4lm-sdot" style="background:var(--green)"></span><span class="s4lm-statustxt" id="s4lm-stxt" style="color:var(--green-ink)">ADMITTED — manifest valid</span></div>
+    <div class="s4lm-missing s4lm-ok" id="s4lm-missing">All required fields present. License CC-BY is on the allow-list.</div>
+   </div>
+   <div class="s4lm-side-card s4lm-note-violet">
+    <div class="s4lm-kicker">DETERMINISM</div>
+    <h2>Same input, same hash</h2>
+    <p>Re-run the pipeline over the identical shard text. A content-based id and sha256 must come back byte-for-byte identical.</p>
+    <button class="s4lm-rerun" id="s4lm-rerun">↻ re-run pipeline</button>
+    <div class="s4lm-det-row"><span class="s4lm-det-label">run #1</span><span class="s4lm-det-val" id="s4lm-run1">—</span></div>
+    <div class="s4lm-det-row"><span class="s4lm-det-label">run #2</span><span class="s4lm-det-val" id="s4lm-run2">press re-run</span></div>
+    <div class="s4lm-det-row"><span class="s4lm-det-label">shard_id</span><span class="s4lm-det-val" id="s4lm-cid">—</span></div>
+    <div class="s4lm-det-match" id="s4lm-match">content-based id is deterministic</div>
+    <div class="s4lm-v4"><strong>V4 reality:</strong> ids came from <span style="font-family:var(--font-mono)">row_number() over monotonically_increasing_id()</span> — a non-deterministic ordering that changed on every run, so the same input produced different ids each time.</div>
+   </div>
+   <div class="s4lm-side-card">
+    <div class="s4lm-kicker">WHY IT EXISTS</div>
+    <p>This manifest is the HuggingFace datasheet artifact and the paper's audit trail. No shard enters the corpus without one.</p>
+   </div>
+   <div class="s4lm-side-card s4lm-note-violet">
+    <div class="s4lm-kicker">THE DECISION</div>
+    <p>The gating rule enforces THIS — a contribution that cannot produce a manifest has not shipped clean data.</p>
+   </div>
+   <div class="s4lm-side-card">
+    <div class="s4lm-kicker">V4 REALITY</div>
+    <p>V4 estimated tokens as words × 1.3 (wrong for Indic by 2–10×), copy-pasted dataset sizes, and generated non-deterministic ids — all prevented by a content-based manifest.</p>
+   </div>
+  </aside>
+ </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const enc=new TextEncoder();
+async function sha256Hex(str){
+ const buf=await crypto.subtle.digest('SHA-256',enc.encode(str));
+ return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function tokenCount(t){const m=t.trim().match(/[\p{L}\p{N}]+|[^\s\p{L}\p{N}]/gu);return m?m.length:0;}
+function esc(s){return String(s).replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));}
+
+// ingest timestamp: fixed at first paint (auto), ISO-8601
+const INGEST=new Date().toISOString().replace(/\.\d+Z$/,'Z');
+$('s4lm-ts').value=INGEST;
+
+let curSha='', lastText=null;
+
+// license allow-list: everything except unknown / unsafe (and empty)
+const BLOCKED_LIC=new Set(['unknown','unsafe','']);
+
+function scriptHash(){return $('s4lm-script').value;}
+
+function collect(){
+ return {
+  source_url:$('s4lm-src').value.trim(),
+  license_class:$('s4lm-lic').value,
+  contributor_id:$('s4lm-contrib').value.trim(),
+  cleaning_script:$('s4lm-script').selectedOptions[0]?.textContent||'',
+  cleaning_script_hash:scriptHash(),
+  ingest_timestamp:INGEST,
+  sha256:curSha,
+  token_count:tokenCount($('s4lm-text').value),
+  lang_distribution:{
+   [$('s4lm-l1k').value||'?']:Number($('s4lm-l1v').value)||0,
+   [$('s4lm-l2k').value||'?']:Number($('s4lm-l2v').value)||0
+  }
+ };
+}
+
+function requiredMissing(m){
+ const miss=[];
+ if(!m.source_url)miss.push('source_url');
+ if(!m.contributor_id)miss.push('contributor_id');
+ if(!m.cleaning_script_hash)miss.push('cleaning_script_hash');
+ if(!m.sha256||m.sha256==='computing…')miss.push('sha256');
+ if(!m.token_count)miss.push('token_count');
+ return miss;
+}
+
+function jsonHTML(m,admitted){
+ const licBad=BLOCKED_LIC.has(m.license_class);
+ const idLine=admitted?`\n  <span class="s4lm-k">"shard_id"</span>: <span class="s4lm-s">"shard_${(m.sha256||'').slice(0,12)}"</span>,`:'';
+ const ld=Object.entries(m.lang_distribution).map(([k,v])=>`\n    <span class="s4lm-k">"${esc(k)}"</span>: <span class="s4lm-n">${v}</span>`).join(',');
+ return `{`+idLine+
+ `\n  <span class="s4lm-k">"source_url"</span>: <span class="s4lm-s">"${esc(m.source_url||'—')}"</span>,`+
+ `\n  <span class="s4lm-k">"license_class"</span>: <span class="${licBad?'s4lm-bad':'s4lm-s'}">"${esc(m.license_class||'—')}"</span>,`+
+ `\n  <span class="s4lm-k">"contributor_id"</span>: <span class="s4lm-s">"${esc(m.contributor_id||'—')}"</span>,`+
+ `\n  <span class="s4lm-k">"cleaning_script"</span>: <span class="s4lm-s">"${esc(m.cleaning_script||'—')}"</span>,`+
+ `\n  <span class="s4lm-k">"cleaning_script_hash"</span>: <span class="s4lm-s">"${esc(m.cleaning_script_hash||'—')}"</span>,`+
+ `\n  <span class="s4lm-k">"ingest_timestamp"</span>: <span class="s4lm-s">"${esc(m.ingest_timestamp)}"</span>,`+
+ `\n  <span class="s4lm-k">"sha256"</span>: <span class="s4lm-s">"${esc(m.sha256)}"</span>,`+
+ `\n  <span class="s4lm-k">"token_count"</span>: <span class="s4lm-n">${m.token_count}</span>,`+
+ `\n  <span class="s4lm-k">"lang_distribution"</span>: {${ld}\n  },`+
+ `\n  <span class="s4lm-k">"status"</span>: <span class="${admitted?'s4lm-good':'s4lm-bad'}">"${admitted?'ADMITTED':'BLOCKED'}"</span>`+
+ `\n}`;
+}
+
+function verdict(){
+ const m=collect();
+ const miss=requiredMissing(m);
+ const licBad=BLOCKED_LIC.has(m.license_class);
+ const admitted=miss.length===0 && !licBad;
+
+ // JSON
+ $('s4lm-jsonout').innerHTML=jsonHTML(m,admitted);
+
+ // banner
+ const b=$('s4lm-banner');
+ if(admitted){
+  b.className='s4lm-banner admit';$('s4lm-bico').textContent='✓';
+  $('s4lm-btitle').textContent='ADMITTED';
+  $('s4lm-bsub').textContent='Manifest is complete and the license is on the allow-list. This shard may enter the corpus.';
+ }else{
+  b.className='s4lm-banner block';$('s4lm-bico').textContent='✕';
+  $('s4lm-btitle').textContent='BLOCKED — cannot enter the corpus';
+  let why=licBad?(m.license_class?`license_class "${m.license_class}" is not on the allow-list`:'license_class not chosen'):`missing required field${miss.length>1?'s':''}: ${miss.join(', ')}`;
+  $('s4lm-bsub').textContent=why+'. No manifest, no ingest.';
+ }
+
+ // sidebar status
+ $('s4lm-sdot').style.background=admitted?'var(--green)':'var(--red)';
+ $('s4lm-stxt').style.color=admitted?'var(--green-ink)':'var(--red-ink)';
+ $('s4lm-stxt').textContent=admitted?'ADMITTED — manifest valid':'BLOCKED — manifest incomplete';
+ const mel=$('s4lm-missing');
+ if(admitted){mel.className='s4lm-missing s4lm-ok';mel.textContent=`All required fields present. License ${m.license_class} is on the allow-list.`;}
+ else{mel.className='s4lm-missing';
+  mel.textContent=licBad?`License "${m.license_class||'(none)'}" is unknown/unsafe → blocked regardless of other fields.`:`Missing: ${miss.join(', ')}.`;}
+
+ // content id follows from live hash
+ $('s4lm-cid').textContent=curSha?('shard_'+curSha.slice(0,12)):'—';
+}
+
+async function rehash(){
+ const t=$('s4lm-text').value;
+ $('s4lm-sha').value='computing…';
+ curSha=await sha256Hex(t);
+ lastText=t;
+ $('s4lm-sha').value=curSha;
+ $('s4lm-tokens').value=tokenCount(t);
+ verdict();
+}
+
+// wire inputs
+['s4lm-src','s4lm-lic','s4lm-contrib','s4lm-l1k','s4lm-l1v','s4lm-l2k','s4lm-l2v'].forEach(id=>{
+ $(id).addEventListener('input',verdict);$(id).addEventListener('change',verdict);
+});
+$('s4lm-script').addEventListener('change',()=>{$('s4lm-scripthash').value=scriptHash()||'';$('s4lm-scripthash').placeholder='select a script above';verdict();});
+$('s4lm-text').addEventListener('input',rehash);
+
+// determinism: re-run pipeline over the SAME shard text → identical hash
+$('s4lm-rerun').addEventListener('click',async()=>{
+ const t=$('s4lm-text').value;
+ const h1=await sha256Hex(t);
+ // simulate a full independent second pass over identical bytes
+ const h2=await sha256Hex(t);
+ $('s4lm-run1').textContent=h1.slice(0,32)+'…';
+ $('s4lm-run2').textContent=h2.slice(0,32)+'…';
+ $('s4lm-cid').textContent='shard_'+h1.slice(0,12);
+ const same=h1===h2;
+ const el=$('s4lm-match');
+ el.textContent=same?'✓ identical hash on re-run — deterministic':'✗ mismatch';
+ el.style.background=same?'var(--violet-soft)':'var(--red-soft)';
+ el.style.color=same?'var(--violet-ink)':'var(--red-ink)';
+ el.style.borderColor=same?'#d8cfff':'#f6ccd2';
+});
+
+// init
+$('s4lm-scripthash').value=scriptHash()||'';
+rehash();
+</script>
+</body>
+</html>

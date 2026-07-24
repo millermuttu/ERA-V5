@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Language ID and Validation · Session 4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Noto+Sans+Bengali:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&family=Noto+Sans+Telugu:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+--bg:#f6f8fb; --surface:#ffffff; --surface-alt:#fbfdff;
+--ink:#102338; --ink-body:#1f3850; --ink-muted:#60768d; --muted-2:#7d90a5;
+--rule:#e2e9f0; --rule-strong:#cfdbe6;
+--accent:#00a7d8; --accent-soft:#eafaff; --accent-ink:#0f6e8c;
+--green:#24b36b; --green-soft:#e7fff2; --green-ink:#19824e;
+--amber:#d99a13; --amber-soft:#fff7df; --amber-ink:#8a5c06;
+--violet:#7b61ff; --violet-soft:#eeeaff; --violet-ink:#5a44c8;
+--red:#e05f6e; --red-soft:#ffeef0; --red-ink:#c0455a;
+--shadow-soft:0 8px 22px rgba(16,35,56,.05);
+--font-sans:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+--font-mono:"SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;overflow-x:hidden;background:linear-gradient(180deg,#f8fafc,#f2f5f9);color:var(--ink);font-family:var(--font-sans)}
+body{padding:14px}
+.s4li-app{max-width:1480px;margin:auto}
+.s4li-topbar{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:10px}
+.s4li-topbar h1{margin:0;font-size:clamp(23px,2.6vw,34px);letter-spacing:-.035em}
+.s4li-subtitle{margin-top:7px;max-width:1080px;color:var(--ink-muted);line-height:1.5;font-size:14px}
+.s4li-badge{border:1px solid #d9e9f3;background:#f4fbfe;color:#157ca2;padding:8px 12px;border-radius:999px;font-size:12px;font-weight:800;white-space:nowrap}
+.s4li-layout{display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:12px}
+.s4li-stage,.s4li-side{background:var(--surface);border:1px solid var(--rule);border-radius:18px;box-shadow:var(--shadow-soft)}
+.s4li-stage{padding:12px;min-width:0}
+.s4li-side{padding:10px}
+.s4li-stage-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;gap:10px}
+.s4li-stage-title{font-weight:800;font-size:15px}
+.s4li-stage-note{font-size:12px;color:var(--ink-muted)}
+.s4li-modepill{font-size:11px;font-weight:800;padding:5px 10px;border-radius:999px;border:1px solid;white-space:nowrap}
+.s4li-modepill.s4li-trust{background:var(--amber-soft);border-color:#f0dca0;color:var(--amber-ink)}
+.s4li-modepill.s4li-run{background:var(--violet-soft);border-color:#c9bcff;color:var(--violet-ink)}
+.s4li-tablewrap{border:1px solid var(--rule);border-radius:14px;overflow:hidden}
+table.s4li-tbl{width:100%;table-layout:fixed;border-collapse:collapse}
+.s4li-tbl col.s4li-cDoc{width:44%}
+.s4li-tbl col.s4li-cClaim{width:16%}
+.s4li-tbl col.s4li-cDet{width:22%}
+.s4li-tbl col.s4li-cStat{width:18%}
+.s4li-tbl thead th{background:var(--surface-alt);text-align:left;font-size:10px;letter-spacing:.12em;font-weight:800;color:var(--muted-2);padding:9px 10px;border-bottom:1px solid var(--rule)}
+.s4li-tbl tbody td{padding:8px 10px;border-bottom:1px solid var(--rule);vertical-align:top;overflow:hidden}
+.s4li-tbl tbody tr:last-child td{border-bottom:none}
+.s4li-tbl tbody tr.s4li-flag td{background:#fff8f9}
+.s4li-doctext{font-size:13px;line-height:1.8;color:var(--ink-body);overflow-wrap:anywhere;word-break:break-word}
+.s4li-doctext.s4li-indic{font-family:"Noto Sans Bengali","Noto Sans Devanagari","Noto Sans Telugu",var(--font-sans);line-height:1.8}
+.s4li-hi{background:#eef7fb;border-radius:4px;padding:0 2px}
+.s4li-en{background:#f2fff8;border-radius:4px;padding:0 2px}
+.s4li-path{display:block;margin-top:6px;font-family:var(--font-mono);font-size:10.5px;color:var(--muted-2);overflow-wrap:anywhere;word-break:break-all}
+.s4li-path b{color:var(--accent-ink)}
+.s4li-claim{font-size:12.5px;font-weight:800;color:var(--ink)}
+.s4li-claim small{display:block;font-weight:600;color:var(--muted-2);font-size:10px;margin-top:3px;font-family:var(--font-mono)}
+.s4li-det{font-size:12.5px;font-weight:800;color:var(--ink)}
+.s4li-detsub{display:block;font-weight:600;color:var(--ink-muted);font-size:10.5px;margin-top:3px;line-height:1.35}
+.s4li-conf{display:inline-block;margin-top:5px;font-size:10px;font-weight:800;font-variant-numeric:tabular-nums;padding:2px 7px;border-radius:999px;background:#f1f6f9;border:1px solid var(--rule);color:var(--ink-muted)}
+.s4li-conf.s4li-two{background:var(--amber-soft);border-color:#f0dca0;color:var(--amber-ink)}
+.s4li-chip{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:900;padding:6px 10px;border-radius:999px;border:1px solid;white-space:nowrap}
+.s4li-chip .s4li-dot{width:8px;height:8px;border-radius:50%;flex:none}
+.s4li-chip.s4li-match{background:var(--green-soft);border-color:#c6ecd6;color:var(--green-ink)}
+.s4li-chip.s4li-match .s4li-dot{background:var(--green)}
+.s4li-chip.s4li-mismatch{background:var(--red-soft);border-color:#f3c4cc;color:var(--red-ink)}
+.s4li-chip.s4li-mismatch .s4li-dot{background:var(--red)}
+.s4li-chip.s4li-mixed{background:var(--amber-soft);border-color:#f0dca0;color:var(--amber-ink)}
+.s4li-chip.s4li-mixed .s4li-dot{background:var(--amber)}
+.s4li-statnote{display:block;margin-top:6px;font-size:10px;color:var(--muted-2);line-height:1.4}
+.s4li-legend{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.s4li-lg{font-size:10.5px;padding:5px 8px;border-radius:999px;border:1px solid var(--rule);display:flex;align-items:center;gap:6px;font-weight:700;color:var(--ink-muted)}
+.s4li-sw{width:9px;height:9px;border-radius:3px;flex:none}
+.s4li-summary{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}
+.s4li-scard{border:1px solid var(--rule);border-radius:14px;background:var(--surface-alt);padding:10px 11px}
+.s4li-scard.s4li-good{background:linear-gradient(180deg,#fbfffd,#f2fff8);border-color:#c6ecd6}
+.s4li-scard.s4li-bad{background:linear-gradient(180deg,#fff9fa,#fff2f4);border-color:#f3ccd3}
+.s4li-scap{font-size:10px;letter-spacing:.13em;font-weight:800;color:var(--muted-2)}
+.s4li-snum{font-size:28px;font-weight:900;letter-spacing:-.02em;margin-top:2px;font-variant-numeric:tabular-nums}
+.s4li-ssub{font-size:11px;color:var(--ink-muted);margin-top:2px;line-height:1.4}
+.s4li-panel-title{font-weight:800;font-size:14px;margin-bottom:2px}
+.s4li-side-card{border:1px solid var(--rule);background:var(--surface-alt);padding:10px;border-radius:14px;margin-bottom:9px}
+.s4li-side-card h2{font-size:14px;margin:0 0 7px}
+.s4li-step-kicker{font-size:10px;letter-spacing:.15em;color:#0fa2ce;font-weight:800;display:block;margin-bottom:6px}
+.s4li-seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:#eef3f7;border:1px solid var(--rule);border-radius:12px;padding:4px;margin-top:2px}
+.s4li-segbtn{border:none;background:transparent;border-radius:9px;padding:8px 6px;font-weight:800;font-size:12px;color:var(--ink-muted);cursor:pointer;transition:.15s;line-height:1.25}
+.s4li-segbtn small{display:block;font-weight:600;font-size:9.5px;margin-top:2px}
+.s4li-segbtn.s4li-on-trust{background:#fff;color:var(--amber-ink);box-shadow:0 1px 4px rgba(16,35,56,.12)}
+.s4li-segbtn.s4li-on-run{background:#fff;color:var(--violet-ink);box-shadow:0 1px 4px rgba(16,35,56,.12)}
+.s4li-togexpl{margin-top:8px;font-size:11.5px;line-height:1.45;padding:8px 10px;border-radius:10px;border:1px solid}
+.s4li-togexpl.s4li-trust{background:var(--amber-soft);border-color:#f0dca0;color:var(--amber-ink)}
+.s4li-togexpl.s4li-run{background:var(--violet-soft);border-color:#c9bcff;color:var(--violet-ink)}
+.s4li-codebug{margin-top:10px;border:1px solid var(--rule);border-radius:14px;background:var(--surface-alt);padding:11px 12px}
+.s4li-cb-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.s4li-cb-title{font-size:14px;font-weight:800;color:var(--ink)}
+.s4li-cb-grid{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,1fr);gap:12px;margin-top:9px;align-items:start}
+.s4li-cb-right{min-width:0}
+.s4li-code{background:#0f2033;border:1px solid #1d3247;border-radius:12px;padding:10px 11px;font-family:var(--font-mono);font-size:11px;line-height:1.65;color:#cfe3f2;overflow-x:auto;white-space:pre-wrap;word-break:break-word}
+.s4li-code .s4li-kw{color:#5fd0f5}
+.s4li-code .s4li-fn{color:#7ee3b0}
+.s4li-code .s4li-cm{color:#7d94a8}
+.s4li-code .s4li-str{color:#f0c987}
+.s4li-code .s4li-bad{color:#ff9db0;font-weight:700}
+.s4li-runbtn{border:1px solid var(--rule-strong);background:#fff;color:var(--ink);border-radius:11px;padding:7px 10px;font-weight:800;font-size:12px;cursor:pointer;transition:.15s;margin-top:8px}
+.s4li-runbtn:hover{transform:translateY(-1px)}
+.s4li-lookout{margin-top:8px;border:1px solid var(--rule);border-radius:10px;background:#fff;overflow:hidden}
+.s4li-lookrow{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;padding:6px 9px;border-bottom:1px solid var(--rule);font-family:var(--font-mono);font-size:11px}
+.s4li-lookrow:last-child{border-bottom:none}
+.s4li-lookrow code{color:var(--ink-body)}
+.s4li-lookret{font-weight:800;color:var(--ink)}
+.s4li-tag{font-family:var(--font-sans);font-size:9.5px;font-weight:800;padding:2px 6px;border-radius:999px;white-space:nowrap}
+.s4li-tag.s4li-hit{background:var(--green-soft);color:var(--green-ink);border:1px solid #c6ecd6}
+.s4li-tag.s4li-fb{background:var(--amber-soft);color:var(--amber-ink);border:1px solid #f0dca0}
+.s4li-tag.s4li-mal{background:var(--red-soft);color:var(--red-ink);border:1px solid #f3c4cc}
+.s4li-note{margin-top:9px;padding:8px 10px;border-radius:11px;background:#fff8f1;border:1px solid #f8dfbf;color:#89602d;font-size:11.5px;line-height:1.45}
+.s4li-violet{margin-top:2px;padding:11px 12px;border-radius:14px;background:linear-gradient(180deg,#f6f3ff,#efeaff);border:1px solid #cabfff}
+.s4li-violet .s4li-vcap{font-size:10px;letter-spacing:.13em;font-weight:800;color:var(--violet-ink)}
+.s4li-violet h2{font-size:15px;margin:5px 0 5px;color:var(--violet-ink);letter-spacing:-.01em}
+.s4li-violet p{margin:0;font-size:12px;line-height:1.5;color:#4a3f7a}
+.s4li-footer{font-size:11px;color:var(--muted-2);line-height:1.5;margin-top:2px}
+@media(max-width:1100px){.s4li-layout{grid-template-columns:1fr}}
+@media(max-width:820px){.s4li-cb-grid{grid-template-columns:1fr}}
+@media(max-width:700px){body{padding:10px}.s4li-topbar{display:block}.s4li-badge{display:inline-block;margin-top:10px}.s4li-summary{grid-template-columns:1fr}.s4li-tbl col.s4li-cDoc{width:38%}}
+</style>
+</head>
+<body>
+<div class="s4li-app">
+ <div class="s4li-topbar">
+  <div>
+   <h1>Language ID and Validation</h1>
+   <div class="s4li-subtitle">A document's folder path is a <strong>claim</strong>, not a fact. Trusting <span style="font-family:var(--font-mono)">verified/asm/</span> to mean "this is Assamese" is a real bug: a Bengali file sat in that folder for the whole V4 run. The fix is to <strong>detect the language at runtime</strong> and compare it against the path. Flip the toggle to watch the mislabelled doc light up.</div>
+  </div>
+  <div class="s4li-badge">Interactive · real detection + toggle</div>
+ </div>
+
+ <div class="s4li-layout">
+  <main class="s4li-stage">
+   <div class="s4li-stage-head">
+    <div class="s4li-stage-title">Four documents. Claimed language vs detected language.</div>
+    <div class="s4li-modepill s4li-trust" id="s4li-modepill">MODE · trusting the directory name</div>
+   </div>
+
+   <div class="s4li-tablewrap">
+    <table class="s4li-tbl">
+     <colgroup><col class="s4li-cDoc"><col class="s4li-cClaim"><col class="s4li-cDet"><col class="s4li-cStat"></colgroup>
+     <thead>
+      <tr><th>DOCUMENT SNIPPET</th><th>CLAIMED · from folder</th><th>DETECTED · illustrative conf.</th><th>STATUS</th></tr>
+     </thead>
+     <tbody id="s4li-rows"></tbody>
+    </table>
+   </div>
+
+   <div class="s4li-legend">
+    <span class="s4li-lg"><span class="s4li-sw" style="background:var(--green)"></span>MATCH · detected = claimed</span>
+    <span class="s4li-lg"><span class="s4li-sw" style="background:var(--red)"></span>MISMATCH · mislabelled doc</span>
+    <span class="s4li-lg"><span class="s4li-sw" style="background:var(--amber)"></span>code-switched · flag for review</span>
+    <span class="s4li-lg"><span class="s4li-sw" style="background:var(--accent)"></span>detection is real; confidence illustrative</span>
+   </div>
+
+   <div class="s4li-summary">
+    <section class="s4li-scard" id="s4li-card1">
+     <div class="s4li-scap">MISLABELLED DOCS CAUGHT</div>
+     <div class="s4li-snum" id="s4li-caught">0</div>
+     <div class="s4li-ssub" id="s4li-caughtsub">Trusting the path catches nothing — the Bengali file passes as Assamese.</div>
+    </section>
+    <section class="s4li-scard" id="s4li-card2">
+     <div class="s4li-scap">DOCS FLAGGED FOR REVIEW</div>
+     <div class="s4li-snum" id="s4li-flagged">0</div>
+     <div class="s4li-ssub">Code-switched documents the pipeline should not silently ship into one language bucket.</div>
+    </section>
+   </div>
+
+   <section class="s4li-codebug">
+    <div class="s4li-cb-head">
+     <span class="s4li-step-kicker" style="margin-bottom:0">THE TELUGU CODE BUG · te vs tel</span>
+     <div class="s4li-cb-title">A 2-vs-3-char code that passed by luck</div>
+    </div>
+    <div class="s4li-cb-grid">
+     <div class="s4li-code"><span class="s4li-cm"># every entry uses the 3-char code…</span>
+LANG_3_TO_2 = {
+  <span class="s4li-str">"asm"</span>: <span class="s4li-str">"as"</span>, <span class="s4li-str">"ben"</span>: <span class="s4li-str">"bn"</span>, <span class="s4li-str">"guj"</span>: <span class="s4li-str">"gu"</span>,
+  <span class="s4li-str">"tel"</span>: { <span class="s4li-str">"language"</span>: <span class="s4li-str">"te"</span> }  <span class="s4li-bad"># ← malformed</span>
+}
+<span class="s4li-cm"># pipeline looked up the 2-char code:</span>
+LANG_3_TO_2.<span class="s4li-fn">get</span>(<span class="s4li-str">"te"</span>, <span class="s4li-str">"te"</span>)  <span class="s4li-cm"># → "te" via FALLBACK</span></div>
+     <div class="s4li-cb-right">
+      <button class="s4li-runbtn" id="s4li-runlook" style="margin-top:0">Run the real lookups &nbsp;→</button>
+      <div class="s4li-lookout" id="s4li-lookout" style="display:none"></div>
+      <div class="s4li-note">The key <span style="font-family:var(--font-mono)">"te"</span> was never in the table, so <span style="font-family:var(--font-mono)">.get()</span> returned the default — which happened to equal <span style="font-family:var(--font-mono)">"te"</span>. It "worked" only because the fallback matched by accident. The malformed <span style="font-family:var(--font-mono)">"tel"</span> entry never resolves.</div>
+     </div>
+    </div>
+   </section>
+  </main>
+
+  <aside class="s4li-side">
+   <div class="s4li-panel-title">Source of truth for language</div>
+   <div class="s4li-side-card">
+    <span class="s4li-step-kicker">CHOOSE HOW THE LABEL IS ASSIGNED</span>
+    <div class="s4li-seg">
+     <button class="s4li-segbtn s4li-on-trust" data-mode="trust" id="s4li-btn-trust">Trust directory name<small>label = folder path</small></button>
+     <button class="s4li-segbtn" data-mode="detect" id="s4li-btn-detect">Detect at runtime<small>label = detector</small></button>
+    </div>
+    <div class="s4li-togexpl s4li-trust" id="s4li-togexpl">Every document is labelled by the folder it sits in. The Bengali file inside <span style="font-family:var(--font-mono)">verified/asm/</span> is therefore called Assamese, and nothing objects. This is exactly what V4 did.</div>
+   </div>
+
+   <div class="s4li-side-card">
+    <span class="s4li-step-kicker">WHY MISLABELS ARE EXPENSIVE</span>
+    <div class="s4li-footer" style="color:var(--ink-muted);font-size:12px">A Bengali doc counted as Assamese inflates the Assamese token total and starves the Bengali one. <strong>Mislabelled docs skew per-language fertility numbers</strong>, so every downstream sampling and coverage decision is computed on a corrupted denominator.</div>
+   </div>
+
+   <div class="s4li-violet">
+    <div class="s4li-vcap">THE FIX</div>
+    <h2>Detect at runtime; never trust the provenance path.</h2>
+    <p>The folder tells you where a file came from, not what it contains. Run a language detector on the text, compare it against the claimed code, and quarantine any mismatch before it reaches the tokenizer.</p>
+   </div>
+
+   <div class="s4li-footer">Mismatch logic and the code-bug demo are real; detector confidences are illustrative. Cases from our V4 DATA_PIPELINE_AUDIT.</div>
+  </aside>
+ </div>
+</div>
+
+<script>
+// ---- Sample documents. Real code points; the detector runs on this text. ----
+// Assamese and Bengali share the same Unicode block (U+0980–U+09FF). Assamese is
+// distinguished by ৰ (U+09F0 RA) and ৱ (U+09F1 WA); standard Bengali uses র (U+09B0).
+const DOCS = [
+ {
+  id:'en',
+  html:'The 120B run consumed 1.4M GPU-hours across the cohort this month.',
+  text:'The 120B run consumed 1.4M GPU-hours across the cohort this month.',
+  indic:false,
+  claim:{code3:'en',  code2:'en', name:'English'},
+  path:'verified/<b>en</b>/shard-0142.jsonl'
+ },
+ {
+  id:'te',
+  html:'డేటా శుద్ధి పైప్‌లైన్‌లో భాషా గుర్తింపు చాలా ముఖ్యమైన దశ.',
+  text:'డేటా శుద్ధి పైప్‌లైన్‌లో భాషా గుర్తింపు చాలా ముఖ్యమైన దశ.',
+  indic:true,
+  claim:{code3:'tel', code2:'te', name:'Telugu'},
+  path:'verified/<b>tel</b>/shard-0067.jsonl'
+ },
+ {
+  id:'mix',
+  htmlParts:[['यह ','hi'],['dataset ','en'],['बहुत ','hi'],['large scale ','en'],['पर ','hi'],['train ','en'],['होता है।','hi']],
+  text:'यह dataset बहुत large scale पर train होता है।',
+  indic:true,
+  claim:{code3:'hin', code2:'hi', name:'Hindi'},
+  path:'verified/<b>hin</b>/shard-0219.jsonl'
+ },
+ {
+  id:'asm',
+  // NOTE: this is standard BENGALI (uses র U+09B0, no ৰ/ৱ markers) but lives in the asm/ folder.
+  html:'আমরা বাংলা ভাষার বহু নথি সংগ্রহ করেছি এবং যাচাই করা হয়েছে।',
+  text:'আমরা বাংলা ভাষার বহু নথি সংগ্রহ করেছি এবং যাচাই করা হয়েছে।',
+  indic:true,
+  claim:{code3:'asm', code2:'as', name:'Assamese'},
+  path:'verified/<b>asm</b>/shard-0031.jsonl'
+ }
+];
+
+// ---- Real, script-histogram language detector ----
+// Returns {code2, name, conf(0..1), mixed, parts:[{name,code2,share}]}.
+function detect(text){
+ const counts={latin:0,tel:0,dev:0,beng:0,other:0};
+ let asmMarks=0, letters=0;
+ for(const ch of text){
+  const cp=ch.codePointAt(0);
+  if((cp>=0x41&&cp<=0x5A)||(cp>=0x61&&cp<=0x7A)){counts.latin++;letters++;}
+  else if(cp>=0x0C00&&cp<=0x0C7F){counts.tel++;letters++;}
+  else if(cp>=0x0900&&cp<=0x097F){counts.dev++;letters++;}
+  else if(cp>=0x0980&&cp<=0x09FF){counts.beng++;letters++; if(cp===0x09F0||cp===0x09F1) asmMarks++;}
+ }
+ letters=Math.max(letters,1);
+ const scriptToLang={latin:{c:'en',n:'English'},tel:{c:'te',n:'Telugu'},dev:{c:'hi',n:'Hindi'}};
+ // rank scripts by share
+ const ranked=Object.entries(counts).filter(([k])=>k!=='other').map(([k,v])=>({k,share:v/letters})).sort((a,b)=>b.share-a.share);
+ const top=ranked[0], second=ranked[1];
+ // code-switched: two scripts each meaningfully present
+ if(top.share<0.80 && second && second.share>=0.20){
+  const parts=ranked.filter(r=>r.share>=0.15).map(r=>{
+   const m=r.k==='beng'?{c:asmMarks>0?'as':'bn',n:asmMarks>0?'Assamese':'Bengali'}:scriptToLang[r.k];
+   return {name:m.n,code2:m.c,share:r.share};
+  });
+  return {code2:'mixed',name:'mixed',conf:top.share,mixed:true,parts};
+ }
+ // single dominant script
+ if(top.k==='beng'){
+  const isAsm=asmMarks>0;
+  return {code2:isAsm?'as':'bn',name:isAsm?'Assamese':'Bengali',conf:top.share,mixed:false,
+          reason:isAsm?'ৰ / ৱ Assamese markers present':'Bengali script, no ৰ / ৱ markers'};
+ }
+ const m=scriptToLang[top.k]||{c:'und',n:'unknown'};
+ return {code2:m.c,name:m.n,conf:top.share,mixed:false};
+}
+
+// ---- Render the table for the current mode ----
+let mode='trust';
+function statusFor(claimCode2, det){
+ if(det.mixed) return 'mixed';
+ return det.code2===claimCode2 ? 'match' : 'mismatch';
+}
+function docHTML(d){
+ if(d.htmlParts){
+  return d.htmlParts.map(([t,l])=>'<span class="s4li-'+l+'">'+t+'</span>').join('');
+ }
+ return d.html;
+}
+function render(){
+ const tbody=document.getElementById('s4li-rows');
+ tbody.innerHTML='';
+ let caught=0, flagged=0;
+ DOCS.forEach(d=>{
+  const det=detect(d.text);
+  let detName, detSub, confTxt, confTwo=false, status, statNote;
+  if(mode==='trust'){
+   // The label IS the folder claim. No detector runs -> everything "matches" its own claim.
+   detName=d.claim.name;
+   detSub='taken from the folder path — no check run';
+   confTxt='assumed';
+   status='match';
+   statNote=d.id==='asm' ? 'Passes as Assamese. It is actually Bengali.' :
+            d.id==='mix' ? 'Shipped whole into the Hindi bucket.' : 'Label assumed correct.';
+  } else {
+   // Runtime detection overrides the claim.
+   if(det.mixed){
+    detName='mixed';
+    detSub=det.parts.map(p=>p.name+' '+Math.round(p.share*100)+'%').join(' · ');
+    confTxt='code-switched';
+    confTwo=true;
+    status='mixed';
+    statNote='Detector splits the text; do not file under one language.';
+   } else {
+    detName=det.name;
+    detSub=det.reason||('dominant script → '+det.code2);
+    confTxt='conf '+det.conf.toFixed(2);
+    status=statusFor(d.claim.code2, det);
+    statNote = status==='mismatch'
+      ? 'Claimed '+d.claim.name+' ('+d.claim.code3+'), detected '+det.name+' ('+det.code2+').'
+      : 'Detected language equals the claim.';
+   }
+  }
+  if(status==='mismatch') caught++;
+  if(status==='mixed') flagged++;
+
+  const chipLabel = status==='match'?'MATCH':status==='mismatch'?'MISMATCH':'CODE-SWITCHED';
+  const tr=document.createElement('tr');
+  if(status==='mismatch') tr.className='s4li-flag';
+  tr.innerHTML=
+   '<td><div class="s4li-doctext '+(d.indic?'s4li-indic':'')+'">'+docHTML(d)+'</div>'+
+     '<span class="s4li-path">'+d.path+'</span></td>'+
+   '<td><div class="s4li-claim">'+d.claim.name+'<small>'+d.claim.code3+' / '+d.claim.code2+'</small></div></td>'+
+   '<td><div class="s4li-det">'+detName+'<span class="s4li-detsub">'+detSub+'</span>'+
+     '<span class="s4li-conf'+(confTwo?' s4li-two':'')+'">'+confTxt+'</span></div></td>'+
+   '<td><span class="s4li-chip s4li-'+status+'"><span class="s4li-dot"></span>'+chipLabel+'</span>'+
+     '<span class="s4li-statnote">'+statNote+'</span></td>';
+  tbody.appendChild(tr);
+ });
+
+ // mode pill + summary cards
+ const pill=document.getElementById('s4li-modepill');
+ if(mode==='trust'){ pill.className='s4li-modepill s4li-trust'; pill.textContent='MODE · trusting the directory name'; }
+ else{ pill.className='s4li-modepill s4li-run'; pill.textContent='MODE · detecting at runtime'; }
+
+ document.getElementById('s4li-caught').textContent=caught;
+ const c1=document.getElementById('s4li-card1');
+ c1.className='s4li-scard'+(caught>0?' s4li-bad':'');
+ document.getElementById('s4li-caughtsub').textContent = caught>0
+   ? 'The Bengali file in verified/asm/ is now flagged red — trusting the path would have shipped it.'
+   : 'Trusting the path catches nothing — the Bengali file passes as Assamese.';
+ document.getElementById('s4li-flagged').textContent=flagged;
+ document.getElementById('s4li-card2').className='s4li-scard'+(flagged>0?'':'');
+
+ // toggle explanation + segmented buttons
+ const bt=document.getElementById('s4li-btn-trust'), bd=document.getElementById('s4li-btn-detect');
+ bt.className='s4li-segbtn'+(mode==='trust'?' s4li-on-trust':'');
+ bd.className='s4li-segbtn'+(mode==='detect'?' s4li-on-run':'');
+ const ex=document.getElementById('s4li-togexpl');
+ if(mode==='trust'){ ex.className='s4li-togexpl s4li-trust';
+  ex.innerHTML='Every document is labelled by the folder it sits in. The Bengali file inside <span style="font-family:var(--font-mono)">verified/asm/</span> is therefore called Assamese, and nothing objects. This is exactly what V4 did.'; }
+ else{ ex.className='s4li-togexpl s4li-run';
+  ex.innerHTML='The detector reads each document and overrides the folder. The Bengali file in <span style="font-family:var(--font-mono)">verified/asm/</span> now resolves to <strong>bn</strong>, not <strong>as</strong>, and lights red. The code-switched doc is held for review.'; }
+}
+
+document.querySelectorAll('.s4li-segbtn').forEach(b=>{
+ b.onclick=()=>{ mode=b.dataset.mode; render(); };
+});
+
+// ---- Real Telugu code-bug lookup demo ----
+const LANG_3_TO_2 = { asm:"as", ben:"bn", guj:"gu", tel:{ language:"te" } };
+// mirrors Python dict.get(key, default): return value if key present, else default
+function getPy(key, dflt){
+ return Object.prototype.hasOwnProperty.call(LANG_3_TO_2,key) ? LANG_3_TO_2[key] : dflt;
+}
+document.getElementById('s4li-runlook').onclick=()=>{
+ const probes=[
+  {call:'get("asm","asm")', key:'asm', dflt:'asm'},
+  {call:'get("ben","ben")', key:'ben', dflt:'ben'},
+  {call:'get("tel","tel")', key:'tel', dflt:'tel'},
+  {call:'get("te","te")',   key:'te',  dflt:'te'}
+ ];
+ const out=document.getElementById('s4li-lookout');
+ out.style.display='block';
+ out.innerHTML=probes.map(p=>{
+  const present=Object.prototype.hasOwnProperty.call(LANG_3_TO_2,p.key);
+  const val=getPy(p.key,p.dflt);
+  let retTxt, tagCls, tagTxt;
+  if(present && typeof val==='object'){ retTxt='{ language:"te" }'; tagCls='s4li-mal'; tagTxt='MALFORMED'; }
+  else if(present){ retTxt='"'+val+'"'; tagCls='s4li-hit'; tagTxt='real hit'; }
+  else{ retTxt='"'+val+'"'; tagCls='s4li-fb'; tagTxt='fallback'; }
+  return '<div class="s4li-lookrow"><code>'+p.call+'</code>'+
+         '<span class="s4li-lookret">→ '+retTxt+'</span>'+
+         '<span class="s4li-tag '+tagCls+'">'+tagTxt+'</span></div>';
+ }).join('');
+};
+
+render();
+</script>
+</body>
+</html>

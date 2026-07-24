@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Global Dedup at Scale</title>
+<style>
+:root{
+--bg:#f6f8fb; --surface:#ffffff; --surface-alt:#fbfdff;
+--ink:#102338; --ink-body:#1f3850; --ink-muted:#60768d; --muted-2:#7d90a5;
+--rule:#e2e9f0; --rule-strong:#cfdbe6;
+--accent:#00a7d8; --accent-soft:#eafaff; --accent-ink:#0f6e8c;
+--green:#24b36b; --green-soft:#e7fff2; --green-ink:#19824e;
+--amber:#d99a13; --amber-soft:#fff7df; --amber-ink:#8a5c06;
+--violet:#7b61ff; --violet-soft:#eeeaff; --violet-ink:#5a44c8;
+--red:#e05f6e; --red-soft:#ffeef0; --red-ink:#c0455a;
+--shadow-soft:0 8px 22px rgba(16,35,56,.05);
+--font-sans:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+--font-mono:"SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;overflow-x:hidden}
+body{background:linear-gradient(180deg,#f8fafc 0%,#f3f6fa 100%);color:var(--ink-body);font-family:var(--font-sans);font-size:14px;line-height:1.55;padding:14px}
+.s4gd-app{max-width:1480px;margin:auto}
+
+/* topbar */
+.s4gd-topbar{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:10px}
+.s4gd-topbar h1{margin:0;color:var(--ink);font-size:clamp(23px,2.6vw,34px);font-weight:800;letter-spacing:-.035em;line-height:1.08}
+.s4gd-subtitle{margin-top:7px;max-width:1050px;color:var(--ink-muted);line-height:1.5;font-size:14px}
+.s4gd-subtitle b{color:var(--ink-body)}
+.s4gd-badge{border:1px solid #bcefff;background:var(--accent-soft);color:var(--accent-ink);padding:8px 13px;border-radius:999px;font-size:12px;font-weight:800;white-space:nowrap}
+
+/* layout */
+.s4gd-layout{display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:12px;align-items:start}
+.s4gd-stage,.s4gd-side{background:var(--surface);border:1px solid var(--rule);border-radius:18px;box-shadow:var(--shadow-soft)}
+.s4gd-stage{padding:11px}
+.s4gd-side{padding:10px;display:flex;flex-direction:column;gap:8px}
+
+/* lower stage band (relocated cards fill the empty left area) */
+.s4gd-band{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:8px;margin-top:11px}
+.s4gd-band-col{display:flex;flex-direction:column;gap:8px;min-width:0}
+.s4gd-mm2{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+.s4gd-mm2 .s4gd-mm-foot{margin-top:0;padding-top:0;border-top:none}
+
+/* stage head */
+.s4gd-stage-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:9px}
+.s4gd-stage-title{font-weight:800;color:var(--ink);font-size:15px;letter-spacing:-.01em}
+.s4gd-stage-note{font-size:11.5px;color:var(--ink-muted)}
+
+/* before/after readout */
+.s4gd-readout{display:grid;grid-template-columns:1fr 30px 1fr;gap:8px;align-items:stretch;margin-bottom:10px}
+.s4gd-metric{border:1px solid var(--rule);border-radius:14px;background:var(--surface-alt);padding:9px 12px}
+.s4gd-metric.s4gd-after{border-color:#d9d0ff;background:var(--violet-soft)}
+.s4gd-mcap{font-size:9.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted-2)}
+.s4gd-metric.s4gd-after .s4gd-mcap{color:var(--violet-ink)}
+.s4gd-mval{font-family:var(--font-mono);font-size:23px;font-weight:800;color:var(--green-ink);line-height:1.15;margin-top:2px;font-variant-numeric:tabular-nums}
+.s4gd-metric.s4gd-after .s4gd-mval{color:var(--violet-ink)}
+.s4gd-msub{font-size:11px;color:var(--ink-muted);margin-top:1px}
+.s4gd-arrowmid{display:flex;align-items:center;justify-content:center;color:var(--muted-2);font-size:20px}
+
+/* shard grid */
+.s4gd-gridwrap{position:relative}
+.s4gd-links{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:4;overflow:visible}
+.s4gd-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;position:relative;z-index:1}
+.s4gd-shard{border:1px solid var(--rule);border-radius:13px;background:var(--surface-alt);padding:8px 8px 9px;display:flex;flex-direction:column;min-width:0}
+.s4gd-shard-head{display:flex;align-items:center;justify-content:space-between;gap:5px;margin-bottom:7px}
+.s4gd-shard-name{font-size:11.5px;font-weight:800;color:var(--ink);letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.s4gd-shard-name span{font-weight:600;color:var(--muted-2);font-size:10px}
+.s4gd-shard-badge{font-size:8.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:2px 6px;border-radius:999px;border:1px solid var(--rule-strong);color:var(--muted-2);background:#fff;white-space:nowrap;flex:none}
+.s4gd-shard-badge.s4gd-clean{border-color:#b7eccf;background:var(--green-soft);color:var(--green-ink)}
+.s4gd-docs{display:flex;flex-direction:column;gap:5px}
+.s4gd-doc{border:1px solid var(--rule);border-radius:9px;background:#fff;padding:5px 7px;display:flex;align-items:center;justify-content:space-between;gap:6px;transition:.28s ease;position:relative}
+.s4gd-doc .s4gd-dhash{font-family:var(--font-mono);font-size:11px;font-weight:800;color:var(--ink-body);letter-spacing:-.01em}
+.s4gd-doc .s4gd-dtok{font-family:var(--font-mono);font-size:10px;color:var(--muted-2);font-variant-numeric:tabular-nums;flex:none}
+.s4gd-doc.s4gd-clean{border-color:#b7eccf;background:var(--green-soft)}
+.s4gd-doc.s4gd-clean .s4gd-dhash{color:var(--green-ink)}
+.s4gd-doc.s4gd-localdup{border-color:#f0ddaf;background:var(--amber-soft);opacity:.82}
+.s4gd-doc.s4gd-localdup .s4gd-dhash{color:var(--amber-ink);text-decoration:line-through}
+.s4gd-doc.s4gd-crossdup{border-color:#f3c0c8;background:var(--red-soft)}
+.s4gd-doc.s4gd-crossdup .s4gd-dhash{color:var(--red-ink);text-decoration:line-through}
+.s4gd-doc.s4gd-anchor{box-shadow:0 0 0 2px rgba(224,95,110,.35)}
+.s4gd-dtag{font-size:8px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;padding:1px 5px;border-radius:6px;flex:none}
+.s4gd-dtag.amber{background:#fff;border:1px solid #f0ddaf;color:var(--amber-ink)}
+.s4gd-dtag.red{background:#fff;border:1px solid #f3c0c8;color:var(--red-ink)}
+.s4gd-dtag.green{background:#fff;border:1px solid #b7eccf;color:var(--green-ink)}
+
+/* phase caption */
+.s4gd-caption{margin-top:11px;display:flex;align-items:center;gap:10px;padding:10px 13px;border:1px dashed var(--rule-strong);border-radius:12px;background:#fff;font-size:12px;color:var(--ink-muted);line-height:1.45}
+.s4gd-caption b{color:var(--ink-body)}
+.s4gd-caption.s4gd-hot{border:1px solid #f3c0c8;background:var(--red-soft);color:var(--red-ink)}
+.s4gd-caption.s4gd-hot b{color:var(--red-ink)}
+.s4gd-cdot{width:9px;height:9px;border-radius:50%;background:var(--muted-2);flex:none}
+.s4gd-caption.s4gd-hot .s4gd-cdot{background:var(--red)}
+
+/* legend */
+.s4gd-legend{display:flex;gap:15px;margin-top:10px;flex-wrap:wrap}
+.s4gd-legrow{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ink-muted)}
+.s4gd-legchip{width:12px;height:12px;border-radius:3px;flex:none;border:1px solid rgba(16,35,56,.12)}
+.s4gd-legchip.g{background:var(--green-soft);border-color:#b7eccf}
+.s4gd-legchip.a{background:var(--amber-soft);border-color:#f0ddaf}
+.s4gd-legchip.r{background:var(--red-soft);border-color:#f3c0c8}
+
+/* sidebar */
+.s4gd-card{border:1px solid var(--rule);border-radius:14px;background:var(--surface-alt);padding:10px 11px}
+.s4gd-ck{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted-2);display:flex;align-items:center;gap:6px;margin-bottom:7px}
+.s4gd-ck .s4gd-kdot{width:8px;height:8px;border-radius:2px;flex:none}
+
+/* controls */
+.s4gd-btns{display:flex;flex-direction:column;gap:6px}
+.s4gd-btns button{border:1px solid var(--rule-strong);background:#fff;color:var(--ink-body);border-radius:10px;padding:8px 11px;font-weight:800;font-size:12.5px;cursor:pointer;font-family:inherit;transition:.15s;text-align:left;display:flex;align-items:center;gap:8px}
+.s4gd-btns button:hover:not(:disabled){border-color:var(--accent);color:var(--accent-ink);background:#f2fbfe}
+.s4gd-btns button.s4gd-prim{background:linear-gradient(180deg,#f5f1ff,#eee9ff);border-color:#d4c9ff;color:var(--violet-ink)}
+.s4gd-btns button.s4gd-prim:hover:not(:disabled){border-color:var(--violet);background:#efeaff}
+.s4gd-btns button:disabled{opacity:.42;cursor:default}
+.s4gd-bnum{font-family:var(--font-mono);font-size:11px;font-weight:800;width:16px;height:16px;border-radius:5px;display:flex;align-items:center;justify-content:center;background:#eef3f7;color:var(--muted-2);flex:none}
+
+/* overlap card */
+.s4gd-ovl{display:flex;align-items:baseline;gap:8px}
+.s4gd-ovl-big{font-family:var(--font-mono);font-size:30px;font-weight:800;color:var(--red-ink);line-height:1;font-variant-numeric:tabular-nums}
+.s4gd-ovl-lbl{font-size:11px;color:var(--ink-muted);line-height:1.35}
+.s4gd-ovl-bar{height:9px;border-radius:999px;background:#eef3f7;overflow:hidden;margin-top:8px;border:1px solid var(--rule)}
+.s4gd-ovl-bar i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#ec7d8a,#e05f6e);width:0;transition:width .8s cubic-bezier(.2,.7,.2,1)}
+.s4gd-ovl-note{font-size:11px;color:var(--ink-muted);margin-top:7px;line-height:1.45}
+.s4gd-ovl-note b{color:var(--red-ink)}
+
+/* memory math */
+.s4gd-mm-row{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11.5px;padding:3px 0}
+.s4gd-mm-row span{color:var(--ink-muted)}
+.s4gd-mm-row b{font-family:var(--font-mono);font-weight:800;color:var(--ink-body);font-variant-numeric:tabular-nums}
+.s4gd-slider{width:100%;margin:6px 0 2px;accent-color:var(--accent)}
+.s4gd-mm-foot{margin-top:8px;padding-top:8px;border-top:1px dashed var(--rule-strong)}
+.s4gd-mm-hero{display:flex;align-items:baseline;gap:7px}
+.s4gd-mm-hero b{font-family:var(--font-mono);font-size:22px;font-weight:800;color:var(--accent-ink);font-variant-numeric:tabular-nums}
+.s4gd-mm-hero span{font-size:11px;color:var(--ink-muted)}
+.s4gd-cap-bar{height:11px;border-radius:999px;background:#eef3f7;overflow:hidden;margin-top:7px;border:1px solid var(--rule);position:relative}
+.s4gd-cap-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#38c1e6,#00a7d8);width:0;transition:width .4s ease}
+.s4gd-cap-fill.s4gd-over{background:linear-gradient(90deg,#ec7d8a,#e05f6e)}
+.s4gd-cap-line{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--violet);left:100%}
+.s4gd-cap-cap{font-size:10px;color:var(--muted-2);margin-top:4px;display:flex;justify-content:space-between}
+.s4gd-cap-cap b{color:var(--violet-ink)}
+.s4gd-verdict{font-size:11px;font-weight:700;margin-top:7px;padding:6px 9px;border-radius:9px;line-height:1.4}
+.s4gd-verdict.ok{background:var(--green-soft);border:1px solid #b7eccf;color:var(--green-ink)}
+.s4gd-verdict.over{background:var(--red-soft);border:1px solid #f3c0c8;color:var(--red-ink)}
+
+/* spec chips */
+.s4gd-spec{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.s4gd-spec span{font-size:10px;font-weight:700;padding:3px 7px;border-radius:7px;background:#fff;border:1px solid var(--rule-strong);color:var(--ink-body)}
+.s4gd-spec span.v{border-color:#d4c9ff;background:var(--violet-soft);color:var(--violet-ink)}
+
+/* note + violet + v4 cards */
+.s4gd-note{border:1px solid #cceefa;border-radius:12px;background:var(--accent-soft);padding:9px 11px;font-size:11.5px;line-height:1.5;color:var(--accent-ink)}
+.s4gd-note b{font-weight:800}
+.s4gd-violet{border:1px solid #d4c9ff;border-radius:12px;background:var(--violet-soft);padding:9px 11px}
+.s4gd-violet .s4gd-ck{color:var(--violet-ink)}.s4gd-violet .s4gd-kdot{background:var(--violet)}
+.s4gd-violet p{margin:0;font-size:12px;line-height:1.5;color:var(--violet-ink)}
+.s4gd-violet p b{font-weight:800}
+.s4gd-v4{border:1px solid #f3c0c8;border-radius:12px;background:var(--red-soft);padding:9px 11px}
+.s4gd-v4 .s4gd-ck{color:var(--red-ink)}.s4gd-v4 .s4gd-kdot{background:var(--red)}
+.s4gd-v4 p{margin:0;font-size:11.5px;line-height:1.5;color:var(--red-ink)}
+.s4gd-v4 p b{font-weight:800}
+
+.s4gd-footer{margin-top:11px;padding-top:9px;border-top:1px solid var(--rule);font-size:11px;color:var(--muted-2);line-height:1.5}
+.s4gd-footer b{color:var(--ink-muted)}
+
+@media(max-width:1100px){
+.s4gd-layout{grid-template-columns:1fr}
+}
+@media(max-width:640px){
+body{padding:10px}
+.s4gd-topbar{display:block}
+.s4gd-badge{display:inline-block;margin-top:10px}
+.s4gd-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.s4gd-readout{grid-template-columns:1fr}
+.s4gd-arrowmid{transform:rotate(90deg)}
+}
+</style>
+</head>
+<body>
+<div class="s4gd-app">
+ <div class="s4gd-topbar">
+  <div>
+   <h1>Global Dedup at Scale</h1>
+   <div class="s4gd-subtitle">Every student deduplicates their own shard, so each one looks <b>clean</b>. But the same document was crawled by <b>different students</b>. No local pass can ever see those cross-shard copies. Only one owned machine, holding the whole corpus at once, can. Watch it find the duplicates every local pass called clean.</div>
+  </div>
+  <div class="s4gd-badge">Interactive &middot; real hashing + memory math</div>
+ </div>
+
+ <div class="s4gd-layout">
+  <main class="s4gd-stage">
+   <div class="s4gd-stage-head">
+    <div class="s4gd-stage-title">4 student shards &rarr; one central dedup pass</div>
+    <div class="s4gd-stage-note">#hash = sha of cleaned text &middot; same text &rarr; same hash</div>
+   </div>
+
+   <div class="s4gd-readout">
+    <div class="s4gd-metric">
+     <div class="s4gd-mcap">Unique tokens &middot; after every local pass</div>
+     <div class="s4gd-mval" id="s4gdLocalVal">&mdash;</div>
+     <div class="s4gd-msub" id="s4gdLocalSub">run each shard's local dedup first</div>
+    </div>
+    <div class="s4gd-arrowmid">&rarr;</div>
+    <div class="s4gd-metric s4gd-after">
+     <div class="s4gd-mcap">Unique tokens &middot; after the global pass</div>
+     <div class="s4gd-mval" id="s4gdGlobalVal">&mdash;</div>
+     <div class="s4gd-msub" id="s4gdGlobalSub">the central machine merges the corpus</div>
+    </div>
+   </div>
+
+   <div class="s4gd-gridwrap">
+    <svg class="s4gd-links" id="s4gdLinks"></svg>
+    <div class="s4gd-grid" id="s4gdGrid"></div>
+   </div>
+
+   <div class="s4gd-caption" id="s4gdCaption">
+    <span class="s4gd-cdot"></span>
+    <div id="s4gdCaptionTxt"><b>Raw shards.</b> 20 documents were collected across 4 students. Some are byte-identical because two students crawled the same page. Start by running each shard's local dedup.</div>
+   </div>
+
+   <div class="s4gd-legend">
+    <div class="s4gd-legrow"><span class="s4gd-legchip g"></span> clean / globally unique</div>
+    <div class="s4gd-legrow"><span class="s4gd-legchip a"></span> local duplicate (same shard)</div>
+    <div class="s4gd-legrow"><span class="s4gd-legchip r"></span> cross-shard duplicate (missed by every local pass)</div>
+   </div>
+
+   <div class="s4gd-band">
+    <div class="s4gd-band-col">
+     <div class="s4gd-card">
+      <div class="s4gd-ck"><span class="s4gd-kdot" style="background:var(--accent)"></span>MinHash index memory &mdash; why this needs one big machine</div>
+      <div class="s4gd-mm2">
+       <div>
+        <div class="s4gd-mm-row"><span>Corpus documents <b style="color:var(--muted-2);font-weight:600">(drag)</b></span><b id="s4gdNval">500 M</b></div>
+        <input class="s4gd-slider" id="s4gdNslider" type="range" min="50" max="1200" step="10" value="500" />
+        <div class="s4gd-mm-row"><span>Signature / doc</span><b>128 &times; 8 B = 1 KB</b></div>
+        <div class="s4gd-mm-row"><span>LSH band + id overhead</span><b>&times; 1.6</b></div>
+        <div class="s4gd-spec">
+         <span class="v">&ge;768 GB RAM</span><span>NVMe scratch</span><span>S3-attached</span><span>checkpoint-resumable</span><span>1 owner + backup</span>
+        </div>
+       </div>
+       <div class="s4gd-mm-foot">
+        <div class="s4gd-mm-hero"><b id="s4gdFootGiB">763</b><span>GiB resident index</span></div>
+        <div class="s4gd-cap-bar"><div class="s4gd-cap-fill" id="s4gdCapFill"></div><div class="s4gd-cap-line"></div></div>
+        <div class="s4gd-cap-cap"><span>index footprint</span><b>768 GiB node</b></div>
+        <div class="s4gd-verdict ok" id="s4gdVerdict">Fits one 768 GB node &middot; the whole index must stay resident in RAM.</div>
+       </div>
+      </div>
+     </div>
+    </div>
+
+    <div class="s4gd-band-col">
+     <div class="s4gd-note">
+      <b>When it runs:</b> global dedup runs as a proof-of-concept at <b>Class&nbsp;12</b>, then as a final pass before the <b>Class&nbsp;18</b> corpus lock.
+     </div>
+     <div class="s4gd-violet">
+      <div class="s4gd-ck"><span class="s4gd-kdot"></span>The design decision</div>
+      <p><b>Local dedup does NOT produce a globally-deduplicated corpus.</b> Only the central pass does. That is why it is a single owned machine sized for the whole corpus, not a step each student runs.</p>
+     </div>
+    </div>
+   </div>
+  </main>
+
+  <aside class="s4gd-side">
+   <div class="s4gd-card">
+    <div class="s4gd-ck"><span class="s4gd-kdot" style="background:var(--accent)"></span>Run the passes</div>
+    <div class="s4gd-btns">
+     <button id="s4gdBtnLocal"><span class="s4gd-bnum">1</span>Run each shard's local dedup</button>
+     <button id="s4gdBtnGlobal" class="s4gd-prim" disabled><span class="s4gd-bnum">2</span>Merge + dedup globally</button>
+     <button id="s4gdBtnReset"><span class="s4gd-bnum">&#8635;</span>Reset all shards</button>
+    </div>
+   </div>
+
+   <div class="s4gd-card">
+    <div class="s4gd-ck"><span class="s4gd-kdot" style="background:var(--red)"></span>Cross-shard overlap</div>
+    <div class="s4gd-ovl">
+     <div class="s4gd-ovl-big" id="s4gdOverlapPct">&mdash;</div>
+     <div class="s4gd-ovl-lbl">of the <i>locally-clean</i> corpus was still duplicate across shards</div>
+    </div>
+    <div class="s4gd-ovl-bar"><i id="s4gdOverlapBar"></i></div>
+    <div class="s4gd-ovl-note" id="s4gdOverlapNote">Every one of these tokens sat inside a shard its owner had already certified as deduplicated.</div>
+   </div>
+
+   <div class="s4gd-v4">
+    <div class="s4gd-ck"><span class="s4gd-kdot"></span>V4 reality</div>
+    <p>V4's Indic pipeline did <b>local, per-source handling with no global dedup</b>. The audit flagged it as <b>wasted compute + memorization risk</b> at scale.</p>
+   </div>
+  </main>
+
+  <div class="s4gd-footer" style="grid-column:1/-1">
+   <b>Cross-shard matching and the index memory estimate are computed live.</b> Duplicate detection runs a real FNV-1a hash over each document's text in JS; identical text yields an identical hash. Token counts are illustrative. Machine spec per the ERA&nbsp;V5 syllabus: large-memory instance (&ge;768&nbsp;GB), high-throughput NVMe scratch, S3-attached, checkpoint-resumable, single owner plus backup.
+  </div>
+ </div>
+</div>
+
+<script>
+"use strict";
+(function(){
+ const $=id=>document.getElementById(id);
+
+ // ---- real content: identical `text` -> identical hash -> duplicate ----
+ const CONTENT={
+  gst   :{tok:1200,text:"gst-rate-change-explainer-official-notification-2026"},
+  wiki  :{tok:2200,text:"wikipedia-article-rivers-of-india-full-body"},
+  blog  :{tok:1500,text:"blog-post-what-is-a-large-language-model-beginner"},
+  forum :{tok:1100,text:"forum-thread-student-visa-application-question-answer"},
+  story :{tok:600 ,text:"panchatantra-folk-tale-the-clever-jackal"},
+  recipe:{tok:800 ,text:"kerala-style-dal-tadka-recipe-step-by-step"},
+  faq   :{tok:700 ,text:"national-bank-account-opening-faq-page"},
+  gov   :{tok:900 ,text:"pib-press-release-union-budget-highlights"},
+  uA    :{tok:1300,text:"assam-district-gazette-land-records-notice"},
+  uB    :{tok:1000,text:"kerala-backwaters-tourism-travel-note"},
+  uC    :{tok:1400,text:"marathi-daily-newspaper-editorial-column"},
+  uC2   :{tok:950 ,text:"classical-tamil-sangam-poetry-anthology"},
+  uD    :{tok:1150,text:"odia-primary-school-language-primer-lesson"}
+ };
+ // each student shard; note deliberate within-shard AND cross-shard repeats
+ const SHARDS=[
+  {name:"Aarav", pool:"as", keys:["gst","wiki","wiki","blog","uA"]},
+  {name:"Bea",   pool:"ml", keys:["recipe","blog","faq","forum","uB"]},
+  {name:"Chen",  pool:"mr", keys:["gov","story","wiki","uC","uC2"]},
+  {name:"Diya",  pool:"or", keys:["gst","forum","story","story","uD"]}
+ ];
+
+ // real FNV-1a 32-bit hash over the document text
+ function fnv1a(s){let h=2166136261>>>0;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)>>>0;}return h>>>0;}
+ const shortHash=s=>fnv1a(s).toString(16).padStart(8,"0").slice(0,4);
+
+ // build immutable doc list with real hashes
+ let DOCS=[];
+ SHARDS.forEach((sh,si)=>{
+  sh.keys.forEach((k,di)=>{
+   const c=CONTENT[k];
+   DOCS.push({shard:si,idx:di,key:k,tok:c.tok,hash:shortHash(c.text)});
+  });
+ });
+
+ let phase="raw"; // raw -> local -> global
+
+ // ---- dedup computation (all real) ----
+ function computeFlags(ph){
+  // local: within a shard, first occurrence of a hash kept, rest removed
+  const seenLocal=SHARDS.map(()=>new Set());
+  DOCS.forEach(d=>{d.localRemoved=false;d.globalRemoved=false;d.anchor=false;});
+  if(ph==="raw")return {clusters:[]};
+  DOCS.forEach(d=>{
+   const s=seenLocal[d.shard];
+   if(s.has(d.hash))d.localRemoved=true; else s.add(d.hash);
+  });
+  if(ph==="local")return {clusters:[]};
+  // global: group locally-kept docs by hash; any hash spanning >1 shard = cross-shard cluster
+  const groups={};
+  DOCS.filter(d=>!d.localRemoved).forEach(d=>{(groups[d.hash]=groups[d.hash]||[]).push(d);});
+  const clusters=[];
+  Object.values(groups).forEach(g=>{
+   const shards=new Set(g.map(d=>d.shard));
+   if(g.length>1 && shards.size>1){
+    g[0].anchor=true;
+    g.slice(1).forEach(d=>d.globalRemoved=true);
+    clusters.push(g);
+   }
+  });
+  return {clusters};
+ }
+
+ function sum(f){return DOCS.filter(f).reduce((a,d)=>a+d.tok,0);}
+ const fmt=n=>n.toLocaleString("en-US");
+
+ // ---- render shards ----
+ function renderGrid(){
+  const g=$("s4gdGrid");
+  g.innerHTML=SHARDS.map((sh,si)=>{
+   const docs=DOCS.filter(d=>d.shard===si);
+   const shardClean=(phase!=="raw");
+   const blocks=docs.map(d=>{
+    let cls="s4gd-doc",tag="";
+    if(d.globalRemoved){cls+=" s4gd-crossdup";tag='<span class="s4gd-dtag red">cross-shard</span>';}
+    else if(d.localRemoved){cls+=" s4gd-localdup";tag='<span class="s4gd-dtag amber">local dup</span>';}
+    else if(phase!=="raw"){cls+=" s4gd-clean";if(d.anchor)tag='<span class="s4gd-dtag green">kept 1&times;</span>';}
+    if(d.anchor)cls+=" s4gd-anchor";
+    return `<div class="${cls}" data-doc="${d.shard}-${d.idx}">
+       <span class="s4gd-dhash">#${d.hash}</span>${tag}
+       <span class="s4gd-dtok">${d.tok}t</span>
+      </div>`;
+   }).join("");
+   const badge=shardClean
+    ? '<span class="s4gd-shard-badge s4gd-clean">locally clean &check;</span>'
+    : '<span class="s4gd-shard-badge">raw</span>';
+   return `<div class="s4gd-shard">
+     <div class="s4gd-shard-head">
+      <div class="s4gd-shard-name">${sh.name} <span>&middot; ${sh.pool}</span></div>${badge}
+     </div>
+     <div class="s4gd-docs">${blocks}</div>
+    </div>`;
+  }).join("");
+ }
+
+ // ---- draw red connectors between cross-shard duplicates ----
+ function drawLinks(clusters){
+  const svg=$("s4gdLinks");
+  svg.innerHTML="";
+  if(!clusters.length)return;
+  const wrap=$("s4gdGrid").parentElement.getBoundingClientRect();
+  svg.setAttribute("viewBox",`0 0 ${wrap.width} ${wrap.height}`);
+  const center=el=>{const r=el.getBoundingClientRect();return {x:r.left-wrap.left+r.width/2,y:r.top-wrap.top+r.height/2};};
+  clusters.forEach(g=>{
+   const els=g.map(d=>document.querySelector(`[data-doc="${d.shard}-${d.idx}"]`)).filter(Boolean);
+   for(let i=0;i<els.length-1;i++){
+    const a=center(els[i]),b=center(els[i+1]);
+    const mx=(a.x+b.x)/2, lift=Math.min(46,Math.abs(b.x-a.x)*0.28+14);
+    const cy=Math.min(a.y,b.y)-lift;
+    const path=document.createElementNS("http://www.w3.org/2000/svg","path");
+    path.setAttribute("d",`M ${a.x} ${a.y} C ${mx} ${cy}, ${mx} ${cy}, ${b.x} ${b.y}`);
+    path.setAttribute("fill","none");
+    path.setAttribute("stroke","#e05f6e");
+    path.setAttribute("stroke-width","2");
+    path.setAttribute("stroke-dasharray","5 4");
+    path.setAttribute("opacity","0.9");
+    svg.appendChild(path);
+    [a,b].forEach(p=>{
+     const c=document.createElementNS("http://www.w3.org/2000/svg","circle");
+     c.setAttribute("cx",p.x);c.setAttribute("cy",p.y);c.setAttribute("r","3.4");
+     c.setAttribute("fill","#e05f6e");svg.appendChild(c);
+    });
+   }
+  });
+ }
+
+ // ---- render readouts / caption ----
+ function renderState(clusters){
+  const rawTok=sum(()=>true);
+  const localTok=sum(d=>!d.localRemoved);
+  const globalTok=sum(d=>!d.localRemoved&&!d.globalRemoved);
+  const localN=DOCS.filter(d=>!d.localRemoved).length;
+  const globalN=DOCS.filter(d=>!d.localRemoved&&!d.globalRemoved).length;
+  const crossTok=localTok-globalTok;
+  const overlap=localTok? (crossTok/localTok*100):0;
+
+  const cap=$("s4gdCaption"), capT=$("s4gdCaptionTxt");
+  cap.classList.remove("s4gd-hot");
+
+  if(phase==="raw"){
+   $("s4gdLocalVal").innerHTML="&mdash;"; $("s4gdLocalSub").textContent="run each shard's local dedup first";
+   $("s4gdGlobalVal").innerHTML="&mdash;"; $("s4gdGlobalSub").textContent="the central machine merges the corpus";
+   $("s4gdOverlapPct").innerHTML="&mdash;"; $("s4gdOverlapBar").style.width="0%";
+   $("s4gdOverlapNote").innerHTML="Every one of these tokens sits inside a shard its owner had already certified as deduplicated.";
+   capT.innerHTML="<b>Raw shards.</b> 20 documents across 4 students, "+fmt(rawTok)+" tokens. Some are byte-identical because two students crawled the same page. Start with each shard's local dedup.";
+  } else if(phase==="local"){
+   $("s4gdLocalVal").textContent=fmt(localTok);
+   $("s4gdLocalSub").textContent=localN+" docs kept · every shard reads as clean ✓";
+   $("s4gdGlobalVal").innerHTML="&mdash;"; $("s4gdGlobalSub").textContent="now merge the shards on one machine";
+   $("s4gdOverlapPct").innerHTML="&mdash;"; $("s4gdOverlapBar").style.width="0%";
+   capT.innerHTML="<b>Every shard is locally clean.</b> Each student removed their own in-shard duplicates ("+(DOCS.filter(d=>d.localRemoved).length)+" collapsed). No student can see another shard, so the corpus <i>looks</i> finished at "+fmt(localTok)+" tokens.";
+  } else {
+   $("s4gdLocalVal").textContent=fmt(localTok);
+   $("s4gdLocalSub").textContent=localN+" docs · each shard called itself clean";
+   $("s4gdGlobalVal").textContent=fmt(globalTok);
+   $("s4gdGlobalSub").textContent=globalN+" globally-unique docs";
+   $("s4gdOverlapPct").textContent=overlap.toFixed(1)+"%";
+   $("s4gdOverlapBar").style.width=Math.min(100,overlap)+"%";
+   $("s4gdOverlapNote").innerHTML="<b>"+fmt(crossTok)+" tokens</b> across <b>"+clusters.length+"</b> cross-shard clusters were duplicate — and every local pass called them clean.";
+   cap.classList.add("s4gd-hot");
+   capT.innerHTML="<b>The global pass found what no local pass could.</b> Merging on one machine exposed "+clusters.length+" cross-shard clusters. Dropped "+fmt(crossTok)+" duplicate tokens: "+fmt(localTok)+" &rarr; <b>"+fmt(globalTok)+"</b>. This reveal is the whole argument for one owned machine.";
+  }
+ }
+
+ function render(){
+  const {clusters}=computeFlags(phase);
+  renderGrid();
+  renderState(clusters);
+  requestAnimationFrame(()=>drawLinks(phase==="global"?clusters:[]));
+  $("s4gdBtnLocal").disabled=(phase!=="raw");
+  $("s4gdBtnGlobal").disabled=(phase!=="local");
+ }
+
+ // ---- memory math (live) ----
+ const S_BYTES=128*8, OVERHEAD=1.6, NODE_GIB=768, GiB=1073741824;
+ function renderMem(){
+  const nM=+$("s4gdNslider").value;            // documents in millions
+  const N=nM*1e6;
+  const bytes=N*S_BYTES*OVERHEAD;
+  const gib=bytes/GiB;
+  $("s4gdNval").textContent=(nM>=1000?(nM/1000).toFixed(2)+" B":nM+" M");
+  $("s4gdFootGiB").textContent=gib>=1000?(gib/1000).toFixed(2)+"k":Math.round(gib);
+  const fill=$("s4gdCapFill");
+  fill.style.width=Math.min(100,gib/NODE_GIB*100)+"%";
+  const over=gib>NODE_GIB;
+  fill.classList.toggle("s4gd-over",over);
+  const v=$("s4gdVerdict");
+  if(over){
+   v.className="s4gd-verdict over";
+   v.innerHTML="Exceeds one 768&nbsp;GB node ("+Math.round(gib)+"&nbsp;GiB). The index must shard across nodes or use a larger-memory instance — exactly why sizing this machine is a design decision.";
+  } else {
+   v.className="s4gd-verdict ok";
+   v.innerHTML="Fits one 768&nbsp;GB node ("+Math.round(gib)+"&nbsp;GiB resident). The whole MinHash index stays in RAM — impossible on any student laptop.";
+  }
+ }
+ $("s4gdNslider").addEventListener("input",renderMem);
+
+ // ---- controls ----
+ $("s4gdBtnLocal").addEventListener("click",()=>{if(phase==="raw"){phase="local";render();}});
+ $("s4gdBtnGlobal").addEventListener("click",()=>{if(phase==="local"){phase="global";render();}});
+ $("s4gdBtnReset").addEventListener("click",()=>{phase="raw";render();});
+ window.addEventListener("resize",()=>{const {clusters}=computeFlags(phase);drawLinks(phase==="global"?clusters:[]);});
+
+ render();
+ renderMem();
+})();
+</script>
+</body>
+</html>

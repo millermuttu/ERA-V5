@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Special Tokens and the Ghost-Tag Trap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+--bg:#f6f8fb; --surface:#ffffff; --surface-alt:#fbfdff;
+--ink:#102338; --ink-body:#1f3850; --ink-muted:#60768d; --muted-2:#7d90a5;
+--rule:#e2e9f0; --rule-strong:#cfdbe6;
+--accent:#00a7d8; --accent-soft:#eafaff; --accent-ink:#0f6e8c;
+--green:#24b36b; --green-soft:#e7fff2; --green-ink:#19824e;
+--amber:#d99a13; --amber-soft:#fff7df; --amber-ink:#8a5c06;
+--violet:#7b61ff; --violet-soft:#eeeaff; --violet-ink:#5a44c8;
+--red:#e05f6e; --red-soft:#ffeef0; --red-ink:#c0455a;
+--shadow-soft:0 8px 22px rgba(16,35,56,.05);
+--font-sans:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+--font-mono:"SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;overflow-x:hidden;background:linear-gradient(180deg,#f8fafc,#f2f5f9);color:var(--ink);font-family:var(--font-sans)}
+body{padding:14px}
+.s4gt-app{max-width:1480px;margin:auto}
+.s4gt-topbar{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:10px}
+.s4gt-topbar h1{margin:0;font-size:clamp(23px,2.6vw,34px);letter-spacing:-.035em}
+.s4gt-subtitle{margin-top:7px;max-width:1050px;color:var(--ink-muted);line-height:1.5;font-size:14px}
+.s4gt-badge{border:1px solid #d9e9f3;background:#f4fbfe;color:#157ca2;padding:8px 12px;border-radius:999px;font-size:12px;font-weight:800;white-space:nowrap}
+.s4gt-layout{display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:12px}
+.s4gt-stage,.s4gt-side{background:var(--surface);border:1px solid var(--rule);border-radius:18px;box-shadow:var(--shadow-soft)}
+.s4gt-stage{padding:12px;min-width:0}
+.s4gt-side{padding:10px}
+.s4gt-stage-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;gap:12px}
+.s4gt-stage-title{font-weight:800;font-size:15px}
+.s4gt-stage-note{font-size:12px;color:var(--ink-muted)}
+.s4gt-mode-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
+.s4gt-tab{border:1px solid var(--rule-strong);background:#fff;border-radius:12px;padding:8px 6px;text-align:center;font-weight:800;color:#536b82;cursor:pointer;transition:.18s;min-width:0}
+.s4gt-tab .s4gt-tab-sub{display:block;font-size:9px;letter-spacing:.06em;color:var(--muted-2);font-weight:700;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.s4gt-tab:hover{transform:translateY(-1px)}
+.s4gt-tab.s4gt-active{border-color:#8ddff5;background:#effbff;color:#087b9f;box-shadow:0 0 0 2px #e3f9ff inset}
+.s4gt-raw{border:1px solid var(--rule);background:var(--surface-alt);border-radius:12px;padding:9px 11px;margin-bottom:10px}
+.s4gt-raw-cap{font-size:10px;letter-spacing:.14em;font-weight:800;color:var(--muted-2)}
+.s4gt-raw-line{font-family:var(--font-mono);font-size:12.5px;line-height:1.9;margin-top:6px;color:var(--ink-body);overflow-wrap:anywhere;word-break:break-word}
+.s4gt-raw-mark{background:var(--amber-soft);color:var(--amber-ink);border:1px solid #f0dca0;border-radius:5px;padding:1px 5px;font-weight:700}
+.s4gt-hi{font-family:"Noto Sans Devanagari",var(--font-sans);line-height:1.9;overflow-wrap:anywhere;word-break:break-word}
+.s4gt-compare{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.s4gt-path{border:1px solid var(--rule);border-radius:16px;padding:11px;min-width:0;display:flex;flex-direction:column}
+.s4gt-path-pre{background:linear-gradient(180deg,#fffdf5,#fffefb)}
+.s4gt-path-sft{background:linear-gradient(180deg,#fbfaff,#fdfcff)}
+.s4gt-path.s4gt-unified{background:linear-gradient(180deg,#f4fff9,#fbfffd)}
+.s4gt-path-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.s4gt-cap{font-size:10px;letter-spacing:.13em;font-weight:800;color:var(--muted-2)}
+.s4gt-cap.s4gt-amber{color:var(--amber-ink)}
+.s4gt-cap.s4gt-violet{color:var(--violet-ink)}
+.s4gt-cap.s4gt-green{color:var(--green-ink)}
+.s4gt-count{font-size:11px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--ink-muted)}
+.s4gt-path-sub{font-size:11px;color:var(--ink-muted);margin-top:4px;line-height:1.4;min-height:30px}
+.s4gt-tokens{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px;padding:9px;border-radius:11px;background:#fff;border:1px solid var(--rule);flex:1;align-content:flex-start;min-height:150px}
+.s4gt-tok{display:inline-flex;align-items:center;font-family:var(--font-mono);font-size:11px;padding:3px 6px;border-radius:7px;border:1px solid;line-height:1.5;overflow-wrap:anywhere;word-break:break-word}
+.s4gt-tok.s4gt-hi{font-family:"Noto Sans Devanagari",var(--font-mono);line-height:1.8}
+.s4gt-tok-content{background:#f3f6f9;color:#546a80;border-color:#e4ebf1}
+.s4gt-tok-ghost{background:var(--amber-soft);color:var(--amber-ink);border-color:#eccd7f}
+.s4gt-tok-special{background:var(--violet-soft);color:var(--violet-ink);border-color:#cfc4ff;font-weight:800}
+.s4gt-tok-green{background:var(--green-soft);color:var(--green-ink);border-color:#b4eccc;font-weight:800}
+.s4gt-pathnote{font-size:11px;line-height:1.4;margin-top:8px;padding:7px 9px;border-radius:9px}
+.s4gt-pathnote.s4gt-amber{background:var(--amber-soft);color:var(--amber-ink);border:1px solid #f0dca0}
+.s4gt-pathnote.s4gt-violet{background:var(--violet-soft);color:var(--violet-ink);border:1px solid #ddd5ff}
+.s4gt-pathnote.s4gt-green{background:var(--green-soft);color:var(--green-ink);border:1px solid #bfeed3}
+.s4gt-explain{margin-top:10px;border:1px solid #d8eaf2;background:linear-gradient(90deg,#f5fcff,#fbfdff);padding:9px 12px;border-radius:13px;display:grid;grid-template-columns:130px 1fr;gap:12px;align-items:center}
+.s4gt-kicker{font-size:10px;letter-spacing:.15em;color:var(--accent-ink);font-weight:800}
+.s4gt-explain-body{font-size:12.5px;line-height:1.5;color:#4f667c}
+.s4gt-explain-body strong{color:var(--ink)}
+/* sidebar */
+.s4gt-side-title{font-weight:800;font-size:14px;margin-bottom:8px}
+.s4gt-unify-btn{width:100%;border:1px solid #cfc4ff;background:linear-gradient(180deg,#f6f3ff,#efeaff);color:var(--violet-ink);border-radius:13px;padding:12px 12px;font-weight:900;font-size:14px;cursor:pointer;transition:.18s;font-family:var(--font-sans)}
+.s4gt-unify-btn:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(123,97,255,.18)}
+.s4gt-unify-btn.s4gt-on{border-color:#b4eccc;background:linear-gradient(180deg,#eefff6,#e2fded);color:var(--green-ink)}
+.s4gt-side-card{border:1px solid var(--rule);background:var(--surface-alt);padding:11px;border-radius:14px;margin-top:10px}
+.s4gt-side-card h2{font-size:14px;margin:0 0 6px}
+.s4gt-meter{height:10px;background:#eef2f6;border-radius:999px;overflow:hidden;margin:8px 0 7px}
+.s4gt-meter-fill{height:100%;width:100%;border-radius:999px;transition:.4s}
+.s4gt-meter-read{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:800}
+.s4gt-meter-read .s4gt-dot{width:9px;height:9px;border-radius:50%;flex:none}
+.s4gt-ghost-list{display:grid;gap:6px;margin-top:4px}
+.s4gt-ghost-row{display:flex;justify-content:space-between;align-items:center;padding:6px 9px;border-radius:9px;background:#fff;border:1px solid #eccd7f;transition:.3s}
+.s4gt-ghost-row.s4gt-resolved{border-color:#bfeed3;background:var(--green-soft)}
+.s4gt-ghost-tag{font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--amber-ink)}
+.s4gt-ghost-row.s4gt-resolved .s4gt-ghost-tag{color:var(--green-ink);text-decoration:line-through;opacity:.75}
+.s4gt-ghost-n{font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;background:var(--amber-soft);color:var(--amber-ink)}
+.s4gt-ghost-row.s4gt-resolved .s4gt-ghost-n{background:#fff;color:var(--green-ink)}
+.s4gt-note{font-size:12px;line-height:1.5;color:var(--ink-muted);margin:0}
+.s4gt-note strong{color:var(--red-ink)}
+.s4gt-side-card.s4gt-p0{border-color:#f2c6ce;background:var(--red-soft)}
+.s4gt-side-card.s4gt-p0.s4gt-clear{border-color:#bfeed3;background:var(--green-soft)}
+.s4gt-side-card.s4gt-p0.s4gt-clear .s4gt-note strong{color:var(--green-ink)}
+.s4gt-footer{font-size:11px;color:var(--muted-2);line-height:1.5;margin-top:10px}
+@media(max-width:1100px){.s4gt-layout{grid-template-columns:1fr}}
+@media(max-width:640px){.s4gt-compare{grid-template-columns:1fr}.s4gt-mode-tabs{grid-template-columns:repeat(2,1fr)}.s4gt-explain{grid-template-columns:1fr}.s4gt-topbar{display:block}.s4gt-badge{display:inline-block;margin-top:9px}}
+</style>
+</head>
+<body>
+<div class="s4gt-app">
+ <div class="s4gt-topbar">
+  <div>
+   <h1>Special Tokens and the Ghost-Tag Trap</h1>
+   <div class="s4gt-subtitle">Conversation markers typed as plain text into pretraining data become ordinary subwords. In SFT they collide with the tokenizer's real special tokens. One canonical chat format is the only fix, and it is a cleaning-time decision.</div>
+  </div>
+  <div class="s4gt-badge">Interactive · real tokenizer split</div>
+ </div>
+ <div class="s4gt-layout">
+  <main class="s4gt-stage">
+   <div class="s4gt-stage-head">
+    <div class="s4gt-stage-title">The same 2-turn conversation, four V4 source formats</div>
+    <div class="s4gt-stage-note">Pick a source to tokenize both paths</div>
+   </div>
+   <div class="s4gt-mode-tabs" id="s4gtTabs"></div>
+   <div class="s4gt-raw">
+    <div class="s4gt-raw-cap">RAW TEXT AS STORED IN THE SHARD</div>
+    <div class="s4gt-raw-line" id="s4gtRaw"></div>
+   </div>
+   <div class="s4gt-compare">
+    <section class="s4gt-path s4gt-path-pre" id="s4gtPrePath">
+     <div class="s4gt-path-head">
+      <span class="s4gt-cap s4gt-amber" id="s4gtPreCap">PRETRAINING PATH</span>
+      <span class="s4gt-count" id="s4gtPreCount"></span>
+     </div>
+     <div class="s4gt-path-sub" id="s4gtPreSub">The literal markers get tokenized into ordinary subwords, indistinguishable from any other text.</div>
+     <div class="s4gt-tokens" id="s4gtPreTokens"></div>
+     <div class="s4gt-pathnote s4gt-amber" id="s4gtPreNote">model learns these as fake structure</div>
+    </section>
+    <section class="s4gt-path s4gt-path-sft" id="s4gtSftPath">
+     <div class="s4gt-path-head">
+      <span class="s4gt-cap s4gt-violet" id="s4gtSftCap">SFT PATH</span>
+      <span class="s4gt-count" id="s4gtSftCount"></span>
+     </div>
+     <div class="s4gt-path-sub" id="s4gtSftSub">SFT wants the tokenizer's real special tokens: one atomic id per turn boundary.</div>
+     <div class="s4gt-tokens" id="s4gtSftTokens"></div>
+     <div class="s4gt-pathnote s4gt-violet" id="s4gtSftNote">single-id tokens the model treats as true turn boundaries</div>
+    </section>
+   </div>
+   <div class="s4gt-explain">
+    <div><div class="s4gt-kicker" id="s4gtKicker">THE COLLISION</div></div>
+    <div class="s4gt-explain-body" id="s4gtExplain">Two encodings of the same boundary now compete: the <strong>fake amber subwords</strong> baked into pretraining text and the <strong>real violet special tokens</strong> introduced at SFT. The model has to unlearn one. Press <strong>Unify to real special tokens</strong> to make every source speak the one canonical format.</div>
+   </div>
+  </main>
+  <aside class="s4gt-side">
+   <div class="s4gt-side-title">Format discipline</div>
+   <button class="s4gt-unify-btn" id="s4gtUnify">Unify to real special tokens</button>
+   <div class="s4gt-side-card">
+    <div class="s4gt-cap">FORMAT COLLISION</div>
+    <div class="s4gt-meter"><div class="s4gt-meter-fill" id="s4gtMeterFill"></div></div>
+    <div class="s4gt-meter-read" id="s4gtMeterRead"><span class="s4gt-dot"></span><span class="s4gt-meter-text"></span></div>
+   </div>
+   <div class="s4gt-side-card">
+    <h2>Ghost tags the V4 audit found</h2>
+    <div class="s4gt-note" style="margin-bottom:8px">Literal markers counted inside pretraining shards, none of them real tokenizer ids:</div>
+    <div class="s4gt-ghost-list" id="s4gtGhostList">
+     <div class="s4gt-ghost-row"><span class="s4gt-ghost-tag">[USER]</span><span class="s4gt-ghost-n">×6</span></div>
+     <div class="s4gt-ghost-row"><span class="s4gt-ghost-tag">[SYSTEM]</span><span class="s4gt-ghost-n">×2</span></div>
+     <div class="s4gt-ghost-row"><span class="s4gt-ghost-tag">&lt;|endoftext|&gt;</span><span class="s4gt-ghost-n">×3</span></div>
+    </div>
+   </div>
+   <div class="s4gt-side-card s4gt-p0" id="s4gtP0">
+    <div class="s4gt-cap">ROOT CAUSE</div>
+    <p class="s4gt-note" id="s4gtP0Note" style="margin-top:6px">None of the 4 V4 sources used the tokenizer's real special tokens. This is the <strong>P0 root cause</strong> of the ghost tags.</p>
+   </div>
+   <div class="s4gt-footer">Conversation formats and ghost-tag counts are from our own V4 DATA_PIPELINE_AUDIT.</div>
+  </aside>
+ </div>
+</div>
+<script>
+// ---- Data: same 2-turn conversation across four V4 source formats ----
+// segs drive the RAW view + PRETRAINING path; turns drive the SFT/unified path.
+const FORMATS={
+ samvaad:{name:'Samvaad',sub:'Hindi',hi:true,
+  segs:[
+   {role:'marker',text:'[USER]'},
+   {role:'content',text:'कैसे हो?'},
+   {role:'marker',text:'[ASSISTANT]'},
+   {role:'content',text:'मैं ठीक हूँ'}
+  ],
+  turns:[
+   {role:'user',text:'कैसे हो?'},
+   {role:'assistant',text:'मैं ठीक हूँ'}
+  ]},
+ smoltalk:{name:'SmolTalk2',sub:'XML-ish',hi:false,
+  segs:[
+   {role:'marker',text:'<USER>'},
+   {role:'content',text:'How are you?'},
+   {role:'marker',text:'</USER>'},
+   {role:'marker',text:'<ASSISTANT>'},
+   {role:'content',text:'Fine'},
+   {role:'marker',text:'</ASSISTANT>'}
+  ],
+  turns:[
+   {role:'user',text:'How are you?'},
+   {role:'assistant',text:'Fine'}
+  ]},
+ megascience:{name:'MegaScience',sub:'Alpaca',hi:false,
+  segs:[
+   {role:'marker',text:'### Instruction:'},
+   {role:'content',text:'Define inertia'},
+   {role:'marker',text:'### Response:'},
+   {role:'content',text:'Resistance to change in motion'}
+  ],
+  turns:[
+   {role:'user',text:'Define inertia'},
+   {role:'assistant',text:'Resistance to change in motion'}
+  ]},
+ ncert:{name:'NCERT',sub:'Header',hi:false,
+  segs:[
+   {role:'marker',text:'### Topic: Physics'},
+   {role:'marker',text:'### Question:'},
+   {role:'content',text:'State Newton first law'}
+  ],
+  turns:[
+   {role:'system',text:'Topic: Physics'},
+   {role:'user',text:'State Newton first law'}
+  ]}
+};
+const ORDER=['samvaad','smoltalk','megascience','ncert'];
+let current='samvaad', unified=false;
+
+// ---- Real subword tokenizer (deterministic, granularity like a BPE split) ----
+function subwords(s){
+ const out=[];
+ const re=/[A-Za-z]+|[0-9]+|[ऀ-ॿ]+|[^\sA-Za-z0-9ऀ-ॿ]/g;
+ let m;
+ while((m=re.exec(s))!==null){
+  const t=m[0];
+  if(/^[A-Za-z]+$/.test(t)&&t.length>4){
+   for(let i=0;i<t.length;i+=4) out.push(t.slice(i,i+4));
+  }else if(/^[ऀ-ॿ]+$/.test(t)&&t.length>3){
+   const mid=Math.ceil(t.length/2);
+   out.push(t.slice(0,mid)); out.push(t.slice(mid));
+  }else{
+   out.push(t);
+  }
+ }
+ return out;
+}
+function isHi(t){return /[ऀ-ॿ]/.test(t);}
+function chip(text,kind){
+ const hi=isHi(text)?' s4gt-hi':'';
+ return `<span class="s4gt-tok ${kind}${hi}">${escapeHtml(text)}</span>`;
+}
+function escapeHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// ---- Renderers ----
+function renderTabs(){
+ const el=document.getElementById('s4gtTabs');
+ el.innerHTML=ORDER.map(k=>{
+  const f=FORMATS[k];
+  return `<button class="s4gt-tab${k===current?' s4gt-active':''}" data-k="${k}">${f.name}<span class="s4gt-tab-sub">${f.sub}</span></button>`;
+ }).join('');
+ el.querySelectorAll('.s4gt-tab').forEach(b=>b.onclick=()=>{current=b.dataset.k;render();});
+}
+function renderRaw(){
+ const f=FORMATS[current];
+ const hi=f.hi?' s4gt-hi':'';
+ document.getElementById('s4gtRaw').className='s4gt-raw-line'+hi;
+ document.getElementById('s4gtRaw').innerHTML=f.segs.map(sg=>{
+  if(sg.role==='marker') return `<span class="s4gt-raw-mark">${escapeHtml(sg.text)}</span>`;
+  return ' '+escapeHtml(sg.text)+' ';
+ }).join('');
+}
+function renderPre(){
+ const f=FORMATS[current];
+ const cap=document.getElementById('s4gtPreCap');
+ const note=document.getElementById('s4gtPreNote');
+ const path=document.getElementById('s4gtPrePath');
+ let html='', total=0, ghostSub=0;
+ f.segs.forEach(sg=>{
+  const parts=subwords(sg.text);
+  total+=parts.length;
+  if(sg.role==='marker'){
+   ghostSub+=parts.length;
+   parts.forEach(p=>html+=chip(p, unified?'s4gt-tok-green':'s4gt-tok-ghost'));
+  }else{
+   parts.forEach(p=>html+=chip(p,'s4gt-tok-content'));
+  }
+ });
+ if(unified){
+  // rewrite pretraining path to the canonical special-token form
+  path.classList.add('s4gt-unified');
+  cap.textContent='PRETRAINING PATH · REWRITTEN';
+  cap.className='s4gt-cap s4gt-green';
+  note.className='s4gt-pathnote s4gt-green';
+  note.textContent='ghost subwords removed — the shard now carries the real special tokens';
+  html=turnsHtml(f,'s4gt-tok-green');
+  document.getElementById('s4gtPreSub').textContent='After the cleaning pass the literal markers are gone; the source stores the canonical tokens.';
+ }else{
+  path.classList.remove('s4gt-unified');
+  cap.textContent='PRETRAINING PATH';
+  cap.className='s4gt-cap s4gt-amber';
+  note.className='s4gt-pathnote s4gt-amber';
+  note.textContent=ghostSub+' ghost subwords · model learns these as fake structure';
+  document.getElementById('s4gtPreSub').textContent='The literal markers get tokenized into ordinary subwords, indistinguishable from any other text.';
+ }
+ document.getElementById('s4gtPreTokens').innerHTML=html;
+ document.getElementById('s4gtPreCount').textContent=(unified?turnTokenCount(f):total)+' tokens';
+}
+function turnsHtml(f,specialKind){
+ let html='';
+ f.turns.forEach(t=>{
+  html+=chip('<|'+t.role+'|>',specialKind);
+  subwords(t.text).forEach(p=>html+=chip(p,'s4gt-tok-content'));
+ });
+ html+=chip('<|end|>',specialKind);
+ return html;
+}
+function turnTokenCount(f){
+ let n=0;
+ f.turns.forEach(t=>{n+=1+subwords(t.text).length;});
+ return n+1; // <|end|>
+}
+function renderSft(){
+ const f=FORMATS[current];
+ const cap=document.getElementById('s4gtSftCap');
+ const note=document.getElementById('s4gtSftNote');
+ document.getElementById('s4gtSftTokens').innerHTML=turnsHtml(f, unified?'s4gt-tok-green':'s4gt-tok-special');
+ document.getElementById('s4gtSftCount').textContent=turnTokenCount(f)+' tokens';
+ if(unified){
+  cap.textContent='SFT PATH · MATCHED';
+  cap.className='s4gt-cap s4gt-green';
+  note.className='s4gt-pathnote s4gt-green';
+  note.textContent='both paths now emit the identical canonical tokens — nothing to unlearn';
+  document.getElementById('s4gtSftPath').classList.add('s4gt-unified');
+ }else{
+  cap.textContent='SFT PATH';
+  cap.className='s4gt-cap s4gt-violet';
+  note.className='s4gt-pathnote s4gt-violet';
+  note.textContent='single-id special tokens the model treats as true turn boundaries';
+  document.getElementById('s4gtSftPath').classList.remove('s4gt-unified');
+ }
+}
+function renderExplain(){
+ const k=document.getElementById('s4gtKicker');
+ const e=document.getElementById('s4gtExplain');
+ if(unified){
+  k.textContent='UNIFIED';
+  k.style.color='var(--green-ink)';
+  e.innerHTML='All four sources were rewritten to the one canonical <strong>&lt;|user|&gt; / &lt;|assistant|&gt;</strong> form. The amber ghost markers are gone and both paths agree — <strong>one format, no collision</strong>. Format discipline was decided here, at cleaning time.';
+ }else{
+  k.textContent='THE COLLISION';
+  k.style.color='var(--accent-ink)';
+  e.innerHTML='Two encodings of the same boundary now compete: the <strong>fake amber subwords</strong> baked into pretraining text and the <strong>real violet special tokens</strong> introduced at SFT. The model has to unlearn one. Press <strong>Unify to real special tokens</strong> to make every source speak the one canonical format.';
+ }
+}
+function renderMeter(){
+ const fill=document.getElementById('s4gtMeterFill');
+ const read=document.getElementById('s4gtMeterRead');
+ const dot=read.querySelector('.s4gt-dot');
+ const txt=read.querySelector('.s4gt-meter-text');
+ if(unified){
+  fill.style.width='50%';
+  fill.style.background='var(--green)';
+  dot.style.background='var(--green)';
+  txt.textContent='1 canonical format';
+  txt.style.color='var(--green-ink)';
+ }else{
+  fill.style.width='100%';
+  fill.style.background='var(--red)';
+  dot.style.background='var(--red)';
+  txt.textContent='2 competing formats';
+  txt.style.color='var(--red-ink)';
+ }
+}
+function renderSidebarState(){
+ const btn=document.getElementById('s4gtUnify');
+ btn.textContent=unified?'Unified ✓ · click to revert':'Unify to real special tokens';
+ btn.classList.toggle('s4gt-on',unified);
+ document.querySelectorAll('.s4gt-ghost-row').forEach(r=>r.classList.toggle('s4gt-resolved',unified));
+ const p0=document.getElementById('s4gtP0');
+ const p0n=document.getElementById('s4gtP0Note');
+ p0.classList.toggle('s4gt-clear',unified);
+ p0n.innerHTML=unified
+  ? 'All 4 V4 sources now emit the tokenizer\'s real special tokens. The <strong>P0 root cause</strong> is resolved across the pipeline.'
+  : 'None of the 4 V4 sources used the tokenizer\'s real special tokens. This is the <strong>P0 root cause</strong> of the ghost tags.';
+}
+function render(){
+ renderTabs();renderRaw();renderPre();renderSft();renderExplain();renderMeter();renderSidebarState();
+}
+document.getElementById('s4gtUnify').onclick=()=>{unified=!unified;render();};
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Quality Filter Cascade · heuristic chain + classifier gate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Noto+Sans+Telugu:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+--bg:#f6f8fb; --surface:#ffffff; --surface-alt:#fbfdff;
+--ink:#102338; --ink-body:#1f3850; --ink-muted:#60768d; --muted-2:#7d90a5;
+--rule:#e2e9f0; --rule-strong:#cfdbe6;
+--accent:#00a7d8; --accent-soft:#eafaff; --accent-ink:#0f6e8c;
+--green:#24b36b; --green-soft:#e7fff2; --green-ink:#19824e;
+--amber:#d99a13; --amber-soft:#fff7df; --amber-ink:#8a5c06;
+--violet:#7b61ff; --violet-soft:#eeeaff; --violet-ink:#5a44c8;
+--red:#e05f6e; --red-soft:#ffeef0; --red-ink:#c0455a;
+--shadow-soft:0 8px 22px rgba(16,35,56,.05);
+--font-sans:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+--font-mono:"SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;overflow-x:hidden}
+body{background:linear-gradient(180deg,#f8fafc 0%,#f2f5f9 100%);color:var(--ink-body);font-family:var(--font-sans);font-size:14px;line-height:1.5;padding:14px}
+.s4qf-app{max-width:1480px;margin:auto}
+
+.s4qf-topbar{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:10px}
+.s4qf-topbar h1{margin:0;font-size:clamp(22px,2.5vw,33px);letter-spacing:-.035em;color:var(--ink);font-weight:800;line-height:1.06}
+.s4qf-subtitle{margin-top:7px;max-width:1040px;color:var(--ink-muted);line-height:1.5;font-size:14px}
+.s4qf-subtitle b{color:var(--ink-body)}
+.s4qf-badge{border:1px solid #d9e9f3;background:#f4fbfe;color:#157ca2;padding:8px 12px;border-radius:999px;font-size:12px;font-weight:800;white-space:nowrap}
+
+.s4qf-layout{display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:12px}
+.s4qf-stage,.s4qf-side{background:var(--surface);border:1px solid var(--rule);border-radius:18px;box-shadow:var(--shadow-soft)}
+.s4qf-stage{padding:12px;min-width:0}
+.s4qf-side{padding:11px}
+
+.s4qf-stage-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:9px}
+.s4qf-stage-title{font-weight:800;color:var(--ink);font-size:15px}
+.s4qf-stage-note{font-size:11.5px;color:var(--ink-muted)}
+
+/* document card */
+.s4qf-doc{border:1px solid var(--rule);border-radius:14px;background:var(--surface-alt);padding:11px 13px;margin-bottom:10px}
+.s4qf-doc-cap{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+.s4qf-doc-lbl{font-size:10px;letter-spacing:.14em;font-weight:800;color:var(--muted-2);text-transform:uppercase}
+.s4qf-doc-chip{font-family:var(--font-mono);font-size:10px;font-weight:800;padding:3px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent-ink);border:1px solid #cceefa;white-space:nowrap}
+.s4qf-doctext{font-size:12.5px;line-height:1.6;color:var(--ink-body);white-space:pre-line;max-height:112px;overflow:hidden}
+.s4qf-doctext.te{font-family:"Noto Sans Telugu",var(--font-sans);overflow-wrap:anywhere;word-break:break-word;line-height:1.95;font-size:13px}
+
+/* cascade */
+.s4qf-cascade-cap{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin:4px 2px 7px}
+.s4qf-cascade-cap .s4qf-t{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted-2)}
+.s4qf-cascade-cap .s4qf-live{font-family:var(--font-mono);font-size:11px;color:var(--ink-muted)}
+.s4qf-cascade{display:grid;gap:5px}
+.s4qf-row{display:grid;grid-template-columns:1.5fr 1.35fr auto;gap:9px;align-items:center;border:1px solid var(--rule);border-radius:10px;background:#fff;padding:6px 10px;transition:.2s}
+.s4qf-row.pass{border-color:#c7ecd6;background:#fbfffc}
+.s4qf-row.fail{border-color:#f3c8cf;background:#fff9fa}
+.s4qf-row.bias{border-color:#f0dda2;background:#fffdf4}
+.s4qf-rname{font-size:12px;font-weight:700;color:var(--ink);letter-spacing:-.01em;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.s4qf-rthresh{font-family:var(--font-mono);font-size:10.5px;color:var(--muted-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.s4qf-rmeas{font-family:var(--font-mono);font-size:11px;font-weight:800;color:var(--ink-body)}
+.s4qf-chip{font-family:var(--font-mono);font-size:9.5px;font-weight:800;letter-spacing:.05em;padding:3px 8px;border-radius:999px;white-space:nowrap;text-align:center}
+.s4qf-chip.k{color:var(--green-ink);background:var(--green-soft);border:1px solid #c7ecd6}
+.s4qf-chip.d{color:var(--red-ink);background:var(--red-soft);border:1px solid #f3c8cf}
+.s4qf-chip.b{color:var(--amber-ink);background:var(--amber-soft);border:1px solid #f0dda2}
+
+/* classifier gate */
+.s4qf-gate{margin-top:8px;border:1px solid #d8d0ff;border-radius:12px;background:linear-gradient(180deg,#fbfaff,#f5f2ff);padding:9px 12px;display:grid;grid-template-columns:1.5fr 1.35fr auto;gap:9px;align-items:center}
+.s4qf-gate .s4qf-gname{font-size:12px;font-weight:800;color:var(--violet-ink)}
+.s4qf-gate .s4qf-gsub{font-family:var(--font-mono);font-size:10px;color:var(--muted-2)}
+.s4qf-gate .s4qf-gscore{font-family:var(--font-mono);font-size:15px;font-weight:800;color:var(--violet-ink)}
+.s4qf-gate .s4qf-gscore small{font-size:10px;color:var(--muted-2);font-weight:700}
+
+/* verdict banner */
+.s4qf-verdict{margin-top:9px;border-radius:13px;padding:11px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid}
+.s4qf-verdict.keep{background:var(--green-soft);border-color:#c7ecd6}
+.s4qf-verdict.drop{background:var(--red-soft);border-color:#f3c8cf}
+.s4qf-verdict .s4qf-vbig{font-size:15px;font-weight:800}
+.s4qf-verdict.keep .s4qf-vbig{color:var(--green-ink)}
+.s4qf-verdict.drop .s4qf-vbig{color:var(--red-ink)}
+.s4qf-verdict .s4qf-vtxt{font-size:12px;color:var(--ink-body);line-height:1.45;flex:1 1 300px;min-width:0}
+.s4qf-verdict .s4qf-vtxt b{color:var(--ink)}
+
+/* sidebar */
+.s4qf-side-card{border:1px solid var(--rule);background:var(--surface-alt);padding:10px 11px;border-radius:14px;margin-bottom:9px}
+.s4qf-kick{font-size:10px;letter-spacing:.13em;font-weight:800;text-transform:uppercase;color:var(--accent-ink)}
+.s4qf-side-card h2{font-size:14px;margin:5px 0 5px;color:var(--ink);font-weight:800}
+.s4qf-side-card p{margin:0;color:var(--ink-muted);line-height:1.5;font-size:12px}
+.s4qf-side-card p b{color:var(--ink-body)}
+
+.s4qf-seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.s4qf-seg button{border:1px solid var(--rule);border-radius:10px;background:#fff;color:var(--ink-muted);font-family:var(--font-sans);font-size:12.5px;font-weight:800;padding:9px 8px;cursor:pointer;transition:.16s;text-align:center}
+.s4qf-seg button:hover{color:var(--accent-ink);background:#f2fbfe}
+.s4qf-seg button.s4qf-on{background:linear-gradient(180deg,#f2fcff,#e7f9ff);color:var(--accent-ink);box-shadow:inset 0 0 0 1px #bcefff}
+
+.s4qf-dialtop{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-top:2px}
+.s4qf-dialtop .s4qf-dl{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted-2)}
+.s4qf-dialval{font-family:var(--font-mono);font-size:22px;font-weight:800;color:var(--violet-ink);line-height:1}
+.s4qf-dialval small{font-size:11px;color:var(--muted-2);font-weight:700;margin-left:3px}
+input[type=range]{width:100%;accent-color:var(--violet);cursor:pointer;margin:9px 0 4px}
+.s4qf-ticks{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:9.5px;color:var(--muted-2)}
+
+.s4qf-meter{margin-top:11px}
+.s4qf-mtop{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:6px}
+.s4qf-mlbl{font-size:11px;font-weight:800;color:var(--ink);display:flex;align-items:center;gap:7px}
+.s4qf-dot{width:9px;height:9px;border-radius:3px;flex:none}
+.s4qf-dot.am{background:var(--amber)} .s4qf-dot.gn{background:var(--green)}
+.s4qf-mval{font-family:var(--font-mono);font-size:13px;font-weight:800}
+.s4qf-mval.am{color:var(--amber-ink)} .s4qf-mval.gn{color:var(--green-ink)}
+.s4qf-track{position:relative;height:11px;border-radius:999px;background:#eef3f7;overflow:hidden}
+.s4qf-fill{position:absolute;left:0;top:0;bottom:0;border-radius:999px;transition:width .4s cubic-bezier(.2,.7,.2,1)}
+.s4qf-fill.am{background:linear-gradient(90deg,#f1c97a,var(--amber))}
+.s4qf-fill.gn{background:linear-gradient(90deg,#84ddb0,var(--green))}
+
+.s4qf-answer{border:1px solid #d8d0ff;background:linear-gradient(180deg,#fbfaff,#f6f3ff)}
+.s4qf-answer h2{color:var(--violet-ink)}
+.s4qf-answer p b{color:var(--violet-ink)}
+.s4qf-v4{border:1px solid #d9e9f3;background:linear-gradient(180deg,#fafdff,#f2fbff)}
+.s4qf-v4 h2{color:var(--accent-ink)}
+
+.s4qf-footer{font-size:11px;color:var(--muted-2);line-height:1.5;margin-top:10px}
+.s4qf-footer b{color:var(--ink-muted)}
+
+@media(max-width:1100px){
+ .s4qf-layout{grid-template-columns:minmax(0,1fr)}
+ .s4qf-doctext{max-height:none}
+}
+@media(max-width:640px){
+ body{padding:11px}
+ .s4qf-topbar{display:block}
+ .s4qf-badge{display:inline-block;margin-top:9px}
+ .s4qf-row,.s4qf-gate{grid-template-columns:1fr auto}
+ .s4qf-rthresh{display:none}
+}
+</style>
+</head>
+<body>
+<div class="s4qf-app">
+ <div class="s4qf-topbar">
+  <div>
+   <h1>Quality Filter Cascade</h1>
+   <div class="s4qf-subtitle">Before a single token reaches the model, every document runs a gauntlet of <b>Gopher/C4 heuristic rules</b> and then a <b>FineWeb-Edu style classifier gate</b>. A document survives only if it clears every rule and scores above the threshold. Toggle to the clean Telugu passage and watch an English-tuned chain quietly throw out perfectly good low-resource text.</div>
+  </div>
+  <div class="s4qf-badge">Interactive · rules run live in JS</div>
+ </div>
+
+ <div class="s4qf-layout">
+  <main class="s4qf-stage">
+   <div class="s4qf-stage-head">
+    <div class="s4qf-stage-title">One document, one filter chain</div>
+    <div class="s4qf-stage-note">Every value below is measured on the text on the left</div>
+   </div>
+
+   <div class="s4qf-doc">
+    <div class="s4qf-doc-cap"><span class="s4qf-doc-lbl" id="s4qf-docLbl">Clean English document</span><span class="s4qf-doc-chip" id="s4qf-docChip">— words</span></div>
+    <div class="s4qf-doctext" id="s4qf-doctext"></div>
+   </div>
+
+   <div class="s4qf-cascade-cap">
+    <span class="s4qf-t">Heuristic cascade · Gopher / C4</span>
+    <span class="s4qf-live" id="s4qf-liveCount">— pass · — fail</span>
+   </div>
+   <div class="s4qf-cascade" id="s4qf-cascade"></div>
+
+   <div class="s4qf-gate">
+    <div>
+     <div class="s4qf-gname">Classifier gate</div>
+     <div class="s4qf-gsub">FineWeb-Edu style · educational value (illustrative)</div>
+    </div>
+    <div class="s4qf-rthresh" id="s4qf-gateThresh">keep if score ≥ 3.0</div>
+    <div class="s4qf-gscore" id="s4qf-gateScore">4.3<small>/5</small></div>
+   </div>
+
+   <div class="s4qf-verdict keep" id="s4qf-verdict">
+    <div class="s4qf-vbig" id="s4qf-verdictBig">KEPT</div>
+    <div class="s4qf-vtxt" id="s4qf-verdictTxt"></div>
+   </div>
+  </main>
+
+  <aside class="s4qf-side">
+   <div class="s4qf-side-card">
+    <div class="s4qf-kick">Choose a document</div>
+    <div class="s4qf-seg" id="s4qf-langSel">
+     <button data-lang="en" class="s4qf-on">English</button>
+     <button data-lang="te">Indic · Telugu</button>
+    </div>
+    <p style="margin-top:8px" id="s4qf-langNote"></p>
+   </div>
+
+   <div class="s4qf-side-card">
+    <div class="s4qf-dialtop">
+     <span class="s4qf-dl">Classifier strictness</span>
+     <span class="s4qf-dialval" id="s4qf-thVal">3.0<small>/5</small></span>
+    </div>
+    <input type="range" id="s4qf-th" min="0" max="5" step="0.1" value="3.0">
+    <div class="s4qf-ticks"><span>0 · keep all</span><span>3</span><span>5 · keep none</span></div>
+
+    <div class="s4qf-meter">
+     <div class="s4qf-mtop"><span class="s4qf-mlbl"><span class="s4qf-dot am"></span>Corpus kept</span><span class="s4qf-mval am" id="s4qf-corpVal">100%</span></div>
+     <div class="s4qf-track"><div class="s4qf-fill am" id="s4qf-corpFill" style="width:100%"></div></div>
+    </div>
+    <div class="s4qf-meter">
+     <div class="s4qf-mtop"><span class="s4qf-mlbl"><span class="s4qf-dot gn"></span>Avg quality of survivors</span><span class="s4qf-mval gn" id="s4qf-qVal">2.6/5</span></div>
+     <div class="s4qf-track"><div class="s4qf-fill gn" id="s4qf-qFill" style="width:52%"></div></div>
+    </div>
+    <p style="margin-top:9px" id="s4qf-meterNote">Raise the threshold and the corpus <b>shrinks</b> while the average quality of what survives <b>rises</b>. Filtering is a trade, not a free lunch.</p>
+   </div>
+
+   <div class="s4qf-side-card">
+    <div class="s4qf-kick">The recipe</div>
+    <h2>LLM labels &rarr; cheap classifier</h2>
+    <p>An LLM scores a <b>small sample</b> 0&ndash;5 for educational value, those labels train a <b>cheap classifier</b> that then filters the <b>whole corpus</b> for almost nothing. <b>FineWeb-Edu</b> used a BERT-embedding regression head (Snowflake-arctic-embed) at score&nbsp;&ge;3, keeping ~8% of FineWeb (1.3T of 15T tokens); <b>Llama 3</b> and <b>DCLM</b> used fastText.</p>
+   </div>
+
+   <div class="s4qf-side-card s4qf-answer">
+    <div class="s4qf-kick" style="color:var(--violet-ink)">The script-aware fix</div>
+    <h2 id="s4qf-answerTitle">Rules must know the script</h2>
+    <p id="s4qf-answerTxt"></p>
+   </div>
+
+   <div class="s4qf-side-card s4qf-v4">
+    <div class="s4qf-kick" style="color:var(--accent-ink)">Tie-in to V4</div>
+    <h2>Why Indic got an Always-ON channel</h2>
+    <p>V4's OPUS data selector leaned on an <b>English-heavy proxy</b> that systematically <b>under-valued Indic</b> text. The same bias you see in this cascade is why Indic was pulled out of the scored pool and protected in a dedicated <b>Always-ON channel</b> rather than left to a filter tuned for English.</p>
+   </div>
+  </aside>
+ </div>
+
+ <div class="s4qf-footer">Heuristic rules are computed <b>live in your browser</b> on the document shown. Gopher/C4 thresholds are <b>verified</b> against Gopher (arXiv:2112.11446) and C4 (arXiv:1910.10683); the terminal-punctuation rule is C4's. The classifier score is <b>illustrative</b> only, there is no real model behind it.</div>
+</div>
+
+<script>
+"use strict";
+(function(){
+ const $=id=>document.getElementById(id);
+
+ const DOCS={
+  en:{
+   label:"Clean English document",
+   score:4.3,
+   text:"Photosynthesis is the process by which green plants convert light into chemical energy. In the leaves, chlorophyll absorbs sunlight and drives a reaction that turns carbon dioxide and water into glucose and oxygen.\nThe glucose stores energy for the plant, and the oxygen is released into the air that we breathe. This exchange links plants and animals in a single cycle.\nBecause the reaction depends on light, the rate of photosynthesis rises during the day and falls at night. Farmers and scientists study these patterns to improve crop yields."
+  },
+  te:{
+   label:"Clean Telugu passage (native, high quality)",
+   score:4.1,
+   text:"కిరణజన్య సంయోగక్రియ అనేది పచ్చని మొక్కలు కాంతిని రసాయన శక్తిగా మార్చే ప్రక్రియ.\nఆకులలోని పత్రహరితం సూర్యకాంతిని గ్రహించి, కార్బన్ డయాక్సైడ్ మరియు నీటిని గ్లూకోజ్, ఆక్సిజన్‌గా మార్చే చర్యను నడిపిస్తుంది.\nగ్లూకోజ్ మొక్కకు శక్తిని నిల్వ చేస్తుంది, ఆక్సిజన్ మనం పీల్చే గాలిలోకి విడుదల అవుతుంది.\nఈ ప్రక్రియ కాంతిపై ఆధారపడి ఉంటుంది కాబట్టి, పగటిపూట కిరణజన్య సంయోగక్రియ వేగం పెరుగుతుంది, రాత్రి తగ్గుతుంది."
+  }
+ };
+
+ // Rules that are English-tuned: on good non-English text a failure is a BIAS artefact (amber), not a real quality problem.
+ // - stopwords: the list is English words, so any non-English text scores zero.
+ // - wordcount: a floor calibrated on English penalises morphologically dense scripts that pack more meaning per whitespace-word.
+ const EN_BIASED=new Set(["stopwords","wordcount"]);
+
+ let lang="en", th=3.0;
+
+ // ---- real heuristic analysis on the shown text ----
+ // Gopher-style "symbol" ratio counts special symbols (# @ * … etc.), NOT ordinary sentence punctuation.
+ const SYM=/[#@^*~<>{}\[\]|\\_=+`$%&]/g;
+ const STRIP=/[^\p{L}\p{N}]/gu;        // normalise a token down to letters / numbers for stop-word matching
+ const STOPWORDS=["the","be","to","of","and","that","have","with"]; // Gopher's exact stop-word set (Rae et al. 2021, App. A)
+
+ function analyze(text){
+  const lines=text.split(/\n/).map(l=>l.trim()).filter(l=>l.length>0);
+  const words=text.split(/\s+/).filter(w=>/[\p{L}\p{N}]/u.test(w));
+  const nW=words.length, nL=lines.length||1;
+
+  // mean word length (code points per word)
+  const meanLen=words.reduce((s,w)=>s+[...w].length,0)/(nW||1);
+  // symbol-to-word ratio
+  const symCount=(text.match(SYM)||[]).length;
+  const symRatio=symCount/(nW||1);
+  // fraction of lines ending in terminal punctuation
+  const termFrac=lines.filter(l=>/[.!?।]$/.test(l)).length/nL;
+  // fraction of duplicate lines
+  const seen=new Set(); let dup=0;
+  lines.forEach(l=>{const k=l.toLowerCase(); if(seen.has(k))dup++; else seen.add(k);});
+  const dupFrac=dup/nL;
+  // most common character 2-gram fraction (repetition proxy)
+  const flat=text.replace(/\s+/g,"");
+  const bg=new Map(); let bgTot=0;
+  for(let i=0;i<flat.length-1;i++){const g=flat.slice(i,i+2); bg.set(g,(bg.get(g)||0)+1); bgTot++;}
+  let bgMax=0; bg.forEach(v=>{if(v>bgMax)bgMax=v;});
+  const bgFrac=bgTot?bgMax/bgTot:0;
+  // stop-words present
+  const wl=new Set(words.map(w=>w.toLowerCase().replace(STRIP,"")));
+  const stopHits=STOPWORDS.filter(s=>wl.has(s)).length;
+  // bullet-line ratio
+  const bulletFrac=lines.filter(l=>/^[-*•▪‣·–—]/.test(l)).length/nL;
+  // ellipsis-line ratio
+  const ellFrac=lines.filter(l=>/(\.\.\.|…)\s*$/.test(l)).length/nL;
+
+  return [
+   {id:"meanlen",  name:"Mean word length",       thresh:"within [3, 10]",   val:meanLen.toFixed(1),            pass:meanLen>=3&&meanLen<=10},
+   {id:"symratio", name:"Symbol-to-word ratio",   thresh:"< 0.10",           val:symRatio.toFixed(2),          pass:symRatio<0.1},
+   {id:"termpunc", name:"Lines end in . ! ?",      thresh:"≥ 0.30",           val:termFrac.toFixed(2),          pass:termFrac>=0.3},
+   {id:"duplines", name:"Duplicate-line fraction", thresh:"< 0.30",           val:dupFrac.toFixed(2),           pass:dupFrac<0.3},
+   {id:"repeat",   name:"Top 2-gram fraction",     thresh:"< 0.20",           val:bgFrac.toFixed(2),            pass:bgFrac<0.2},
+   {id:"stopwords",name:"Common stop-words",       thresh:"≥ 2 present",      val:stopHits+" found",            pass:stopHits>=2},
+   {id:"bullets",  name:"Bullet-line ratio",       thresh:"< 0.90",           val:bulletFrac.toFixed(2),        pass:bulletFrac<0.9},
+   {id:"ellipsis", name:"Ellipsis-line ratio",     thresh:"< 0.30",           val:ellFrac.toFixed(2),           pass:ellFrac<0.3},
+   {id:"wordcount",name:"Document word count",     thresh:"[50, 100000]",     val:nW+" w",                      pass:nW>=50&&nW<=100000}
+  ];
+ }
+
+ // ---- synthetic corpus for the sidebar meters (strictness -> shrink / quality) ----
+ const CORPUS=(function(){
+  // deterministic spread of educational-value scores across a sample crawl
+  const a=[];
+  for(let i=0;i<60;i++){ a.push(+( (Math.sin(i*12.9898)*43758.5453%1+1)%1 *5 ).toFixed(2)); }
+  return a;
+ })();
+
+ function renderCascade(){
+  const doc=DOCS[lang];
+  const dt=$("s4qf-doctext");
+  dt.textContent=doc.text;
+  dt.className="s4qf-doctext"+(lang==="te"?" te":"");
+  $("s4qf-docLbl").textContent=doc.label;
+
+  const rules=analyze(doc.text);
+  const nW=doc.text.split(/\s+/).filter(w=>/[\p{L}\p{N}]/u.test(w)).length;
+  $("s4qf-docChip").textContent=nW+" words";
+
+  const wrap=$("s4qf-cascade"); wrap.innerHTML="";
+  let passN=0, failN=0, hardFail=false, biasFail=0;
+  rules.forEach(r=>{
+   const biased=!r.pass && lang!=="en" && EN_BIASED.has(r.id);
+   const row=document.createElement("div");
+   row.className="s4qf-row "+(r.pass?"pass":(biased?"bias":"fail"));
+   let chip;
+   if(r.pass){chip='<span class="s4qf-chip k">PASS</span>'; passN++;}
+   else if(biased){chip='<span class="s4qf-chip b">FAIL · EN-BIAS</span>'; failN++; hardFail=true; biasFail++;}
+   else {chip='<span class="s4qf-chip d">FAIL</span>'; failN++; hardFail=true;}
+   row.innerHTML='<span class="s4qf-rname">'+r.name+'</span>'+
+     '<span class="s4qf-rthresh">'+r.thresh+' · got '+r.val+'</span>'+chip;
+   wrap.appendChild(row);
+  });
+  $("s4qf-liveCount").textContent=passN+" pass · "+failN+" fail";
+
+  // classifier gate
+  const passGate=doc.score>=th;
+  $("s4qf-gateScore").innerHTML=doc.score.toFixed(1)+'<small>/5</small>';
+  $("s4qf-gateThresh").textContent="keep if score ≥ "+th.toFixed(1);
+
+  // final verdict: survive only if every rule passes AND classifier clears threshold
+  const kept=!hardFail && passGate;
+  const v=$("s4qf-verdict"), vb=$("s4qf-verdictBig"), vt=$("s4qf-verdictTxt");
+  v.className="s4qf-verdict "+(kept?"keep":"drop");
+  vb.textContent=kept?"KEPT":"DROPPED";
+  if(kept){
+   vt.innerHTML="This document clears <b>all "+rules.length+" heuristic rules</b> and scores <b>"+doc.score.toFixed(1)+" ≥ "+th.toFixed(1)+"</b> at the classifier gate, so it enters the training corpus.";
+  } else if(hardFail && biasFail>0){
+   vt.innerHTML="This is <b>clean, high-quality</b> text, and the classifier even scores it <b>"+doc.score.toFixed(1)+"/5</b>, yet it is dropped by <b>"+biasFail+" English-tuned rule"+(biasFail>1?"s":"")+"</b> (amber) that a non-English script was never going to satisfy. <b>The filter, not the text, is broken.</b>";
+  } else if(hardFail){
+   vt.innerHTML="A heuristic rule failed, so the document is dropped <b>before it ever reaches the classifier</b>. The cascade is an AND gate: one failed rule is enough.";
+  } else {
+   vt.innerHTML="Every heuristic passed, but the classifier score <b>"+doc.score.toFixed(1)+" &lt; "+th.toFixed(1)+"</b> falls below the threshold, so the gate drops it.";
+  }
+ }
+
+ function renderMeters(){
+  const total=CORPUS.length;
+  const kept=CORPUS.filter(s=>s>=th);
+  const keepPct=kept.length/total*100;
+  const avgQ=kept.length?kept.reduce((a,b)=>a+b,0)/kept.length:0;
+  $("s4qf-thVal").innerHTML=th.toFixed(1)+'<small>/5</small>';
+  $("s4qf-corpVal").textContent=keepPct.toFixed(0)+"%";
+  $("s4qf-corpFill").style.width=keepPct+"%";
+  $("s4qf-qVal").textContent=kept.length?avgQ.toFixed(1)+"/5":"n/a";
+  $("s4qf-qFill").style.width=(avgQ/5*100)+"%";
+ }
+
+ function renderAnswer(){
+  if(lang==="en"){
+   $("s4qf-langNote").innerHTML="A clean English document that <b>passes the whole cascade</b>. This is the corpus the rules were tuned on.";
+   $("s4qf-answerTitle").textContent="The rules assume English";
+   $("s4qf-answerTxt").innerHTML="Every threshold here was calibrated on English. It happens to work for this document, which hides the fact that the rules encode <b>English writing habits</b> as if they were universal marks of quality.";
+  }else{
+   $("s4qf-langNote").innerHTML="A <b>native, high-quality</b> Telugu passage on photosynthesis. Watch it fail rules it should never have been judged by.";
+   $("s4qf-answerTxt").innerHTML="The stop-word check only looks for <b>English</b> words, so clean Telugu scores zero, and the word-count floor was tuned on English even though Telugu <b>packs more meaning into each word</b> and needs fewer of them. The fix is <b>per-language stop-word lists and per-script thresholds</b>, so good Telugu is judged as Telugu, not as broken English.";
+  }
+ }
+
+ $("s4qf-th").addEventListener("input",e=>{th=parseFloat(e.target.value);renderMeters();renderCascade();});
+ $("s4qf-langSel").addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b)return;
+  lang=b.dataset.lang;
+  document.querySelectorAll("#s4qf-langSel button").forEach(x=>x.classList.toggle("s4qf-on",x===b));
+  renderAnswer();renderCascade();
+ });
+
+ renderAnswer();
+ renderMeters();
+ renderCascade();
+})();
+</script>
+</body>
+</html>

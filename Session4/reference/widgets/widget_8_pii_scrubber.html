@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PII Scrubber — Regex + NER</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+--bg:#f6f8fb; --surface:#ffffff; --surface-alt:#fbfdff;
+--ink:#102338; --ink-body:#1f3850; --ink-muted:#60768d; --muted-2:#7d90a5;
+--rule:#e2e9f0; --rule-strong:#cfdbe6;
+--accent:#00a7d8; --accent-soft:#eafaff; --accent-ink:#0f6e8c;
+--green:#24b36b; --green-soft:#e7fff2; --green-ink:#19824e;
+--amber:#d99a13; --amber-soft:#fff7df; --amber-ink:#8a5c06;
+--violet:#7b61ff; --violet-soft:#eeeaff; --violet-ink:#5a44c8;
+--red:#e05f6e; --red-soft:#ffeef0; --red-ink:#c0455a;
+--shadow-soft:0 8px 22px rgba(16,35,56,.05);
+--font-sans:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+--font-mono:"SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;overflow-x:hidden;background:linear-gradient(180deg,#f8fafc,#f2f5f9);color:var(--ink);font-family:var(--font-sans)}
+body{padding:14px}
+.s4pii-app{max-width:1480px;margin:auto}
+.s4pii-topbar{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:10px}
+.s4pii-topbar h1{margin:0;font-size:clamp(22px,2.5vw,32px);letter-spacing:-.035em}
+.s4pii-subtitle{margin-top:7px;max-width:1050px;color:var(--ink-muted);line-height:1.5;font-size:14px}
+.s4pii-badge{border:1px solid #d9e9f3;background:var(--accent-soft);color:var(--accent-ink);padding:8px 12px;border-radius:999px;font-size:12px;font-weight:800;white-space:nowrap}
+.s4pii-layout{display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:12px}
+.s4pii-stage,.s4pii-side{background:var(--surface);border:1px solid var(--rule);border-radius:18px;box-shadow:var(--shadow-soft)}
+.s4pii-stage{padding:12px;min-width:0}
+.s4pii-side{padding:10px}
+.s4pii-stage-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;gap:10px}
+.s4pii-stage-title{font-weight:800;font-size:15px}
+.s4pii-stage-note{font-size:12px;color:var(--ink-muted)}
+
+/* Document */
+.s4pii-doc-cap{font-size:10px;letter-spacing:.14em;font-weight:800;color:var(--muted-2)}
+.s4pii-doc{margin-top:7px;border:1px solid var(--rule);border-radius:14px;background:var(--surface-alt);padding:15px 17px;line-height:2.05;font-size:14.5px;color:var(--ink-body);overflow-wrap:anywhere}
+.s4pii-doc .s4pii-meta{display:block;font-family:var(--font-mono);font-size:11px;color:var(--muted-2);letter-spacing:.04em;margin-bottom:9px;line-height:1.5}
+.s4pii-tok{border-radius:6px;padding:1px 3px;transition:background .22s,color .22s,box-shadow .22s}
+.s4pii-mask{font-family:var(--font-mono);font-size:12.5px;font-weight:800;border-radius:6px;padding:2px 7px;white-space:nowrap;letter-spacing:.02em}
+.s4pii-mask.s4pii-green{background:var(--green-soft);color:var(--green-ink);box-shadow:inset 0 0 0 1px #b6eccf}
+.s4pii-mask.s4pii-amber{background:var(--amber-soft);color:var(--amber-ink);box-shadow:inset 0 0 0 1px #f0dca0}
+.s4pii-raw-red{background:var(--red-soft);color:var(--red-ink);box-shadow:inset 0 0 0 1px #f5c9d0;border-radius:6px;padding:1px 4px;font-weight:700}
+.s4pii-deva{font-family:"Noto Sans Devanagari",var(--font-sans);overflow-wrap:anywhere}
+
+/* Legend */
+.s4pii-legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:11px}
+.s4pii-leg{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--ink-muted);border:1px solid var(--rule);background:#fff;border-radius:999px;padding:5px 10px;font-weight:650}
+.s4pii-swatch{width:11px;height:11px;border-radius:4px;flex:none}
+.s4pii-sw-green{background:var(--green)}
+.s4pii-sw-amber{background:var(--amber)}
+.s4pii-sw-red{background:var(--red)}
+.s4pii-sw-cyan{background:var(--accent)}
+
+/* explain strip */
+.s4pii-explain{margin-top:11px;border:1px solid #cdeff8;background:linear-gradient(90deg,#f2fcff,#fbfeff);border-radius:14px;padding:11px 13px;display:grid;grid-template-columns:150px 1fr;gap:13px;align-items:center}
+.s4pii-kicker{font-size:10px;letter-spacing:.15em;color:var(--accent-ink);font-weight:800}
+.s4pii-explain-body{font-size:12.5px;line-height:1.5;color:var(--ink-body)}
+.s4pii-explain-body strong{color:var(--ink)}
+
+/* relocated two-column band in the stage */
+.s4pii-band{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:11px;margin-top:11px}
+.s4pii-band-card{border:1px solid var(--rule);background:var(--surface-alt);border-radius:14px;padding:11px 13px}
+.s4pii-band-title{font-size:14px;margin:6px 0 6px}
+.s4pii-band-body{margin:0;color:var(--ink-muted);line-height:1.5;font-size:12.5px}
+.s4pii-band-body strong{color:var(--ink)}
+
+/* counts row */
+.s4pii-counts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:11px}
+.s4pii-count-card{border:1px solid var(--rule);border-radius:13px;background:var(--surface-alt);padding:9px 11px}
+.s4pii-count-num{font-size:22px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1}
+.s4pii-count-lab{font-size:10.5px;letter-spacing:.05em;color:var(--ink-muted);font-weight:700;margin-top:5px;text-transform:uppercase}
+.s4pii-count-card.s4pii-c-green .s4pii-count-num{color:var(--green-ink)}
+.s4pii-count-card.s4pii-c-amber .s4pii-count-num{color:var(--amber-ink)}
+.s4pii-count-card.s4pii-c-red .s4pii-count-num{color:var(--red-ink)}
+
+/* Sidebar */
+.s4pii-panel-title{font-weight:800;font-size:13px;margin:2px 0 8px}
+.s4pii-side-card{border:1px solid var(--rule);background:var(--surface-alt);padding:11px;border-radius:14px;margin-bottom:10px}
+.s4pii-side-card h2{font-size:14px;margin:0 0 6px}
+.s4pii-side-card p{margin:0;color:var(--ink-muted);line-height:1.5;font-size:12px}
+.s4pii-step-kicker{font-size:10px;letter-spacing:.14em;color:var(--accent-ink);font-weight:800}
+
+.s4pii-toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--rule-strong);background:#fff;border-radius:12px;padding:9px 11px;cursor:pointer;margin-bottom:9px;transition:.18s}
+.s4pii-toggle:hover{transform:translateY(-1px)}
+.s4pii-toggle.s4pii-on{border-color:#a9e7c4;background:var(--green-soft)}
+.s4pii-tog-txt{min-width:0}
+.s4pii-tog-name{font-weight:800;font-size:13px;color:var(--ink)}
+.s4pii-tog-sub{font-size:11px;color:var(--ink-muted);margin-top:2px;line-height:1.35}
+.s4pii-switch{width:40px;height:23px;border-radius:999px;background:#d5dee7;position:relative;flex:none;transition:.2s}
+.s4pii-toggle.s4pii-on .s4pii-switch{background:var(--green)}
+.s4pii-knob{position:absolute;top:2.5px;left:2.5px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:.2s}
+.s4pii-toggle.s4pii-on .s4pii-knob{left:19px}
+.s4pii-tag-ill{display:inline-block;margin-left:6px;font-size:9px;font-weight:800;letter-spacing:.06em;color:var(--violet-ink);background:var(--violet-soft);border:1px solid #d9d1ff;border-radius:999px;padding:2px 6px;vertical-align:middle}
+
+.s4pii-slider-wrap{margin-top:4px}
+.s4pii-slider-head{display:flex;justify-content:space-between;align-items:baseline;font-size:11.5px;margin-bottom:7px}
+.s4pii-slider-head strong{font-size:13px;color:var(--ink)}
+.s4pii-slider-val{font-family:var(--font-mono);font-weight:800;color:var(--amber-ink)}
+input[type=range]{-webkit-appearance:none;width:100%;height:6px;border-radius:999px;background:linear-gradient(90deg,var(--green) 0%,var(--amber) 100%);outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:19px;height:19px;border-radius:50%;background:#fff;border:2px solid var(--amber);box-shadow:0 1px 4px rgba(16,35,56,.25);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:19px;height:19px;border-radius:50%;background:#fff;border:2px solid var(--amber);cursor:pointer}
+.s4pii-slider-scale{display:flex;justify-content:space-between;font-size:10px;color:var(--muted-2);margin-top:5px;font-weight:700}
+
+/* meters */
+.s4pii-meters{display:grid;gap:11px;margin-top:2px}
+.s4pii-meter-lab{display:flex;justify-content:space-between;align-items:baseline;font-size:11.5px;font-weight:700;color:var(--ink-body);margin-bottom:5px}
+.s4pii-meter-lab span:last-child{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-weight:800}
+.s4pii-meter{height:9px;background:#eef2f6;border-radius:999px;overflow:hidden}
+.s4pii-meter>div{height:100%;border-radius:999px;transition:width .25s}
+.s4pii-meter-note{font-size:10.5px;color:var(--ink-muted);margin-top:5px;line-height:1.4}
+
+.s4pii-v4{border-left:3px solid var(--violet);background:var(--violet-soft);border-radius:0 12px 12px 0;padding:9px 11px;margin-top:2px}
+.s4pii-v4 .s4pii-step-kicker{color:var(--violet-ink)}
+.s4pii-v4 p{color:var(--violet-ink);font-size:12px;line-height:1.5;margin:5px 0 0;opacity:.92}
+
+.s4pii-footer{font-size:11px;color:var(--muted-2);line-height:1.5;margin-top:8px}
+
+@media(max-width:1100px){
+ .s4pii-layout{grid-template-columns:minmax(0,1fr)}
+ .s4pii-explain{grid-template-columns:1fr}
+ .s4pii-topbar{display:block}
+ .s4pii-badge{display:inline-block;margin-top:10px}
+}
+@media(max-width:640px){
+ body{padding:10px}
+ .s4pii-counts{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="s4pii-app">
+ <div class="s4pii-topbar">
+  <div>
+   <h1>PII Scrubber: Regex Layer + Name Layer</h1>
+   <div class="s4pii-subtitle">Structured identifiers fall to a regex pass that runs live in your browser. Personal names need an ML/NER layer, and that layer carries a real precision-versus-recall tension that gets sharper for Indic names. Turn the layers on and push the aggressiveness slider to watch a real name get wrongly masked.</div>
+  </div>
+  <div class="s4pii-badge">Interactive · real regex masking</div>
+ </div>
+
+ <div class="s4pii-layout">
+  <main class="s4pii-stage">
+   <div class="s4pii-stage-head">
+    <div class="s4pii-stage-title">One forum post from the raw crawl</div>
+    <div class="s4pii-stage-note" id="s4pii-note">Both layers OFF — nothing masked yet</div>
+   </div>
+
+   <div class="s4pii-doc-cap">DOCUMENT · rendered with the active masking layers applied inline</div>
+   <div class="s4pii-doc" id="s4pii-doc"></div>
+
+   <div class="s4pii-legend">
+    <div class="s4pii-leg"><span class="s4pii-swatch s4pii-sw-green"></span>Correctly masked PII</div>
+    <div class="s4pii-leg"><span class="s4pii-swatch s4pii-sw-amber"></span>False positive (not PII)</div>
+    <div class="s4pii-leg"><span class="s4pii-swatch s4pii-sw-red"></span>Missed PII (still exposed)</div>
+    <div class="s4pii-leg"><span class="s4pii-swatch s4pii-sw-cyan"></span>Explained below</div>
+   </div>
+
+   <div class="s4pii-counts">
+    <div class="s4pii-count-card s4pii-c-green"><div class="s4pii-count-num" id="s4pii-cnt-masked">0</div><div class="s4pii-count-lab">PII correctly masked</div></div>
+    <div class="s4pii-count-card s4pii-c-amber"><div class="s4pii-count-num" id="s4pii-cnt-fp">0</div><div class="s4pii-count-lab">False positives</div></div>
+    <div class="s4pii-count-card s4pii-c-red"><div class="s4pii-count-num" id="s4pii-cnt-missed">6</div><div class="s4pii-count-lab">PII still exposed</div></div>
+   </div>
+
+   <div class="s4pii-explain">
+    <div><div class="s4pii-kicker">READ THE COLORS</div></div>
+    <div class="s4pii-explain-body" id="s4pii-explain">
+     <strong>Emails, the phone number and the IPv4 address</strong> are structured — a regex catches them exactly, with zero false positives. <strong>Names</strong> have no fixed shape, so they need the ML/NER layer. That layer is where mistakes appear: push aggressiveness up and it starts masking <strong>a place name that is not PII</strong>.
+    </div>
+   </div>
+
+   <div class="s4pii-band">
+    <div class="s4pii-band-card">
+     <div class="s4pii-step-kicker">HOW REAL PIPELINES SPLIT IT</div>
+     <h2 class="s4pii-band-title">Two layers, two failure modes</h2>
+     <p class="s4pii-band-body"><strong>Structured PII → regex</strong> (like Dolma): emails, phones, IPs match exact patterns, near-perfect precision. <strong>Names → ML/NER</strong> (e.g. Microsoft Presidio; verify tooling before you publish). Indic names raise false positives because place names, common words and given names overlap.</p>
+    </div>
+    <div class="s4pii-band-card s4pii-v4">
+     <div class="s4pii-step-kicker">V4 REALITY</div>
+     <p class="s4pii-band-body">Dolma handled PII by regex at the document level. The Indic pipeline had no PII pass of its own — the very setting where a name model would have struggled most.</p>
+    </div>
+   </div>
+  </main>
+
+  <aside class="s4pii-side">
+   <div class="s4pii-panel-title">Masking layers</div>
+
+   <div class="s4pii-toggle" id="s4pii-tog-regex">
+    <div class="s4pii-tog-txt">
+     <div class="s4pii-tog-name">Regex layer</div>
+     <div class="s4pii-tog-sub">Email · phone · IPv4 → typed placeholders. Runs for real in JS.</div>
+    </div>
+    <div class="s4pii-switch"><div class="s4pii-knob"></div></div>
+   </div>
+
+   <div class="s4pii-toggle" id="s4pii-tog-ner">
+    <div class="s4pii-tog-txt">
+     <div class="s4pii-tog-name">NER / name layer<span class="s4pii-tag-ill">ILLUSTRATIVE</span></div>
+     <div class="s4pii-tog-sub">Detects personal names. Behaviour shown via a small known list.</div>
+    </div>
+    <div class="s4pii-switch"><div class="s4pii-knob"></div></div>
+   </div>
+
+   <div class="s4pii-side-card">
+    <div class="s4pii-step-kicker">NER AGGRESSIVENESS</div>
+    <div class="s4pii-slider-wrap">
+     <div class="s4pii-slider-head"><strong>False-positive dial</strong><span class="s4pii-slider-val" id="s4pii-aggr-val">0.30</span></div>
+     <input type="range" id="s4pii-aggr" min="0" max="100" value="30" />
+     <div class="s4pii-slider-scale"><span>conservative</span><span>aggressive</span></div>
+    </div>
+    <p style="margin-top:9px">Raising the threshold makes the name model fire on weaker signals. Recall climbs — but it also starts flagging an Indic place name that is not a person. Requires the NER layer to be ON.</p>
+   </div>
+
+   <div class="s4pii-side-card">
+    <div class="s4pii-step-kicker">PRECISION vs RECALL</div>
+    <div class="s4pii-meters" style="margin-top:9px">
+     <div>
+      <div class="s4pii-meter-lab"><span>Precision</span><span id="s4pii-prec-val">—</span></div>
+      <div class="s4pii-meter"><div id="s4pii-prec-bar" style="width:0%;background:var(--green)"></div></div>
+      <div class="s4pii-meter-note">of everything masked, how much was truly PII</div>
+     </div>
+     <div>
+      <div class="s4pii-meter-lab"><span>Recall</span><span id="s4pii-rec-val">—</span></div>
+      <div class="s4pii-meter"><div id="s4pii-rec-bar" style="width:0%;background:var(--accent)"></div></div>
+      <div class="s4pii-meter-note">of all real PII, how much got caught</div>
+     </div>
+    </div>
+   </div>
+
+   <div class="s4pii-footer">Regex masking runs live in your browser on the document text. The name/NER layer and the precision/recall match rates are illustrative, driven by a small labelled list so the false-positive behaviour is real and repeatable.</div>
+  </aside>
+ </div>
+</div>
+
+<script>
+// ---------- Ground-truth document ----------
+// tokens carry semantic labels so precision/recall is computed from real labels.
+// kind: 'text' | 'email' | 'phone' | 'ip' | 'name' | 'place'
+// piiTrue: whether the token is genuinely PII (drives recall + false-positive logic)
+const DOC = [
+ {t:"From ", kind:"text"},
+ {t:"Ananya Sharma", kind:"name", piiTrue:true, deva:false},
+ {t:" (", kind:"text"},
+ {t:"ananya.sharma@gmail.com", kind:"email", piiTrue:true},
+ {t:"), posting on the migration thread. Reply-to set to ", kind:"text"},
+ {t:"r.iyer@wipro.co.in", kind:"email", piiTrue:true},
+ {t:". Callback number ", kind:"text"},
+ {t:"+91 98450 12345", kind:"phone", piiTrue:true},
+ {t:", request logged from ", kind:"text"},
+ {t:"203.0.113.47", kind:"ip", piiTrue:true},
+ {t:". Ticket raised by ", kind:"text"},
+ {t:"राहुल वर्मा", kind:"name", piiTrue:true, deva:true},
+ {t:" while travelling through ", kind:"text"},
+ {t:"मैसूर", kind:"place", piiTrue:false, deva:true},
+ {t:" — the ", kind:"text"},
+ {t:"Mysuru", kind:"place", piiTrue:false, deva:false},
+ {t:" data centre. No further contact details on file.", kind:"text"}
+];
+
+const PLACEHOLDER = {email:"[EMAIL]", phone:"[PHONE]", ip:"[IP]", name:"[NAME]", place:"[NAME]"};
+
+// ---------- Real regexes (run live) ----------
+const RE = {
+ email: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/,
+ phone: /(?:\+\d{1,3}[\s-]?)?(?:\d[\s-]?){8,12}\d/,
+ ip:    /\b(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)\b/
+};
+function regexKind(tok){
+ if(RE.email.test(tok)) return "email";
+ if(RE.ip.test(tok))    return "ip";
+ if(RE.phone.test(tok)) return "phone";
+ return null;
+}
+
+// ---------- NER illustrative list ----------
+// Known personal names the model reliably catches. Place names are only
+// masked once aggressiveness crosses a threshold (the false positive).
+const NER_NAMES = new Set(["Ananya Sharma","राहुल वर्मा"]);
+// place tokens the aggressive model starts to confuse for names
+const NER_PLACE_CONFUSE = new Set(["मैसूर","Mysuru"]);
+
+let state = { regex:false, ner:false, aggr:0.30 };
+
+const el = id => document.getElementById(id);
+
+function decide(tok){
+ // returns {masked:bool, cls:'green'|'amber', placeholder} or null
+ // ----- regex layer (real) -----
+ if(state.regex){
+  const rk = regexKind(tok.t);
+  if(rk){ return {masked:true, cls:"green", ph:PLACEHOLDER[rk]}; }
+ }
+ // ----- NER layer (illustrative) -----
+ if(state.ner){
+  if(NER_NAMES.has(tok.t)){
+   return {masked:true, cls:"green", ph:PLACEHOLDER.name};
+  }
+  // place-name false positive appears as aggressiveness rises
+  if(NER_PLACE_CONFUSE.has(tok.t) && state.aggr >= 0.55){
+   return {masked:true, cls:"amber", ph:PLACEHOLDER.place};
+  }
+ }
+ return null;
+}
+
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+
+function render(){
+ const doc = el("s4pii-doc");
+ let html = '<span class="s4pii-meta">POST #40217 · lang: mixed (en + hi) · source: raw web crawl · pii pass:'
+   + (state.regex||state.ner ? ' ACTIVE</span>' : ' none</span>');
+ let masked=0, fp=0, missed=0;
+
+ DOC.forEach(tok=>{
+  if(tok.kind==="text"){ html += esc(tok.t); return; }
+  const d = decide(tok);
+  const devaCls = tok.deva ? " s4pii-deva" : "";
+  if(d){
+   html += `<span class="s4pii-mask s4pii-${d.cls}">${d.ph}</span>`;
+   if(d.cls==="green") masked++; else fp++;
+  } else {
+   // not masked — is it exposed PII?
+   if(tok.piiTrue){
+    missed++;
+    html += `<span class="s4pii-raw-red${devaCls}">${esc(tok.t)}</span>`;
+   } else {
+    html += `<span class="s4pii-tok${devaCls}">${esc(tok.t)}</span>`;
+   }
+  }
+ });
+ doc.innerHTML = html;
+
+ el("s4pii-cnt-masked").textContent = masked;
+ el("s4pii-cnt-fp").textContent = fp;
+ el("s4pii-cnt-missed").textContent = missed;
+
+ // ---------- precision / recall over the whole doc ----------
+ const totalPII = DOC.filter(t=>t.piiTrue).length; // 6
+ const truePos = masked;          // correctly masked PII
+ const falsePos = fp;             // masked non-PII
+ const precision = (truePos+falsePos)===0 ? null : truePos/(truePos+falsePos);
+ const recall = totalPII===0 ? 0 : truePos/totalPII;
+
+ setMeter("prec", precision);
+ setMeter("rec", recall, true);
+
+ // ---------- status note ----------
+ let note;
+ if(!state.regex && !state.ner) note = "Both layers OFF — nothing masked yet";
+ else if(state.regex && !state.ner) note = "Regex only — structured PII gone, names still exposed";
+ else if(!state.regex && state.ner) note = "NER only — names masked, structured PII still exposed";
+ else note = fp>0 ? "Both layers ON — but a place name got wrongly masked" : "Both layers ON — PII masked cleanly";
+ el("s4pii-note").textContent = note;
+
+ el("s4pii-tog-regex").classList.toggle("s4pii-on", state.regex);
+ el("s4pii-tog-ner").classList.toggle("s4pii-on", state.ner);
+}
+
+function setMeter(which, val, isRecall){
+ const bar = el(`s4pii-${which}-bar`);
+ const lab = el(`s4pii-${which}-val`);
+ if(val===null){ bar.style.width="0%"; lab.textContent="—"; return; }
+ const pct = Math.round(val*100);
+ bar.style.width = pct+"%";
+ lab.textContent = pct+"%";
+ if(!isRecall){
+  // precision colour: green when perfect, amber when dented by false positives
+  bar.style.background = val>=0.999 ? "var(--green)" : "var(--amber)";
+  lab.style.color = val>=0.999 ? "var(--green-ink)" : "var(--amber-ink)";
+ }
+}
+
+// ---------- wiring ----------
+el("s4pii-tog-regex").addEventListener("click", ()=>{ state.regex=!state.regex; render(); });
+el("s4pii-tog-ner").addEventListener("click", ()=>{ state.ner=!state.ner; render(); });
+el("s4pii-aggr").addEventListener("input", e=>{
+ state.aggr = (+e.target.value)/100;
+ el("s4pii-aggr-val").textContent = state.aggr.toFixed(2);
+ render();
+});
+
+render();
+</script>
+</body>
+</html>

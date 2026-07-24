@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Real Corpus — Data strategy for a 40B India-first model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B1310; --ink-2:#0F1A15; --surface:#111E18;
+    --line:rgba(233,231,220,0.10); --line-strong:rgba(233,231,220,0.18);
+    --text:#ECEAE1; --muted:#8A9A92; --muted-2:#63736B;
+    --jade:#4FC58C; --jade-bright:#79E6B0; --jade-dim:rgba(79,197,140,0.16);
+    --ochre:#B8923E; --ochre-ground:#2A2414; --amber:#E0A03A; --rust:#E0693D;
+    --pad-hatch: repeating-linear-gradient(-45deg, rgba(184,146,62,0.55) 0 1.5px, rgba(184,146,62,0.0) 1.5px 8px), var(--ochre-ground);
+    --maxw:1180px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--ink);color:var(--text);font-family:"Hanken Grotesk",system-ui,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5;overflow:hidden}
+
+  .deck{height:100vh;overflow-y:scroll;scroll-snap-type:y mandatory;scroll-behavior:smooth;scrollbar-width:none}
+  .deck::-webkit-scrollbar{display:none}
+  .slide{min-height:100vh;scroll-snap-align:start;scroll-snap-stop:always;display:flex;flex-direction:column;justify-content:center;padding:84px 48px 76px;position:relative}
+  .wrap{width:100%;max-width:var(--maxw);margin:0 auto}
+
+  .rv{opacity:0;transform:translateY(18px);transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1)}
+  .slide.in .rv{opacity:1;transform:none}
+  .slide.in .rv.d1{transition-delay:.07s}.slide.in .rv.d2{transition-delay:.14s}.slide.in .rv.d3{transition-delay:.21s}
+  .slide.in .rv.d4{transition-delay:.28s}.slide.in .rv.d5{transition-delay:.35s}.slide.in .rv.d6{transition-delay:.42s}
+
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:var(--jade);font-weight:500;display:inline-flex;align-items:center;gap:10px}
+  .eyebrow::before{content:"";width:22px;height:1px;background:var(--jade);opacity:.7}
+  .eyebrow.stage{color:var(--amber)} .eyebrow.stage::before{background:var(--amber)}
+  h1{font-family:"Archivo",sans-serif;font-weight:900;letter-spacing:-.02em;line-height:.98;font-size:clamp(40px,6.4vw,86px)}
+  h2{font-family:"Archivo",sans-serif;font-weight:800;letter-spacing:-.015em;line-height:1.02;font-size:clamp(28px,3.7vw,50px)}
+  h3{font-family:"Archivo",sans-serif;font-weight:700;letter-spacing:-.01em;font-size:clamp(18px,1.5vw,21px)}
+  .lede{font-size:clamp(16px,1.4vw,20px);color:var(--muted);max-width:62ch;font-weight:400}
+  .mono{font-family:"IBM Plex Mono",monospace}
+  strong,b{color:var(--text);font-weight:700}
+  .jade{color:var(--jade-bright)} .amber{color:var(--amber)} .rust{color:var(--rust)}
+
+  .rail{position:fixed;top:0;left:0;right:0;height:3px;z-index:40}
+  .rail i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--jade),var(--jade-bright));transition:width .3s ease}
+  .brand{position:fixed;left:28px;bottom:22px;z-index:40;font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-2);display:flex;gap:8px;align-items:center}
+  .brand b{color:var(--jade)}
+  .nav{position:fixed;right:24px;bottom:20px;z-index:40;display:flex;align-items:center;gap:14px}
+  .counter{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted);letter-spacing:.08em}
+  .counter b{color:var(--text)}
+  .navbtn{width:38px;height:38px;border-radius:50%;border:1px solid var(--line-strong);background:rgba(17,30,24,.7);color:var(--text);cursor:pointer;display:grid;place-items:center;transition:.2s;backdrop-filter:blur(6px)}
+  .navbtn:hover{border-color:var(--jade);color:var(--jade-bright)}
+  .navbtn:focus-visible{outline:2px solid var(--jade);outline-offset:2px}
+  .navbtn svg{width:15px;height:15px}
+  .hint{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:30;font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--muted-2);letter-spacing:.12em;opacity:.9;transition:opacity .5s}
+  .hint.gone{opacity:0}
+
+  .bar-track{position:relative;height:22px;border-radius:3px;background:rgba(233,231,220,0.05);overflow:hidden}
+  .bar-fill{position:absolute;inset:0 auto 0 0;display:flex;align-items:stretch;width:0;transition:width 1.1s cubic-bezier(.2,.75,.2,1)}
+  .seg-real{background:linear-gradient(90deg,var(--jade),#3AA774);height:100%;flex:0 0 auto;border-radius:3px 0 0 3px}
+  .seg-pad{background:var(--pad-hatch);height:100%;flex:1 1 auto;transition:opacity .6s ease,flex-basis 1.1s cubic-bezier(.2,.75,.2,1)}
+
+  .hero-num{font-family:"IBM Plex Mono",monospace;font-weight:600;font-variant-numeric:tabular-nums;font-size:clamp(72px,15vw,190px);line-height:.85;letter-spacing:-.04em}
+  .hero-bar{margin-top:26px;height:30px}
+  .hero-legend{display:flex;gap:26px;margin-top:20px;flex-wrap:wrap}
+  .lg{display:flex;align-items:center;gap:9px;font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted);letter-spacing:.04em}
+  .sw{width:26px;height:12px;border-radius:2px}
+  .sw.real{background:linear-gradient(90deg,var(--jade),#3AA774)} .sw.pad{background:var(--pad-hatch)}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
+  .grid-side{display:grid;grid-template-columns:0.95fr 1.15fr;gap:56px;align-items:center}
+  .stack>*+*{margin-top:16px}
+
+  .tag{display:inline-flex;align-items:center;gap:7px;font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:5px 11px;border-radius:999px;border:1px solid var(--line-strong);color:var(--muted)}
+  .tag.v{color:var(--jade-bright);border-color:rgba(79,197,140,.4)} .tag.s{color:var(--amber);border-color:rgba(224,160,58,.35)}
+
+  .split{display:flex;height:56px;border-radius:6px;overflow:hidden;border:1px solid var(--line);font-family:"IBM Plex Mono",monospace}
+  .split div{display:flex;flex-direction:column;justify-content:center;padding:0 16px;font-size:13px}
+  .split .a{background:linear-gradient(90deg,rgba(79,197,140,.9),rgba(58,167,116,.85));color:#06120C;font-weight:600;flex:0 0 25.5%}
+  .split .b{background:rgba(90,120,150,.35);color:var(--text);flex:0 0 9.5%}
+  .split .c{background:var(--pad-hatch);color:var(--ochre);flex:1 1 auto}
+  .split small{opacity:.8;font-size:10px;letter-spacing:.08em}
+
+  .chart-head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:22px}
+  .toggle{display:inline-flex;border:1px solid var(--line-strong);border-radius:999px;padding:3px;background:rgba(17,30,24,.6)}
+  .toggle button{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.08em;color:var(--muted);background:none;border:none;padding:8px 16px;border-radius:999px;cursor:pointer;transition:.2s;text-transform:uppercase}
+  .toggle button.on{background:var(--jade);color:#06120C;font-weight:600}
+  .toggle button:focus-visible{outline:2px solid var(--jade);outline-offset:2px}
+  .rows{display:grid;gap:11px}
+  .row{display:grid;grid-template-columns:150px 1fr 76px;align-items:center;gap:16px}
+  .row .lang{font-weight:600;font-size:15px} .row .lang span{display:block;font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted-2);font-weight:400}
+  .row .val{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;text-align:right;font-size:14px;color:var(--jade-bright)}
+  .row .val.head{color:var(--muted)}
+  .est{color:var(--muted-2);font-size:10px;vertical-align:super}
+
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .card{border:1px solid var(--line);border-radius:12px;padding:20px;background:var(--surface);position:relative;overflow:hidden}
+  .card .k{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.13em;text-transform:uppercase;color:var(--jade);margin-bottom:10px}
+  .card p{font-size:13.5px;color:var(--muted)}
+  .card .big{font-family:"IBM Plex Mono",monospace;font-size:32px;font-weight:600;letter-spacing:-.02em;color:var(--text);line-height:1}
+
+  .tiers{display:grid;gap:11px}
+  .tier{display:grid;grid-template-columns:64px 1fr;gap:20px;align-items:center;border:1px solid var(--line);border-left:3px solid var(--jade);border-radius:10px;padding:14px 20px;background:var(--surface)}
+  .tier .t{font-family:"Archivo";font-weight:800;font-size:20px}
+  .tier .band{font-family:"IBM Plex Mono";font-size:11px;color:var(--muted-2);letter-spacing:.06em}
+  .tier .langs{font-weight:600;font-size:15px} .tier .langs em{font-style:normal;color:var(--muted);font-weight:400;font-size:13px;display:block;margin-top:2px}
+  .tier.t1{border-left-color:var(--jade-bright)}.tier.t2{border-left-color:var(--jade)}.tier.t3{border-left-color:var(--amber)}.tier.t4{border-left-color:var(--muted-2)}
+
+  .mix{width:100%;border-collapse:collapse;font-size:14px}
+  .mix th{text-align:left;font-family:"IBM Plex Mono";font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-2);font-weight:500;padding:0 14px 12px;border-bottom:1px solid var(--line-strong)}
+  .mix td{padding:10px 14px;border-bottom:1px solid var(--line)}
+  .mix td.p{font-family:"IBM Plex Mono";font-variant-numeric:tabular-nums;color:var(--jade-bright);width:70px}
+  .mix td.n{color:var(--muted);font-size:13px}
+  .mix tr.hl td{background:rgba(79,197,140,.06)} .mix tr.hl td.p{color:var(--jade-bright);font-weight:600}
+  .mbar{height:7px;border-radius:4px;background:linear-gradient(90deg,var(--jade),#3AA774);min-width:4px} .mbar.g{background:rgba(233,231,220,.16)}
+
+  .rules{display:grid;gap:13px}
+  .rule{display:grid;grid-template-columns:38px 1fr;gap:18px;align-items:start;padding:16px 20px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+  .rule .n{font-family:"IBM Plex Mono";font-size:15px;color:var(--jade);font-weight:600;padding-top:2px}
+  .rule h3{font-size:16px;margin-bottom:4px} .rule p{font-size:13.5px;color:var(--muted)}
+
+  .close-line{font-family:"Archivo";font-weight:800;font-size:clamp(24px,3.2vw,42px);line-height:1.14;letter-spacing:-.015em;max-width:21ch}
+  .close-line .u{color:var(--jade-bright)}
+  .footnote{font-family:"IBM Plex Mono";font-size:11px;color:var(--muted-2);letter-spacing:.03em;margin-top:16px;line-height:1.6}
+  .kicker{font-size:clamp(17px,1.6vw,21px);color:var(--text);font-weight:600;line-height:1.35;max-width:28ch}
+
+  /* pipeline */
+  .pipe{display:flex;gap:9px;flex-wrap:wrap}
+  .pipe .st{flex:1 1 0;min-width:120px;border:1px solid var(--line);border-radius:9px;padding:12px 13px;background:var(--surface)}
+  .pipe .st .k{font-family:"IBM Plex Mono";font-size:10px;letter-spacing:.1em;color:var(--jade);text-transform:uppercase;margin-bottom:5px}
+  .pipe .st p{font-size:11.5px;color:var(--muted);line-height:1.4}
+  .lanes{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:16px}
+
+  /* fertility */
+  .fert{display:grid;gap:8px}
+  .fr{display:grid;grid-template-columns:150px 1fr 108px;align-items:center;gap:14px}
+  .fr .fl{font-weight:600;font-size:14px} .fr .fl span{font-family:"IBM Plex Mono";font-size:11px;color:var(--muted-2);display:block;font-weight:400}
+  .ft{height:14px;border-radius:3px;background:rgba(233,231,220,.05);position:relative;overflow:hidden}
+  .ft i{position:absolute;left:0;top:0;bottom:0;border-radius:3px}
+  .fv{font-family:"IBM Plex Mono";font-size:12px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+
+  /* vocab */
+  .vocab{display:flex;height:64px;border-radius:8px;overflow:hidden;border:1px solid var(--line);font-family:"IBM Plex Mono";font-size:11px}
+  .vocab div{display:flex;flex-direction:column;justify-content:center;padding:0 10px;color:#06120C;font-weight:600;overflow:hidden;white-space:nowrap}
+  .vocab small{font-size:9px;opacity:.8;letter-spacing:.03em;font-weight:500}
+  .vlist{font-family:"IBM Plex Mono";font-size:12.5px;display:grid;gap:5px}
+  .vlist .vi{display:flex;justify-content:space-between;gap:12px;color:var(--muted);border-bottom:1px dashed var(--line);padding-bottom:4px}
+  .vlist .vi b{color:var(--text);font-weight:500} .vlist .vi span{color:var(--jade-bright)}
+
+  @media (max-width:900px){
+    .slide{padding:74px 22px 100px}
+    .grid2,.grid-side{grid-template-columns:1fr;gap:26px}
+    .cards,.lanes{grid-template-columns:1fr}
+    .row{grid-template-columns:108px 1fr 64px;gap:10px}
+    .fr{grid-template-columns:120px 1fr 96px;gap:10px}
+    .hint{display:none} .brand{left:18px;font-size:10px}
+    .pipe .st{min-width:calc(50% - 5px)}
+  }
+  @media (max-width:560px){
+    .row{grid-template-columns:1fr;gap:5px} .row .val{text-align:left}
+    .split{height:auto;flex-direction:column}.split div{padding:9px 14px}.split .a,.split .b,.split .c{flex:none}
+    .vocab{height:auto;flex-direction:column}.vocab div{padding:9px 12px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .rv{transition:none;opacity:1;transform:none}
+    .bar-fill,.seg-pad,.deck{transition:none;scroll-behavior:auto}
+  }
+</style>
+</head>
+<body>
+
+<div class="rail"><i id="rail"></i></div>
+<div class="brand"><b>&#9670;</b> The Real Corpus &middot; Data Strategy</div>
+<div class="nav">
+  <span class="counter"><b id="cur">01</b> / <span id="tot">17</span></span>
+  <button class="navbtn" id="prev" aria-label="Previous slide"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>
+  <button class="navbtn" id="next" aria-label="Next slide"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></button>
+</div>
+<div class="hint" id="hint">&darr; scroll &middot; arrow keys to move</div>
+
+<main class="deck" id="deck">
+
+  <!-- 1 HERO -->
+  <section class="slide" data-i="0">
+    <div class="wrap">
+      <div class="eyebrow rv">Data strategy &middot; 40B India-first LLM</div>
+      <h1 class="rv d1" style="margin-top:22px">The number on the<br>box is not the corpus.</h1>
+      <p class="lede rv d2" style="margin-top:24px">Sangraha ships <span class="mono">251B</span> tokens across 22 languages. Collapse the synthetic padding and the real, native corpus is a fraction of that. We design every stage &mdash; pretraining, post-training, alignment, tokenizer &mdash; from the verified number up.</p>
+      <div class="hero-bar bar-track rv d3">
+        <div class="bar-fill" id="heroBar"><div class="seg-real" style="flex-basis:25.5%"></div><div class="seg-pad" id="heroPad"></div></div>
+      </div>
+      <div class="hero-legend rv d4">
+        <div class="lg"><span class="sw real"></span> <span id="heroReal">64B verified &middot; human-origin native</span></div>
+        <div class="lg"><span class="sw pad"></span> 187B unverified crawl + synthetic padding</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 THESIS -->
+  <section class="slide" data-i="1">
+    <div class="wrap"><div class="grid-side">
+      <div>
+        <div class="eyebrow rv">The thesis</div>
+        <h2 class="rv d1" style="margin-top:18px">~65% of Sangraha is machine-made.</h2>
+        <p class="lede rv d2" style="margin-top:20px">The headline is inflated by English Wikimedia translated in (IndicTrans2, ~90B) and romanized transliteration (IndicXlit, ~72B). Three tiers remain &mdash; only the first carries true signal.</p>
+        <p class="footnote rv d3">Source: AI4Bharat &middot; IndicLLMSuite (ACL 2024). License CC-BY-4.0.</p>
+      </div>
+      <div class="stack">
+        <div class="split rv d2">
+          <div class="a">Verified<br><small>64B &middot; 25%</small></div>
+          <div class="b">Unverif.<br><small>24B &middot; 10%</small></div>
+          <div class="c">Synthetic padding<br><small>162B &middot; ~65%</small></div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap" class="rv d3">
+          <span class="tag v">&#10003; native = signal</span>
+          <span class="tag">~ crawl = noise</span>
+          <span class="tag s">&#10007; synthetic = padding</span>
+        </div>
+      </div>
+    </div></div>
+  </section>
+
+  <!-- 3 COLLAPSE CHART -->
+  <section class="slide" data-i="2">
+    <div class="wrap">
+      <div class="chart-head">
+        <div><div class="eyebrow rv">The collapse, per language</div>
+          <h2 class="rv d1" style="margin-top:14px">Flip the toggle. Watch the padding fall away.</h2></div>
+        <div class="toggle rv d1" role="group" aria-label="Show headline or verified tokens">
+          <button id="tHead" class="on">Headline</button><button id="tVer">Verified</button>
+        </div>
+      </div>
+      <div class="rows rv d2" id="langRows"></div>
+      <p class="footnote rv d3">Telugu 16.3B&rarr;3.7B and Odia 12.5B&rarr;1.2B are confirmed. Other verified figures <span class="est">est.</span> from the verified-split proportion &mdash; swap in exact per-language counts when available.</p>
+    </div>
+  </section>
+
+  <!-- 4 WHY PADDING WORSE -->
+  <section class="slide" data-i="3">
+    <div class="wrap">
+      <div class="eyebrow rv">Why padding is worse than absence</div>
+      <h2 class="rv d1" style="margin-top:16px;max-width:20ch">Translationese speaks Indic but thinks in English.</h2>
+      <div class="cards" style="margin-top:32px">
+        <div class="card rv d2"><div class="k">Register</div><p>Machine-translated text carries English syntax, calques and collocations. It teaches the model to <strong>produce stilted Indic</strong> &mdash; the opposite of fluency.</p></div>
+        <div class="card rv d3"><div class="k">Worldview</div><p>Translated Wikipedia doesn't reason in lakh/crore, &#8377;, or Indian legal &amp; exam framing. More Tier-D means a model that <strong>speaks Indic, thinks American</strong> &mdash; leaking out the exact thing "India-first" exists to keep in.</p></div>
+        <div class="card rv d4"><div class="k">Collapse risk</div><p>Synthesize on top of translated text and you get <strong>recursive translationese amplification</strong>. Provenance must be a graph &mdash; synthetic may never seed synthetic.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 REAL BUDGET -->
+  <section class="slide" data-i="4">
+    <div class="wrap"><div class="grid2">
+      <div>
+        <div class="eyebrow rv">The real budget</div>
+        <h2 class="rv d1" style="margin-top:16px">After dedup, the corpus is<br>~100B &mdash; not 251B.</h2>
+        <p class="lede rv d2" style="margin-top:22px">IndicCorp v2, MADLAD-400, CulturaX and FineWeb-2 overlap heavily with each other and with Sangraha's unverified tier. You cannot sum them.</p>
+        <p class="kicker rv d3" style="margin-top:22px">Unique clean native &asymp; <span class="jade mono">90&ndash;110B</span> across all 22 languages. <strong>That</strong> is what we design around.</p>
+      </div>
+      <div class="stack">
+        <div class="card rv d2"><div class="k">Genuinely native, cleaned</div><div class="big jade">&asymp; 100B</div><p style="margin-top:10px">Zipfian &mdash; Hindi &amp; Bengali dominate; a long, thin tail. The clean-verified slice is roughly half again.</p></div>
+        <div class="card rv d3"><div class="k">Planning rule</div><p style="font-size:15px;color:var(--text)">Never budget against a headline count. <strong>Every source is provenance-tagged before it enters the math.</strong></p></div>
+      </div>
+    </div></div>
+  </section>
+
+  <!-- 6 TIERS -->
+  <section class="slide" data-i="5">
+    <div class="wrap">
+      <div class="eyebrow rv">Honest language tiers</div>
+      <h2 class="rv d1" style="margin-top:14px">The verified column <em style="font-style:italic;color:var(--jade-bright)">is</em> the tiering.</h2>
+      <p class="lede rv d2" style="margin-top:14px;margin-bottom:24px">Don't hold Odia to Hindi's bar. State the bar per tier and target the model to it.</p>
+      <div class="tiers">
+        <div class="tier t1 rv d2"><div class="t">1</div><div><div class="band mono">FIRST-CLASS &middot; &gt;8B native</div><div class="langs">Hindi &middot; Bengali <em>Enough to train register &amp; reasoning natively. Full capability bar.</em></div></div></div>
+        <div class="tier t2 rv d3"><div class="t">2</div><div><div class="band mono">STRONG &middot; 2&ndash;5B native</div><div class="langs">Tamil &middot; Telugu &middot; Gujarati &middot; Malayalam &middot; Kannada &middot; Marathi &middot; Urdu <em>Native core + transfer. Strong, with a stated gap on long-form generation.</em></div></div></div>
+        <div class="tier t3 rv d4"><div class="t">3</div><div><div class="band mono">TRANSFER-RELIANT &middot; &lt;2B native</div><div class="langs">Punjabi &middot; Odia &middot; Assamese &amp; tail <em>~80% of capability from cross-lingual transfer off Hindi/English. Native data fixes register &amp; script, not reasoning.</em></div></div></div>
+        <div class="tier t4 rv d5"><div class="t">4</div><div><div class="band mono">BEST-EFFORT</div><div class="langs">Sanskrit &middot; Konkani &middot; Maithili &hellip; <em>Coverage, not parity.</em></div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 PRETRAIN MIX -->
+  <section class="slide" data-i="6">
+    <div class="wrap"><div class="grid-side">
+      <div>
+        <div class="eyebrow stage rv">Data &middot; stage 1 / 3 &mdash; pretraining</div>
+        <h2 class="rv d1" style="margin-top:16px">Indic drops to an honest 6%.</h2>
+        <p class="lede rv d2" style="margin-top:20px">The counterintuitive move: you don't need billions of native Indic tokens to make the model <strong>think</strong> Indian. India-first is carried by a clean, abundant, mostly-English India-knowledge bucket + alignment &mdash; not by inflated Indic volume.</p>
+        <p class="footnote rv d3">~13T effective tokens &middot; heavily over-trained, Gemma-4 class.</p>
+      </div>
+      <div class="rv d2">
+        <table class="mix"><thead><tr><th>Bucket</th><th>Share</th><th></th></tr></thead><tbody>
+          <tr><td>English web</td><td class="p">30%</td><td><div class="mbar" style="width:100%"></div></td></tr>
+          <tr><td>Code</td><td class="p">20%</td><td><div class="mbar" style="width:67%"></div></td></tr>
+          <tr><td>Math / science / reasoning</td><td class="p">10%</td><td><div class="mbar" style="width:33%"></div></td></tr>
+          <tr class="hl"><td>India-knowledge <span class="n">(mostly EN)</span></td><td class="p">8%</td><td><div class="mbar" style="width:27%"></div></td></tr>
+          <tr><td>Books / long-form</td><td class="p">7%</td><td><div class="mbar" style="width:23%"></div></td></tr>
+          <tr class="hl"><td>Indic <span class="n">(native-dominant)</span></td><td class="p">6%</td><td><div class="mbar" style="width:20%"></div></td></tr>
+          <tr><td>Non-Indic multilingual</td><td class="p">5%</td><td><div class="mbar" style="width:17%"></div></td></tr>
+          <tr><td class="n">English / code / reasoning tail</td><td class="p">14%</td><td><div class="mbar g" style="width:47%"></div></td></tr>
+        </tbody></table>
+      </div>
+    </div></div>
+  </section>
+
+  <!-- 8 INDIC EPOCHS -->
+  <section class="slide" data-i="7">
+    <div class="wrap">
+      <div class="eyebrow rv">The Indic 780B, built honestly</div>
+      <h2 class="rv d1" style="margin-top:14px">Provenance-weighted epochs &mdash; not flat mixing.</h2>
+      <p class="lede rv d2" style="margin-top:14px;margin-bottom:26px">~100B unique native tokens become ~780B effective. Native &amp; native-generated dominate; Sangraha's 162B of translation is capped, not poured in.</p>
+      <div class="cards" style="grid-template-columns:repeat(4,1fr)">
+        <div class="card rv d2"><div class="k">Tier A &middot; verified</div><div class="big jade">&times;3.5</div><p style="margin-top:8px">&asymp;220B eff. The precious, clean core. Highest weight.</p></div>
+        <div class="card rv d3"><div class="k">Tier B &middot; unverified</div><div class="big">&times;1.5</div><p style="margin-top:8px">&asymp;45B eff. Filtered web, downweighted.</p></div>
+        <div class="card rv d4"><div class="k">Tier C &middot; native-gen</div><div class="big">&le;1&times;</div><p style="margin-top:8px">~350&ndash;400B. Model <em>writes</em> original grounded Indic &mdash; the scale lever.</p></div>
+        <div class="card rv d5"><div class="k">Tier D &middot; translated</div><div class="big amber">cap</div><p style="margin-top:8px">Coverage only, &le;1 epoch. Zero for Tier-3 languages.</p></div>
+      </div>
+      <p class="kicker rv d5" style="margin-top:24px;max-width:62ch">Plus a <span class="jade">decay-phase upsample</span>: in the final ~10&ndash;15% of pretraining, sharply raise Tier-A native + India-knowledge to lock in Indian register cheaply.</p>
+    </div>
+  </section>
+
+  <!-- 9 POST-TRAINING -->
+  <section class="slide" data-i="8">
+    <div class="wrap">
+      <div class="eyebrow stage rv">Data &middot; stage 2 / 3 &mdash; post-training (SFT)</div>
+      <h2 class="rv d1" style="margin-top:14px">Teach the model to <em style="font-style:italic;color:var(--jade-bright)">use</em> what it knows.</h2>
+      <p class="lede rv d2" style="margin-top:14px;margin-bottom:26px">~2&ndash;5M high-quality examples. The mix is chosen to hit the three headline objectives &mdash; coding, agentic, Indic &mdash; directly.</p>
+      <div class="cards" style="grid-template-columns:repeat(3,1fr)">
+        <div class="card rv d2"><div class="k">Agentic traces</div><p>Multi-step tool &amp; function calls with real schemas, multi-file code edits, debugging loops, terminal &amp; browser transcripts. The core of the agentic objective.</p></div>
+        <div class="card rv d3"><div class="k">Code instruction</div><p>Repo-level, test-driven tasks &mdash; not single-function HumanEval snippets. Keep the natural-language&harr;code interleaving.</p></div>
+        <div class="card rv d4"><div class="k">Verified reasoning</div><p>Long math / science chain-of-thought, <strong>checked before inclusion</strong>. Distilled or self-generated, then filtered by a verifier.</p></div>
+        <div class="card rv d2"><div class="k">Indic instruction</div><p>Native-authored where possible; translated-then-<strong>verified</strong> otherwise. IndicAlign as a noisy starting point, not the endpoint.</p></div>
+        <div class="card rv d3"><div class="k">India-grounded tasks</div><p>Indian legal Q&amp;A, UPSC / JEE / NEET items, civic &amp; government-service queries, and explicit <strong>code-switching</strong> handling.</p></div>
+        <div class="card rv d4"><div class="k">Dialogue &amp; refusals</div><p>Multi-turn conversation, format-following, and safety refusals authored in-language &mdash; not just English.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10 RL / ALIGNMENT -->
+  <section class="slide" data-i="9">
+    <div class="wrap">
+      <div class="eyebrow stage rv">Data &middot; stage 3 / 3 &mdash; RL / alignment</div>
+      <h2 class="rv d1" style="margin-top:14px">RLVR for capability. Indian raters for the worldview.</h2>
+      <div class="grid2" style="margin-top:28px;align-items:start">
+        <div class="stack">
+          <div class="card rv d2"><div class="k">Verifiable rewards (RLVR)</div><p style="font-size:14.5px;color:var(--text)">Where most real capability gain now lives &mdash; objective and cheap to scale.</p>
+            <p style="margin-top:10px"><strong>Code</strong> &rarr; unit tests in a sandbox. <strong>Math</strong> &rarr; answer-checkers. <strong>Agentic</strong> &rarr; task-success in a live environment. No human labels needed for the reward.</p></div>
+        </div>
+        <div class="stack">
+          <div class="card rv d3"><div class="k">Preference &mdash; worldview &amp; safety</div><p style="font-size:14.5px;color:var(--text)">RLHF / DPO with <strong>Indian raters</strong> for the subjective axes.</p>
+            <p style="margin-top:10px">Tone, cultural appropriateness, code-switch fluency, refusing India-illegal content correctly. Red-team preference data authored in Indic <strong>and romanized</strong> forms.</p></div>
+          <div class="card rv d4" style="border-color:rgba(224,160,58,.3)"><div class="k" style="color:var(--amber)">The quiet failure</div><p style="font-size:13.5px">Preference data collected by non-Indian raters will <strong>silently de-Indianize</strong> the model &mdash; the alignment-stage analog of translationese.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11 CLEANING -->
+  <section class="slide" data-i="10">
+    <div class="wrap">
+      <div class="eyebrow rv">Cleaning &mdash; objective-aware</div>
+      <h2 class="rv d1" style="margin-top:14px">Code isn't cleaned like Malayalam prose.</h2>
+      <p class="lede rv d2" style="margin-top:12px;margin-bottom:22px">A universal spine every source passes through, then per-objective lanes.</p>
+      <div class="pipe rv d2">
+        <div class="st"><div class="k">1 &middot; Dedup</div><p>MinHash / LSH, exact + fuzzy. Indic drops the <strong>most</strong> here &mdash; republished news.</p></div>
+        <div class="st"><div class="k">2 &middot; PII scrub</div><p>Strip personal &amp; sensitive data before anything else touches it.</p></div>
+        <div class="st"><div class="k">3 &middot; Decontaminate</div><p>Remove eval n-gram overlap <strong>early</strong>, and log it &mdash; or the numbers are fiction.</p></div>
+        <div class="st"><div class="k">4 &middot; Provenance tag</div><p>Every doc labelled A/B/C/D. The tag drives all downstream weighting.</p></div>
+      </div>
+      <div class="lanes">
+        <div class="card rv d3"><div class="k">Indic lane</div><p>Language ID across 22 scripts <strong>+ romanized</strong>; NFC matra normalization; <strong>per-language</strong> KenLM perplexity (80th-pct, nudged up for low-resource). A global threshold deletes low-resource languages.</p></div>
+        <div class="card rv d4"><div class="k">Code lane</div><p>Permissive-license filter, secret removal, file + repo dedup, and a <strong>parse / compile / lint</strong> quality gate.</p></div>
+        <div class="card rv d5"><div class="k">Math lane</div><p>Verify final answers where checkable, keep step structure, split digits one-per-token.</p></div>
+        <div class="card rv d6"><div class="k">Translationese</div><p>Native-vs-translation perplexity ratio + back-translation consistency &rarr; downweight Tiers B/C/D.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 12 TESTING -->
+  <section class="slide" data-i="11">
+    <div class="wrap"><div class="grid-side">
+      <div>
+        <div class="eyebrow rv">Testing against the objectives</div>
+        <h2 class="rv d1" style="margin-top:16px">Public benchmark <em style="font-style:italic;color:var(--jade-bright)">plus</em> a bespoke eval.</h2>
+        <p class="lede rv d2" style="margin-top:20px">Public benches prove Gemma-4 parity. They cannot measure "India-first" &mdash; so we build <strong>Bharat-eval</strong> for that.</p>
+        <p class="kicker rv d3" style="margin-top:20px;max-width:30ch">Report thinking-mode &amp; standard <span class="jade">separately</span> &mdash; Gemma 4's headline numbers are thinking-mode.</p>
+      </div>
+      <div class="rv d2">
+        <table class="mix"><thead><tr><th>Objective</th><th>Public</th><th>Bespoke</th></tr></thead><tbody>
+          <tr><td>General / EN</td><td class="n">MMLU-Pro, GPQA, BBH</td><td class="n">&mdash;</td></tr>
+          <tr><td>Code</td><td class="n">SWE-bench Verified, LiveCodeBench v6, Aider</td><td class="n">repo tasks</td></tr>
+          <tr><td>Agentic</td><td class="n">&tau;&sup2;-bench, ToolBench</td><td class="n">sandbox task-success</td></tr>
+          <tr><td>Math</td><td class="n">AIME 2026, MATH, GSM8K</td><td class="n">&mdash;</td></tr>
+          <tr><td>Indic</td><td class="n">IndicGenBench, MMLU-IN, FLORES chrF++</td><td class="n">code-switch set</td></tr>
+          <tr class="hl"><td>India-first</td><td class="n">&mdash; none exist &mdash;</td><td class="n"><strong style="color:var(--jade-bright)">Bharat-eval</strong></td></tr>
+        </tbody></table>
+        <p class="footnote">Bharat-eval: Indian defaults (&#8377;, lakh/crore, dates) &middot; India-knowledge (UPSC/JEE/NEET, law, civics) &middot; code-switching &middot; romanized handling &middot; does the model itself emit translationese?</p>
+      </div>
+    </div></div>
+  </section>
+
+  <!-- 13 FERTILITY -->
+  <section class="slide" data-i="12">
+    <div class="wrap">
+      <div class="eyebrow rv">Fertility targets &middot; tokens per word</div>
+      <h2 class="rv d1" style="margin-top:14px">Dravidian scripts sit higher &mdash; by nature.</h2>
+      <p class="lede rv d2" style="margin-top:12px;margin-bottom:22px">Sandhi &amp; agglutination set a hard floor. We target parity-or-better vs Sarvam-30B (262K &asymp; 2.14 mean). Measured on <strong>native-only</strong> held-out text.</p>
+      <div class="fert rv d2">
+        <div class="fr"><div class="fl">English<span>anchor</span></div><div class="ft"><i style="width:42%;background:var(--jade-bright)"></i></div><div class="fv">1.2&ndash;1.3</div></div>
+        <div class="fr"><div class="fl">Hindi / Marathi<span>Devanagari</span></div><div class="ft"><i style="width:47%;background:var(--jade-bright)"></i></div><div class="fv">1.35&ndash;1.5</div></div>
+        <div class="fr"><div class="fl">Bengali / Gujarati<span>&nbsp;</span></div><div class="ft"><i style="width:58%;background:var(--jade)"></i></div><div class="fv">1.6&ndash;1.9</div></div>
+        <div class="fr"><div class="fl">Urdu<span>Perso-Arabic</span></div><div class="ft"><i style="width:58%;background:var(--jade)"></i></div><div class="fv">1.6&ndash;1.9</div></div>
+        <div class="fr"><div class="fl">Odia<span>&nbsp;</span></div><div class="ft"><i style="width:68%;background:var(--amber)"></i></div><div class="fv">1.9&ndash;2.2</div></div>
+        <div class="fr"><div class="fl">Tamil / Telugu<span>agglutinative</span></div><div class="ft"><i style="width:72%;background:var(--jade)"></i></div><div class="fv">2.0&ndash;2.3</div></div>
+        <div class="fr"><div class="fl">Kannada<span>&nbsp;</span></div><div class="ft"><i style="width:75%;background:var(--jade)"></i></div><div class="fv">2.1&ndash;2.4</div></div>
+        <div class="fr"><div class="fl">Malayalam<span>hard floor</span></div><div class="ft"><i style="width:88%;background:var(--jade)"></i></div><div class="fv">2.5&ndash;2.8</div></div>
+      </div>
+      <p class="footnote rv d3"><strong style="color:var(--muted)">Code</strong> &asymp; 3.5&ndash;4.0 chars/token, indentation preserved &middot; <strong style="color:var(--muted)">Math</strong> digits split 1-per-token (deliberately high &mdash; it improves arithmetic).</p>
+    </div>
+  </section>
+
+  <!-- 14 TOKENIZER -->
+  <section class="slide" data-i="13">
+    <div class="wrap">
+      <div class="eyebrow rv">Tokenizer size</div>
+      <h2 class="rv d1" style="margin-top:14px">256K &mdash; 262,144 = 2<sup>18</sup>.</h2>
+      <p class="lede rv d2" style="margin-top:12px;margin-bottom:20px">The point the serious multilingual+code models converged on (Gemma 3/4, Sarvam-30B 262K &middot; o200k ~200K &middot; Command-R 256K). Enough budget to hit every Indic target across ~13 scripts.</p>
+      <div class="vocab rv d2">
+        <div style="flex:0 0 31.2%;background:linear-gradient(90deg,var(--jade-bright),var(--jade))">Latin + code<br><small>80K</small></div>
+        <div style="flex:0 0 15.6%;background:var(--jade)">Devanagari<br><small>40K</small></div>
+        <div style="flex:0 0 21.1%;background:#3AA774;color:#dff">Dravidian<br><small>54K</small></div>
+        <div style="flex:0 0 9.8%;background:#2E8C63;color:#dff">Eastern<br><small>25K</small></div>
+        <div style="flex:0 0 10.9%;background:#276F51;color:#cfe">Western<br><small>28K</small></div>
+        <div style="flex:1 1 auto;background:var(--pad-hatch);color:var(--ochre)">bytes+specials<br><small>29K</small></div>
+      </div>
+      <div class="grid2" style="margin-top:22px;align-items:start;gap:40px">
+        <div class="vlist rv d3">
+          <div class="vi"><b>English / Latin</b><span>65K</span></div>
+          <div class="vi"><b>Code (shared kw/indent)</b><span>15K</span></div>
+          <div class="vi"><b>Devanagari</b><span>40K</span></div>
+          <div class="vi"><b>Malayalam</b><span>15K &middot; highest floor</span></div>
+          <div class="vi"><b>Ta / Te / Ka</b><span>12K each</span></div>
+          <div class="vi"><b>Bengali/Assamese &middot; Odia &middot; Gujarati &middot; Urdu</b><span>10&ndash;15K</span></div>
+          <div class="vi"><b>Punjabi &middot; byte-fallback + digits + agentic specials</b><span>bal.</span></div>
+        </div>
+        <div class="stack rv d4">
+          <div class="card"><div class="k" style="color:var(--amber)">Why not 128K</div><p>Forces Dravidian back toward 3+ tok/word &mdash; kills the population-scale inference economics this project exists for.</p></div>
+          <div class="card"><div class="k">Embedding cost</div><p>At d_model &asymp; 6144, 256K &asymp; <strong>1.6B tied / 3.1B untied</strong> params &mdash; ~4&ndash;8% of a 40B model. The right ceiling; higher under-trains rare tokens.</p></div>
+        </div>
+      </div>
+      <p class="footnote rv d5">As decisive as the size: train the tokenizer on an <strong style="color:var(--muted)">Indic-upsampled</strong> corpus, with digit-splitting, indentation-preserving pretokenization, and NFC normalization.</p>
+    </div>
+  </section>
+
+  <!-- 15 THE FIX -->
+  <section class="slide" data-i="14">
+    <div class="wrap"><div class="grid2">
+      <div>
+        <div class="eyebrow rv">The fix &middot; grow the real number</div>
+        <h2 class="rv d1" style="margin-top:16px">India's native signal lives in audio.</h2>
+        <p class="lede rv d2" style="margin-top:20px">Text crawl won't move it. ASR of Indian video, podcasts, TV/radio, parliamentary &amp; court proceedings, and lectures produces genuinely native, colloquial text no translation can give.</p>
+        <p class="kicker rv d3" style="margin-top:22px">Conservatively <span class="jade mono">100&ndash;200B</span> clean native tokens &mdash; <strong>2&ndash;3&times; the entire verified pool</strong>, and a moat non-Indian labs won't build.</p>
+      </div>
+      <div class="stack">
+        <div class="card rv d2"><div class="k">&#9312; ASR &mdash; the hero</div><p style="font-size:14.5px">Indic ASR (AI4Bharat's IndicVoices line) is good enough to transcribe at scale. Highest ROI, hardest to replicate.</p></div>
+        <div class="card rv d3"><div class="k">&#9313; Licensing</div><p style="font-size:14.5px">News archives, publishers, book digitization &mdash; tens of billions of high-register Tier-A tokens.</p></div>
+        <div class="card rv d4"><div class="k">&#9314; Native-generation</div><p style="font-size:14.5px">Unbounded, but only as good as its native seed. Weight all acquisition by tier &mdash; every clean billion moves Punjabi / Odia the most.</p></div>
+      </div>
+    </div></div>
+  </section>
+
+  <!-- 16 DOCTRINE -->
+  <section class="slide" data-i="15">
+    <div class="wrap">
+      <div class="eyebrow rv">Synthetic doctrine</div>
+      <h2 class="rv d1" style="margin-top:14px">Three rules that stop the corpus rotting.</h2>
+      <div class="rules" style="margin-top:26px">
+        <div class="rule rv d2"><div class="n">01</div><div><h3>Provenance is a graph, not a tag</h3><p>Synthetic may never be seeded from synthetic. No Tier-D feeding Tier-C. This prevents recursive translationese amplification and model collapse.</p></div></div>
+        <div class="rule rv d3"><div class="n">02</div><div><h3>Native-generation over translation, always</h3><p>Prompt for original, grounded Indic. Never machine-translate a sentence and call it data &mdash; translation keeps neither the syntax nor the worldview.</p></div></div>
+        <div class="rule rv d4"><div class="n">03</div><div><h3>Translationese is a filter <em style="font-style:italic;color:var(--muted)">and</em> an eval</h3><p>Filter with a native-vs-translation perplexity ratio + back-translation consistency. Then measure whether the trained model itself emits it &mdash; in Bharat-eval.</p></div></div>
+      </div>
+      <p class="footnote rv d5">Carry-overs: fit the tokenizer &amp; measure all fertility on <strong style="color:var(--muted)">native-only</strong> text &middot; collect preference/alignment data with <strong style="color:var(--muted)">Indian raters</strong>.</p>
+    </div>
+  </section>
+
+  <!-- 17 CLOSING -->
+  <section class="slide" data-i="16">
+    <div class="wrap">
+      <div class="eyebrow rv">The reframe, in one line</div>
+      <p class="close-line rv d1" style="margin-top:24px"><span class="u">~100B real native tokens</span>, grown mainly through <span class="u">ASR</span>; scale bought through <span class="u">native-generation, not translation</span>; India-first delivered through clean <span class="u">India-knowledge</span> + <span class="u">Indian-rater alignment</span> &mdash; on a <span class="u">256K tokenizer</span> tuned to native fertility.</p>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:34px" class="rv d3">
+        <span class="tag v">&#10003; count what's verified</span>
+        <span class="tag v">&#10003; transcribe the audio</span>
+        <span class="tag v">&#10003; generate natively</span>
+        <span class="tag v">&#10003; verify, then align with Indians</span>
+      </div>
+      <div class="brand" style="position:static;margin-top:42px;padding:0"><b>&#9670;</b> The Real Corpus &middot; Data strategy for a 40B India-first model</div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(function(){
+  "use strict";
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var MAX = 34.5;
+  var LANGS = [
+    {en:"Hindi",     nat:"\u0939\u093f\u0928\u094d\u0926\u0940", head:34.5, ver:14.5, conf:false},
+    {en:"Bengali",   nat:"\u09ac\u09be\u0982\u09b2\u09be",       head:30.0, ver:11.0, conf:false},
+    {en:"Tamil",     nat:"\u0ba4\u0bae\u0bbf\u0bb4\u0bcd",       head:17.4, ver:4.3,  conf:false},
+    {en:"Gujarati",  nat:"\u0a97\u0ac1\u0a9c\u0ab0\u0abe\u0aa4\u0ac0", head:17.2, ver:4.8, conf:false},
+    {en:"Malayalam", nat:"\u0d2e\u0d32\u0d2f\u0d3e\u0d33\u0d02", head:16.4, ver:3.8, conf:false},
+    {en:"Telugu",    nat:"\u0c24\u0c46\u0c32\u0c41\u0c17\u0c41", head:16.3, ver:3.7, conf:true},
+    {en:"Kannada",   nat:"\u0c95\u0ca8\u0ccd\u0ca8\u0ca1",       head:14.3, ver:2.9, conf:false},
+    {en:"Odia",      nat:"\u0b13\u0b21\u0b3c\u0b3f\u0b06",       head:12.5, ver:1.2, conf:true},
+    {en:"Punjabi",   nat:"\u0a2a\u0a70\u0a1c\u0a3e\u0a2c\u0a40", head:11.2, ver:1.5, conf:false}
+  ];
+
+  var rowsEl = document.getElementById("langRows");
+  LANGS.forEach(function(L){
+    var headW=(L.head/MAX*100), verW=(L.ver/MAX*100), padW=headW-verW;
+    var row=document.createElement("div"); row.className="row";
+    row.innerHTML =
+      '<div class="lang">'+L.en+'<span>'+L.nat+'</span></div>'+
+      '<div class="bar-track"><div class="bar-fill" data-head="'+headW+'" data-ver="'+verW+'">'+
+        '<div class="seg-real" style="flex:0 0 '+verW+'%"></div>'+
+        '<div class="seg-pad" style="flex:0 0 '+padW+'%"></div></div></div>'+
+      '<div class="val head" data-head="'+L.head.toFixed(1)+'B" data-ver="'+L.ver.toFixed(1)+'B'+(L.conf?'':'<span class=\"est\">est</span>')+'">'+L.head.toFixed(1)+'B</div>';
+    rowsEl.appendChild(row);
+  });
+
+  var mode="head";
+  function paintChart(){
+    rowsEl.querySelectorAll(".bar-fill").forEach(function(f){
+      var head=+f.getAttribute("data-head"), ver=+f.getAttribute("data-ver");
+      var real=f.querySelector(".seg-real"), pad=f.querySelector(".seg-pad");
+      if(mode==="head"){ f.style.width=head+"%"; real.style.flexBasis=ver+"%"; pad.style.flexBasis=(head-ver)+"%"; pad.style.opacity="1"; }
+      else { f.style.width=ver+"%"; real.style.flexBasis=ver+"%"; pad.style.flexBasis="0%"; pad.style.opacity="0"; }
+    });
+    rowsEl.querySelectorAll(".val").forEach(function(v){
+      v.innerHTML=v.getAttribute(mode==="head"?"data-head":"data-ver");
+      v.classList.toggle("head", mode==="head");
+    });
+  }
+  var tHead=document.getElementById("tHead"), tVer=document.getElementById("tVer"), chartArmed=false;
+  function setMode(m){ mode=m; tHead.classList.toggle("on",m==="head"); tVer.classList.toggle("on",m==="ver"); paintChart(); }
+  tHead.addEventListener("click",function(){setMode("head");});
+  tVer.addEventListener("click",function(){setMode("ver");});
+
+  function runHero(){
+    var pad=document.getElementById("heroPad"), label=document.getElementById("heroReal");
+    if(reduce){ pad.style.flexBasis="0%"; pad.style.opacity="0"; label.textContent="64B verified \u00b7 human-origin native"; return; }
+    pad.style.flexBasis="74.5%"; pad.style.opacity="1";
+    var n0=251,n1=64,dur=1400,t0=null;
+    setTimeout(function(){
+      pad.style.flexBasis="0%"; pad.style.opacity="0";
+      function step(ts){ if(!t0)t0=ts; var p=Math.min(1,(ts-t0)/dur); var e=1-Math.pow(1-p,3);
+        var cur=Math.round(n0+(n1-n0)*e); label.textContent=cur+"B verified \u00b7 human-origin native";
+        if(p<1) requestAnimationFrame(step); else label.textContent="64B verified \u00b7 human-origin native"; }
+      requestAnimationFrame(step);
+    },550);
+  }
+
+  var slides=Array.prototype.slice.call(document.querySelectorAll(".slide"));
+  var total=slides.length;
+  document.getElementById("tot").textContent=String(total).padStart(2,"0");
+  var rail=document.getElementById("rail"), curEl=document.getElementById("cur"), deck=document.getElementById("deck");
+  var current=0, heroDone=false;
+
+  var io=new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if(en.isIntersecting && en.intersectionRatio>0.55){
+        en.target.classList.add("in");
+        var i=+en.target.getAttribute("data-i");
+        current=i; curEl.textContent=String(i+1).padStart(2,"0");
+        rail.style.width=(i/(total-1)*100)+"%";
+        if(i===0 && !heroDone){ heroDone=true; runHero(); }
+        if(i===2 && !chartArmed){ chartArmed=true; setMode("head"); }
+      }
+    });
+  },{threshold:[0,0.55,1]});
+  slides.forEach(function(s){ io.observe(s); });
+
+  function goto(i){ i=Math.max(0,Math.min(total-1,i)); slides[i].scrollIntoView({behavior:reduce?"auto":"smooth"}); }
+  document.getElementById("next").addEventListener("click",function(){goto(current+1);});
+  document.getElementById("prev").addEventListener("click",function(){goto(current-1);});
+  window.addEventListener("keydown",function(e){
+    if(["ArrowDown","ArrowRight","PageDown"," "].indexOf(e.key)>-1){ e.preventDefault(); goto(current+1); }
+    else if(["ArrowUp","ArrowLeft","PageUp"].indexOf(e.key)>-1){ e.preventDefault(); goto(current-1); }
+    else if(e.key==="Home"){ e.preventDefault(); goto(0); }
+    else if(e.key==="End"){ e.preventDefault(); goto(total-1); }
+  });
+  var hint=document.getElementById("hint");
+  deck.addEventListener("scroll",function(){ if(deck.scrollTop>40) hint.classList.add("gone"); },{passive:true});
+})();
+</script>
+</body>
+</html>
