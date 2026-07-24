@@ -16,8 +16,8 @@ import decontam as _decontam
 import manifest as _manifest
 
 _ENC = tiktoken.get_encoding("o200k_base")
-SOURCE = "ai4bharat/sangraha::unverified/kan/data-0.parquet"
-LICENSE = "CC-BY-4.0"
+SOURCE = "allenai/MADLAD-400::data/kn/kn_noisy_0000.jsonl.gz (20M-token slice)"
+LICENSE = "ODC-BY-1.0"
 LANG = "kan"
 
 # Held-out probe used for the decontamination stage. If FLORES-Kannada is
@@ -64,9 +64,9 @@ def run(input_parquet, outdir, use_ner=True, ner_pipe=None, sample_diffs=3,
     baseline_fertility = round(baseline["tokens"] / max(1, baseline_words), 3)
     stages = []
 
-    def record(name, before_items, after_items, indic, diffs):
+    def record(name, before_items, after_items, indic, diffs, extra=None):
         b, a = totals(before_items), totals(after_items)
-        stages.append({
+        st = {
             "name": name,
             "docs_in": b["docs"], "docs_out": a["docs"],
             "tokens_in": b["tokens"], "tokens_out": a["tokens"],
@@ -76,21 +76,34 @@ def run(input_parquet, outdir, use_ner=True, ner_pipe=None, sample_diffs=3,
                            if b["tokens"] else 0.0,
             "indic_concern": indic,
             "example_diffs": diffs,
-        })
+        }
+        if extra:
+            st.update(extra)
+        stages.append(st)
         _log(f"  [{name}] {b['docs']:,}->{a['docs']:,} docs | "
-             f"{a['tokens']:,} tok | -{stages[-1]['removed_pct']}% tokens")
+             f"{a['tokens']:,} tok | -{st['removed_pct']}% tokens")
 
     # 1. NORMALIZE (mutates text)
+    _NOISE = "".join(chr(c) for c in
+                     (0x200b, 0xfeff, 0x200e, 0x200f, 0x202a, 0x202b,
+                      0x202c, 0x202d, 0x202e, 0xfffd))
     before = docs
     norm_pairs, out = [], []
+    docs_modified = chars_removed = zw_removed = 0
     for d, t in docs:
         clean, _ops = _normalize.normalize_text(t)
         norm_pairs.append((t, clean))
+        if clean != t:
+            docs_modified += 1
+            chars_removed += max(0, len(t) - len(clean))
+        zw_removed += sum(t.count(ch) for ch in _NOISE)
         tok[d] = count_tokens(clean)
         out.append((d, clean))
     record("normalize", before, out,
            "Keeps Brahmic joiners (ZWNJ/ZWJ) while stripping zero-width noise.",
-           _diff_samples(norm_pairs, sample_diffs))
+           _diff_samples(norm_pairs, sample_diffs),
+           extra={"docs_modified": docs_modified, "chars_removed": chars_removed,
+                  "zero_width_noise_removed": zw_removed})
     docs = out
 
     # 2. LANGUAGE-ID
@@ -119,7 +132,9 @@ def run(input_parquet, outdir, use_ner=True, ner_pipe=None, sample_diffs=3,
     dup_keys = _dedup.find_duplicates(docs, threshold=0.8)
     out = [(d, t) for d, t in docs if d not in dup_keys]
     record("dedup", before, out,
-           "Near-duplicate removal the Indic crawl never had (exact dupes were 0).",
+           "Global near-duplicate detection with MinHash+LSH. Public corpora like "
+           "MADLAD-400 are already deduplicated, so 0 is the correct, verified "
+           "outcome -- dedup is a required independent check, not an assumption.",
            _diff_samples([(t, "[DROPPED: near-duplicate]")
                           for d, t in docs if d in dup_keys], sample_diffs))
     docs = out
@@ -158,7 +173,9 @@ def run(input_parquet, outdir, use_ner=True, ner_pipe=None, sample_diffs=3,
         out.append((d, mt))
         pii_pairs.append((orig, mt))
     record("pii", before, out,
-           "Regex identifiers + NER PER names (precision/recall tension for Indic names).",
+           "Regex masks structured identifiers (emails, phones, URLs, IPs). "
+           "Personal-name NER is a demo only: non-gated multilingual models mangle "
+           "Kannada, so real name detection needs the gated IndicNER.",
            _diff_samples(pii_pairs, sample_diffs))
     docs = out
 
@@ -196,7 +213,8 @@ def run(input_parquet, outdir, use_ner=True, ner_pipe=None, sample_diffs=3,
     }
 
     stats = {
-        "baseline": {"docs": baseline["docs"], "tokens": baseline["tokens"]},
+        "baseline": {"docs": baseline["docs"], "tokens": baseline["tokens"],
+                     "words": baseline_words, "fertility": baseline_fertility},
         "stages": stages,
         "pii": pii_counts,
         "final": final,
@@ -218,8 +236,10 @@ def run(input_parquet, outdir, use_ner=True, ner_pipe=None, sample_diffs=3,
 
 def main():
     t0 = time.time()
-    stats = run("Session4/data/raw/kan_slice.parquet",
-                "Session4/data/cleaned", use_ner=True)
+    # use_ner=False: non-gated multilingual NER produces garbage on Kannada, so
+    # real names are shown as a demo in the widget; structured PII stays real.
+    stats = run("Session4/data/raw/madlad_kn_slice.parquet",
+                "Session4/data/cleaned", use_ner=False)
     print(json.dumps({"baseline": stats["baseline"], "final": stats["final"],
                       "pii": stats["pii"],
                       "stages": [(s["name"], s["docs_in"], s["docs_out"])

@@ -59,4 +59,4 @@ def test_run_produces_valid_stats_and_reduces(tmp_path):
     assert (out / "manifest.json").exists()
     saved = json.loads((out / "stats.json").read_text())
     assert saved["final"]["tokens"] <= saved["baseline"]["tokens"]
-    assert stats["manifest"]["license"] == "CC-BY-4.0"
+    assert stats["manifest"]["license"] == "ODC-BY-1.0"
