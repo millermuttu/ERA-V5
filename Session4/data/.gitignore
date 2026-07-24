@@ -1,0 +1,3 @@
+# Raw + intermediate corpus data is large — never commit it.
+*
+!.gitignore
