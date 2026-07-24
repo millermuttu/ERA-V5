@@ -27,6 +27,10 @@ _EVAL_FALLBACK = [
 ]
 
 
+def _log(msg):
+    print(msg, flush=True)
+
+
 def count_tokens(text):
     return len(_ENC.encode(text))
 
@@ -44,8 +48,10 @@ def _diff_samples(pairs, n):
 def run(input_parquet, outdir, use_ner=True, ner_pipe=None, sample_diffs=3,
         eval_texts=None):
     os.makedirs(outdir, exist_ok=True)
+    _log(f"[load] reading {input_parquet}")
     tbl = pq.read_table(input_parquet, columns=["doc_id", "text"]).to_pydict()
     docs = list(zip(tbl["doc_id"], tbl["text"]))
+    _log(f"[load] {len(docs):,} docs; tokenizing baseline (o200k)...")
 
     # token cache keyed by doc_id (recomputed only when text changes)
     tok = {d: count_tokens(t) for d, t in docs}
@@ -54,6 +60,8 @@ def run(input_parquet, outdir, use_ner=True, ner_pipe=None, sample_diffs=3,
         return {"docs": len(items), "tokens": sum(tok[d] for d, _ in items)}
 
     baseline = totals(docs)
+    baseline_words = sum(len(t.split()) for _, t in docs)
+    baseline_fertility = round(baseline["tokens"] / max(1, baseline_words), 3)
     stages = []
 
     def record(name, before_items, after_items, indic, diffs):
@@ -69,6 +77,8 @@ def run(input_parquet, outdir, use_ner=True, ner_pipe=None, sample_diffs=3,
             "indic_concern": indic,
             "example_diffs": diffs,
         })
+        _log(f"  [{name}] {b['docs']:,}->{a['docs']:,} docs | "
+             f"{a['tokens']:,} tok | -{stages[-1]['removed_pct']}% tokens")
 
     # 1. NORMALIZE (mutates text)
     before = docs
@@ -114,24 +124,41 @@ def run(input_parquet, outdir, use_ner=True, ner_pipe=None, sample_diffs=3,
                           for d, t in docs if d in dup_keys], sample_diffs))
     docs = out
 
-    # 5. PII (mutates text)
+    # 5. PII: structured regex on all docs, then names via batched NER
     before = docs
     pii_counts = {"email": 0, "phone": 0, "url": 0, "ip": 0, "name": 0}
-    pipe = ner_pipe if ner_pipe is not None else (_pii.load_ner() if use_ner else None)
-    pii_pairs, out = [], []
-    for d, t in docs:
-        masked, c = _pii.mask_structured(t)
+    ids = [d for d, _ in docs]
+    originals = [t for _, t in docs]
+    struct = []
+    for t in originals:
+        m, c = _pii.mask_structured(t)
         for k in ("email", "phone", "url", "ip"):
             pii_counts[k] += c[k]
-        if pipe is not None:
-            masked, n = _pii.mask_names(masked, pipe=pipe)
+        struct.append(m)
+
+    if ner_pipe is not None:                     # test path: per-doc stub
+        masked_texts = []
+        for m in struct:
+            mm, n = _pii.mask_names(m, pipe=ner_pipe)
             pii_counts["name"] += n
-        pii_pairs.append((t, masked))
-        if masked != t:
-            tok[d] = count_tokens(masked)
-        out.append((d, masked))
+            masked_texts.append(mm)
+    elif use_ner:                                # real path: batched on GPU
+        _log(f"  [pii] masking names across {len(struct):,} docs (batched, head-window NER)...")
+        masked_texts, total = _pii.mask_names_batch(
+            struct, batch_size=64, max_windows=1,
+            progress=lambda d, n: _log(f"    NER {d:,}/{n:,} chunks"))
+        pii_counts["name"] += total
+    else:
+        masked_texts = struct
+
+    out, pii_pairs = [], []
+    for d, orig, mt in zip(ids, originals, masked_texts):
+        if mt != orig:
+            tok[d] = count_tokens(mt)
+        out.append((d, mt))
+        pii_pairs.append((orig, mt))
     record("pii", before, out,
-           "Regex identifiers + IndicNER PER names (precision/recall tension for Indic names).",
+           "Regex identifiers + NER PER names (precision/recall tension for Indic names).",
            _diff_samples(pii_pairs, sample_diffs))
     docs = out
 
@@ -175,9 +202,11 @@ def run(input_parquet, outdir, use_ner=True, ner_pipe=None, sample_diffs=3,
         "final": final,
         "manifest": {**man, "validation": validation},
         "meta": {"source": SOURCE, "license": LICENSE, "language": LANG,
+                 "ner_model": _pii.NER_MODEL,
                  "generated_at": man["generated_at"], "script_hash": script_h},
     }
 
+    _log(f"[write] {len(docs):,} docs -> {outdir}/ (corpus, manifest, stats)")
     pq.write_table(pa.table({"doc_id": [d for d, _ in docs], "text": texts}),
                    os.path.join(outdir, "cleaned_corpus.parquet"))
     with open(os.path.join(outdir, "manifest.json"), "w", encoding="utf-8") as f:
