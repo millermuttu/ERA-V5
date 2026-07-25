@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Session 4 — Cleaning a Kannada Crawl into Training Data</title>
+<title>Session 4 — Cleaning a News Crawl into Training Data</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -181,25 +181,25 @@ const el = (tag, cls, html) => { const e=document.createElement(tag); if(cls)e.c
 /* ---------- static copy: the 8 strategies ---------- */
 const STRATEGIES = [
   {n:"01", key:"normalize", kind:"applied", title:"Text normalization",
-   blurb:"NFC, strip zero-width & control noise, unescape HTML entities, collapse whitespace — while keeping the Brahmic joiners.",
-   fix:"46 garbage tokens & character-level dirt"},
+   blurb:"NFC, strip zero-width & control noise, unescape HTML entities, collapse whitespace (joiners preserved for any script).",
+   fix:"character-level dirt & garbage tokens"},
   {n:"02", key:null, kind:"demo", title:"Format discipline",
    blurb:"Rewrite every conversation source into one canonical special-token format so pretraining never learns the ghost markers.",
    fix:"4 sources → 4 incompatible chat formats"},
   {n:"03", key:"quality", kind:"applied", title:"Quality filtering",
-   blurb:"A heuristic cascade (length, symbol ratio, boilerplate, duplicate lines) with Indic-aware thresholds.",
-   fix:"filter bias against low-resource text"},
+   blurb:"A heuristic cascade: length, symbol ratio, boilerplate/nav lines, duplicate-line ratio, mean word length.",
+   fix:"junk pages leaking into the corpus"},
   {n:"04", key:"dedup", kind:"applied", title:"Deduplication",
-   blurb:"MinHash signatures + LSH banding to catch near-duplicates, not just exact copies.",
-   fix:"the Indic crawl had no dedup at all"},
+   blurb:"MinHash signatures + LSH banding to catch near-duplicates, not just exact copies — the syndicated reposts.",
+   fix:"undeduplicated crawl → wasted compute + memorization"},
   {n:"05", key:"langid", kind:"applied", title:"Language-ID validation",
-   blurb:"Detect the real script instead of trusting the folder, so mislabelled docs never pollute the pool.",
-   fix:"the Telugu language-code that worked by accident"},
+   blurb:"Detect real English prose by script ratio + stop-word density, so non-English and non-prose docs are dropped.",
+   fix:"mislabelled documents skewing the pools"},
   {n:"06", key:"pii", kind:"applied", title:"PII removal",
-   blurb:"Regex for structured identifiers plus a multilingual NER pass for personal names.",
+   blurb:"Regex masks emails, phones, URLs and IPs across every document; name NER shown as a demo.",
    fix:"personal data & legal usability"},
   {n:"07", key:"decontam", kind:"applied", title:"Decontamination",
-   blurb:"Fingerprint the eval sets, scan every shard for overlap, plant canary strings.",
+   blurb:"Fingerprint a held-out eval set, remove any training doc overlapping it, plant canary strings.",
    fix:"benchmark scores that quietly inflate"},
   {n:"08", key:"manifest", kind:"applied", title:"Reproducibility & manifest",
    blurb:"Deterministic content hash after cleaning, plus a provenance manifest no shard can skip.",
@@ -217,12 +217,12 @@ const B = STATS.baseline, F = STATS.final, M = STATS.manifest, meta = STATS.meta
 (() => {
   const s = el("section","hero");
   const removed = B.tokens - F.tokens;
-  s.appendChild(el("div","eyebrow","MADLAD-400 · noisy · Kannada"));
+  s.appendChild(el("div","eyebrow","CC-News · CommonCrawl · English"));
   s.innerHTML += `
     <h1>Raw data is <span class="thesis">not</span><br>training data.</h1>
-    <p class="lede">A 20-million-token slice of a raw, minimally-filtered Kannada web crawl, run through
-    eight cleaning strategies until what is left is something you could actually train on — every number
-    below is measured, not estimated.</p>
+    <p class="lede">A 20-million-token slice of an undeduplicated news crawl, run through eight cleaning
+    strategies until what is left is something you could actually train on — every number below is measured,
+    not estimated.</p>
     <div class="flow">
       <div class="start"><div class="lbl">Raw crawl</div><div class="big mono">${abbr(B.tokens)}</div></div>
       <div class="arrow">→</div>
@@ -244,9 +244,9 @@ const B = STATS.baseline, F = STATS.final, M = STATS.manifest, meta = STATS.meta
   const s = el("section");
   s.innerHTML = `<div class="eyebrow">The dataset</div>
     <h2 style="margin:14px 0 10px">Why this corpus</h2>
-    <p class="lede">Session 3's Sangraha turned out already-clean, so we took a genuinely raw source:
-    <b>MADLAD-400</b>'s <b>noisy</b> Kannada split — a minimally-filtered web crawl thick with boilerplate,
-    code-switching and zero-width junk. A Brahmic script that puts the keep-the-joiner rule to work.</p>
+    <p class="lede">Curated corpora are already deduplicated, so the interesting stages never fire on them.
+    We took <b>CC-News</b> — CommonCrawl news — precisely because it is <b>undeduplicated</b>: the same wire
+    story is syndicated across dozens of outlets, so near-duplicates, emails and phone numbers are really there.</p>
     <div class="cards">
       <div class="card"><div class="k">Documents</div><div class="big mono">${fmt(B.docs)}</div><p>raw crawl records</p></div>
       <div class="card"><div class="k">Tokens</div><div class="big mono">${abbr(B.tokens)}</div><p>o200k reference count</p></div>
@@ -257,15 +257,15 @@ const B = STATS.baseline, F = STATS.final, M = STATS.manifest, meta = STATS.meta
       <table class="kv">
         <tr><td class="k">Source</td><td class="v mono">${esc(meta.source)}</td></tr>
         <tr><td class="k">License</td><td class="v"><b>${esc(meta.license)}</b></td></tr>
-        <tr><td class="k">Language</td><td class="v">Kannada — <span class="mono">${esc(meta.language)}</span> · Kannada script (U+0C80–0CFF)</td></tr>
+        <tr><td class="k">Language</td><td class="v">English — <span class="mono">${esc(meta.language)}</span> · CommonCrawl news articles</td></tr>
         <tr><td class="k">Selection</td><td class="v">first documents until 20M o200k tokens · streamed</td></tr>
       </table>
       <div>
         <div class="eyebrow amber" style="margin-bottom:12px">The one rule underneath</div>
         <p class="sub" style="font-size:14.5px">Cleaning happens <b>before</b> the content hash, so the manifest
-        fingerprints the cleaned text — not the dirty original. And a published corpus is never assumed clean:
-        we run every stage independently, which is why <b class="jade">deduplication</b> still runs even when it
-        finds nothing.</p>
+        fingerprints the cleaned text — not the dirty original. And nothing is assumed clean: every stage runs
+        independently, which is how <b class="jade">deduplication</b> quietly reclaims 14% of the corpus the
+        source never removed.</p>
       </div>
     </div>`;
   app.appendChild(s);
@@ -362,10 +362,9 @@ const B = STATS.baseline, F = STATS.final, M = STATS.manifest, meta = STATS.meta
       <div class="metric"><div class="n">${fmt(p.ip)}</div><div class="l">ip addrs</div></div>
       <div class="metric"><div class="n" style="color:var(--amber)">demo</div><div class="l">names (NER)</div></div>
     </div>
-    <p class="concern">Structured identifiers are masked by regex, fully and precisely, across every document.
-    Personal-name detection is shown as a demo only: the non-gated multilingual NER models shatter Kannada
-    script into fragments and tag common words as names — real Kannada name detection needs the gated
-    <span class="mono">ai4bharat/IndicNER</span>.</p>`;
+    <p class="concern">Structured identifiers are masked by regex, fully and precisely, across every document —
+    thousands of emails, phone numbers and URLs. Personal-name detection is shown as a demo to keep the run
+    fast and dependency-light; an English NER pass would slot in here for production.</p>`;
   s.appendChild(pii);
   app.appendChild(s);
 })();
@@ -399,22 +398,25 @@ const B = STATS.baseline, F = STATS.final, M = STATS.manifest, meta = STATS.meta
 /* CONCERNS */
 (() => {
   const s = el("section");
-  const fdrop = (B.fertility && F.fertility) ? (B.fertility - F.fertility) : 0;
-  s.innerHTML = `<div class="eyebrow amber">Other concerns cleaned up</div>
-    <h2 style="margin:14px 0 10px">The sovereign thread</h2>
+  const dd = STATS.stages.find(x => x.name === "dedup") || {};
+  const dc = STATS.stages.find(x => x.name === "decontam") || {};
+  const p = STATS.pii;
+  const piiTotal = p.email + p.phone + p.url + p.ip;
+  s.innerHTML = `<div class="eyebrow amber">What the pipeline caught</div>
+    <h2 style="margin:14px 0 10px">Where the cleaning actually bit</h2>
     <div class="conc">
-      <div class="cc"><div class="big">${B.fertility}</div><h3>Fertility, measured not guessed</h3>
-        <p>o200k splits Kannada into ${B.fertility} tokens per word — the exact “wrong Indic token ratio” the
-        session warns about. Post-cleaning it settles at ${F.fertility}.</p></div>
-      <div class="cc"><div class="big">verify</div><h3>Trust nothing, run it anyway</h3>
-        <p>MinHash+LSH found 0 near-duplicates — this corpus was already deduplicated. That's the point:
-        dedup is an independent check you run regardless, not a claim you take on faith.</p></div>
-      <div class="cc"><div class="big">ZWJ · ZWNJ</div><h3>Keep the joiners</h3>
-        <p>Normalization strips zero-width noise but preserves U+200C / U+200D — stripping every invisible
-        character would mangle Kannada while believing it helps.</p></div>
-      <div class="cc"><div class="big">script</div><h3>Detect, don’t trust the folder</h3>
-        <p>Language-ID reads the actual Kannada-script ratio, so code-switched and mislabelled documents are
-        judged on what they contain, not where they sit.</p></div>
+      <div class="cc"><div class="big">${pct(dd.removed_pct)}</div><h3>Syndication is duplication</h3>
+        <p>The same wire story is republished across dozens of outlets. MinHash+LSH removed
+        ${fmt(dd.removed_docs)} near-duplicate documents that exact hashing would have missed entirely.</p></div>
+      <div class="cc"><div class="big">${abbr(piiTotal)}</div><h3>PII at scale, by regex</h3>
+        <p>${fmt(p.email)} emails, ${fmt(p.phone)} phone numbers and ${fmt(p.url)} URLs masked across the
+        corpus — the structured identifiers regex catches precisely, at every document.</p></div>
+      <div class="cc"><div class="big">${fmt(dc.holdout_docs || 0)} held</div><h3>The eval firewall</h3>
+        <p>${fmt(dc.holdout_docs || 0)} documents were held out as an evaluation set. Decontamination removed
+        them and every training doc sharing a verbatim 13-word run — ${fmt(dc.removed_docs)} in all.</p></div>
+      <div class="cc"><div class="big">${B.fertility}</div><h3>No corpus maxes every stage</h3>
+        <p>English tokenizes at ${B.fertility} tokens/word and is character-clean, so normalization does little
+        here. Which stages bite is a property of the data — you run all of them regardless.</p></div>
     </div>`;
   app.appendChild(s);
 })();
@@ -446,9 +448,9 @@ const B = STATS.baseline, F = STATS.final, M = STATS.manifest, meta = STATS.meta
     </div>
     <button class="btn" id="dl">↓ Download manifest.json</button>
     <p class="foot" style="margin-top:30px">
-      <b>Reproduce:</b> fetch_madlad_slice.py → run_pipeline.py → build_widget.py &nbsp;·&nbsp;
+      <b>Reproduce:</b> fetch_ccnews_slice.py → run_pipeline.py → build_widget.py &nbsp;·&nbsp;
       content hash over cleaned text &nbsp;·&nbsp; generated <span class="mono">${esc((meta.generated_at||"").slice(0,19))}Z</span><br>
-      Session 04 · ERA · Data Cleaning &amp; Deduplication — Kannada corpus, MADLAD-400 noisy split.
+      Session 04 · ERA · Data Cleaning &amp; Deduplication — English news corpus, CC-News (CommonCrawl).
     </p>`;
   app.appendChild(s);
   s.querySelector("#dl").addEventListener("click", () => {

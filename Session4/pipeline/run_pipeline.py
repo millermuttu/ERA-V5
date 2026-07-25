@@ -194,10 +194,10 @@ def run(input_parquet, outdir, use_ner=True, ner_pipe=None, sample_diffs=3,
         holdout = [docs[i][1] for i in rng.sample(range(len(docs)), k)]
     else:
         holdout = _EVAL_FALLBACK
-    eval_fps = _decontam.build_eval_fingerprint_set(holdout, n=8)
+    eval_fps = _decontam.build_eval_fingerprint_set(holdout, n=13)
     kept, dropped = [], []
     for d, t in docs:
-        if _decontam.is_contaminated(t, eval_fps, n=8) or _decontam.has_canary(t):
+        if _decontam.is_contaminated(t, eval_fps, n=13) or _decontam.has_canary(t):
             dropped.append((d, t))
         else:
             kept.append((d, t))
