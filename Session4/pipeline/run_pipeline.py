@@ -1,5 +1,6 @@
 import json
 import os
+import random
 import time
 from datetime import datetime, timezone
 
@@ -16,14 +17,13 @@ import decontam as _decontam
 import manifest as _manifest
 
 _ENC = tiktoken.get_encoding("o200k_base")
-SOURCE = "allenai/MADLAD-400::data/kn/kn_noisy_0000.jsonl.gz (20M-token slice)"
-LICENSE = "ODC-BY-1.0"
-LANG = "kan"
+SOURCE = "vblagoje/cc_news (CommonCrawl News, English) :: 20M-token slice"
+LICENSE = "CommonCrawl-ToU"
+LANG = "en"
 
-# Held-out probe used for the decontamination stage. If FLORES-Kannada is
-# available it is loaded in main(); this fallback keeps the stage meaningful.
+# Fallback held-out probe (used when no eval set and holdout sampling is off).
 _EVAL_FALLBACK = [
-    "ಈ ವಾಕ್ಯವು ಮೌಲ್ಯಮಾಪನ ಸೆಟ್‌ನ ಭಾಗವಾಗಿದೆ ಮತ್ತು ತರಬೇತಿಯಲ್ಲಿ ಬರಬಾರದು",
+    "this sentence belongs to the held-out evaluation set and must not be trained on",
 ]
 
 
@@ -46,7 +46,7 @@ def _diff_samples(pairs, n):
 
 
 def run(input_parquet, outdir, use_ner=True, ner_pipe=None, sample_diffs=3,
-        eval_texts=None):
+        eval_texts=None, decontam_holdout=0):
     os.makedirs(outdir, exist_ok=True)
     _log(f"[load] reading {input_parquet}")
     tbl = pq.read_table(input_parquet, columns=["doc_id", "text"]).to_pydict()
@@ -100,7 +100,8 @@ def run(input_parquet, outdir, use_ner=True, ner_pipe=None, sample_diffs=3,
         tok[d] = count_tokens(clean)
         out.append((d, clean))
     record("normalize", before, out,
-           "Keeps Brahmic joiners (ZWNJ/ZWJ) while stripping zero-width noise.",
+           "NFC, strip zero-width and control noise, unescape HTML entities, "
+           "collapse whitespace. Preserves ZWJ/ZWNJ joiners for any Brahmic text.",
            _diff_samples(norm_pairs, sample_diffs),
            extra={"docs_modified": docs_modified, "chars_removed": chars_removed,
                   "zero_width_noise_removed": zw_removed})
@@ -108,11 +109,14 @@ def run(input_parquet, outdir, use_ner=True, ner_pipe=None, sample_diffs=3,
 
     # 2. LANGUAGE-ID
     before = docs
-    out = [(d, t) for d, t in docs if _langid.is_kannada(t, 0.5)]
-    dropped = [(d, t) for d, t in docs if not _langid.is_kannada(t, 0.5)]
+    kept, dropped = [], []
+    for d, t in docs:
+        (kept if _langid.is_english(t) else dropped).append((d, t))
+    out = kept
     record("langid", before, out,
-           "Detects real Kannada vs code-switched/mislabelled docs.",
-           _diff_samples([(t, "[DROPPED: not Kannada]") for _, t in dropped], sample_diffs))
+           "Detects real English prose by Latin-script ratio + stop-word density; "
+           "drops other-language, other-script and non-prose junk.",
+           _diff_samples([(t, "[DROPPED: not English]") for _, t in dropped], sample_diffs))
     docs = out
 
     # 3. QUALITY
@@ -123,7 +127,8 @@ def run(input_parquet, outdir, use_ner=True, ner_pipe=None, sample_diffs=3,
         (kept if ok else drops).append((d, t, reasons if not ok else None))
     out = [(d, t) for d, t, _ in kept]
     record("quality", before, out,
-           "Indic-aware thresholds so combining marks are not counted as symbols.",
+           "Heuristic cascade: min length, symbol ratio, boilerplate/nav lines, "
+           "duplicate-line ratio, mean word length.",
            _diff_samples([(t, f"[DROPPED: {r}]") for _, t, r in drops], sample_diffs))
     docs = out
 
@@ -132,9 +137,9 @@ def run(input_parquet, outdir, use_ner=True, ner_pipe=None, sample_diffs=3,
     dup_keys = _dedup.find_duplicates(docs, threshold=0.8)
     out = [(d, t) for d, t in docs if d not in dup_keys]
     record("dedup", before, out,
-           "Global near-duplicate detection with MinHash+LSH. Public corpora like "
-           "MADLAD-400 are already deduplicated, so 0 is the correct, verified "
-           "outcome -- dedup is a required independent check, not an assumption.",
+           "Global near-duplicate detection with MinHash+LSH. CommonCrawl news is "
+           "undeduplicated, so syndicated reposts and re-crawls are caught here -- "
+           "the near-duplicates exact hashing misses.",
            _diff_samples([(t, "[DROPPED: near-duplicate]")
                           for d, t in docs if d in dup_keys], sample_diffs))
     docs = out
@@ -173,15 +178,23 @@ def run(input_parquet, outdir, use_ner=True, ner_pipe=None, sample_diffs=3,
         out.append((d, mt))
         pii_pairs.append((orig, mt))
     record("pii", before, out,
-           "Regex masks structured identifiers (emails, phones, URLs, IPs). "
-           "Personal-name NER is a demo only: non-gated multilingual models mangle "
-           "Kannada, so real name detection needs the gated IndicNER.",
+           "Regex masks structured identifiers (emails, phones, URLs, IPs) across "
+           "every document. Personal-name NER is shown as a demo to keep the run fast.",
            _diff_samples(pii_pairs, sample_diffs))
     docs = out
 
-    # 6. DECONTAM
+    # 6. DECONTAM: fingerprint a held-out eval set, remove any training doc that
+    # overlaps it (or its duplicates). eval_texts overrides; else sample a holdout.
     before = docs
-    eval_fps = _decontam.build_eval_fingerprint_set(eval_texts or _EVAL_FALLBACK, n=8)
+    if eval_texts is not None:
+        holdout = eval_texts
+    elif decontam_holdout and docs:
+        rng = random.Random(1234)
+        k = min(decontam_holdout, len(docs))
+        holdout = [docs[i][1] for i in rng.sample(range(len(docs)), k)]
+    else:
+        holdout = _EVAL_FALLBACK
+    eval_fps = _decontam.build_eval_fingerprint_set(holdout, n=8)
     kept, dropped = [], []
     for d, t in docs:
         if _decontam.is_contaminated(t, eval_fps, n=8) or _decontam.has_canary(t):
@@ -190,8 +203,10 @@ def run(input_parquet, outdir, use_ner=True, ner_pipe=None, sample_diffs=3,
             kept.append((d, t))
     out = kept
     record("decontam", before, out,
-           "Fingerprint vs held-out eval + canary strings to keep scores honest.",
-           _diff_samples([(t, "[DROPPED: eval overlap]") for _, t in dropped], sample_diffs))
+           "A held-out eval set is fingerprinted; every training doc that overlaps "
+           "it -- or is a duplicate of an eval doc -- is removed, plus canary strings.",
+           _diff_samples([(t, "[DROPPED: eval overlap]") for _, t in dropped], sample_diffs),
+           extra={"holdout_docs": len(holdout)})
     docs = out
 
     # 7. MANIFEST
@@ -236,10 +251,10 @@ def run(input_parquet, outdir, use_ner=True, ner_pipe=None, sample_diffs=3,
 
 def main():
     t0 = time.time()
-    # use_ner=False: non-gated multilingual NER produces garbage on Kannada, so
-    # real names are shown as a demo in the widget; structured PII stays real.
-    stats = run("Session4/data/raw/madlad_kn_slice.parquet",
-                "Session4/data/cleaned", use_ner=False)
+    # use_ner=False: names are a demo (keeps the run fast); structured PII is real.
+    # decontam_holdout=50: hold out 50 docs as an eval set to exercise the firewall.
+    stats = run("Session4/data/raw/ccnews_slice.parquet",
+                "Session4/data/cleaned", use_ner=False, decontam_holdout=50)
     print(json.dumps({"baseline": stats["baseline"], "final": stats["final"],
                       "pii": stats["pii"],
                       "stages": [(s["name"], s["docs_in"], s["docs_out"])

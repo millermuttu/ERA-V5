@@ -4,7 +4,10 @@ from functools import lru_cache
 _URL = re.compile(r"https?://\S+")
 _EMAIL = re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+")
 _IP = re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b")
-_PHONE = re.compile(r"(?<!\d)(?:\+91[\s-]?)?[6-9]\d{9}(?!\d)")
+# US/international style (area code 2-9) plus Indian 10-digit mobiles.
+_PHONE = re.compile(
+    r"(?<!\d)(?:\+?\d{1,3}[-.\s]?)?\(?[2-9]\d{2}\)?[-.\s]?\d{3}[-.\s]?\d{4}(?!\d)"
+    r"|(?<!\d)(?:\+91[\s-]?)?[6-9]\d{9}(?!\d)")
 
 
 def mask_structured(text):
