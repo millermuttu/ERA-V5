@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>OPUS: Dynamic Per-Iteration Selection</title>
+<style>
+:root{
+--bg:#f6f8fb; --surface:#ffffff; --surface-alt:#fbfdff;
+--ink:#102338; --ink-body:#1f3850; --ink-muted:#60768d; --muted-2:#7d90a5;
+--rule:#e2e9f0; --rule-strong:#cfdbe6;
+--accent:#00a7d8; --accent-soft:#eafaff; --accent-ink:#0f6e8c;
+--green:#24b36b; --green-soft:#e7fff2; --green-ink:#19824e;
+--amber:#d99a13; --amber-soft:#fff7df; --amber-ink:#8a5c06;
+--violet:#7b61ff; --violet-soft:#eeeaff; --violet-ink:#5a44c8;
+--red:#e05f6e; --red-soft:#ffeef0; --red-ink:#c0455a;
+--shadow-soft:0 8px 22px rgba(16,35,56,.05);
+--font-sans:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+--font-mono:"SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;overflow-x:hidden}
+body{background:linear-gradient(180deg,#f8fafc 0%,#f3f6fa 100%);color:var(--ink-body);font-family:var(--font-sans);font-size:14px;line-height:1.55;padding:14px}
+.s5op-app{max-width:1480px;margin:auto}
+
+/* topbar */
+.s5op-topbar{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:10px}
+.s5op-topbar h1{margin:0;color:var(--ink);font-size:clamp(23px,2.6vw,34px);font-weight:800;letter-spacing:-.035em;line-height:1.08}
+.s5op-subtitle{margin-top:7px;max-width:1050px;color:var(--ink-muted);line-height:1.5;font-size:14px}
+.s5op-subtitle b{color:var(--ink-body)}
+.s5op-badge{border:1px solid #bcefff;background:var(--accent-soft);color:var(--accent-ink);padding:8px 13px;border-radius:999px;font-size:12px;font-weight:800;white-space:nowrap}
+
+/* layout */
+.s5op-layout{display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:12px;align-items:start}
+.s5op-stage,.s5op-side{background:var(--surface);border:1px solid var(--rule);border-radius:18px;box-shadow:var(--shadow-soft)}
+.s5op-stage{padding:11px}
+.s5op-side{padding:10px;display:flex;flex-direction:column;gap:9px}
+
+/* stage head */
+.s5op-stage-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:9px}
+.s5op-stage-title{font-weight:800;color:var(--ink);font-size:15px;letter-spacing:-.01em}
+.s5op-stage-note{font-size:11.5px;color:var(--ink-muted)}
+.s5op-stage-note b{color:var(--ink-body)}
+
+/* proxy direction indicator */
+.s5op-proxy{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;border:1px solid var(--rule);border-radius:14px;background:var(--surface-alt);padding:10px 12px;margin-bottom:10px}
+.s5op-proxy-l{min-width:0}
+.s5op-proxy-cap{font-size:9.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted-2);display:flex;align-items:center;gap:7px;margin-bottom:7px}
+.s5op-proxy-mode{font-family:var(--font-sans);font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;letter-spacing:0;text-transform:none}
+.s5op-proxy-mode.eng{background:var(--accent-soft);border:1px solid #bcefff;color:var(--accent-ink)}
+.s5op-proxy-mode.bal{background:var(--green-soft);border:1px solid #b7eccf;color:var(--green-ink)}
+.s5op-comp{display:grid;grid-template-columns:70px minmax(0,1fr) 38px;gap:8px;align-items:center;margin-top:4px}
+.s5op-comp-lab{font-size:10.5px;font-weight:700;color:var(--ink-muted)}
+.s5op-comp-bar{height:8px;border-radius:999px;background:#eef3f7;overflow:hidden;border:1px solid var(--rule)}
+.s5op-comp-bar i{display:block;height:100%;border-radius:999px;transition:width .4s ease}
+.s5op-comp-bar.eng i{background:linear-gradient(90deg,#38c1e6,#00a7d8)}
+.s5op-comp-bar.rea i{background:linear-gradient(90deg,#e9b84a,#d99a13)}
+.s5op-comp-bar.sov i{background:linear-gradient(90deg,#9a83ff,#7b61ff)}
+.s5op-comp-val{font-family:var(--font-mono);font-size:11px;font-weight:800;color:var(--ink-body);text-align:right;font-variant-numeric:tabular-nums}
+.s5op-proxy-r{text-align:center;flex:none;border-left:1px dashed var(--rule-strong);padding-left:12px}
+.s5op-proxy-arrow{display:flex;align-items:center;gap:6px;color:var(--accent-ink);justify-content:center}
+.s5op-proxy-arrow svg{flex:none}
+.s5op-proxy-arrow span{font-size:11px;font-weight:800}
+.s5op-proxy-cos{margin-top:6px;font-family:var(--font-mono);font-size:19px;font-weight:800;color:var(--accent-ink);font-variant-numeric:tabular-nums;line-height:1}
+.s5op-proxy-cossub{font-size:9.5px;color:var(--muted-2);margin-top:2px;max-width:120px;line-height:1.3}
+
+/* tile grid */
+.s5op-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.s5op-tile{position:relative;border:1px solid var(--rule);border-radius:12px;background:var(--surface-alt);padding:8px 9px 9px;min-width:0;transition:background .3s ease,border-color .3s ease,opacity .3s ease,transform .18s ease}
+.s5op-tile-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px}
+.s5op-tile-dom{display:flex;align-items:center;gap:5px;min-width:0}
+.s5op-dot{width:8px;height:8px;border-radius:50%;flex:none}
+.s5op-dom-lab{font-size:10.5px;font-weight:800;color:var(--ink-body);letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.s5op-tok{font-family:var(--font-mono);font-size:9.5px;color:var(--muted-2);flex:none;font-variant-numeric:tabular-nums}
+.s5op-util-row{display:flex;align-items:baseline;justify-content:space-between;gap:6px}
+.s5op-util-lab{font-size:9px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--muted-2)}
+.s5op-util-val{font-family:var(--font-mono);font-size:15px;font-weight:800;color:var(--ink-body);font-variant-numeric:tabular-nums;line-height:1}
+.s5op-util-bar{height:5px;border-radius:999px;background:#eef3f7;overflow:hidden;border:1px solid var(--rule);margin-top:5px}
+.s5op-util-bar i{display:block;height:100%;border-radius:999px;background:var(--rule-strong);transition:width .35s ease}
+.s5op-state{position:absolute;top:8px;right:9px;display:none}
+.s5op-state-tag{font-size:8px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:2px 6px;border-radius:6px}
+
+/* tile states */
+.s5op-tile.kept{border-color:#b7eccf;background:var(--green-soft)}
+.s5op-tile.kept .s5op-util-val{color:var(--green-ink)}
+.s5op-tile.kept .s5op-util-bar i{background:linear-gradient(90deg,#2fc178,#24b36b)}
+.s5op-tile.rej{border-color:#f3c0c8;background:var(--red-soft);opacity:.72}
+.s5op-tile.rej .s5op-util-val{color:var(--red-ink)}
+.s5op-tile.rej .s5op-util-bar i{background:linear-gradient(90deg,#ec7d8a,#e05f6e)}
+.s5op-tile.forced{border-color:#d4c9ff;background:var(--violet-soft);box-shadow:0 0 0 2px rgba(123,97,255,.16)}
+.s5op-tile.forced .s5op-util-val{color:var(--violet-ink)}
+.s5op-tile.forced .s5op-util-bar i{background:linear-gradient(90deg,#9a83ff,#7b61ff)}
+
+/* legend */
+.s5op-legend{display:flex;gap:15px;margin-top:10px;flex-wrap:wrap}
+.s5op-legrow{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ink-muted)}
+.s5op-legchip{width:12px;height:12px;border-radius:3px;flex:none;border:1px solid rgba(16,35,56,.12)}
+.s5op-legchip.g{background:var(--green-soft);border-color:#b7eccf}
+.s5op-legchip.r{background:var(--red-soft);border-color:#f3c0c8}
+.s5op-legchip.v{background:var(--violet-soft);border-color:#d4c9ff}
+
+/* iteration meta bar */
+.s5op-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:11px;padding:9px 12px;border:1px dashed var(--rule-strong);border-radius:12px;background:#fff}
+.s5op-meta-txt{font-size:11.5px;color:var(--ink-muted);line-height:1.45;flex:1 1 auto;min-width:0}
+.s5op-meta-txt b{color:var(--ink-body);font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.s5op-meta-txt .k{color:var(--green-ink)} .s5op-meta-txt .r{color:var(--red-ink)} .s5op-meta-txt .v{color:var(--violet-ink)}
+.s5op-btns{display:flex;gap:6px;flex:none}
+.s5op-btns button{border:1px solid var(--rule-strong);background:#fff;color:var(--ink-body);border-radius:10px;padding:6px 11px;font-weight:800;font-size:12px;cursor:pointer;font-family:inherit;transition:.15s}
+.s5op-btns button:hover{border-color:var(--accent);color:var(--accent-ink);background:#f2fbfe}
+.s5op-btns button.s5op-prim{background:linear-gradient(180deg,#f3fcff,#e9f9ff);border-color:#bcefff;color:var(--accent-ink)}
+.s5op-btns button.s5op-on{background:linear-gradient(180deg,#f5f1ff,#eee9ff);border-color:#d4c9ff;color:var(--violet-ink)}
+
+/* sidebar cards */
+.s5op-card{border:1px solid var(--rule);border-radius:14px;background:var(--surface-alt);padding:10px 11px}
+.s5op-ck{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted-2);display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.s5op-ck .s5op-kdot{width:8px;height:8px;border-radius:2px;flex:none}
+
+/* keep slider */
+.s5op-ctrl-top{display:flex;justify-content:space-between;align-items:baseline}
+.s5op-ctrl-name{font-size:12px;font-weight:800;color:var(--ink-body)}
+.s5op-ctrl-val{font-family:var(--font-mono);font-size:14px;font-weight:800;color:var(--accent-ink);font-variant-numeric:tabular-nums}
+.s5op-slider{width:100%;margin:8px 0 2px;accent-color:var(--accent)}
+.s5op-ctrl-sub{font-size:10.5px;color:var(--ink-muted);line-height:1.35;margin-top:2px}
+
+/* segmented proxy toggle */
+.s5op-seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:4px}
+.s5op-seg button{border:1px solid var(--rule-strong);background:#fff;color:var(--ink-muted);border-radius:10px;padding:8px 8px;font-weight:800;font-size:12px;cursor:pointer;font-family:inherit;transition:.15s;line-height:1.2}
+.s5op-seg button small{display:block;font-weight:600;font-size:9.5px;color:var(--muted-2);margin-top:2px}
+.s5op-seg button.on{background:var(--accent-soft);border-color:#8ddff5;color:var(--accent-ink);box-shadow:0 0 0 2px #e3f9ff inset}
+.s5op-seg button.on small{color:var(--accent-ink)}
+
+/* always-on switch */
+.s5op-lane{border:1px solid #d4c9ff;border-radius:14px;background:var(--violet-soft);padding:10px 11px}
+.s5op-lane .s5op-ck{color:var(--violet-ink)} .s5op-lane .s5op-kdot{background:var(--violet)}
+.s5op-switch-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.s5op-switch-lab{font-size:12px;font-weight:800;color:var(--violet-ink)}
+.s5op-switch-state{font-family:var(--font-mono);font-size:11px;font-weight:800;color:var(--muted-2)}
+.s5op-switch-state.on{color:var(--violet-ink)}
+.s5op-switch{width:46px;height:26px;border-radius:999px;border:1px solid var(--rule-strong);background:#eef3f7;position:relative;cursor:pointer;flex:none;transition:.2s;padding:0}
+.s5op-switch.on{background:linear-gradient(180deg,#9a83ff,#7b61ff);border-color:#7b61ff}
+.s5op-switch .knob{position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(16,35,56,.28);transition:.2s}
+.s5op-switch.on .knob{left:22px}
+.s5op-lane-note{font-size:11px;color:var(--violet-ink);line-height:1.5;margin-top:8px}
+.s5op-lane-note b{font-weight:800}
+
+/* readouts */
+.s5op-read2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.s5op-read{border:1px solid var(--rule);border-radius:11px;background:#fff;padding:8px 9px}
+.s5op-read.mult{border-color:#bcefff;background:var(--accent-soft)}
+.s5op-read.cost{border-color:#f0ddaf;background:var(--amber-soft)}
+.s5op-read-k{font-size:9px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted-2)}
+.s5op-read.mult .s5op-read-k{color:var(--accent-ink)} .s5op-read.cost .s5op-read-k{color:var(--amber-ink)}
+.s5op-read-v{font-family:var(--font-mono);font-size:21px;font-weight:800;line-height:1.1;margin-top:2px;font-variant-numeric:tabular-nums}
+.s5op-read.mult .s5op-read-v{color:var(--accent-ink)} .s5op-read.cost .s5op-read-v{color:var(--amber-ink)}
+.s5op-read-sub{font-size:10px;color:var(--ink-muted);margin-top:1px;line-height:1.3}
+.s5op-tokline{margin-top:8px;font-size:11px;color:var(--ink-muted);line-height:1.45;border-top:1px dashed var(--rule-strong);padding-top:8px}
+.s5op-tokline b{font-family:var(--font-mono);color:var(--accent-ink);font-weight:800}
+
+/* meters */
+.s5op-meter{margin-bottom:9px}
+.s5op-meter:last-child{margin-bottom:0}
+.s5op-meter-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.s5op-meter-lab{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:800;color:var(--ink-body)}
+.s5op-meter-lab .d{width:8px;height:8px;border-radius:50%;flex:none}
+.s5op-meter-val{font-family:var(--font-mono);font-size:13px;font-weight:800;font-variant-numeric:tabular-nums}
+.s5op-meter-bar{height:14px;border-radius:999px;background:#eef3f7;overflow:hidden;border:1px solid var(--rule);margin-top:5px;position:relative}
+.s5op-meter-bar i{display:block;height:100%;border-radius:999px;transition:width .5s cubic-bezier(.2,.7,.2,1)}
+.s5op-meter-floor{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--violet);left:40%}
+.s5op-meter-sub{font-size:10px;color:var(--muted-2);margin-top:3px;line-height:1.35}
+.s5op-meter.starved .s5op-meter-val{color:var(--red-ink)}
+.s5op-meter.starved i{background:linear-gradient(90deg,#ec7d8a,#e05f6e)}
+.s5op-meter.recov .s5op-meter-val{color:var(--violet-ink)}
+.s5op-meter.recov i{background:linear-gradient(90deg,#9a83ff,#7b61ff)}
+
+/* note + v4 */
+.s5op-note{border:1px solid #cceefa;border-radius:12px;background:var(--accent-soft);padding:9px 11px;font-size:11.5px;line-height:1.5;color:var(--accent-ink)}
+.s5op-note b{font-weight:800}
+.s5op-note code{font-family:var(--font-mono);font-size:11px;background:#fff;border:1px solid #cceefb;border-radius:5px;padding:1px 5px;overflow-wrap:anywhere}
+.s5op-v4{border:1px solid #d4c9ff;border-radius:12px;background:var(--violet-soft);padding:9px 11px}
+.s5op-v4 .s5op-ck{color:var(--violet-ink)} .s5op-v4 .s5op-kdot{background:var(--violet)}
+.s5op-v4 p{margin:0;font-size:11.5px;line-height:1.5;color:var(--violet-ink)}
+.s5op-v4 p b{font-weight:800}
+.s5op-v4 code{font-family:var(--font-mono);font-size:11px;background:#fff;border:1px solid #d4c9ff;border-radius:5px;padding:1px 5px}
+
+.s5op-footer{margin-top:11px;padding-top:9px;border-top:1px solid var(--rule);font-size:11px;color:var(--muted-2);line-height:1.5}
+.s5op-footer b{color:var(--ink-muted)}
+
+@media(max-width:1100px){
+.s5op-layout{grid-template-columns:1fr}
+}
+@media(max-width:640px){
+body{padding:10px}
+.s5op-topbar{display:block}
+.s5op-badge{display:inline-block;margin-top:10px}
+.s5op-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.s5op-proxy{grid-template-columns:1fr}
+.s5op-proxy-r{border-left:none;border-top:1px dashed var(--rule-strong);padding-left:0;padding-top:9px;margin-top:3px}
+}
+</style>
+</head>
+<body>
+<div class="s5op-app">
+ <div class="s5op-topbar">
+  <div>
+   <h1>OPUS: Dynamic Per-Iteration Selection</h1>
+   <div class="s5op-subtitle">The 2026 shift is from static filtering to <b>per-iteration selection</b>. Every step, a fresh set of candidate batches arrives; OPUS scores each one by projecting its optimizer-induced update onto a stable proxy direction and keeps only the most useful. But a global <b>English-heavy</b> proxy starves the scarce Indic and agentic data. Watch it happen, then flip the protected Always-On lane and watch it recover.</div>
+  </div>
+  <div class="s5op-badge">Interactive &middot; real selection</div>
+ </div>
+
+ <div class="s5op-layout">
+  <main class="s5op-stage">
+   <div class="s5op-stage-head">
+    <div class="s5op-stage-title">Candidate batches &rarr; project onto proxy &rarr; keep the useful ones</div>
+    <div class="s5op-stage-note">Top <b id="s5opKeepNote">40%</b> by projected utility survive</div>
+   </div>
+
+   <div class="s5op-proxy">
+    <div class="s5op-proxy-l">
+     <div class="s5op-proxy-cap">Proxy target direction <span class="s5op-proxy-mode eng" id="s5opProxyMode">English-heavy</span></div>
+     <div class="s5op-comp">
+      <span class="s5op-comp-lab">English</span>
+      <span class="s5op-comp-bar eng"><i id="s5opCompEng"></i></span>
+      <span class="s5op-comp-val" id="s5opCompEngV">0.70</span>
+     </div>
+     <div class="s5op-comp">
+      <span class="s5op-comp-lab">Reasoning</span>
+      <span class="s5op-comp-bar rea"><i id="s5opCompRea"></i></span>
+      <span class="s5op-comp-val" id="s5opCompReaV">0.53</span>
+     </div>
+     <div class="s5op-comp">
+      <span class="s5op-comp-lab">Sovereign</span>
+      <span class="s5op-comp-bar sov"><i id="s5opCompSov"></i></span>
+      <span class="s5op-comp-val" id="s5opCompSovV">0.33</span>
+     </div>
+    </div>
+    <div class="s5op-proxy-r">
+     <div class="s5op-proxy-arrow">
+      <span>aligns with</span>
+      <svg width="20" height="14" viewBox="0 0 20 14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h14"/><path d="M12 3l4 4-4 4"/></svg>
+     </div>
+     <div class="s5op-proxy-cos" id="s5opCos">0.876</div>
+     <div class="s5op-proxy-cossub">cosine with the English web band</div>
+    </div>
+   </div>
+
+   <div class="s5op-grid" id="s5opGrid"></div>
+
+   <div class="s5op-legend">
+    <div class="s5op-legrow"><span class="s5op-legchip g"></span> kept by OPUS (top score)</div>
+    <div class="s5op-legrow"><span class="s5op-legchip r"></span> rejected (below the keep cut)</div>
+    <div class="s5op-legrow"><span class="s5op-legchip v"></span> forced by the Always-On lane</div>
+   </div>
+
+   <div class="s5op-meta">
+    <div class="s5op-meta-txt" id="s5opMetaTxt"></div>
+    <div class="s5op-btns">
+     <button id="s5opAuto">Auto-run</button>
+     <button id="s5opNext" class="s5op-prim">Next iteration &rarr;</button>
+    </div>
+   </div>
+  </main>
+
+  <aside class="s5op-side">
+   <div class="s5op-card">
+    <div class="s5op-ck"><span class="s5op-kdot" style="background:var(--accent)"></span>Selection controls</div>
+    <div class="s5op-ctrl-top"><span class="s5op-ctrl-name">Keep-fraction</span><span class="s5op-ctrl-val" id="s5opKeepVal">40%</span></div>
+    <input class="s5op-slider" id="s5opKeep" type="range" min="10" max="90" step="5" value="40" />
+    <div class="s5op-ctrl-sub">The share of candidate batches OPUS keeps each iteration. Lower = more selective = higher effective-token multiplier.</div>
+
+    <div class="s5op-ck" style="margin-top:12px"><span class="s5op-kdot" style="background:var(--accent)"></span>Proxy mix</div>
+    <div class="s5op-seg">
+     <button id="s5opProxEng" class="on">English-heavy<small>V4 production proxy</small></button>
+     <button id="s5opProxBal">Balanced<small>values all bands</small></button>
+    </div>
+   </div>
+
+   <div class="s5op-lane">
+    <div class="s5op-ck"><span class="s5op-kdot"></span>The design decision &middot; Always-On lane</div>
+    <div class="s5op-switch-row">
+     <div class="s5op-switch-lab">Force 8% Indic + agentic</div>
+     <div style="display:flex;align-items:center;gap:9px">
+      <span class="s5op-switch-state" id="s5opLaneState">OFF</span>
+      <button class="s5op-switch" id="s5opLane"><span class="knob"></span></button>
+     </div>
+    </div>
+    <div class="s5op-lane-note" id="s5opLaneNote"><b>OFF:</b> the English-heavy proxy rejects almost every Indic and agentic batch. The two meters below fall toward zero.</div>
+   </div>
+
+   <div class="s5op-card">
+    <div class="s5op-ck"><span class="s5op-kdot" style="background:var(--accent)"></span>Selection economics</div>
+    <div class="s5op-read2">
+     <div class="s5op-read mult">
+      <div class="s5op-read-k">Effective-token multiplier</div>
+      <div class="s5op-read-v" id="s5opMult">6.0&times;</div>
+      <div class="s5op-read-sub">value per trained token</div>
+     </div>
+     <div class="s5op-read cost">
+      <div class="s5op-read-k">Compute overhead</div>
+      <div class="s5op-read-v">4.7%</div>
+      <div class="s5op-read-sub">from the paper (ICML 2026)</div>
+     </div>
+    </div>
+    <div class="s5op-tokline" id="s5opTokLine"></div>
+   </div>
+
+   <div class="s5op-card">
+    <div class="s5op-ck"><span class="s5op-kdot" style="background:var(--violet)"></span>Trained this iteration</div>
+    <div class="s5op-meter" id="s5opIndicMeter">
+     <div class="s5op-meter-top">
+      <span class="s5op-meter-lab"><span class="d" style="background:#5a44c8"></span>Indic</span>
+      <span class="s5op-meter-val" id="s5opIndicVal">0.0%</span>
+     </div>
+     <div class="s5op-meter-bar"><i id="s5opIndicBar"></i></div>
+     <div class="s5op-meter-sub" id="s5opIndicSub">share of tokens trained this iteration</div>
+    </div>
+    <div class="s5op-meter" id="s5opAgMeter">
+     <div class="s5op-meter-top">
+      <span class="s5op-meter-lab"><span class="d" style="background:#7b61ff"></span>Agentic</span>
+      <span class="s5op-meter-val" id="s5opAgVal">0.0%</span>
+     </div>
+     <div class="s5op-meter-bar"><i id="s5opAgBar"></i></div>
+     <div class="s5op-meter-sub" id="s5opAgSub">share of tokens trained this iteration</div>
+    </div>
+   </div>
+
+   <div class="s5op-note">
+    <b>OPUS = Optimizer-induced Projected Utility Selection.</b> It scores in the optimizer-induced <b>update</b> space, not the raw gradient, using a ghost + CountSketch low-rank approximation, and samples with a Boltzmann rule so the kept set stays diverse.
+   </div>
+
+   <div class="s5op-v4">
+    <div class="s5op-ck"><span class="s5op-kdot"></span>V4 reality</div>
+    <p>V4 ran production OPUS keeping <b>~40%</b> of candidates for <b>~6&times;</b> effective tokens (<code>~200B &rarr; ~1.2T</code>). But its proxy was English-heavy (<b>cosine 0.876</b> with the English web band), so it under-valued Indic. That is why <b>Always-On injects 8%</b> of every batch invisible to OPUS.</p>
+   </div>
+
+   <div class="s5op-footer">
+    <b>OPUS: arXiv:2602.05400.</b> OPUS: arXiv:2602.05400, ICML 2026 Oral. The 4.7% overhead and the 6x effective multiplier are from the paper. Selection scores computed live in your browser.
+   </div>
+  </aside>
+ </div>
+</div>
+
+<script>
+"use strict";
+(function(){
+ const $=id=>document.getElementById(id);
+
+ // ---- domain vectors in [English, Reasoning, Sovereign] update-space ----
+ const DOMAINS={
+  web:      {label:"web",       vec:[0.92,0.20,0.08], color:"#00a7d8", scarce:false},
+  code:     {label:"code",      vec:[0.78,0.52,0.06], color:"#0f6e8c", scarce:false},
+  reasoning:{label:"reasoning", vec:[0.50,0.82,0.10], color:"#d99a13", scarce:false},
+  agentic:  {label:"agentic",   vec:[0.34,0.50,0.30], color:"#7b61ff", scarce:true},
+  indic:    {label:"indic",     vec:[0.18,0.26,0.92], color:"#5a44c8", scarce:true}
+ };
+ // corpus is English web-heavy: Indic + agentic show up, but scarce
+ const SAMPLE=[
+  ["web",34],["code",22],["reasoning",16],["agentic",16],["indic",12]
+ ];
+ // proxy target directions
+ const PROXY={
+  english :{vec:[0.70,0.53,0.33], mode:"English-heavy", cls:"eng"},
+  balanced:{vec:[0.577,0.577,0.577], mode:"Balanced", cls:"bal"}
+ };
+ const LANE_FLOOR=0.08;   // 8% of trained tokens reserved for Indic + agentic
+
+ // ---- real vector math ----
+ function dot(a,b){return a[0]*b[0]+a[1]*b[1]+a[2]*b[2];}
+ function norm(a){return Math.sqrt(dot(a,a));}
+ function cosine(a,b){const d=norm(a)*norm(b);return d?dot(a,b)/d:0;}
+
+ // ---- state ----
+ let keepFrac=0.40;
+ let proxyKey="english";
+ let laneOn=false;
+ let iter=0;
+ let tiles=[];        // current iteration's candidate batches (stable order)
+ let autoTimer=null;
+
+ function rand(a,b){return a+Math.random()*(b-a);}
+ function pickDomain(){
+  const total=SAMPLE.reduce((s,d)=>s+d[1],0);
+  let r=Math.random()*total;
+  for(const [k,w] of SAMPLE){ r-=w; if(r<=0) return k; }
+  return "web";
+ }
+
+ // regenerate the candidate stream (domains + token sizes; scores are derived)
+ function regenerate(){
+  iter++;
+  const N=Math.round(rand(11,14.4));   // ~11-14 candidate batch tiles
+  tiles=[];
+  // guarantee the scarce bands actually appear so the story is visible
+  const forced=["indic","agentic"];
+  for(let i=0;i<N;i++){
+   const dom = i<forced.length ? forced[i] : pickDomain();
+   tiles.push({dom, tok:Math.round(rand(6,20)), noise:(Math.random()-0.5)*0.14});
+  }
+  // shuffle so the guaranteed scarce tiles are not always first
+  for(let i=tiles.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[tiles[i],tiles[j]]=[tiles[j],tiles[i]];}
+ }
+
+ // score = projection of the batch's update onto the proxy direction + noise
+ function scoreTiles(){
+  const p=PROXY[proxyKey].vec;
+  tiles.forEach(t=>{ t.score = dot(DOMAINS[t.dom].vec, p) + t.noise; });
+ }
+
+ // run OPUS selection + the Always-On lane. Returns per-tile state.
+ function select(){
+  scoreTiles();
+  const N=tiles.length;
+  const order=[...tiles].sort((a,b)=>b.score-a.score);
+  const keepCount=Math.max(1,Math.round(keepFrac*N));
+  const keptSet=new Set(order.slice(0,keepCount));
+  tiles.forEach(t=>{ t.state = keptSet.has(t) ? "kept" : "rej"; });
+
+  // Always-On lane: force scarce (indic+agentic) batches until their combined
+  // share of trained tokens reaches the 8% floor, bypassing OPUS scores.
+  if(laneOn){
+   const trainedTok=()=>tiles.filter(t=>t.state==="kept"||t.state==="forced").reduce((s,t)=>s+t.tok,0);
+   const scarceTok=()=>tiles.filter(t=>(t.state==="kept"||t.state==="forced")&&DOMAINS[t.dom].scarce).reduce((s,t)=>s+t.tok,0);
+   // candidates to promote: rejected scarce batches, best score first
+   const promo=tiles.filter(t=>t.state==="rej"&&DOMAINS[t.dom].scarce).sort((a,b)=>b.score-a.score);
+   let guard=0;
+   while(promo.length && (scarceTok()/Math.max(1,trainedTok()))<LANE_FLOOR && guard<promo.length){
+    promo[guard].state="forced"; guard++;
+   }
+   // guarantee at least one Indic AND one agentic are actually trained
+   ["indic","agentic"].forEach(d=>{
+    const hasIt=tiles.some(t=>t.dom===d&&(t.state==="kept"||t.state==="forced"));
+    if(!hasIt){ const cand=tiles.filter(t=>t.dom===d).sort((a,b)=>b.score-a.score)[0]; if(cand)cand.state="forced"; }
+   });
+  }
+ }
+
+ // ---- economics ----
+ function effMult(){
+  const m=6.0*Math.pow(0.40/keepFrac,0.8);
+  return Math.min(14,Math.max(1.4,m));
+ }
+
+ // ---- render ----
+ function fmtPct(x){return (x*100).toFixed(1)+"%";}
+
+ function render(){
+  select();
+  const p=PROXY[proxyKey];
+
+  // proxy panel
+  $("s5opProxyMode").textContent=p.mode;
+  $("s5opProxyMode").className="s5op-proxy-mode "+p.cls;
+  const pv=p.vec, mx=Math.max(pv[0],pv[1],pv[2],0.001);
+  $("s5opCompEng").style.width=(pv[0]/mx*100)+"%"; $("s5opCompEngV").textContent=pv[0].toFixed(2);
+  $("s5opCompRea").style.width=(pv[1]/mx*100)+"%"; $("s5opCompReaV").textContent=pv[1].toFixed(2);
+  $("s5opCompSov").style.width=(pv[2]/mx*100)+"%"; $("s5opCompSovV").textContent=pv[2].toFixed(2);
+  const cos=cosine(pv,DOMAINS.web.vec);
+  $("s5opCos").textContent=cos.toFixed(3);
+
+  // score scaling for tile bars (map observed range to 0..1)
+  const scores=tiles.map(t=>t.score);
+  const lo=Math.min(...scores), hi=Math.max(...scores), span=(hi-lo)||1;
+
+  // tiles
+  $("s5opGrid").innerHTML=tiles.map(t=>{
+   const d=DOMAINS[t.dom];
+   const w=Math.max(6,(t.score-lo)/span*100);
+   let tag="";
+   if(t.state==="kept") tag='<div class="s5op-state" style="display:block"><span class="s5op-state-tag" style="background:var(--green-soft);border:1px solid #b7eccf;color:var(--green-ink)">kept</span></div>';
+   else if(t.state==="forced") tag='<div class="s5op-state" style="display:block"><span class="s5op-state-tag" style="background:#fff;border:1px solid #d4c9ff;color:var(--violet-ink)">lane</span></div>';
+   else tag='<div class="s5op-state" style="display:block"><span class="s5op-state-tag" style="background:var(--red-soft);border:1px solid #f3c0c8;color:var(--red-ink)">cut</span></div>';
+   return `<div class="s5op-tile ${t.state}">
+     ${tag}
+     <div class="s5op-tile-head">
+      <div class="s5op-tile-dom"><span class="s5op-dot" style="background:${d.color}"></span><span class="s5op-dom-lab">${d.label}</span></div>
+      <span class="s5op-tok">${t.tok}M</span>
+     </div>
+     <div class="s5op-util-row">
+      <span class="s5op-util-lab">proj. utility</span>
+      <span class="s5op-util-val">${t.score.toFixed(2)}</span>
+     </div>
+     <div class="s5op-util-bar"><i style="width:${w}%"></i></div>
+    </div>`;
+  }).join("");
+
+  // meta line
+  const kept=tiles.filter(t=>t.state==="kept").length;
+  const forced=tiles.filter(t=>t.state==="forced").length;
+  const rej=tiles.filter(t=>t.state==="rej").length;
+  $("s5opMetaTxt").innerHTML=`Iteration <b>${iter}</b> &middot; arrived <b>${tiles.length}</b> &middot; kept <b class="k">${kept}</b>`+
+   (forced?` &middot; lane-forced <b class="v">${forced}</b>`:``)+` &middot; rejected <b class="r">${rej}</b>`;
+
+  // economics
+  const m=effMult();
+  $("s5opMult").innerHTML=m.toFixed(1)+"&times;";
+  $("s5opKeepVal").textContent=Math.round(keepFrac*100)+"%";
+  $("s5opKeepNote").textContent=Math.round(keepFrac*100)+"%";
+  const effB=Math.round(200*m);
+  const effStr= effB>=1000 ? (effB/1000).toFixed(2)+"T" : effB+"B";
+  $("s5opTokLine").innerHTML=`At <b>${Math.round(keepFrac*100)}%</b> keep, V4 scale <b>~200B</b> actual tokens train like <b>~${effStr}</b> effective.`;
+
+  // meters: share of THIS iteration's trained tokens
+  const trained=tiles.filter(t=>t.state==="kept"||t.state==="forced");
+  const trainedTok=trained.reduce((s,t)=>s+t.tok,0)||1;
+  const indicTok=trained.filter(t=>t.dom==="indic").reduce((s,t)=>s+t.tok,0);
+  const agTok=trained.filter(t=>t.dom==="agentic").reduce((s,t)=>s+t.tok,0);
+  const indicShare=indicTok/trainedTok, agShare=agTok/trainedTok;
+
+  const setMeter=(mEl,barEl,valEl,subEl,share,name)=>{
+   valEl.textContent=(share*100).toFixed(1)+"%";
+   // bar scaled so 20% fills the track; violet floor marker sits at 4% (per-band ~half of 8%)
+   barEl.style.width=Math.min(100,share/0.20*100)+"%";
+   mEl.classList.remove("starved","recov");
+   if(laneOn){ mEl.classList.add("recov"); subEl.textContent=name+" protected by the lane, above the floor"; }
+   else if(share<0.03){ mEl.classList.add("starved"); subEl.textContent=name+" starved by the English-heavy proxy"; }
+   else { subEl.textContent="share of tokens trained this iteration"; }
+  };
+  setMeter($("s5opIndicMeter"),$("s5opIndicBar"),$("s5opIndicVal"),$("s5opIndicSub"),indicShare,"Indic");
+  setMeter($("s5opAgMeter"),$("s5opAgBar"),$("s5opAgVal"),$("s5opAgSub"),agShare,"Agentic");
+
+  // lane copy
+  $("s5opLaneState").textContent=laneOn?"ON":"OFF";
+  $("s5opLaneState").classList.toggle("on",laneOn);
+  $("s5opLane").classList.toggle("on",laneOn);
+  $("s5opLaneNote").innerHTML=laneOn
+   ? `<b>ON:</b> a fixed <b>8%</b> of every iteration is forced to be Indic + agentic, shown violet, bypassing OPUS entirely. The scarce meters recover.`
+   : `<b>OFF:</b> the English-heavy proxy rejects almost every Indic and agentic batch. The two meters below fall toward zero.`;
+ }
+
+ // ---- controls ----
+ $("s5opKeep").addEventListener("input",e=>{ keepFrac=(+e.target.value)/100; render(); });
+ $("s5opProxEng").addEventListener("click",()=>{ proxyKey="english"; $("s5opProxEng").classList.add("on"); $("s5opProxBal").classList.remove("on"); render(); });
+ $("s5opProxBal").addEventListener("click",()=>{ proxyKey="balanced"; $("s5opProxBal").classList.add("on"); $("s5opProxEng").classList.remove("on"); render(); });
+ $("s5opLane").addEventListener("click",()=>{ laneOn=!laneOn; render(); });
+ $("s5opNext").addEventListener("click",()=>{ regenerate(); render(); });
+ $("s5opAuto").addEventListener("click",()=>{
+  if(autoTimer){ clearInterval(autoTimer); autoTimer=null; $("s5opAuto").textContent="Auto-run"; $("s5opAuto").classList.remove("s5op-on"); }
+  else { $("s5opAuto").textContent="Stop"; $("s5opAuto").classList.add("s5op-on"); autoTimer=setInterval(()=>{ regenerate(); render(); },1700); }
+ });
+
+ // init
+ regenerate();
+ render();
+})();
+</script>
+</body>
+</html>

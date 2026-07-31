@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mixture-shift Gradient Explosion</title>
+<style>
+:root{
+--bg:#f6f8fb; --surface:#ffffff; --surface-alt:#fbfdff;
+--ink:#102338; --ink-body:#1f3850; --ink-muted:#60768d; --muted-2:#7d90a5;
+--rule:#e2e9f0; --rule-strong:#cfdbe6;
+--accent:#00a7d8; --accent-soft:#eafaff; --accent-ink:#0f6e8c;
+--green:#24b36b; --green-soft:#e7fff2; --green-ink:#19824e;
+--amber:#d99a13; --amber-soft:#fff7df; --amber-ink:#8a5c06;
+--violet:#7b61ff; --violet-soft:#eeeaff; --violet-ink:#5a44c8;
+--red:#e05f6e; --red-soft:#ffeef0; --red-ink:#c0455a;
+--shadow-soft:0 8px 22px rgba(16,35,56,.05);
+--font-sans:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+--font-mono:"SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;overflow-x:hidden}
+body{background:linear-gradient(180deg,#f8fafc 0%,#f2f5f9 100%);color:var(--ink);font-family:var(--font-sans);font-size:14px;line-height:1.55;padding:14px}
+.s5ms-app{max-width:1480px;margin:auto}
+
+/* topbar */
+.s5ms-topbar{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:10px}
+.s5ms-topbar h1{margin:0;color:var(--ink);font-size:clamp(23px,2.6vw,34px);font-weight:800;letter-spacing:-.035em;line-height:1.06}
+.s5ms-subtitle{margin-top:7px;max-width:1050px;color:var(--ink-muted);line-height:1.5;font-size:13.5px}
+.s5ms-subtitle b{color:var(--ink-body)}
+.s5ms-badge{border:1px solid #d9e9f3;background:#f4fbfe;color:var(--accent-ink);padding:8px 13px;border-radius:999px;font-size:12px;font-weight:800;white-space:nowrap}
+
+/* layout */
+.s5ms-layout{display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:12px;align-items:start}
+.s5ms-stage,.s5ms-side{background:var(--surface);border:1px solid var(--rule);border-radius:18px;box-shadow:var(--shadow-soft)}
+.s5ms-stage{padding:11px;display:flex;flex-direction:column;min-width:0}
+.s5ms-side{padding:10px;display:flex;flex-direction:column;gap:9px}
+
+/* stage head */
+.s5ms-stage-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:8px}
+.s5ms-stage-title{font-weight:800;color:var(--ink);font-size:15px;letter-spacing:-.01em}
+.s5ms-stage-note{font-size:11.5px;color:var(--ink-muted)}
+
+/* chart */
+.s5ms-chartwrap{border:1px solid var(--rule);border-radius:14px;background:var(--surface-alt);padding:9px 9px 6px;position:relative}
+.s5ms-canvas{width:100%;height:432px;display:block}
+
+/* transport */
+.s5ms-transport{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}
+.s5ms-tbtn{border:1px solid var(--rule-strong);background:#fff;color:var(--ink-body);border-radius:10px;padding:8px 14px;font-weight:800;font-size:12.5px;cursor:pointer;font-family:inherit;transition:.15s;display:inline-flex;align-items:center;gap:7px}
+.s5ms-tbtn:hover{transform:translateY(-1px);border-color:var(--accent);color:var(--accent-ink)}
+.s5ms-tbtn.s5ms-run{background:linear-gradient(180deg,#f3fcff,#e9f9ff);border-color:#bcefff;color:var(--accent-ink)}
+.s5ms-tdot{width:8px;height:8px;border-radius:50%;background:var(--muted-2);flex:none}
+.s5ms-tbtn.s5ms-run .s5ms-tdot{background:var(--accent)}
+.s5ms-tstat{margin-left:auto;font-size:11.5px;color:var(--ink-muted);font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.s5ms-tstat b{color:var(--ink-body)}
+
+/* legend */
+.s5ms-legend{display:flex;gap:15px;margin-top:9px;flex-wrap:wrap}
+.s5ms-legrow{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ink-muted)}
+.s5ms-legchip{width:14px;height:4px;border-radius:2px;flex:none}
+.s5ms-legchip.dash{height:0;border-top:2px dashed}
+.s5ms-legchip.band{height:12px;width:12px;border-radius:3px;background:var(--violet-soft);border:1px solid #d4c9ff}
+
+/* status verdict under chart */
+.s5ms-verdict{margin-top:10px;border-radius:12px;padding:10px 13px;border:1px solid;display:flex;align-items:center;gap:11px}
+.s5ms-verdict .s5ms-vic{width:34px;height:34px;border-radius:9px;flex:none;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-weight:800;font-size:13px}
+.s5ms-verdict .s5ms-vt{font-size:13px;font-weight:800;line-height:1.2}
+.s5ms-verdict .s5ms-vs{font-size:11.5px;line-height:1.4;margin-top:1px}
+.s5ms-verdict.s5ms-hot{background:var(--red-soft);border-color:#f3c0c8;color:var(--red-ink)}
+.s5ms-verdict.s5ms-hot .s5ms-vic{background:#fff;color:var(--red-ink);border:1px solid #f3c0c8}
+.s5ms-verdict.s5ms-ok{background:var(--green-soft);border-color:#b7eccf;color:var(--green-ink)}
+.s5ms-verdict.s5ms-ok .s5ms-vic{background:#fff;color:var(--green-ink);border:1px solid #b7eccf}
+.s5ms-verdict.s5ms-idle{background:var(--accent-soft);border-color:#bcefff;color:var(--accent-ink)}
+.s5ms-verdict.s5ms-idle .s5ms-vic{background:#fff;color:var(--accent-ink);border:1px solid #bcefff}
+
+/* sidebar */
+.s5ms-panel-title{font-weight:800;font-size:13px;margin-bottom:2px}
+.s5ms-ctrl{border:1px solid var(--rule);border-radius:12px;background:var(--surface-alt);padding:9px 11px}
+.s5ms-ctrl-top{display:flex;justify-content:space-between;align-items:baseline;font-size:12px}
+.s5ms-ctrl-top .s5ms-cn{font-weight:800;color:var(--ink-body)}
+.s5ms-ctrl-top .s5ms-cv{font-family:var(--font-mono);font-weight:800;color:var(--accent-ink);font-size:13px}
+.s5ms-ctrl.s5ms-vio .s5ms-cv{color:var(--violet-ink)}
+.s5ms-ctrl-sub{font-size:10.5px;color:var(--ink-muted);margin-top:2px;line-height:1.35}
+input[type=range]{width:100%;margin-top:7px;accent-color:var(--accent);height:4px}
+.s5ms-ctrl.s5ms-vio input[type=range]{accent-color:var(--violet)}
+
+/* frozen toggle */
+.s5ms-toggle{border:1px solid var(--rule);border-radius:12px;background:var(--surface-alt);padding:9px 11px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;transition:.15s}
+.s5ms-toggle:hover{border-color:var(--rule-strong)}
+.s5ms-toggle.s5ms-on{border-color:#f3c0c8;background:var(--red-soft)}
+.s5ms-tg-txt .s5ms-tg-n{font-size:12px;font-weight:800;color:var(--ink-body)}
+.s5ms-toggle.s5ms-on .s5ms-tg-n{color:var(--red-ink)}
+.s5ms-tg-txt .s5ms-tg-s{font-size:10.5px;color:var(--ink-muted);line-height:1.3;margin-top:1px}
+.s5ms-toggle.s5ms-on .s5ms-tg-s{color:var(--red-ink)}
+.s5ms-sw{width:44px;height:24px;border-radius:999px;background:#d7e0e8;position:relative;flex:none;transition:.18s}
+.s5ms-toggle.s5ms-on .s5ms-sw{background:var(--red)}
+.s5ms-sw i{position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.18s;box-shadow:0 1px 3px rgba(16,35,56,.25)}
+.s5ms-toggle.s5ms-on .s5ms-sw i{left:22px}
+
+/* apply button */
+.s5ms-apply{border:1px solid #f0ddaf;background:linear-gradient(180deg,#fffdf5,#fff7df);color:var(--amber-ink);border-radius:12px;padding:11px;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;width:100%;transition:.15s;display:flex;align-items:center;justify-content:center;gap:8px}
+.s5ms-apply:hover{transform:translateY(-1px);border-color:var(--amber)}
+.s5ms-apply .s5ms-adot{width:9px;height:9px;border-radius:2px;background:var(--amber);flex:none}
+
+/* spike readout */
+.s5ms-read{border-radius:13px;padding:11px 13px;border:1px solid;text-align:center}
+.s5ms-read.s5ms-hot{background:var(--red-soft);border-color:#f3c0c8}
+.s5ms-read.s5ms-ok{background:var(--green-soft);border-color:#b7eccf}
+.s5ms-read.s5ms-idle{background:var(--accent-soft);border-color:#bcefff}
+.s5ms-read .s5ms-rk{font-size:10px;letter-spacing:.13em;font-weight:800;opacity:.85}
+.s5ms-read.s5ms-hot .s5ms-rk{color:var(--red-ink)}
+.s5ms-read.s5ms-ok .s5ms-rk{color:var(--green-ink)}
+.s5ms-read.s5ms-idle .s5ms-rk{color:var(--accent-ink)}
+.s5ms-read .s5ms-rv{font-family:var(--font-mono);font-size:38px;font-weight:800;line-height:1.02;margin-top:3px;font-variant-numeric:tabular-nums}
+.s5ms-read.s5ms-hot .s5ms-rv{color:var(--red-ink)}
+.s5ms-read.s5ms-ok .s5ms-rv{color:var(--green-ink)}
+.s5ms-read.s5ms-idle .s5ms-rv{color:var(--accent-ink)}
+.s5ms-read .s5ms-rs{font-size:11px;margin-top:2px;color:var(--ink-muted)}
+
+/* v4 card */
+.s5ms-v4{border:1px solid #f3c0c8;border-radius:12px;background:var(--red-soft);padding:10px 12px}
+.s5ms-v4 .s5ms-kick{font-size:10px;letter-spacing:.14em;color:var(--red-ink);font-weight:800;display:flex;align-items:center;gap:6px}
+.s5ms-v4 .s5ms-kdot{width:8px;height:8px;border-radius:2px;background:var(--red);flex:none}
+.s5ms-v4 h2{font-size:13.5px;margin:5px 0 4px;color:var(--ink)}
+.s5ms-v4 p{margin:0;color:var(--red-ink);line-height:1.5;font-size:11.5px}
+.s5ms-v4 p b{color:var(--red-ink);font-weight:800}
+
+.s5ms-footer{font-size:11px;color:var(--muted-2);line-height:1.5;margin-top:2px}
+.s5ms-footer b{color:var(--ink-muted)}
+
+@media(max-width:1100px){
+.s5ms-layout{grid-template-columns:1fr}
+.s5ms-canvas{height:360px}
+}
+@media(max-width:640px){
+body{padding:10px}
+.s5ms-topbar{display:block}
+.s5ms-badge{display:inline-block;margin-top:10px}
+}
+</style>
+</head>
+<body>
+<div class="s5ms-app">
+ <div class="s5ms-topbar">
+  <div>
+   <h1>Mixture-shift Gradient Explosion</h1>
+   <div class="s5ms-subtitle">A healthy training run keeps its <b>gradient norm</b> low and flat. Change the data mixture too sharply against <b>frozen embeddings</b> and the same seam detonates a gradient spike that can end the run. Trigger the shift, then watch a <b>warmup band</b> at the seam ramp the change and tame the explosion back to a gentle bump.</div>
+  </div>
+  <div class="s5ms-badge">Interactive &middot; trigger the spike</div>
+ </div>
+
+ <div class="s5ms-layout">
+  <main class="s5ms-stage">
+   <div class="s5ms-stage-head">
+    <div class="s5ms-stage-title">Gradient norm over training steps (log scale)</div>
+    <div class="s5ms-stage-note">every point is simulated live from the current controls</div>
+   </div>
+
+   <div class="s5ms-chartwrap">
+    <canvas class="s5ms-canvas" id="s5msCanvas"></canvas>
+   </div>
+
+   <div class="s5ms-transport">
+    <button class="s5ms-tbtn s5ms-run" id="s5msRun"><span class="s5ms-tdot"></span><span id="s5msRunLbl">Run</span></button>
+    <button class="s5ms-tbtn" id="s5msReset">Reset</button>
+    <div class="s5ms-tstat" id="s5msTstat">step <b>0</b> / 640</div>
+   </div>
+
+   <div class="s5ms-legend">
+    <div class="s5ms-legrow"><span class="s5ms-legchip" style="background:var(--accent)"></span> healthy gradient-norm trace</div>
+    <div class="s5ms-legrow"><span class="s5ms-legchip" style="background:var(--red)"></span> unstable spike</div>
+    <div class="s5ms-legrow"><span class="s5ms-legchip" style="background:var(--green)"></span> controlled / recovered</div>
+    <div class="s5ms-legrow"><span class="s5ms-legchip dash" style="border-color:var(--amber)"></span> mixture-shift seam</div>
+    <div class="s5ms-legrow"><span class="s5ms-legchip band"></span> warmup band</div>
+   </div>
+
+   <div class="s5ms-verdict s5ms-idle" id="s5msVerdict">
+    <div class="s5ms-vic" id="s5msVic">--</div>
+    <div>
+     <div class="s5ms-vt" id="s5msVt">No shift applied yet</div>
+     <div class="s5ms-vs" id="s5msVs">The run is flat and healthy. Set the sharpness and the frozen-embeddings switch, then press "Apply shift now".</div>
+    </div>
+   </div>
+  </main>
+
+  <aside class="s5ms-side">
+   <div class="s5ms-panel-title">Controls</div>
+
+   <div class="s5ms-ctrl">
+    <div class="s5ms-ctrl-top"><span class="s5ms-cn">Mixture shift sharpness</span><span class="s5ms-cv" id="s5msShV">0.70</span></div>
+    <input type="range" id="s5msSh" min="0.1" max="1" step="0.02" value="0.7">
+    <div class="s5ms-ctrl-sub">How much of the Indic share is cut in a single seam. Gentle rebalance on the left, hard cliff on the right.</div>
+   </div>
+
+   <div class="s5ms-toggle s5ms-on" id="s5msFrozen" role="switch" aria-checked="true">
+    <div class="s5ms-tg-txt">
+     <div class="s5ms-tg-n">Frozen embeddings</div>
+     <div class="s5ms-tg-s">Embeddings cannot adapt to the new mixture, so the same shift lands far harder.</div>
+    </div>
+    <div class="s5ms-sw"><i></i></div>
+   </div>
+
+   <div class="s5ms-ctrl s5ms-vio">
+    <div class="s5ms-ctrl-top"><span class="s5ms-cn">Warmup band width</span><span class="s5ms-cv" id="s5msBwV">0.0 B</span></div>
+    <input type="range" id="s5msBw" min="0" max="5" step="0.25" value="0">
+    <div class="s5ms-ctrl-sub">Ramp the mixture change over this many tokens instead of at a single step. Wider band, flatter spike.</div>
+   </div>
+
+   <button class="s5ms-apply" id="s5msApply"><span class="s5ms-adot"></span>Apply shift now</button>
+
+   <div class="s5ms-read s5ms-idle" id="s5msReadBox">
+    <div class="s5ms-rk">PEAK GRADIENT NORM</div>
+    <div class="s5ms-rv" id="s5msSpikeV">--</div>
+    <div class="s5ms-rs" id="s5msSpikeS">baseline is 1.0x &middot; apply a shift to measure the spike</div>
+   </div>
+
+   <div class="s5ms-v4">
+    <div class="s5ms-kick"><span class="s5ms-kdot"></span>V4 REALITY</div>
+    <h2>The ~150x spike that shaped the calendar</h2>
+    <p>In V4 a sharp Hindi mixture cut met frozen Kronecker embeddings and the gradient norm jumped <b>~150x</b>. The fix was a rolling warmup band, a <b>~3B-token 60/40 blend</b> at every seam, and it is one reason the mixture is frozen at a fixed point in the calendar.</p>
+   </div>
+
+   <div class="s5ms-footer"><b>The gradient-norm trace is a live illustrative simulation.</b> The ~150x V4 spike is from our own run.</div>
+  </aside>
+ </div>
+</div>
+
+<script>
+"use strict";
+(function(){
+ const $=id=>document.getElementById(id);
+
+ // ---- fixed simulation grid ----
+ const N=640;                 // training steps on the x axis
+ const STEPS_PER_B=26;        // steps spanned by 1B tokens of warmup band
+ const BASE=1.0;              // healthy baseline gradient norm
+ const Y_MIN=0.4, Y_MAX=250;  // log-y window: a 150x spike sits near the ceiling
+ const RED_T=3.0;             // above 3x baseline the run is treated as unstable
+
+ // ---- tuning so a sharp + frozen + no-warmup shift reaches ~150x ----
+ // effSharp = sharpness / (1 + w*C_W);  effFrozen = 1 + (F-1)/(1 + w*C_F)
+ // peakFactor = 1 + effSharp * A * effFrozen    (frozen off => effFrozen=1)
+ const A=7, F=21.4, C_W=1.5, C_F=2.0;
+
+ // ---- state ----
+ let sharpness=0.7, frozen=true, bandB=0;
+ let bandSteps=0, peakFactor=1, spikeRed=false;
+ let shiftActive=false, shiftStep=Math.round(N*0.36);
+ let cur=0, running=false, raf=null, last=0;
+
+ // deterministic baseline wobble (small, so it reads as a real live trace)
+ const noise=new Array(N+1);
+ (function(){let s=1337;const rnd=()=>{s=(Math.imul(s,1103515245)+12345)&0x7fffffff;return s/0x7fffffff;};
+  for(let i=0;i<=N;i++){noise[i]=BASE*(1+0.05*Math.sin(i*0.11)+0.045*(rnd()-0.5));}})();
+
+ function computePeak(){
+  bandSteps=Math.round(bandB*STEPS_PER_B);
+  const effSharp=sharpness/(1+bandB*C_W);
+  const effFrozen=frozen?(1+(F-1)/(1+bandB*C_F)):1;
+  peakFactor=1+effSharp*A*effFrozen;
+  spikeRed=peakFactor>RED_T;
+ }
+
+ // gradient norm at step i, given current shift settings
+ function gval(i){
+  let v=noise[i];
+  if(shiftActive && i>=shiftStep){
+   const d=i-shiftStep;
+   const mu=bandSteps;                    // peak lands at the end of the warmup band
+   const sigma=4+bandSteps*0.6;           // wider band => wider, lower bump
+   const bump=(peakFactor-1)*BASE*Math.exp(-0.5*Math.pow((d-mu)/sigma,2));
+   v+=bump;
+  }
+  return Math.max(0.06,v);
+ }
+
+ // ---- canvas ----
+ const cv=$("s5msCanvas");
+ let ctx=cv.getContext("2d"), CW=900, CH=432, dpr=1;
+ function fit(){
+  dpr=Math.max(1,window.devicePixelRatio||1);
+  CW=cv.clientWidth||900; CH=cv.clientHeight||432;
+  cv.width=Math.round(CW*dpr); cv.height=Math.round(CH*dpr);
+  ctx=cv.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0);
+ }
+
+ const L=Math.log10(Y_MIN), U=Math.log10(Y_MAX);
+ function draw(){
+  const padL=46,padR=14,padT=14,padB=28;
+  const w=CW-padL-padR, h=CH-padT-padB;
+  const X=s=>padL+(s/N)*w;
+  const Y=v=>padT+(1-(Math.log10(v)-L)/(U-L))*h;
+  ctx.clearRect(0,0,CW,CH);
+
+  // plot frame
+  ctx.fillStyle="#ffffff"; ctx.fillRect(padL,padT,w,h);
+
+  // horizontal log gridlines + labels
+  ctx.font="10px Inter,system-ui,sans-serif";
+  const ticks=[1,3,10,30,100,250];
+  ticks.forEach(t=>{
+   const gy=Y(t);
+   ctx.strokeStyle=(t===1)?"#cfdbe6":"#eef2f6"; ctx.lineWidth=1;
+   ctx.beginPath();ctx.moveTo(padL,gy);ctx.lineTo(padL+w,gy);ctx.stroke();
+   ctx.fillStyle="#8fa2b5"; ctx.textAlign="right"; ctx.textBaseline="middle";
+   ctx.fillText(t+"x",padL-7,gy);
+  });
+  // vertical gridlines
+  ctx.textBaseline="alphabetic";
+  for(let i=0;i<=8;i++){
+   const gx=padL+i*w/8;
+   ctx.strokeStyle="#f1f5f8"; ctx.lineWidth=1;
+   ctx.beginPath();ctx.moveTo(gx,padT);ctx.lineTo(gx,padT+h);ctx.stroke();
+   ctx.fillStyle="#9fb0c1"; ctx.textAlign="center";
+   ctx.fillText(Math.round(i*N/8),gx,CH-10);
+  }
+  ctx.fillStyle="#60768d"; ctx.textAlign="center"; ctx.font="11px Inter,system-ui,sans-serif";
+  ctx.fillText("training step",padL+w/2,CH-0.5);
+
+  // instability threshold line (dashed, red)
+  const ty=Y(RED_T);
+  ctx.strokeStyle="rgba(224,95,110,.55)"; ctx.lineWidth=1.4; ctx.setLineDash([5,4]);
+  ctx.beginPath();ctx.moveTo(padL,ty);ctx.lineTo(padL+w,ty);ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle="#c0455a"; ctx.textAlign="left"; ctx.font="700 10px Inter,system-ui,sans-serif";
+  ctx.fillText("instability threshold ~3x",padL+6,ty-4);
+
+  // warmup band (violet shaded) + mixture-shift seam (amber)
+  if(shiftActive){
+   if(bandSteps>0){
+    const bx=X(shiftStep), bx2=X(Math.min(N,shiftStep+bandSteps));
+    ctx.fillStyle="rgba(123,97,255,.12)";
+    ctx.fillRect(bx,padT,bx2-bx,h);
+    ctx.strokeStyle="rgba(123,97,255,.45)"; ctx.lineWidth=1; ctx.setLineDash([3,3]);
+    ctx.beginPath();ctx.moveTo(bx2,padT);ctx.lineTo(bx2,padT+h);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle="#5a44c8"; ctx.font="700 10px Inter,system-ui,sans-serif"; ctx.textAlign="left";
+    ctx.fillText("warmup band "+bandB.toFixed(2)+" B",Math.min(bx+5,padL+w-90),padT+34);
+   }
+   const sx=X(shiftStep);
+   ctx.strokeStyle="#d99a13"; ctx.lineWidth=1.8; ctx.setLineDash([6,4]);
+   ctx.beginPath();ctx.moveTo(sx,padT);ctx.lineTo(sx,padT+h);ctx.stroke();
+   ctx.setLineDash([]);
+   ctx.fillStyle="#8a5c06"; ctx.font="700 10px Inter,system-ui,sans-serif"; ctx.textAlign="left";
+   ctx.fillText("mixture shift",Math.min(sx+5,padL+w-70),padT+14);
+  }
+
+  // clip to plot for the trace
+  ctx.save();
+  ctx.beginPath();ctx.rect(padL,padT,w,h);ctx.clip();
+
+  // idle (fresh load / after Reset): draw the full flat baseline, no shift artifacts
+  const idle=!running && !shiftActive && cur<=0;
+  const upto=idle?N:Math.min(cur,N);
+  // pre-shift portion always cyan; post-shift portion colored by stability
+  const spikeColor=spikeRed?"#e05f6e":"#24b36b";
+  // cyan segment
+  ctx.lineWidth=2.4; ctx.lineJoin="round"; ctx.strokeStyle="#00a7d8";
+  ctx.beginPath();
+  const cyanEnd=shiftActive?Math.min(upto,shiftStep):upto;
+  for(let i=0;i<=cyanEnd;i++){const x=X(i),y=Y(gval(i));i?ctx.lineTo(x,y):ctx.moveTo(x,y);}
+  ctx.stroke();
+  // spike segment
+  if(shiftActive && upto>shiftStep){
+   ctx.strokeStyle=spikeColor; ctx.lineWidth=2.6;
+   ctx.beginPath();
+   for(let i=shiftStep;i<=upto;i++){const x=X(i),y=Y(gval(i));i===shiftStep?ctx.moveTo(x,y):ctx.lineTo(x,y);}
+   ctx.stroke();
+   // fill under the spike for emphasis
+   ctx.lineTo(X(upto),padT+h); ctx.lineTo(X(shiftStep),padT+h); ctx.closePath();
+   ctx.fillStyle=spikeRed?"rgba(224,95,110,.10)":"rgba(36,179,107,.10)";
+   ctx.fill();
+   // peak marker if the peak is already revealed
+   const peakStep=shiftStep+bandSteps;
+   if(upto>=peakStep){
+    const px=X(peakStep),py=Y(gval(peakStep));
+    ctx.beginPath();ctx.arc(px,py,5,0,Math.PI*2);
+    ctx.fillStyle=spikeColor;ctx.fill();ctx.lineWidth=2;ctx.strokeStyle="#fff";ctx.stroke();
+   }
+  }
+  // playhead
+  if(running && upto<N){
+   const hx=X(upto);
+   ctx.strokeStyle="rgba(16,35,56,.18)";ctx.lineWidth=1;
+   ctx.beginPath();ctx.moveTo(hx,padT);ctx.lineTo(hx,padT+h);ctx.stroke();
+  }
+  ctx.restore();
+ }
+
+ // ---- verdict + readout ----
+ function updatePanels(){
+  const box=$("s5msReadBox"), rv=$("s5msSpikeV"), rs=$("s5msSpikeS");
+  const vd=$("s5msVerdict"), vic=$("s5msVic"), vt=$("s5msVt"), vs=$("s5msVs");
+  const fmt=n=>n>=100?Math.round(n)+"x":n.toFixed(1)+"x";
+  if(!shiftActive){
+   box.className="s5ms-read s5ms-idle"; rv.textContent="--";
+   rs.textContent="baseline is 1.0x · apply a shift to measure the spike";
+   vd.className="s5ms-verdict s5ms-idle"; vic.textContent="--";
+   vt.textContent="No shift applied yet";
+   vs.textContent='The run is flat and healthy. Set the sharpness and the frozen-embeddings switch, then press "Apply shift now".';
+   return;
+  }
+  rv.textContent=fmt(peakFactor);
+  box.className="s5ms-read "+(spikeRed?"s5ms-hot":"s5ms-ok");
+  vd.className="s5ms-verdict "+(spikeRed?"s5ms-hot":"s5ms-ok");
+  vic.textContent=fmt(peakFactor);
+  if(spikeRed){
+   rs.textContent="above the 3x threshold · the run is unstable";
+   vt.textContent="Gradient explosion";
+   vt.textContent="Gradient explosion";
+   vs.innerHTML="The seam spiked the gradient norm to <b>"+fmt(peakFactor)+" baseline</b>."+
+    (frozen?" Frozen embeddings multiplied the shock.":"")+
+    (bandB>0?" Widen the warmup band further to ramp the change and flatten it.":" Add a warmup band to ramp the change over tokens.");
+  } else {
+   rs.textContent="under the 3x threshold · controlled and recovered";
+   vt.textContent="Controlled seam";
+   vs.innerHTML="The gradient norm rose to only <b>"+fmt(peakFactor)+" baseline</b> and settled back."+
+    (bandB>0?" The "+bandB.toFixed(2)+"B warmup band ramped the mixture change gently.":" A gentle shift needed no warmup band here.");
+  }
+ }
+
+ function refresh(){computePeak();updatePanels();draw();}
+
+ // ---- animation ----
+ function tick(ts){
+  if(!last)last=ts;
+  const dt=(ts-last)/1000; last=ts;
+  cur+=dt*240;                 // ~240 steps / second
+  if(cur>=N){cur=N;running=false;setRunLabel();}
+  $("s5msTstat").innerHTML="step <b>"+Math.round(Math.min(cur,N))+"</b> / "+N;
+  draw();
+  if(running){raf=requestAnimationFrame(tick);} else {last=0;}
+ }
+ function setRunLabel(){$("s5msRunLbl").textContent=running?"Pause":(cur>=N?"Replay":"Run");
+  $("s5msRun").classList.toggle("s5ms-run",!running);}
+ function play(){
+  if(cur>=N){cur=0;}
+  running=true;last=0;setRunLabel();raf=requestAnimationFrame(tick);
+ }
+ function pause(){running=false;if(raf)cancelAnimationFrame(raf);setRunLabel();}
+ function reset(){
+  pause();
+  // restore controls to their defaults
+  sharpness=0.7; $("s5msSh").value="0.7"; $("s5msShV").textContent="0.70";
+  bandB=0; $("s5msBw").value="0"; $("s5msBwV").textContent="0.0 B";
+  frozen=true;
+  const t=$("s5msFrozen"); t.classList.add("s5ms-on"); t.setAttribute("aria-checked","true");
+  // clear the run: no shift, no seam, no warmup band, flat baseline at step 0
+  shiftActive=false; cur=0; running=false; last=0;
+  $("s5msTstat").innerHTML="step <b>0</b> / "+N;
+  setRunLabel();
+  refresh();
+ }
+
+ // ---- controls ----
+ $("s5msSh").addEventListener("input",e=>{sharpness=+e.target.value;$("s5msShV").textContent=sharpness.toFixed(2);refresh();});
+ $("s5msBw").addEventListener("input",e=>{bandB=+e.target.value;$("s5msBwV").textContent=bandB.toFixed(1)+" B";refresh();});
+ $("s5msFrozen").addEventListener("click",()=>{
+  frozen=!frozen;
+  const t=$("s5msFrozen");t.classList.toggle("s5ms-on",frozen);t.setAttribute("aria-checked",String(frozen));
+  refresh();
+ });
+ $("s5msApply").addEventListener("click",()=>{
+  // inject the shift at the current playhead; keep it visible with room for the band
+  let s=Math.round(cur);
+  if(s<40||s>N-160) s=Math.round(N*0.36);
+  shiftStep=s; shiftActive=true;
+  computePeak();
+  if(cur<shiftStep) {} else {cur=shiftStep;}   // rewind so the spike animates in from the seam
+  updatePanels();
+  play();
+ });
+ $("s5msRun").addEventListener("click",()=>{running?pause():play();});
+ $("s5msReset").addEventListener("click",reset);
+
+ window.addEventListener("resize",()=>{fit();draw();});
+
+ // ---- init ----
+ fit();
+ setRunLabel();
+ refresh();
+})();
+</script>
+</body>
+</html>

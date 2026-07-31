@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Curriculum: Difficulty Bands and Staged Pretraining</title>
+<style>
+:root{
+--bg:#f6f8fb; --surface:#ffffff; --surface-alt:#fbfdff;
+--ink:#102338; --ink-body:#1f3850; --ink-muted:#60768d; --muted-2:#7d90a5;
+--rule:#e2e9f0; --rule-strong:#cfdbe6;
+--accent:#00a7d8; --accent-soft:#eafaff; --accent-ink:#0f6e8c;
+--green:#24b36b; --green-soft:#e7fff2; --green-ink:#19824e;
+--amber:#d99a13; --amber-soft:#fff7df; --amber-ink:#8a5c06;
+--violet:#7b61ff; --violet-soft:#eeeaff; --violet-ink:#5a44c8;
+--red:#e05f6e; --red-soft:#ffeef0; --red-ink:#c0455a;
+--slate:#6c7f93;
+--shadow-soft:0 8px 22px rgba(16,35,56,.05);
+--font-sans:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+--font-mono:"SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;overflow-x:hidden}
+body{background:linear-gradient(180deg,#f8fafc 0%,#f3f6fa 100%);color:var(--ink-body);font-family:var(--font-sans);font-size:14px;line-height:1.55;padding:14px}
+.s5cu-app{max-width:1480px;margin:auto}
+
+/* topbar */
+.s5cu-topbar{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:10px}
+.s5cu-topbar h1{margin:0;color:var(--ink);font-size:clamp(23px,2.6vw,34px);font-weight:800;letter-spacing:-.035em;line-height:1.08}
+.s5cu-subtitle{margin-top:7px;max-width:1050px;color:var(--ink-muted);line-height:1.5;font-size:14px}
+.s5cu-subtitle b{color:var(--ink-body)}
+.s5cu-badge{border:1px solid #bcefff;background:var(--accent-soft);color:var(--accent-ink);padding:8px 13px;border-radius:999px;font-size:12px;font-weight:800;white-space:nowrap}
+
+/* layout */
+.s5cu-layout{display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:12px;align-items:start}
+.s5cu-stage,.s5cu-side{background:var(--surface);border:1px solid var(--rule);border-radius:18px;box-shadow:var(--shadow-soft)}
+.s5cu-stage{padding:12px}
+.s5cu-side{padding:10px;display:flex;flex-direction:column;gap:8px}
+
+.s5cu-stage-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:11px}
+.s5cu-stage-title{font-weight:800;color:var(--ink);font-size:15px;letter-spacing:-.01em}
+.s5cu-stage-note{font-size:11.5px;color:var(--ink-muted)}
+
+/* stage timeline */
+.s5cu-rail{position:relative;margin:2px 2px 0}
+.s5cu-track{position:absolute;left:5%;right:5%;top:15px;height:4px;border-radius:999px;background:#e9eff5;z-index:0}
+.s5cu-track-fill{position:absolute;left:0;top:0;height:100%;border-radius:999px;background:linear-gradient(90deg,#38c1e6,#00a7d8);width:0;transition:width .12s linear}
+.s5cu-nodes{position:relative;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));z-index:1}
+.s5cu-node{text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px}
+.s5cu-dot{width:30px;height:30px;border-radius:50%;background:#fff;border:2px solid var(--rule-strong);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:12px;font-weight:800;color:var(--muted-2);transition:.2s}
+.s5cu-node.done .s5cu-dot{border-color:var(--accent);color:var(--accent-ink);background:var(--accent-soft)}
+.s5cu-node.active .s5cu-dot{border-color:var(--accent);color:#fff;background:linear-gradient(180deg,#38c1e6,#00a7d8);box-shadow:0 0 0 4px rgba(0,167,216,.16)}
+.s5cu-node.anneal.active .s5cu-dot,.s5cu-node.anneal.done .s5cu-dot{border-color:var(--violet)}
+.s5cu-node.anneal.active .s5cu-dot{background:linear-gradient(180deg,#9a85ff,#7b61ff);box-shadow:0 0 0 4px rgba(123,97,255,.18)}
+.s5cu-node.anneal.done .s5cu-dot{color:var(--violet-ink);background:var(--violet-soft)}
+.s5cu-nlab{font-size:11px;font-weight:800;color:var(--ink);letter-spacing:-.01em;line-height:1.15}
+.s5cu-nsub{font-size:9.5px;color:var(--muted-2);line-height:1.2}
+.s5cu-node.dim .s5cu-nlab{color:var(--muted-2)}
+
+/* slider */
+.s5cu-sliderwrap{margin:14px 2px 4px}
+.s5cu-slider{width:100%;margin:0;accent-color:var(--accent);cursor:pointer}
+.s5cu-slidercap{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:9.5px;color:var(--muted-2);margin-top:2px}
+
+/* stage readout */
+.s5cu-nowbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 0 8px;padding:9px 13px;border:1px dashed var(--rule-strong);border-radius:12px;background:#fff}
+.s5cu-nowbar.hot{border:1px solid #d4c9ff;background:var(--violet-soft)}
+.s5cu-now-txt{font-size:12px;color:var(--ink-muted);line-height:1.45;flex:1;min-width:0}
+.s5cu-now-txt b{color:var(--ink-body);font-weight:800}
+.s5cu-nowbar.hot .s5cu-now-txt{color:var(--violet-ink)}
+.s5cu-nowbar.hot .s5cu-now-txt b{color:var(--violet-ink)}
+.s5cu-now-pos{font-family:var(--font-mono);font-size:11px;font-weight:800;color:var(--accent-ink);background:var(--accent-soft);border:1px solid #cceefa;border-radius:8px;padding:3px 8px;white-space:nowrap;flex:none}
+.s5cu-nowbar.hot .s5cu-now-pos{color:var(--violet-ink);background:#fff;border-color:#d4c9ff}
+
+/* mixture bar */
+.s5cu-mixlbl{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted-2);margin-bottom:8px}
+.s5cu-stack{display:flex;height:56px;border-radius:12px;overflow:hidden;border:1px solid var(--rule);background:#eef3f7}
+.s5cu-seg{display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;min-width:0;transition:width .12s linear;position:relative}
+.s5cu-seg.gen{background:linear-gradient(90deg,#8496a9,#6c7f93)}
+.s5cu-seg.code{background:linear-gradient(90deg,#f1c97a,#d99a13)}
+.s5cu-seg.reason{background:linear-gradient(90deg,#9a85ff,#7b61ff)}
+.s5cu-seg.lctx{background:linear-gradient(90deg,#36c0e6,#00a7d8)}
+.s5cu-seg.indic{background:linear-gradient(90deg,#4fd08c,#24b36b)}
+.s5cu-seg.stem{background:linear-gradient(90deg,#ec8b96,#e05f6e)}
+.s5cu-seg .s5cu-segpct{text-shadow:0 1px 1px rgba(16,35,56,.22);font-variant-numeric:tabular-nums}
+.s5cu-seg.reserved{box-shadow:inset 0 0 0 2.5px var(--violet),inset 0 0 0 4px rgba(255,255,255,.55)}
+
+/* legend / per-band readout */
+.s5cu-bands{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:11px}
+.s5cu-brow{display:flex;align-items:center;gap:8px;border:1px solid var(--rule);border-radius:10px;background:var(--surface-alt);padding:7px 9px;min-width:0}
+.s5cu-bchip{width:12px;height:12px;border-radius:3px;flex:none}
+.s5cu-bchip.gen{background:#6c7f93}.s5cu-bchip.code{background:#d99a13}.s5cu-bchip.reason{background:#7b61ff}
+.s5cu-bchip.lctx{background:#00a7d8}.s5cu-bchip.indic{background:#24b36b}.s5cu-bchip.stem{background:#e05f6e}
+.s5cu-bname{font-size:11.5px;font-weight:700;color:var(--ink-body);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.s5cu-bval{font-family:var(--font-mono);font-size:13px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;flex:none}
+.s5cu-brow.up .s5cu-bval{color:var(--green-ink)}
+.s5cu-brow.down .s5cu-bval{color:var(--muted-2)}
+.s5cu-brow.rsv{border-color:#d4c9ff;background:var(--violet-soft)}
+.s5cu-brow.rsv .s5cu-bname{color:var(--violet-ink)}
+
+/* movers strip */
+.s5cu-movers{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px}
+.s5cu-mv{border:1px solid var(--rule);border-radius:12px;background:#fff;padding:9px 12px}
+.s5cu-mv .s5cu-mvk{font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--muted-2);display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.s5cu-mv .s5cu-mvk i{width:8px;height:8px;border-radius:2px;flex:none}
+.s5cu-mv.fade .s5cu-mvk{color:var(--muted-2)} .s5cu-mv.fade .s5cu-mvk i{background:var(--slate)}
+.s5cu-mv.climb .s5cu-mvk{color:var(--accent-ink)} .s5cu-mv.climb .s5cu-mvk i{background:var(--accent)}
+.s5cu-mvtxt{font-size:11.5px;color:var(--ink-body);line-height:1.45}
+.s5cu-mvtxt b{color:var(--ink);font-weight:800}
+
+/* sidebar cards */
+.s5cu-card{border:1px solid var(--rule);border-radius:14px;background:var(--surface-alt);padding:10px 11px}
+.s5cu-ck{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted-2);display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.s5cu-ck .s5cu-kdot{width:8px;height:8px;border-radius:2px;flex:none;background:var(--accent)}
+
+/* difficulty bands ladder */
+.s5cu-ladder{display:flex;flex-direction:column;gap:5px}
+.s5cu-bandrow{display:grid;grid-template-columns:34px minmax(0,1fr);gap:8px;align-items:stretch}
+.s5cu-btag{display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:12px;font-weight:800;color:#fff;border-radius:8px}
+.s5cu-bandrow .s5cu-bx{border:1px solid var(--rule);border-radius:9px;background:#fff;padding:5px 9px;min-width:0}
+.s5cu-bh{font-size:11.5px;font-weight:800;color:var(--ink);line-height:1.15}
+.s5cu-be{font-size:10.5px;color:var(--ink-muted);line-height:1.3}
+
+/* reasoning length band */
+.s5cu-rl{border:1px solid var(--rule);border-radius:12px;background:#fff;padding:9px 11px}
+.s5cu-rlbar{display:flex;height:16px;border-radius:6px;overflow:hidden;border:1px solid var(--rule);margin:2px 0 6px}
+.s5cu-rlseg{display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;background:linear-gradient(90deg,#9a85ff,#7b61ff)}
+.s5cu-rlseg:nth-child(1){flex:2;opacity:.55}
+.s5cu-rlseg:nth-child(2){flex:3;opacity:.72}
+.s5cu-rlseg:nth-child(3){flex:3;opacity:.86}
+.s5cu-rlseg:nth-child(4){flex:2;opacity:1}
+.s5cu-rltxt{font-size:11px;color:var(--ink-muted);line-height:1.45}
+.s5cu-rltxt b{color:var(--ink-body)}
+
+/* violet anneal reserve card */
+.s5cu-violet{border:1px solid #d4c9ff;border-radius:12px;background:var(--violet-soft);padding:10px 11px}
+.s5cu-violet .s5cu-ck{color:var(--violet-ink)} .s5cu-violet .s5cu-kdot{background:var(--violet)}
+.s5cu-violet p{margin:0 0 7px;font-size:11.5px;line-height:1.5;color:var(--violet-ink)}
+.s5cu-violet p:last-child{margin-bottom:0}
+.s5cu-violet p b{font-weight:800}
+.s5cu-refs{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.s5cu-refs span{font-size:9.5px;font-weight:700;padding:3px 7px;border-radius:7px;background:#fff;border:1px solid #d4c9ff;color:var(--violet-ink)}
+
+/* amber v4 card */
+.s5cu-v4{border:1px solid #f0ddaf;border-radius:12px;background:var(--amber-soft);padding:9px 11px}
+.s5cu-v4 .s5cu-ck{color:var(--amber-ink)} .s5cu-v4 .s5cu-kdot{background:var(--amber)}
+.s5cu-v4 p{margin:0;font-size:11.5px;line-height:1.5;color:var(--amber-ink)}
+.s5cu-v4 p b{font-weight:800}
+
+.s5cu-footer{margin-top:11px;padding-top:9px;border-top:1px solid var(--rule);font-size:11px;color:var(--muted-2);line-height:1.5}
+.s5cu-footer b{color:var(--ink-muted)}
+
+@media(max-width:1100px){
+.s5cu-layout{grid-template-columns:1fr}
+}
+@media(max-width:640px){
+body{padding:10px}
+.s5cu-topbar{display:block}
+.s5cu-badge{display:inline-block;margin-top:10px}
+.s5cu-bands{grid-template-columns:1fr 1fr}
+.s5cu-nsub{display:none}
+}
+</style>
+</head>
+<body>
+<div class="s5cu-app">
+ <div class="s5cu-topbar">
+  <div>
+   <h1>Curriculum: difficulty bands and staged pretraining</h1>
+   <div class="s5cu-subtitle">A 120B model does not read the whole corpus in one undifferentiated pile. The run is <b>staged</b>: it starts on general web, then leans into reasoning and code, then stretches to long context, and finishes on a low-LR cooldown fed the best data held back for exactly that moment. Drag the run marker and watch the diet rebalance deliberately, stage by stage.</div>
+  </div>
+  <div class="s5cu-badge">Interactive &middot; the order it learns in</div>
+ </div>
+
+ <div class="s5cu-layout">
+  <main class="s5cu-stage">
+   <div class="s5cu-stage-head">
+    <div class="s5cu-stage-title">Stage timeline &middot; Seed &rarr; General &rarr; Reasoning &rarr; Long-context &rarr; Anneal</div>
+    <div class="s5cu-stage-note">drag the marker through the run</div>
+   </div>
+
+   <div class="s5cu-rail">
+    <div class="s5cu-track"><div class="s5cu-track-fill" id="s5cuFill"></div></div>
+    <div class="s5cu-nodes" id="s5cuNodes"></div>
+   </div>
+
+   <div class="s5cu-sliderwrap">
+    <input class="s5cu-slider" id="s5cuSlider" type="range" min="0" max="100" step="1" value="10" />
+    <div class="s5cu-slidercap"><span>0% &middot; run start</span><span>100% &middot; cooldown end</span></div>
+   </div>
+
+   <div class="s5cu-nowbar" id="s5cuNowbar">
+    <div class="s5cu-now-txt" id="s5cuNowTxt"></div>
+    <div class="s5cu-now-pos" id="s5cuNowPos"></div>
+   </div>
+
+   <div class="s5cu-mixlbl">Training mixture at this point in the run</div>
+   <div class="s5cu-stack" id="s5cuStack">
+    <div class="s5cu-seg gen"   data-b="gen"><span class="s5cu-segpct"></span></div>
+    <div class="s5cu-seg code"  data-b="code"><span class="s5cu-segpct"></span></div>
+    <div class="s5cu-seg reason" data-b="reason"><span class="s5cu-segpct"></span></div>
+    <div class="s5cu-seg lctx"  data-b="lctx"><span class="s5cu-segpct"></span></div>
+    <div class="s5cu-seg indic" data-b="indic"><span class="s5cu-segpct"></span></div>
+    <div class="s5cu-seg stem"  data-b="stem"><span class="s5cu-segpct"></span></div>
+   </div>
+
+   <div class="s5cu-bands" id="s5cuBands"></div>
+
+   <div class="s5cu-movers">
+    <div class="s5cu-mv fade">
+     <div class="s5cu-mvk"><i></i>Fades as the run advances</div>
+     <div class="s5cu-mvtxt"><b>General web</b> starts dominant and thins out. Early tokens teach basic language; the model does not need 55% web forever.</div>
+    </div>
+    <div class="s5cu-mv climb">
+     <div class="s5cu-mvk"><i></i>Climbs as the run advances</div>
+     <div class="s5cu-mvtxt"><b>Code, reasoning and long-context</b> rise together. Harder capability is trained once the base is solid, not from token zero.</div>
+    </div>
+   </div>
+  </main>
+
+  <aside class="s5cu-side">
+   <div class="s5cu-card">
+    <div class="s5cu-ck"><span class="s5cu-kdot"></span>Difficulty bands &middot; B0 nursery to B5 PhD</div>
+    <div class="s5cu-ladder" id="s5cuLadder"></div>
+   </div>
+
+   <div class="s5cu-card">
+    <div class="s5cu-ck"><span class="s5cu-kdot" style="background:var(--violet)"></span>Reasoning-length band</div>
+    <div class="s5cu-rl">
+     <div class="s5cu-rlbar">
+      <div class="s5cu-rlseg">short</div>
+      <div class="s5cu-rlseg">medium</div>
+      <div class="s5cu-rlseg">long</div>
+      <div class="s5cu-rlseg">ultra</div>
+     </div>
+     <div class="s5cu-rltxt">Reasoning traces are graded by <b>length</b> alongside difficulty: short, medium, long and ultra traces are separate rungs. A hard problem with a short trace and an easy one with an ultra trace are not interchangeable, so trace length is scheduled too.</div>
+    </div>
+   </div>
+
+   <div class="s5cu-violet">
+    <div class="s5cu-ck"><span class="s5cu-kdot"></span>The design decision &middot; anneal reserve</div>
+    <p>The best <b>Tier-A</b> Indic, agentic and long-reasoning data is <b>held back</b> from the main run and spent in the final low-LR cooldown, where a small reserve gives a large benchmark lift.</p>
+    <p>Reserving it is decided <b>here, at composition time</b>, not discovered at the end. That is why the violet outline appears on the Indic and reasoning bands only once the marker reaches Anneal.</p>
+    <div class="s5cu-refs">
+     <span>OLMo 2 anneal (approx / verify)</span>
+     <span>Qwen3 staged pretrain (approx / verify)</span>
+    </div>
+   </div>
+
+   <div class="s5cu-v4">
+    <div class="s5cu-ck"><span class="s5cu-kdot"></span>V4 reality</div>
+    <p>V4 used <b>warmup bands</b> at every growth seam: a roughly <b>3B-token 60/40 blend</b> dropped in to absorb the distribution shift when the mixture changed, so the model never hit a hard mixture edge.</p>
+   </div>
+  </aside>
+
+  <div class="s5cu-footer" style="grid-column:1/-1">
+   <b>Stage profiles are an illustrative V5 first-pass.</b> The mixture rebalancing is real linear interpolation between per-stage profiles computed live in JS. Staged-pretraining and anneal patterns follow modern open models (Qwen3, OLMo 2), being verified.
+  </div>
+ </div>
+</div>
+
+<script>
+"use strict";
+(function(){
+ const $=id=>document.getElementById(id);
+
+ // 5 stage anchors, each profile sums to 100
+ const STAGES=[
+  {key:"seed", name:"Seed",         sub:"warm start",   p:{gen:55,code:15,reason:3, lctx:2, indic:15,stem:10}},
+  {key:"gen",  name:"General",      sub:"broad base",   p:{gen:45,code:20,reason:6, lctx:3, indic:16,stem:10}},
+  {key:"rea",  name:"Reasoning",    sub:"code + logic", p:{gen:25,code:28,reason:18,lctx:5, indic:14,stem:10}},
+  {key:"lctx", name:"Long-context", sub:"stretch ctx",  p:{gen:18,code:30,reason:16,lctx:18,indic:12,stem:6}},
+  {key:"ann",  name:"Anneal",       sub:"low-LR cool",  p:{gen:8, code:22,reason:20,lctx:10,indic:30,stem:10}}
+ ];
+
+ const BANDS=[
+  {b:"gen",   label:"General web"},
+  {b:"code",  label:"Code"},
+  {b:"reason",label:"Reasoning"},
+  {b:"lctx",  label:"Long-context"},
+  {b:"indic", label:"Indic"},
+  {b:"stem",  label:"STEM"}
+ ];
+ // bands whose Tier-A best is reserved for the cooldown
+ const RESERVED=new Set(["indic","reason"]);
+
+ const DIFF=[
+  {t:"B0",c:"#24b36b",h:"Nursery",       e:"simple children's sentences"},
+  {t:"B1",c:"#4bb39a",h:"Grade-school",  e:"basic grade-school text"},
+  {t:"B2",c:"#00a7d8",h:"High-school",   e:"high-school level material"},
+  {t:"B3",c:"#d99a13",h:"Undergraduate", e:"undergraduate coursework"},
+  {t:"B4",c:"#e0805f",h:"Graduate",      e:"graduate-level texts"},
+  {t:"B5",c:"#7b61ff",h:"Research / PhD",e:"research and PhD-grade papers"}
+ ];
+
+ // ---- build difficulty ladder ----
+ $("s5cuLadder").innerHTML=DIFF.map(d=>
+  `<div class="s5cu-bandrow">
+    <div class="s5cu-btag" style="background:${d.c}">${d.t}</div>
+    <div class="s5cu-bx"><div class="s5cu-bh">${d.h}</div><div class="s5cu-be">${d.e}</div></div>
+   </div>`).join("");
+
+ // ---- build timeline nodes ----
+ $("s5cuNodes").innerHTML=STAGES.map((s,i)=>
+  `<div class="s5cu-node${s.key==="ann"?" anneal":""}" data-i="${i}">
+    <div class="s5cu-dot">${i+1}</div>
+    <div class="s5cu-nlab">${s.name}</div>
+    <div class="s5cu-nsub">${s.sub}</div>
+   </div>`).join("");
+
+ // ---- interpolation ----
+ const lerp=(a,b,f)=>a+(b-a)*f;
+ function profileAt(t){
+  // t in [0,1] over 4 intervals between 5 anchors
+  const seg=Math.max(0,Math.min(3.9999,t*4));
+  const i=Math.floor(seg), f=seg-i;
+  const A=STAGES[i].p, B=STAGES[i+1].p;
+  const out={};
+  BANDS.forEach(({b})=>out[b]=lerp(A[b],B[b],f));
+  return {out,i,f};
+ }
+
+ // integer percents that still sum to 100 (largest-remainder)
+ function roundTo100(vals,keys){
+  const floors={},rema=[]; let s=0;
+  keys.forEach(k=>{const v=vals[k];const fl=Math.floor(v);floors[k]=fl;s+=fl;rema.push([k,v-fl]);});
+  let left=100-s;
+  rema.sort((a,b)=>b[1]-a[1]);
+  for(let j=0;j<rema.length&&left>0;j++){floors[rema[j][0]]++;left--;}
+  return floors;
+ }
+
+ // remember previous integer profile to flag up/down
+ let prev=null;
+
+ function render(){
+  const t=+$("s5cuSlider").value/100;
+  const {out,i,f}=profileAt(t);
+  const pc=roundTo100(out,BANDS.map(x=>x.b));
+
+  // reserve intensity: only in the final Long-context -> Anneal interval
+  const inAnnealApproach = i===3;          // between Long-context (idx3) and Anneal (idx4)
+  const reserveOn = inAnnealApproach && f>0.15;
+
+  // timeline fill + node states
+  $("s5cuFill").style.width=(t*100)+"%";
+  document.querySelectorAll(".s5cu-node").forEach((n,idx)=>{
+   n.classList.remove("done","active","dim");
+   const anchor=idx/4;
+   if(t>=anchor-0.001 && (idx===i||idx===i+1)) n.classList.add("active");
+   else if(anchor<t) n.classList.add("done");
+   else n.classList.add("dim");
+  });
+
+  // mixture bar
+  BANDS.forEach(({b})=>{
+   const seg=document.querySelector(`.s5cu-seg[data-b="${b}"]`);
+   const v=pc[b];
+   seg.style.width=v+"%";
+   const span=seg.querySelector(".s5cu-segpct");
+   span.textContent=v>=8?v+"%":"";
+   seg.classList.toggle("reserved", reserveOn && RESERVED.has(b));
+  });
+
+  // per-band readout
+  $("s5cuBands").innerHTML=BANDS.map(({b,label})=>{
+   const v=pc[b];
+   let dir="";
+   if(prev){ if(v>prev[b]+0.001)dir="up"; else if(v<prev[b]-0.001)dir="down"; }
+   const rsv=reserveOn && RESERVED.has(b) ? " rsv":"";
+   return `<div class="s5cu-brow ${dir}${rsv}">
+     <span class="s5cu-bchip ${b}"></span>
+     <span class="s5cu-bname">${label}</span>
+     <span class="s5cu-bval">${v}%</span>
+    </div>`;
+  }).join("");
+  prev=pc;
+
+  // now-bar narrative
+  const nowbar=$("s5cuNowbar"), nowTxt=$("s5cuNowTxt"), nowPos=$("s5cuNowPos");
+  nowbar.classList.toggle("hot", reserveOn);
+  const A=STAGES[i], B=STAGES[i+1];
+  const towardPct=Math.round(f*100);
+  nowPos.textContent=Math.round(t*100)+"% · "+A.name+(f>0.02?" → "+B.name:"");
+  if(reserveOn){
+   nowTxt.innerHTML="<b>Anneal reserve engaged.</b> The low-LR cooldown is now spending the held-back Tier-A Indic, agentic and long-reasoning data. The violet outline marks the reserve appearing exactly where it was planned to.";
+  } else if(f<0.02){
+   nowTxt.innerHTML="At the <b>"+A.name+"</b> stage. "+stageBlurb(A.key);
+  } else {
+   nowTxt.innerHTML="Transitioning <b>"+A.name+" → "+B.name+"</b> ("+towardPct+"% across). The mixture is rebalancing: general web falls while "+risers(A.p,B.p)+" climb.";
+  }
+ }
+
+ function stageBlurb(k){
+  return ({
+   seed:"General web dominates so the model learns basic language before anything hard.",
+   gen:"A broad base across web, code and Indic, with reasoning still light.",
+   rea:"Code and reasoning are now heavy; this is where thinking capability is built.",
+   lctx:"Long-context climbs sharply as the model learns to hold and use long spans.",
+   ann:"The final low-LR cooldown, fed the reserved Tier-A best data."
+  })[k]||"";
+ }
+ function risers(A,B){
+  const names={code:"code",reason:"reasoning",lctx:"long-context",stem:"STEM",indic:"Indic"};
+  const up=Object.keys(names).filter(k=>B[k]>A[k]).map(k=>names[k]);
+  return up.length?up.slice(0,3).join(", "):"harder data";
+ }
+
+ // node click jumps to that stage anchor
+ $("s5cuNodes").addEventListener("click",e=>{
+  const n=e.target.closest(".s5cu-node"); if(!n)return;
+  const idx=+n.dataset.i;
+  $("s5cuSlider").value=Math.round(idx/4*100);
+  render();
+ });
+
+ $("s5cuSlider").addEventListener("input",render);
+ render();
+})();
+</script>
+</body>
+</html>

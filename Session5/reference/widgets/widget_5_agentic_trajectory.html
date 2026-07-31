@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Agentic Trajectory Walk-through</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+--bg:#f6f8fb; --surface:#ffffff; --surface-alt:#fbfdff;
+--ink:#102338; --ink-body:#1f3850; --ink-muted:#60768d; --muted-2:#7d90a5;
+--rule:#e2e9f0; --rule-strong:#cfdbe6;
+--accent:#00a7d8; --accent-soft:#eafaff; --accent-ink:#0f6e8c;
+--green:#24b36b; --green-soft:#e7fff2; --green-ink:#19824e;
+--amber:#d99a13; --amber-soft:#fff7df; --amber-ink:#8a5c06;
+--violet:#7b61ff; --violet-soft:#eeeaff; --violet-ink:#5a44c8;
+--red:#e05f6e; --red-soft:#ffeef0; --red-ink:#c0455a;
+--shadow-soft:0 8px 22px rgba(16,35,56,.05);
+--font-sans:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+--font-mono:"SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;overflow-x:hidden;background:linear-gradient(180deg,#f8fafc,#f2f5f9);color:var(--ink);font-family:var(--font-sans)}
+body{padding:14px}
+.s5ag-app{max-width:1480px;margin:auto}
+
+/* topbar */
+.s5ag-topbar{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:10px}
+.s5ag-topbar h1{margin:0;font-size:clamp(23px,2.6vw,34px);letter-spacing:-.035em;line-height:1.08}
+.s5ag-subtitle{margin-top:7px;max-width:1050px;color:var(--ink-muted);line-height:1.5;font-size:14px}
+.s5ag-subtitle b{color:var(--ink-body)}
+.s5ag-badge{border:1px solid #bcefff;background:var(--accent-soft);color:var(--accent-ink);padding:8px 13px;border-radius:999px;font-size:12px;font-weight:800;white-space:nowrap}
+
+/* layout */
+.s5ag-layout{display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:12px}
+.s5ag-stage,.s5ag-side{background:var(--surface);border:1px solid var(--rule);border-radius:18px;box-shadow:var(--shadow-soft)}
+.s5ag-stage{padding:12px;min-width:0;display:flex;flex-direction:column}
+.s5ag-side{padding:10px}
+
+/* stage head */
+.s5ag-stage-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:9px}
+.s5ag-stage-title{font-weight:800;color:var(--ink);font-size:15px;letter-spacing:-.01em}
+.s5ag-stage-note{font-size:11.5px;color:var(--ink-muted)}
+
+/* tabs */
+.s5ag-mode-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:10px}
+.s5ag-tab{border:1px solid var(--rule-strong);background:#fff;border-radius:12px;padding:8px 8px;text-align:center;font-weight:800;color:#536b82;cursor:pointer;transition:.18s;min-width:0;font-family:inherit;font-size:13px}
+.s5ag-tab .s5ag-tab-sub{display:block;font-size:9px;letter-spacing:.06em;color:var(--muted-2);font-weight:700;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.s5ag-tab:hover{transform:translateY(-1px)}
+.s5ag-tab.s5ag-active{border-color:#8ddff5;background:#effbff;color:#087b9f;box-shadow:0 0 0 2px #e3f9ff inset}
+
+/* task banner */
+.s5ag-task{border:1px solid var(--rule);background:var(--surface-alt);border-radius:12px;padding:9px 12px;margin-bottom:10px}
+.s5ag-task-cap{font-size:10px;letter-spacing:.14em;font-weight:800;color:var(--muted-2)}
+.s5ag-task-txt{font-size:12.5px;line-height:1.5;color:var(--ink-body);margin-top:4px}
+.s5ag-task-txt b{color:var(--ink)}
+
+/* trajectory scroll region (bounded, reveals step by step) */
+.s5ag-traj{border:1px solid var(--rule);border-radius:14px;background:linear-gradient(180deg,#fcfdff,#f8fbfe);padding:11px;height:566px;overflow-y:auto;overflow-x:hidden;min-width:0}
+.s5ag-traj::-webkit-scrollbar{width:9px}
+.s5ag-traj::-webkit-scrollbar-thumb{background:#d5e0ea;border-radius:9px;border:2px solid transparent;background-clip:padding-box}
+
+/* one card = one step */
+.s5ag-card{border:1px solid var(--rule);border-radius:12px;padding:9px 11px;margin-bottom:9px;background:#fff;animation:s5agIn .28s ease}
+.s5ag-card:last-child{margin-bottom:0}
+@keyframes s5agIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+.s5ag-card-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px}
+.s5ag-card-who{display:flex;align-items:center;gap:8px;min-width:0}
+.s5ag-step-n{font-family:var(--font-mono);font-size:10px;font-weight:800;color:#fff;border-radius:6px;padding:2px 6px;flex:none}
+.s5ag-role{font-size:12px;font-weight:800;letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.s5ag-tag{font-size:10px;font-weight:800;letter-spacing:.03em;padding:3px 8px;border-radius:999px;flex:none;white-space:nowrap}
+.s5ag-body{font-size:12.5px;line-height:1.5;color:var(--ink-body)}
+.s5ag-body b{color:var(--ink)}
+.s5ag-mono{font-family:var(--font-mono);font-size:11.5px;line-height:1.7;background:#f5f8fb;border:1px solid var(--rule);border-radius:9px;padding:7px 9px;margin-top:6px;color:var(--ink-body);overflow-x:auto;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word}
+.s5ag-obs-cap{font-size:10px;letter-spacing:.05em;font-weight:800;color:var(--muted-2);margin-top:6px;font-style:italic}
+.s5ag-weight{font-family:var(--font-mono);font-size:10px;font-weight:800;color:var(--muted-2);flex:none}
+
+/* role colouring */
+.s5ag-card.s5ag-user{background:linear-gradient(180deg,#fbfcfd,#f6f8fa);border-color:#e3e9ef}
+.s5ag-card.s5ag-user .s5ag-step-n{background:var(--muted-2)}
+.s5ag-card.s5ag-user .s5ag-role{color:#54677b}
+.s5ag-card.s5ag-user .s5ag-tag{background:#eef2f6;color:#5f7488;border:1px solid #dde5ec}
+
+.s5ag-card.s5ag-tool{background:linear-gradient(180deg,#fbfcfd,#f6f8fa);border-color:#e3e9ef}
+.s5ag-card.s5ag-tool .s5ag-step-n{background:var(--muted-2)}
+.s5ag-card.s5ag-tool .s5ag-role{color:#54677b}
+.s5ag-card.s5ag-tool .s5ag-tag{background:#eef2f6;color:#5f7488;border:1px solid #dde5ec}
+.s5ag-card.s5ag-tool .s5ag-mono{background:#f1f4f7;color:#54677b}
+
+.s5ag-card.s5ag-asst{background:linear-gradient(180deg,#f4fff9,#fbfffd);border-color:#bfeed3}
+.s5ag-card.s5ag-asst .s5ag-step-n{background:var(--green)}
+.s5ag-card.s5ag-asst .s5ag-role{color:var(--green-ink)}
+.s5ag-card.s5ag-asst .s5ag-tag{background:var(--green-soft);color:var(--green-ink);border:1px solid #b4eccc}
+.s5ag-card.s5ag-asst .s5ag-mono{background:#effbf4;border-color:#c9edd8;color:#1c6a45}
+
+.s5ag-card.s5ag-fail{background:linear-gradient(180deg,#fffdf4,#fffefb);border-color:#eccd7f}
+.s5ag-card.s5ag-fail .s5ag-step-n{background:var(--amber)}
+.s5ag-card.s5ag-fail .s5ag-role{color:var(--amber-ink)}
+.s5ag-card.s5ag-fail .s5ag-tag{background:var(--amber-soft);color:var(--amber-ink);border:1px solid #f0dca0}
+.s5ag-card.s5ag-fail .s5ag-mono{background:#fff9ea;border-color:#f0dca0;color:var(--amber-ink)}
+.s5ag-fail-line{color:var(--amber-ink);font-weight:700}
+
+/* empty / prompt */
+.s5ag-hint{display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted-2);font-size:13px;text-align:center;padding:0 20px;line-height:1.5}
+
+/* one-shot BFCL view */
+.s5ag-oneshot{padding:2px}
+.s5ag-os-block{border:1px solid var(--rule);border-radius:12px;background:#fff;padding:10px 12px;margin-bottom:10px}
+.s5ag-os-cap{font-size:10px;letter-spacing:.1em;font-weight:800;color:var(--muted-2);margin-bottom:6px}
+.s5ag-os-block.s5ag-os-schema .s5ag-mono{background:#f5f8fb}
+.s5ag-os-block.s5ag-os-user{background:linear-gradient(180deg,#fbfcfd,#f6f8fa);border-color:#e3e9ef}
+.s5ag-os-block.s5ag-os-call{background:linear-gradient(180deg,#f4fff9,#fbfffd);border-color:#bfeed3}
+.s5ag-os-block.s5ag-os-call .s5ag-os-cap{color:var(--green-ink)}
+.s5ag-os-block.s5ag-os-call .s5ag-mono{background:#effbf4;border-color:#c9edd8;color:#1c6a45}
+.s5ag-os-tag{float:right;font-size:10px;font-weight:800;padding:2px 8px;border-radius:999px}
+.s5ag-os-tag.g{background:var(--green-soft);color:var(--green-ink);border:1px solid #b4eccc}
+.s5ag-os-tag.m{background:#eef2f6;color:#5f7488;border:1px solid #dde5ec}
+.s5ag-os-note{border:1px solid #d8eaf2;background:linear-gradient(90deg,#f5fcff,#fbfdff);padding:10px 12px;border-radius:12px;font-size:12.5px;line-height:1.5;color:#4f667c}
+.s5ag-os-note b{color:var(--ink)}
+
+/* sidebar */
+.s5ag-side-title{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted-2);margin-bottom:8px}
+.s5ag-controls{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.s5ag-btn{border:1px solid var(--rule-strong);background:#fff;color:var(--ink-body);border-radius:11px;padding:10px 8px;font-weight:800;font-size:12.5px;cursor:pointer;font-family:inherit;transition:.15s}
+.s5ag-btn:hover{border-color:var(--accent);color:var(--accent-ink);background:#f2fbfe}
+.s5ag-btn:disabled{opacity:.4;cursor:default}
+.s5ag-btn.s5ag-prim{grid-column:1 / -1;background:linear-gradient(180deg,#f3fcff,#e9f9ff);border-color:#bcefff;color:var(--accent-ink);font-size:14px;padding:12px}
+.s5ag-btn.s5ag-prim:disabled{background:#f4f6f8;border-color:var(--rule)}
+
+.s5ag-side-card{border:1px solid var(--rule);background:var(--surface-alt);padding:11px;border-radius:14px;margin-top:10px}
+.s5ag-side-card h2{font-size:14px;margin:0 0 4px;color:var(--ink)}
+.s5ag-cap{font-size:10px;letter-spacing:.13em;font-weight:800;color:var(--muted-2)}
+
+/* counter */
+.s5ag-counter-nums{display:flex;justify-content:space-between;gap:8px;margin:9px 0 7px}
+.s5ag-cnum{flex:1;text-align:center;border-radius:10px;padding:8px 4px;border:1px solid}
+.s5ag-cnum.g{background:var(--green-soft);border-color:#b4eccc}
+.s5ag-cnum.m{background:#f1f4f7;border-color:#e0e7ee}
+.s5ag-cnum .s5ag-cn-lbl{font-size:9.5px;letter-spacing:.04em;font-weight:800;text-transform:uppercase}
+.s5ag-cnum.g .s5ag-cn-lbl{color:var(--green-ink)}
+.s5ag-cnum.m .s5ag-cn-lbl{color:var(--muted-2)}
+.s5ag-cnum .s5ag-cn-val{font-family:var(--font-mono);font-size:20px;font-weight:800;margin-top:2px;font-variant-numeric:tabular-nums}
+.s5ag-cnum.g .s5ag-cn-val{color:var(--green-ink)}
+.s5ag-cnum.m .s5ag-cn-val{color:#54677b}
+.s5ag-meter{height:12px;background:#eef2f6;border-radius:999px;overflow:hidden;position:relative}
+.s5ag-meter-fill{height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,#2fc178,#24b36b);transition:width .45s cubic-bezier(.2,.7,.2,1)}
+.s5ag-meter-read{font-size:12px;font-weight:800;margin-top:7px;color:var(--green-ink);font-variant-numeric:tabular-nums}
+.s5ag-meter-read span{color:var(--ink-muted);font-weight:600}
+
+/* masking rule violet card */
+.s5ag-side-card.s5ag-rule-card{border-color:#d9d0ff;background:var(--violet-soft)}
+.s5ag-side-card.s5ag-rule-card .s5ag-cap{color:var(--violet-ink)}
+.s5ag-rule-txt{font-size:12px;line-height:1.5;color:var(--violet-ink);margin-top:5px}
+.s5ag-rule-txt b{font-weight:800}
+
+/* scarcity note */
+.s5ag-note{font-size:12px;line-height:1.5;color:var(--ink-muted);margin:5px 0 0}
+.s5ag-note b{color:var(--ink-body)}
+.s5ag-side-card.s5ag-scarce{border-color:#f0dca0;background:var(--amber-soft)}
+.s5ag-side-card.s5ag-scarce .s5ag-cap{color:var(--amber-ink)}
+.s5ag-side-card.s5ag-scarce .s5ag-note{color:var(--amber-ink)}
+.s5ag-side-card.s5ag-scarce .s5ag-note b{color:var(--amber-ink)}
+
+/* tab note */
+.s5ag-side-card.s5ag-tabnote{border-color:#d9e9f3;background:#f4fbfe}
+.s5ag-side-card.s5ag-tabnote .s5ag-cap{color:var(--accent-ink)}
+.s5ag-side-card.s5ag-tabnote .s5ag-note{color:#3f6072}
+.s5ag-side-card.s5ag-tabnote .s5ag-note b{color:var(--accent-ink)}
+
+.s5ag-footer{font-size:11px;color:var(--muted-2);line-height:1.5;margin-top:10px}
+
+@media(max-width:1100px){.s5ag-layout{grid-template-columns:1fr}.s5ag-traj{height:440px}}
+@media(max-width:640px){body{padding:10px}.s5ag-topbar{display:block}.s5ag-badge{display:inline-block;margin-top:10px}}
+</style>
+</head>
+<body>
+<div class="s5ag-app">
+ <div class="s5ag-topbar">
+  <div>
+   <h1>Agentic Trajectory Walk-through</h1>
+   <div class="s5ag-subtitle">A Codex-class agentic training example is not a single answer. It is a long multi-step tool-calling <b>trajectory</b>: plan, call, read the environment back, hit a failure, recover, and finish. Step through one real run and watch which tokens actually train the model. <b>Only the assistant's own tokens turn green.</b></div>
+  </div>
+  <div class="s5ag-badge">Interactive &middot; step through a real agent run</div>
+ </div>
+
+ <div class="s5ag-layout">
+  <main class="s5ag-stage">
+   <div class="s5ag-stage-head">
+    <div class="s5ag-stage-title" id="s5agStageTitle">One task as a training trajectory</div>
+    <div class="s5ag-stage-note" id="s5agStageNote">Reveal one step at a time &middot; green = trained, grey = masked</div>
+   </div>
+
+   <div class="s5ag-mode-tabs" id="s5agTabs">
+    <button class="s5ag-tab s5ag-active" data-mode="traj">Long trajectory<span class="s5ag-tab-sub">~10 steps &middot; tool use + recovery</span></button>
+    <button class="s5ag-tab" data-mode="oneshot">One-shot call<span class="s5ag-tab-sub">BFCL-style &middot; schema + 1 call</span></button>
+   </div>
+
+   <div class="s5ag-task" id="s5agTask">
+    <div class="s5ag-task-cap">THE TASK GIVEN TO THE AGENT</div>
+    <div class="s5ag-task-txt">Find every US research grant matching a given project, then find the people and labs who won each grant, and judge <b>which winners could buy the piece of hardware I own</b>, because it is exactly the machine their funded work needs.</div>
+   </div>
+
+   <div class="s5ag-traj" id="s5agTraj"></div>
+  </main>
+
+  <aside class="s5ag-side">
+   <div class="s5ag-side-title">Walk the trajectory</div>
+   <div class="s5ag-controls">
+    <button class="s5ag-btn s5ag-prim" id="s5agNext">Next step</button>
+    <button class="s5ag-btn" id="s5agAll">Reveal all</button>
+    <button class="s5ag-btn" id="s5agRestart">Restart</button>
+   </div>
+
+   <div class="s5ag-side-card">
+    <div class="s5ag-cap">SUPERVISION SO FAR</div>
+    <div class="s5ag-counter-nums">
+     <div class="s5ag-cnum g"><div class="s5ag-cn-lbl">Tokens trained on</div><div class="s5ag-cn-val" id="s5agTrained">0</div></div>
+     <div class="s5ag-cnum m"><div class="s5ag-cn-lbl">Tokens seen</div><div class="s5ag-cn-val" id="s5agSeen">0</div></div>
+    </div>
+    <div class="s5ag-meter"><div class="s5ag-meter-fill" id="s5agMeterFill"></div></div>
+    <div class="s5ag-meter-read" id="s5agMeterRead">0% of seen tokens supervised</div>
+   </div>
+
+   <div class="s5ag-side-card s5ag-rule-card">
+    <div class="s5ag-cap">THE MASKING RULE</div>
+    <div class="s5ag-rule-txt">Only the assistant's own tokens (its <b>reasoning</b>, its <b>tool-call arguments</b>, its <b>final answer</b>) are supervised. User turns and tool observations are <b>masked</b>, because the model must never learn to invent the output of a tool it has not really run.</div>
+   </div>
+
+   <div class="s5ag-side-card s5ag-scarce">
+    <div class="s5ag-cap">WHY THIS DATA IS RARE</div>
+    <p class="s5ag-note">These long trajectories are scarce <b>Tier-A agentic data</b>, reserved for the <b>annealing stage</b>. A whole run yields only a few hundred supervised tokens, so every clean trajectory is expensive to collect.</p>
+   </div>
+
+   <div class="s5ag-side-card s5ag-tabnote">
+    <div class="s5ag-cap">CONTRAST TAB</div>
+    <p class="s5ag-note" id="s5agTabNote">Switch to <b>One-shot call</b> to see the BFCL-style baseline: a schema plus a single function call. It teaches the format, but never the long chain of plan, observation and recovery a real agent needs.</p>
+   </div>
+
+   <div class="s5ag-footer">The trajectory is an illustrative example. Token weights are approximate; the masking rule is exact.</div>
+  </aside>
+ </div>
+</div>
+
+<script>
+"use strict";
+(function(){
+ const $=id=>document.getElementById(id);
+
+ // ---- Trajectory step data ----
+ // trained: assistant's own tokens (green plan/call/answer, plus amber failed call).
+ // masked: user turns and tool observations (grey).
+ const STEPS=[
+  {role:'user',roleName:'USER',tag:'masked (user)',trained:false,w:56,
+   body:'Find every US research grant matching my project on cryo-EM motion correction, then find the people and labs who won each grant, and tell me which of those winners could buy my spare high-throughput GPU rig, because it is exactly the machine that kind of funded work needs.'},
+
+  {role:'asst',roleName:'ASSISTANT plan',tag:'trained',trained:true,w:72,
+   body:'I will do this in stages. <b>1)</b> search the federal grants database for grants matching the project topic. <b>2)</b> for each grant id, look up the awardee people and organisations. <b>3)</b> profile each org to judge whether their funded work needs a high-throughput GPU rig and whether they could fund the purchase. I will start with the grant search.'},
+
+  {role:'asst',roleName:'ASSISTANT tool call',tag:'trained',trained:true,w:30,
+   mono:'search_grants({\n  query: "cryo-EM motion correction",\n  agency: "NSF",\n  topic: "structural biology instrumentation"\n})'},
+
+  {role:'tool',roleName:'TOOL observation',tag:'masked (observation)',trained:false,w:92,
+   mono:'[\n  {grant_id:"NSF-2041338", title:"High-throughput cryo-EM pipelines"},\n  {grant_id:"NSF-1955385", title:"GPU-accelerated motion correction"},\n  {grant_id:"NSF-2129888", title:"Instrumentation for structural biology"}\n]',
+   obs:'environment output, never in the loss'},
+
+  {role:'asst',roleName:'ASSISTANT reasoning + tool call',tag:'trained',trained:true,w:50,
+   body:'Three matching grants. I will resolve the awardee behind each one so I know which people and labs to evaluate.',
+   mono:'lookup_awardee({ grant_id: "NSF-2041338" })'},
+
+  {role:'tool',roleName:'TOOL observation',tag:'masked (observation)',trained:false,w:84,
+   mono:'{\n  grant_id:"NSF-2041338",\n  pi:"Dr. Lena Ortiz",\n  org:"Ridgeline Structural Biology Lab",\n  award_usd: 1_850_000\n}',
+   obs:'environment output, never in the loss'},
+
+  {role:'fail',roleName:'ASSISTANT tool call (failed)',tag:'trained · call failed',trained:true,w:28,
+   mono:'fetch_org_profile({ org: "Ridgeline Structural Biology Lab" })',
+   fail:'ERROR 429: rate_limited, org profile service unavailable, retry later'},
+
+  {role:'asst',roleName:'ASSISTANT recovery',tag:'trained',trained:true,w:54,
+   body:'The org profile service is rate limited, so I cannot rely on it. I will recover by switching to an open web search to gather the same signal about the lab’s hardware needs and funding.',
+   mono:'web_search({ query: "Ridgeline Structural Biology Lab cryo-EM GPU hardware needs" })'},
+
+  {role:'tool',roleName:'TOOL observation',tag:'masked (observation)',trained:false,w:80,
+   mono:'[\n  {url:"ridgeline.edu/facilities", note:"lists ageing GPU cluster, seeking upgrade"},\n  {url:"news/ridgeline-nsf-award", note:"$1.85M award for high-throughput cryo-EM"}\n]',
+   obs:'environment output, never in the loss'},
+
+  {role:'asst',roleName:'ASSISTANT final answer',tag:'trained',trained:true,w:122,
+   body:'<b>Shortlist of winners who plausibly need your GPU rig:</b><br>• <b>Dr. Lena Ortiz, Ridgeline Structural Biology Lab (NSF-2041338, $1.85M).</b> Their facilities page lists an ageing GPU cluster they want to upgrade, and the award funds exactly high-throughput cryo-EM, so your rig matches the funded work and the budget can cover it.<br>• The other two grants fund pipeline software and shared instrumentation, so a private GPU purchase is a weaker fit. I would approach Ortiz’s lab first.'}
+ ];
+
+ // ---- BFCL one-shot contrast ----
+ // (rendered statically; only the single call is trained)
+
+ let mode='traj';
+ let revealed=0; // number of trajectory steps shown
+
+ function roleNumColor(){}
+
+ function renderTraj(){
+  const traj=$('s5agTraj');
+  if(revealed===0){
+   traj.innerHTML='<div class="s5ag-hint">Press <b style="margin:0 4px">Next step</b> to reveal the trajectory one step at a time, and watch only the assistant’s own tokens turn green.</div>';
+   return;
+  }
+  let html='';
+  for(let i=0;i<revealed;i++){
+   const s=STEPS[i];
+   html+='<div class="s5ag-card s5ag-'+s.role+'">';
+   html+='<div class="s5ag-card-head"><div class="s5ag-card-who">';
+   html+='<span class="s5ag-step-n">'+(i+1)+'</span>';
+   html+='<span class="s5ag-role">'+s.roleName+'</span>';
+   html+='</div><div style="display:flex;align-items:center;gap:8px;flex:none">';
+   html+='<span class="s5ag-weight">'+(s.trained?'+':'×')+s.w+' tok</span>';
+   html+='<span class="s5ag-tag">'+s.tag+'</span>';
+   html+='</div></div>';
+   if(s.body) html+='<div class="s5ag-body">'+s.body+'</div>';
+   if(s.mono) html+='<div class="s5ag-mono">'+escapeHtml(s.mono)+'</div>';
+   if(s.fail) html+='<div class="s5ag-mono s5ag-fail-line">'+escapeHtml(s.fail)+'</div>';
+   if(s.obs) html+='<div class="s5ag-obs-cap">'+s.obs+'</div>';
+   html+='</div>';
+  }
+  traj.innerHTML=html;
+  // keep newest step in view without scrolling the page
+  traj.scrollTop=traj.scrollHeight;
+ }
+
+ function renderOneshot(){
+  const traj=$('s5agTraj');
+  traj.innerHTML=
+   '<div class="s5ag-oneshot">'+
+    '<div class="s5ag-os-block s5ag-os-schema"><div class="s5ag-os-cap">FUNCTION SCHEMA<span class="s5ag-os-tag m">masked (given)</span></div>'+
+     '<div class="s5ag-mono">'+escapeHtml(
+      'search_grants(query: str,\n              agency: str,\n              topic: str)\n  -> list[{grant_id, title}]\n"Search US research grants by topic."'
+     )+'</div></div>'+
+    '<div class="s5ag-os-block s5ag-os-user"><div class="s5ag-os-cap">USER<span class="s5ag-os-tag m">masked (user)</span></div>'+
+     '<div class="s5ag-body">Find NSF grants about cryo-EM motion correction.</div></div>'+
+    '<div class="s5ag-os-block s5ag-os-call"><div class="s5ag-os-cap">ASSISTANT FUNCTION CALL<span class="s5ag-os-tag g">trained</span></div>'+
+     '<div class="s5ag-mono">'+escapeHtml(
+      'search_grants({\n  query: "cryo-EM motion correction",\n  agency: "NSF",\n  topic: "structural biology"\n})'
+     )+'</div></div>'+
+    '<div class="s5ag-os-note">This BFCL-style example supervises exactly <b>one</b> function call against a fixed schema. There is <b>no observation, no failure, no recovery, no plan</b>. It teaches the <b>call format</b> cheaply, but it never teaches the long chain of decisions a real agent run demands. That chain only exists in the long trajectory on the other tab.</div>'+
+   '</div>';
+ }
+
+ function renderCounter(){
+  let trained=0, seen=0;
+  const upto = (mode==='traj') ? revealed : STEPS.length; // one-shot shows the full-run totals for scale
+  if(mode==='traj'){
+   for(let i=0;i<revealed;i++){ seen+=STEPS[i].w; if(STEPS[i].trained) trained+=STEPS[i].w; }
+  } else {
+   // one-shot: the single call vs schema+user shown in this view
+   trained=42; seen=42+34+22;
+  }
+  $('s5agTrained').textContent=trained;
+  $('s5agSeen').textContent=seen;
+  const pct = seen>0 ? Math.round(trained/seen*100) : 0;
+  $('s5agMeterFill').style.width=pct+'%';
+  $('s5agMeterRead').innerHTML=pct+'% <span>of seen tokens supervised</span>';
+ }
+
+ function renderControls(){
+  const next=$('s5agNext'), all=$('s5agAll');
+  if(mode!=='traj'){
+   next.disabled=true; all.disabled=true;
+   next.textContent='Next step';
+   return;
+  }
+  const done=revealed>=STEPS.length;
+  next.disabled=done; all.disabled=done;
+  next.textContent = done ? 'Trajectory complete' : (revealed===0?'Next step → reveal step 1':'Next step ('+(revealed+1)+' / '+STEPS.length+')');
+ }
+
+ function renderStageMeta(){
+  if(mode==='traj'){
+   $('s5agStageTitle').textContent='One task as a training trajectory';
+   $('s5agStageNote').innerHTML='Reveal one step at a time &middot; green = trained, grey = masked';
+   $('s5agTask').style.display='';
+  } else {
+   $('s5agStageTitle').textContent='The one-shot contrast: schema + a single call';
+   $('s5agStageNote').innerHTML='BFCL-style baseline &middot; only the call is supervised';
+   $('s5agTask').style.display='none';
+  }
+ }
+
+ function render(){
+  renderStageMeta();
+  if(mode==='traj') renderTraj(); else renderOneshot();
+  renderCounter();
+  renderControls();
+ }
+
+ function escapeHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+ // ---- events ----
+ $('s5agNext').addEventListener('click',()=>{
+  if(mode!=='traj') return;
+  if(revealed<STEPS.length){ revealed++; render(); }
+ });
+ $('s5agAll').addEventListener('click',()=>{
+  if(mode!=='traj') return;
+  revealed=STEPS.length; render();
+ });
+ $('s5agRestart').addEventListener('click',()=>{
+  mode='traj'; revealed=0;
+  $('s5agTabs').querySelectorAll('.s5ag-tab').forEach(t=>t.classList.toggle('s5ag-active',t.dataset.mode==='traj'));
+  render();
+ });
+ $('s5agTabs').addEventListener('click',e=>{
+  const t=e.target.closest('.s5ag-tab'); if(!t) return;
+  mode=t.dataset.mode;
+  $('s5agTabs').querySelectorAll('.s5ag-tab').forEach(x=>x.classList.toggle('s5ag-active',x===t));
+  render();
+ });
+
+ render();
+})();
+</script>
+</body>
+</html>

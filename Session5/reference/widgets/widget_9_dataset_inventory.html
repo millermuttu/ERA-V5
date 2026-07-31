@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SOTA Dataset Inventory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+--bg:#f6f8fb; --surface:#ffffff; --surface-alt:#fbfdff;
+--ink:#102338; --ink-body:#1f3850; --ink-muted:#60768d; --muted-2:#7d90a5;
+--rule:#e2e9f0; --rule-strong:#cfdbe6;
+--accent:#00a7d8; --accent-soft:#eafaff; --accent-ink:#0f6e8c;
+--green:#24b36b; --green-soft:#e7fff2; --green-ink:#19824e;
+--amber:#d99a13; --amber-soft:#fff7df; --amber-ink:#8a5c06;
+--violet:#7b61ff; --violet-soft:#eeeaff; --violet-ink:#5a44c8;
+--red:#e05f6e; --red-soft:#ffeef0; --red-ink:#c0455a;
+--shadow-soft:0 8px 22px rgba(16,35,56,.05);
+--font-sans:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+--font-mono:"SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;overflow-x:hidden}
+body{background:linear-gradient(180deg,#f8fafc 0%,#f2f5f9 100%);color:var(--ink-body);font-family:var(--font-sans);font-size:14px;line-height:1.5;padding:14px}
+.s5di-app{max-width:1480px;margin:auto}
+
+/* topbar */
+.s5di-topbar{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:10px}
+.s5di-topbar h1{margin:0;color:var(--ink);font-size:clamp(23px,2.6vw,34px);font-weight:800;letter-spacing:-.035em;line-height:1.07}
+.s5di-subtitle{margin-top:7px;max-width:1080px;color:var(--ink-muted);line-height:1.5;font-size:14px}
+.s5di-subtitle b{color:var(--ink-body)}
+.s5di-badge{border:1px solid #bcefff;background:var(--accent-soft);color:var(--accent-ink);padding:8px 13px;border-radius:999px;font-size:12px;font-weight:800;white-space:nowrap}
+
+/* layout */
+.s5di-layout{display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:12px}
+.s5di-stage,.s5di-side{background:var(--surface);border:1px solid var(--rule);border-radius:18px;box-shadow:var(--shadow-soft)}
+.s5di-stage{padding:11px;min-width:0}
+.s5di-side{padding:10px}
+
+/* stage head */
+.s5di-stage-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:9px;flex-wrap:wrap}
+.s5di-stage-title{font-weight:800;color:var(--ink);font-size:15px;letter-spacing:-.01em}
+.s5di-stage-title small{display:block;font-weight:600;color:var(--ink-muted);font-size:11.5px;letter-spacing:0;margin-top:2px}
+
+/* segmented view toggle */
+.s5di-seg{display:inline-grid;grid-template-columns:1fr 1fr;gap:4px;background:#eef3f7;border:1px solid var(--rule);border-radius:11px;padding:4px}
+.s5di-segbtn{border:none;background:transparent;border-radius:8px;padding:7px 14px;font-weight:800;font-size:12px;color:var(--ink-muted);cursor:pointer;transition:.15s;font-family:inherit;white-space:nowrap;line-height:1.2}
+.s5di-segbtn small{display:block;font-weight:600;font-size:9px;margin-top:2px;letter-spacing:.02em}
+.s5di-segbtn.s5di-on{background:#fff;color:var(--accent-ink);box-shadow:0 1px 4px rgba(16,35,56,.12)}
+
+/* table */
+.s5di-tablewrap{border:1px solid var(--rule);border-radius:14px;overflow:auto;max-height:602px}
+table.s5di-tbl{width:100%;table-layout:fixed;border-collapse:collapse}
+.s5di-tbl col.s5di-cName{width:30%}
+.s5di-tbl col.s5di-cSrc{width:20%}
+.s5di-tbl col.s5di-cSmp{width:14%}
+.s5di-tbl col.s5di-cTok{width:14%}
+.s5di-tbl col.s5di-cLic{width:15%}
+.s5di-tbl col.s5di-cTier{width:7%}
+.s5di-tbl thead th{position:sticky;top:0;z-index:5;background:var(--surface-alt);text-align:left;font-size:10px;letter-spacing:.1em;font-weight:800;color:var(--muted-2);padding:9px 10px;border-bottom:1px solid var(--rule-strong)}
+.s5di-tbl thead th.s5di-num{text-align:right}
+.s5di-tbl thead th.s5di-active{color:var(--accent-ink);background:var(--accent-soft)}
+.s5di-tbl thead th .s5di-sortcue{font-size:8px;margin-left:3px;opacity:.55}
+
+.s5di-grouprow td{padding:7px 10px;background:#f3f7fb;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.s5di-ghead{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.s5di-gdot{width:9px;height:9px;border-radius:3px;flex:none}
+.s5di-gname{font-size:12px;font-weight:900;color:var(--ink);letter-spacing:.01em}
+.s5di-gmeta{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-muted);margin-left:auto}
+.s5di-gmeta b{color:var(--ink-body);font-weight:800}
+.s5di-gthin{font-size:9.5px;font-weight:900;letter-spacing:.06em;color:var(--amber-ink);background:var(--amber-soft);border:1px solid #f0dca0;border-radius:999px;padding:2px 7px}
+
+.s5di-tbl tbody td{padding:8px 10px;border-bottom:1px solid var(--rule);vertical-align:top;overflow:hidden}
+.s5di-row{cursor:pointer;transition:background .12s}
+.s5di-row:hover td{background:#f6fbfe}
+.s5di-row.s5di-sel td{background:#f2fcff}
+.s5di-row.s5di-sel td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
+.s5di-nmwrap{min-width:0}
+.s5di-nm{font-size:12.5px;font-weight:800;color:var(--ink);line-height:1.2;overflow-wrap:anywhere}
+.s5di-flag{display:inline-block;font-size:8.5px;font-weight:900;letter-spacing:.05em;padding:1px 5px;border-radius:999px;margin-left:5px;vertical-align:middle;white-space:nowrap}
+.s5di-flag.s5di-approx{background:#f1f6f9;border:1px solid var(--rule);color:var(--muted-2)}
+.s5di-flag.s5di-conf{background:var(--green-soft);border:1px solid #c6ecd6;color:var(--green-ink)}
+.s5di-flag.s5di-synth{background:var(--violet-soft);border:1px solid #cabfff;color:var(--violet-ink)}
+.s5di-bar{margin-top:6px;height:7px;border-radius:999px;background:#eef3f7;overflow:hidden}
+.s5di-bar i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#38c3ec,#00a7d8);transition:width .45s cubic-bezier(.2,.7,.2,1)}
+.s5di-src{font-size:11px;color:var(--ink-muted);line-height:1.35;overflow-wrap:anywhere}
+.s5di-val{font-family:var(--font-mono);font-size:12.5px;color:var(--ink-body);text-align:right;font-variant-numeric:tabular-nums}
+.s5di-val.s5di-active{color:var(--accent-ink);font-weight:800;background:var(--accent-soft)}
+.s5di-val small{display:block;font-size:9px;color:var(--muted-2);font-weight:600;margin-top:1px}
+.s5di-lic{font-size:10.5px;color:var(--ink-muted);line-height:1.35;overflow-wrap:anywhere}
+.s5di-tier{display:inline-block;font-family:var(--font-mono);font-size:10.5px;font-weight:800;padding:2px 6px;border-radius:7px;border:1px solid;white-space:nowrap}
+.s5di-tier.tA{background:var(--green-soft);border-color:#c6ecd6;color:var(--green-ink)}
+.s5di-tier.tB{background:var(--accent-soft);border-color:#bcefff;color:var(--accent-ink)}
+.s5di-tier.tC{background:var(--amber-soft);border-color:#f0dca0;color:var(--amber-ink)}
+.s5di-tier.tD{background:#eef1f5;border-color:var(--rule-strong);color:var(--muted-2)}
+
+.s5di-legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.s5di-lg{font-size:10px;padding:5px 8px;border-radius:999px;border:1px solid var(--rule);display:flex;align-items:center;gap:6px;font-weight:700;color:var(--ink-muted)}
+.s5di-sw{width:9px;height:9px;border-radius:3px;flex:none}
+.s5di-footer{margin-top:10px;padding-top:9px;border-top:1px solid var(--rule);font-size:11px;color:var(--muted-2);line-height:1.5}
+.s5di-footer b{color:var(--ink-muted)}
+
+/* sidebar */
+.s5di-side-title{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted-2);margin-bottom:8px}
+.s5di-card{border:1px solid var(--rule);border-radius:14px;background:var(--surface-alt);padding:11px;margin-bottom:9px}
+.s5di-ctag{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:#fff;border:1px solid var(--rule)}
+.s5di-ctag .s5di-gdot{width:8px;height:8px}
+.s5di-cname{font-size:17px;font-weight:900;color:var(--ink);letter-spacing:-.015em;margin:7px 0 2px;line-height:1.15}
+.s5di-csrc{font-size:11px;color:var(--ink-muted);font-family:var(--font-mono);margin-bottom:8px}
+.s5di-crow{margin-top:8px}
+.s5di-ck{font-size:9.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-ink);margin-bottom:3px}
+.s5di-ctxt{font-size:12px;color:var(--ink-body);line-height:1.5}
+.s5di-ctxt b{color:var(--ink);font-weight:800}
+.s5di-meta{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:9px}
+.s5di-mcell{border:1px solid var(--rule);border-radius:10px;background:#fff;padding:7px 9px}
+.s5di-mk{font-size:9px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted-2)}
+.s5di-mv{font-family:var(--font-mono);font-size:14px;font-weight:800;color:var(--ink);margin-top:2px;font-variant-numeric:tabular-nums}
+.s5di-mv small{font-family:var(--font-sans);font-size:9.5px;font-weight:700;color:var(--ink-muted)}
+.s5di-checks{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.s5di-chk{font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px;background:#fff;border:1px solid var(--rule);color:var(--ink-muted)}
+
+.s5di-slotcard{border:1px solid var(--rule);border-radius:14px;background:var(--surface);padding:11px;margin-bottom:9px}
+.s5di-sh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px}
+.s5di-sh h3{margin:0;font-size:13px;font-weight:800;color:var(--ink)}
+.s5di-sh span{font-size:10px;color:var(--muted-2);font-weight:700}
+.s5di-mini{display:grid;gap:7px}
+.s5di-minirow{display:grid;grid-template-columns:78px 1fr auto;align-items:center;gap:8px}
+.s5di-minilbl{font-size:10.5px;font-weight:800;color:var(--ink-body);display:flex;align-items:center;gap:5px;min-width:0}
+.s5di-minilbl .s5di-gdot{width:8px;height:8px}
+.s5di-minilbl span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.s5di-minibar{height:12px;border-radius:999px;background:#eef3f7;overflow:hidden;position:relative}
+.s5di-minibar i{display:block;height:100%;border-radius:999px;transition:width .5s ease}
+.s5di-minival{font-family:var(--font-mono);font-size:11px;font-weight:800;color:var(--ink-body);text-align:right;font-variant-numeric:tabular-nums;min-width:44px}
+.s5di-minirow.s5di-sel-slot .s5di-minilbl{color:var(--accent-ink)}
+.s5di-slotnote{margin-top:9px;font-size:11px;line-height:1.45;color:var(--ink-muted);border-top:1px dashed var(--rule-strong);padding-top:8px}
+.s5di-slotnote b{color:var(--ink-body)}
+
+.s5di-violet{border:1px solid #cabfff;border-radius:14px;background:linear-gradient(180deg,#f6f3ff,#efeaff);padding:11px 12px}
+.s5di-violet .s5di-vcap{font-size:10px;letter-spacing:.1em;font-weight:900;color:var(--violet-ink)}
+.s5di-violet h3{font-size:14px;margin:5px 0 6px;color:var(--violet-ink);letter-spacing:-.01em}
+.s5di-violet p{margin:0;font-size:11.5px;line-height:1.5;color:#4a3f7a}
+.s5di-violet p b{color:var(--violet-ink)}
+.s5di-vsplit{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.s5di-vc{background:#fff;border:1px solid #d8cfff;border-radius:10px;padding:7px 9px}
+.s5di-vk{font-size:8.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--violet-ink)}
+.s5di-vv{font-family:var(--font-mono);font-size:14px;font-weight:900;color:var(--ink);margin-top:2px}
+.s5di-vv small{font-family:var(--font-sans);font-size:9px;font-weight:700;color:var(--ink-muted)}
+
+@media(max-width:1100px){.s5di-layout{grid-template-columns:1fr}.s5di-tablewrap{max-height:520px}}
+@media(max-width:640px){body{padding:10px}.s5di-topbar{display:block}.s5di-badge{display:inline-block;margin-top:10px}.s5di-tbl col.s5di-cSrc{width:0}.s5di-src{display:none}}
+</style>
+</head>
+<body>
+<div class="s5di-app">
+ <div class="s5di-topbar">
+  <div>
+   <h1>SOTA Dataset Inventory</h1>
+   <div class="s5di-subtitle">Before you weight a mixture, you have to know what actually exists. Here are the real datasets feeding each capability slot, sized in <b>both samples and tokens</b>, with sources and tiers. Flip the view: a small-sample agentic trajectory set jumps to the top on tokens while a big-sample function-call set drops. <b>Sample counts and token counts tell different stories</b>, and the slot totals show you cannot weight a lane past the tokens that exist for it.</div>
+  </div>
+  <div class="s5di-badge">Interactive · samples and tokens</div>
+ </div>
+
+ <div class="s5di-layout">
+  <main class="s5di-stage">
+   <div class="s5di-stage-head">
+    <div class="s5di-stage-title">Real datasets per capability slot
+     <small>Click any row to inspect it. Toggle the view to re-sort and re-scale the size bars.</small>
+    </div>
+    <div class="s5di-seg" id="s5di-seg-main">
+     <button class="s5di-segbtn" data-view="samples">Samples view<small>size + sort by samples</small></button>
+     <button class="s5di-segbtn" data-view="tokens">Tokens view<small>size + sort by tokens</small></button>
+    </div>
+   </div>
+
+   <div class="s5di-tablewrap">
+    <table class="s5di-tbl">
+     <colgroup><col class="s5di-cName"><col class="s5di-cSrc"><col class="s5di-cSmp"><col class="s5di-cTok"><col class="s5di-cLic"><col class="s5di-cTier"></colgroup>
+     <thead>
+      <tr>
+       <th>DATASET</th>
+       <th>SOURCE</th>
+       <th class="s5di-num" id="s5di-hSmp">SAMPLES</th>
+       <th class="s5di-num" id="s5di-hTok">TOKENS <span style="font-weight:600">≈</span></th>
+       <th>LICENSE</th>
+       <th>TIER</th>
+      </tr>
+     </thead>
+     <tbody id="s5di-rows"></tbody>
+    </table>
+   </div>
+
+   <div class="s5di-legend">
+    <span class="s5di-lg"><span class="s5di-sw" style="background:linear-gradient(90deg,#38c3ec,#00a7d8)"></span>size bar = current view, scaled within its slot</span>
+    <span class="s5di-lg"><span class="s5di-sw" style="background:var(--green)"></span>tier A</span>
+    <span class="s5di-lg"><span class="s5di-sw" style="background:var(--accent)"></span>tier B</span>
+    <span class="s5di-lg"><span class="s5di-sw" style="background:var(--amber)"></span>tier C</span>
+    <span class="s5di-lg"><span class="s5di-sw" style="background:var(--muted-2)"></span>tier D</span>
+    <span class="s5di-lg"><span class="s5di-sw" style="background:var(--amber)"></span>slot flagged thin = scarcity</span>
+   </div>
+
+   <div class="s5di-footer">
+    <b>Dataset sizes are approximate and being verified; sample vs token counts intentionally differ.</b> Sangraha and V4 numbers are confirmed from our sources.
+   </div>
+  </main>
+
+  <aside class="s5di-side">
+   <div class="s5di-side-title">Selected dataset</div>
+   <div class="s5di-card" id="s5di-card"></div>
+
+   <div class="s5di-slotcard">
+    <div class="s5di-sh">
+     <h3>Running per-slot token total</h3>
+     <span>real supply</span>
+    </div>
+    <div class="s5di-mini" id="s5di-mini"></div>
+    <div class="s5di-slotnote">You cannot weight a slot beyond the tokens that <b>exist</b> for it. Supply, not preference, is the hard cap on the mixture. General web and STEM dwarf every specialist slot.</div>
+   </div>
+
+   <div class="s5di-violet" id="s5di-violet"></div>
+  </aside>
+ </div>
+</div>
+
+<script>
+"use strict";
+(function(){
+ const $=id=>document.getElementById(id);
+
+ // ---- Capability slots (consistent color per slot) ----
+ const GROUPS=[
+  {id:'code',    name:'Code',                color:'var(--accent)'},
+  {id:'agentic', name:'Agentic & tool-use',  color:'var(--amber)'},
+  {id:'reason',  name:'Reasoning & math',    color:'var(--violet)'},
+  {id:'long',    name:'Long-context',        color:'var(--green)'},
+  {id:'indic',   name:'Indic',               color:'var(--red)'},
+  {id:'general', name:'General web & STEM',   color:'var(--muted-2)'}
+ ];
+
+ // samples and tokens are raw counts. tag: 'approx' | 'conf' | 'synth'
+ const DATA=[
+  // ---- CODE ----
+  {g:'code',name:'The Stack v2',src:'BigCode / Software Heritage',samples:600e6,tokens:900e9,lic:'permissive + opt-out',tier:'B',tag:'approx',
+   what:'BigCode\'s deduplicated permissive-source code corpus built from Software Heritage.',
+   why:'Anchors the Code slot with real repository and file-level code across hundreds of languages.',
+   checks:['repo + file granularity','near-dedup applied','opt-out honored']},
+  {g:'code',name:'CommitPack / CommitPackFT',src:'BigCode',samples:4e6,tokens:4e9,lic:'mixed / permissive',tier:'B',tag:'approx',
+   what:'Git commits paired with messages and diffs; the FT slice is the filtered instruction subset.',
+   why:'Teaches edit-style, diff-following behavior the base code corpus does not carry.',
+   checks:['millions of commits','message + diff pairs','FT = license-filtered']},
+  {g:'code',name:'D3 Code (V4 corpus)',src:'V4 run (confirmed)',samples:250e6,tokens:199e9,lic:'V4 lineage',tier:'B',tag:'conf',
+   what:'The Code slot exactly as trained in the V4 run.',
+   why:'Lived reference: what 199B code tokens actually bought the last cohort.',
+   checks:['confirmed from our run','~199B tokens trained']},
+
+  // ---- AGENTIC & TOOL-USE ----
+  {g:'agentic',name:'Glaive function-calling v2',src:'Glaive',samples:113e3,tokens:50e6,lic:'Apache-2.0',tier:'D',tag:'approx',
+   what:'Synthetic single- and multi-turn function-calling dialogues.',
+   why:'Cheap breadth of tool-call formatting: many samples, few tokens each.',
+   checks:['~113K samples','short calls','high sample / low token']},
+  {g:'agentic',name:'xLAM / APIGen',src:'Salesforce',samples:60e3,tokens:25e6,lic:'CC-BY (mixed)',tier:'A/D',tag:'approx',
+   what:'APIGen-generated, execution-verified function-call data.',
+   why:'Verified executable calls raise the floor on tool-call correctness.',
+   checks:['~60K calls','execution-verified','mixed tiers']},
+  {g:'agentic',name:'ToolACE',src:'ToolACE',samples:110e3,tokens:60e6,lic:'Apache-2.0',tier:'A/D',tag:'approx',
+   what:'Self-evolving synthesis over an API pool of thousands of tools.',
+   why:'Diversity of tool signatures well beyond hand-written sets.',
+   checks:['large API pool','accuracy-checked','dialogue-level']},
+  {g:'agentic',name:'Hermes function-calling',src:'NousResearch',samples:15e3,tokens:22e6,lic:'Apache-2.0',tier:'A/D',tag:'approx',
+   what:'Function-calling and JSON-mode data popular in open alignment.',
+   why:'A common format many open models are tuned against.',
+   checks:['~15K samples','structured JSON','widely reused']},
+  {g:'agentic',name:'ToolBench',src:'OpenBMB',samples:120e3,tokens:80e6,lic:'Apache-2.0',tier:'D',tag:'approx',
+   what:'Large multi-tool instruction dataset over real REST APIs.',
+   why:'Breadth of real API compositions and multi-tool chains.',
+   checks:['multi-tool chains','real APIs','tier D unverified']},
+  {g:'agentic',name:'Nexus / NexusRaven',src:'Nexusflow',samples:40e3,tokens:30e6,lic:'CC-BY-4.0',tier:'A',tag:'approx',
+   what:'Curated function-calling for the NexusRaven models.',
+   why:'A higher-curation slice for nested and parallel calls.',
+   checks:['curated','nested calls','tier A']},
+  {g:'agentic',name:'SWE-Gym',src:'SWE-Gym',samples:2.4e3,tokens:150e6,lic:'task licenses',tier:'A',tag:'approx',
+   what:'Executable software-engineering tasks with full agent trajectories.',
+   why:'Tiny sample count but very long trajectories: this is where agentic TOKENS actually live. It sorts last on samples and first on tokens.',
+   checks:['~2.4K tasks','long trajectories','execution env']},
+  {g:'agentic',name:'SWE-smith',src:'SWE-smith',samples:26e3,tokens:120e6,lic:'task licenses',tier:'A',tag:'approx',
+   what:'Scaled generation of SWE tasks and trajectories.',
+   why:'Tens of thousands of trajectories extend real-repo agent behavior.',
+   checks:['~26K trajectories','repo-grounded','tier A']},
+  {g:'agentic',name:'OpenHands rollouts',src:'All-Hands / OpenHands',samples:10e3,tokens:90e6,lic:'mixed',tier:'A',tag:'approx',
+   what:'Agent rollouts collected from the OpenHands framework.',
+   why:'End-to-end tool-use episodes inside a real coding agent.',
+   checks:['~10K rollouts','full episodes','mixed licenses']},
+
+  // ---- REASONING & MATH ----
+  {g:'reason',name:'OpenThoughts2',src:'OpenThoughts',samples:1.1e6,tokens:3e9,lic:'Apache-2.0',tier:'A/D',tag:'approx',
+   what:'Open reasoning traces distilled at scale for math and code.',
+   why:'Long chains-of-thought that teach step-by-step derivation.',
+   checks:['~1M+ traces','long CoT','tiers A/D']},
+  {g:'reason',name:'OpenMathReasoning',src:'NVIDIA',samples:3.2e6,tokens:2e9,lic:'CC-BY-4.0',tier:'A/D',tag:'approx',
+   what:'Math problems paired with reasoning solutions.',
+   why:'Broad math coverage with worked solution traces.',
+   checks:['~3M+ samples','solution traces','CC-BY-4.0']},
+  {g:'reason',name:'NuminaMath',src:'Numina',samples:860e3,tokens:500e6,lic:'Apache / CC-BY',tier:'A',tag:'approx',
+   what:'Competition and curated math problems with answers.',
+   why:'High-quality problem statements, the trusted core of the slot.',
+   checks:['~860K problems','curated','tier A']},
+  {g:'reason',name:'OpenR1-Math (R1-distilled)',src:'Hugging Face',samples:220e3,tokens:1.6e9,lic:'Apache-2.0',tier:'D',tag:'approx',
+   what:'R1-distilled long math reasoning traces.',
+   why:'Long distilled traces: fewer samples, far more tokens each.',
+   checks:['~220K samples','very long traces','tier D']},
+  {g:'reason',name:'AON (V4 corpus)',src:'V4 run (confirmed)',samples:40e6,tokens:78e9,lic:'V4 lineage',tier:'A',tag:'conf',
+   what:'The reasoning-heavy slot as trained in the V4 run.',
+   why:'Lived reference for how many reasoning tokens the last cohort actually spent.',
+   checks:['confirmed from our run','~78B tokens trained']},
+
+  // ---- LONG-CONTEXT ----
+  {g:'long',name:'Repo-packed code (32K+)',src:'packed from code corpora',samples:1.5e6,tokens:60e9,lic:'permissive',tier:'B',tag:'approx',
+   what:'Whole repositories packed into 32K+ token sequences.',
+   why:'Teaches cross-file, long-range code structure the base slot cannot.',
+   checks:['32K+ sequences','repo-level packing','permissive sources']},
+  {g:'long',name:'Book-length corpora (packed)',src:'books + long docs',samples:400e3,tokens:40e9,lic:'mixed / public-domain',tier:'B',tag:'approx',
+   what:'Long documents and books packed to fill the context window.',
+   why:'Sustained long-form dependencies over thousands of tokens.',
+   checks:['book-length docs','packed sequences','mixed sources']},
+
+  // ---- INDIC ----
+  {g:'indic',name:'Sangraha (verified)',src:'AI4Bharat',samples:40e6,tokens:64e9,lic:'CC-BY-4.0',tier:'A',tag:'conf',
+   what:'AI4Bharat\'s human-verified Indic web and native-source slice.',
+   why:'The trustworthy core of the Indic slot: our protected lane.',
+   checks:['~64B tokens','verified','confirmed']},
+  {g:'indic',name:'Sangraha (unverified)',src:'AI4Bharat',samples:15e6,tokens:24e9,lic:'CC-BY-4.0',tier:'B',tag:'conf',
+   what:'Sangraha\'s crawled but not-yet-verified slice.',
+   why:'Real volume that still needs QA before it counts as trusted.',
+   checks:['~24B tokens','needs QA','confirmed']},
+  {g:'indic',name:'Sangraha (synthetic)',src:'AI4Bharat',samples:90e6,tokens:162e9,lic:'CC-BY-4.0',tier:'C',tag:'synth',synth:true,
+   what:'Sangraha\'s synthetic and translated expansion.',
+   why:'Covers the gap real Indic supply cannot fill; must be capped so it does not dominate the slot.',
+   checks:['~162B tokens','synthetic','tier C']},
+  {g:'indic',name:'IndicCorpV2',src:'AI4Bharat',samples:10e6,tokens:20.9e9,lic:'CC-BY / mixed',tier:'B',tag:'approx',
+   what:'Monolingual Indic corpus across 24 languages.',
+   why:'Breadth across Indian languages beyond the top few.',
+   checks:['~20.9B tokens','24 languages','tier B']},
+  {g:'indic',name:'BPCC (parallel)',src:'AI4Bharat',samples:22e6,tokens:3e9,lic:'CC-BY-4.0',tier:'C',tag:'approx',
+   what:'Bharat Parallel Corpus Collection.',
+   why:'Parallel pairs for cross-lingual grounding and transfer.',
+   checks:['parallel pairs','tier C','CC-BY-4.0']},
+  {g:'indic',name:'Samanantar',src:'AI4Bharat',samples:49.7e6,tokens:2e9,lic:'CC0 / CC-BY',tier:'C',tag:'approx',
+   what:'Large parallel corpus across 11 Indic languages.',
+   why:'Many pairs but short segments: high samples, low tokens.',
+   checks:['~49.7M pairs','short segments','tier C']},
+
+  // ---- GENERAL WEB & STEM ----
+  {g:'general',name:'FineWeb-Edu',src:'Hugging Face',samples:1.3e9,tokens:1.3e12,lic:'ODC-By',tier:'B',tag:'approx',
+   what:'Education-filtered slice of the FineWeb web crawl.',
+   why:'High-signal general English web text at trillion-token scale.',
+   checks:['~1.3T tokens','edu classifier','ODC-By']},
+  {g:'general',name:'DCLM-Baseline',src:'DataComp-LM',samples:2.6e9,tokens:2.6e12,lic:'mixed / CommonCrawl',tier:'B',tag:'approx',
+   what:'DataComp-LM baseline, model-filtered from a 240T-token pool.',
+   why:'A strong general web baseline proven at scale.',
+   checks:['~2.6T trained','240T pool','model-filtered']},
+  {g:'general',name:'peS2o',src:'AI2',samples:40e6,tokens:42e9,lic:'ODC-By',tier:'A',tag:'approx',
+   what:'AI2 corpus of open-access scientific papers.',
+   why:'STEM and academic depth that raw web lacks.',
+   checks:['~40M papers','scientific','tier A']},
+  {g:'general',name:'proof-pile-2',src:'EleutherAI',samples:5e6,tokens:55e9,lic:'mixed',tier:'A',tag:'approx',
+   what:'Math-heavy corpus of proofs, arXiv math and math code.',
+   why:'Formal and informal math grounding for the STEM slot.',
+   checks:['~55B tokens','math','tier A']},
+  {g:'general',name:'D1 Web-Foundation (V4)',src:'V4 run (confirmed)',samples:200e6,tokens:164e9,lic:'V4 lineage',tier:'B',tag:'conf',
+   what:'The V4 foundational web slot.',
+   why:'Lived reference for the base web layer of last cohort.',
+   checks:['confirmed','~164B tokens']},
+  {g:'general',name:'D2 Web-Diverse (V4)',src:'V4 run (confirmed)',samples:780e6,tokens:627e9,lic:'V4 lineage',tier:'B',tag:'conf',
+   what:'The V4 diverse web slot, the single largest slice of that run.',
+   why:'Lived reference: 627B tokens was the bulk of the V4 corpus.',
+   checks:['confirmed','~627B tokens']},
+  {g:'general',name:'D4 STEM (V4)',src:'V4 run (confirmed)',samples:60e6,tokens:49e9,lic:'V4 lineage',tier:'B',tag:'conf',
+   what:'The V4 STEM slot.',
+   why:'Lived reference for the STEM layer of last cohort.',
+   checks:['confirmed','~49B tokens']}
+ ];
+
+ // ---- formatting ----
+ function trim(x){
+  let s = x>=100 ? Math.round(x).toString() : x.toFixed(1);
+  return s.replace(/\.0$/,'');
+ }
+ function fmt(n){
+  if(n>=1e12) return trim(n/1e12)+'T';
+  if(n>=1e9)  return trim(n/1e9)+'B';
+  if(n>=1e6)  return trim(n/1e6)+'M';
+  if(n>=1e3)  return trim(n/1e3)+'K';
+  return String(n);
+ }
+ function esc(s){return String(s).replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));}
+ function tierClass(t){return 't'+String(t).charAt(0);}
+ function groupById(id){return GROUPS.find(g=>g.id===id);}
+
+ // ---- state ----
+ let view='samples';          // 'samples' | 'tokens'
+ let sel=0;                    // index into DATA
+
+ // ---- per-slot token totals (static supply) ----
+ const slotTotals=GROUPS.map(g=>({
+  id:g.id,name:g.name,color:g.color,
+  tokens:DATA.filter(d=>d.g===g.id).reduce((a,d)=>a+d.tokens,0)
+ }));
+ const slotMax=Math.max(...slotTotals.map(s=>s.tokens));
+
+ // scarcity numbers for the violet card
+ const agenticTokens=slotTotals.find(s=>s.id==='agentic').tokens;
+ const indicRows=DATA.filter(d=>d.g==='indic');
+ const indicSynth=indicRows.filter(d=>d.synth).reduce((a,d)=>a+d.tokens,0);
+ const indicReal=indicRows.filter(d=>!d.synth).reduce((a,d)=>a+d.tokens,0);
+
+ // ---- render table ----
+ function render(){
+  const metric=view;
+  const rows=[];
+  GROUPS.forEach(g=>{
+   const items=DATA.map((d,i)=>({d,i})).filter(o=>o.d.g===g.id)
+                   .sort((a,b)=>b.d[metric]-a.d[metric]);
+   const gmax=Math.max(...items.map(o=>o.d[metric]));
+   const total=slotTotals.find(s=>s.id===g.id).tokens;
+   const thin = g.id==='agentic' || g.id==='indic';
+   rows.push(
+    '<tr class="s5di-grouprow"><td colspan="6"><div class="s5di-ghead">'+
+     '<span class="s5di-gdot" style="background:'+g.color+'"></span>'+
+     '<span class="s5di-gname">'+esc(g.name)+'</span>'+
+     (thin?'<span class="s5di-gthin">SLOT RUNS THIN</span>':'')+
+     '<span class="s5di-gmeta">'+items.length+' sets · slot supply <b>'+fmt(total)+'</b> tokens</span>'+
+    '</div></td></tr>'
+   );
+   items.forEach(o=>{
+    const d=o.d, i=o.i;
+    const w=gmax>0?Math.max(3,(d[metric]/gmax*100)):3;
+    const flag = d.tag==='conf' ? '<span class="s5di-flag s5di-conf">confirmed</span>'
+               : d.tag==='synth'? '<span class="s5di-flag s5di-synth">synthetic</span>'
+               : '<span class="s5di-flag s5di-approx">approx</span>';
+    rows.push(
+     '<tr class="s5di-row'+(i===sel?' s5di-sel':'')+'" data-id="'+i+'">'+
+      '<td><div class="s5di-nmwrap"><div class="s5di-nm">'+esc(d.name)+flag+'</div>'+
+        '<div class="s5di-bar"><i style="width:'+w+'%"></i></div></div></td>'+
+      '<td><div class="s5di-src">'+esc(d.src)+'</div></td>'+
+      '<td><div class="s5di-val'+(metric==='samples'?' s5di-active':'')+'">'+fmt(d.samples)+'</div></td>'+
+      '<td><div class="s5di-val'+(metric==='tokens'?' s5di-active':'')+'">'+fmt(d.tokens)+'</div></td>'+
+      '<td><div class="s5di-lic">'+esc(d.lic)+'</div></td>'+
+      '<td><span class="s5di-tier '+tierClass(d.tier)+'">'+esc(d.tier)+'</span></td>'+
+     '</tr>'
+    );
+   });
+  });
+  $('s5di-rows').innerHTML=rows.join('');
+
+  // header active highlight
+  $('s5di-hSmp').className='s5di-num'+(view==='samples'?' s5di-active':'');
+  $('s5di-hTok').className='s5di-num'+(view==='tokens'?' s5di-active':'');
+  $('s5di-hSmp').innerHTML='SAMPLES'+(view==='samples'?' <span class="s5di-sortcue">▼ sort</span>':'');
+  $('s5di-hTok').innerHTML='TOKENS ≈'+(view==='tokens'?' <span class="s5di-sortcue">▼ sort</span>':'');
+
+  // segmented buttons
+  document.querySelectorAll('#s5di-seg-main .s5di-segbtn').forEach(b=>{
+   b.classList.toggle('s5di-on', b.dataset.view===view);
+  });
+
+  renderCard();
+  renderMini();
+ }
+
+ // ---- selected dataset card ----
+ function renderCard(){
+  const d=DATA[sel];
+  const g=groupById(d.g);
+  const flag = d.tag==='conf' ? '<span class="s5di-flag s5di-conf" style="margin-left:0">confirmed</span>'
+             : d.tag==='synth'? '<span class="s5di-flag s5di-synth" style="margin-left:0">synthetic</span>'
+             : '<span class="s5di-flag s5di-approx" style="margin-left:0">approx sizes</span>';
+  $('s5di-card').innerHTML=
+   '<span class="s5di-ctag"><span class="s5di-gdot" style="background:'+g.color+'"></span>'+esc(g.name)+'</span> '+flag+
+   '<div class="s5di-cname">'+esc(d.name)+'</div>'+
+   '<div class="s5di-csrc">'+esc(d.src)+'</div>'+
+   '<div class="s5di-crow"><div class="s5di-ck">What it is</div><div class="s5di-ctxt">'+esc(d.what)+'</div></div>'+
+   '<div class="s5di-crow"><div class="s5di-ck">Why it is in this slot</div><div class="s5di-ctxt">'+esc(d.why)+'</div></div>'+
+   '<div class="s5di-meta">'+
+     '<div class="s5di-mcell"><div class="s5di-mk">Samples</div><div class="s5di-mv">'+fmt(d.samples)+'</div></div>'+
+     '<div class="s5di-mcell"><div class="s5di-mk">Tokens ≈</div><div class="s5di-mv">'+fmt(d.tokens)+'</div></div>'+
+     '<div class="s5di-mcell"><div class="s5di-mk">License</div><div class="s5di-mv" style="font-size:11px">'+esc(d.lic)+'</div></div>'+
+     '<div class="s5di-mcell"><div class="s5di-mk">Tier</div><div class="s5di-mv"><span class="s5di-tier '+tierClass(d.tier)+'">'+esc(d.tier)+'</span></div></div>'+
+   '</div>'+
+   '<div class="s5di-crow"><div class="s5di-ck">Key metadata / checks</div>'+
+     '<div class="s5di-checks">'+d.checks.map(c=>'<span class="s5di-chk">'+esc(c)+'</span>').join('')+'</div></div>';
+ }
+
+ // ---- per-slot mini bar chart ----
+ function renderMini(){
+  const selGroup=DATA[sel].g;
+  $('s5di-mini').innerHTML=slotTotals.map(s=>{
+   const w=Math.max(2,(s.tokens/slotMax*100));
+   return '<div class="s5di-minirow'+(s.id===selGroup?' s5di-sel-slot':'')+'">'+
+    '<div class="s5di-minilbl"><span class="s5di-gdot" style="background:'+s.color+'"></span><span>'+esc(s.name)+'</span></div>'+
+    '<div class="s5di-minibar"><i style="width:'+w+'%;background:'+s.color+'"></i></div>'+
+    '<div class="s5di-minival">'+fmt(s.tokens)+'</div>'+
+   '</div>';
+  }).join('');
+ }
+
+ // ---- violet scarcity card ----
+ $('s5di-violet').innerHTML=
+  '<div class="s5di-vcap">DESIGN NOTE · WHERE THE SLOTS RUN THIN</div>'+
+  '<h3>Indic and Agentic cannot be filled from real supply alone.</h3>'+
+  '<p>The Agentic slot holds only about <b>'+fmt(agenticTokens)+'</b> tokens of real supply, and Indic\'s trusted, non-synthetic text is about <b>'+fmt(indicReal)+'</b> against <b>'+fmt(indicSynth)+'</b> synthetic. These are the lanes the <b>protected sampler and synthetic generation must cover</b>; you cannot simply up-weight past what exists.</p>'+
+  '<div class="s5di-vsplit">'+
+    '<div class="s5di-vc"><div class="s5di-vk">Agentic real</div><div class="s5di-vv">'+fmt(agenticTokens)+' <small>tokens</small></div></div>'+
+    '<div class="s5di-vc"><div class="s5di-vk">Indic real vs synth</div><div class="s5di-vv">'+fmt(indicReal)+' <small>/ '+fmt(indicSynth)+'</small></div></div>'+
+  '</div>';
+
+ // ---- events ----
+ document.querySelectorAll('#s5di-seg-main .s5di-segbtn').forEach(b=>{
+  b.addEventListener('click',()=>{ view=b.dataset.view; render(); });
+ });
+ $('s5di-rows').addEventListener('click',e=>{
+  const tr=e.target.closest('.s5di-row'); if(!tr) return;
+  sel=+tr.dataset.id; render();
+ });
+
+ render();
+})();
+</script>
+</body>
+</html>
