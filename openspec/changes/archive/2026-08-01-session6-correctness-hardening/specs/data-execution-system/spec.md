@@ -1,24 +1,8 @@
 ## Purpose
 
 Defines the observable behavior of the toy-scale training-data execution pipeline: the guarantees it must uphold from raw documents through packed batches, ledgers, checkpoints, crash/resume, replay, and audit, so that a single command produces a verifiable, non-hardcoded evidence bundle.
-## Requirements
-### Requirement: Immutable Content-Addressed Shards
-The system SHALL derive each shard's identifier from a hash of its tokenized content, and re-tokenizing identical source documents SHALL always yield the same shard id and content hash.
 
-#### Scenario: Identical documents produce identical shard id
-- **WHEN** the same set of source documents is tokenized twice with the same frozen tokenizer
-- **THEN** both runs produce shards with identical `shard_id` and `content_hash` values
-
-#### Scenario: Changed document changes the shard hash
-- **WHEN** a single source document in a shard is modified before tokenization
-- **THEN** the resulting `content_hash` and `shard_id` differ from the original shard's
-
-### Requirement: Frozen Tokenizer Hash Verification
-The system SHALL record a `tokenizer_hash` derived from the frozen vocabulary, and every shard manifest SHALL be rejected if its tokenizer hash does not match the frozen tokenizer's hash.
-
-#### Scenario: Tokenizer hash matches across the run
-- **WHEN** shards are produced using the frozen tokenizer
-- **THEN** every shard manifest's `tokenizer_hash` equals the tokenizer's recorded hash, and `run.log` contains `[PASS] tokenizer_hash_verified`
+## MODIFIED Requirements
 
 ### Requirement: Shard Manifest Admission Gate
 The system SHALL admit a shard only if all hard-required fields (`tokenizer_hash`, `cleaning_pipeline_hash`, `eval_overlap_status`) are present, its `license_tier` is not `unsafe`, its `eval_overlap_status` is `clear`, it is not a near-duplicate of an already-seen shard, and its computed admission score exceeds the admission threshold. Admission SHALL NOT depend on any downstream consumer declining to select the shard.
@@ -115,17 +99,6 @@ The system SHALL pack tokens into batches using a lane-appropriate policy, SHALL
 - **WHEN** a full run is materialized
 - **THEN** at least one committed batch contains more than one source document
 
-### Requirement: Consumption and Learning Ledgers
-The system SHALL append a `batch_committed` consumption-ledger event for every committed batch with a strictly increasing `ledger_offset`, SHALL append a `checkpoint_bound` event whenever a checkpoint is saved that references a valid `ledger_offset`, and SHALL record learning-ledger rollups linking loss statistics back to source shard ids.
-
-#### Scenario: Ledger offsets strictly increase
-- **WHEN** multiple batches are committed during a run
-- **THEN** each successive `batch_committed` event's `ledger_offset` is strictly greater than the previous one
-
-#### Scenario: Checkpoint binds to a valid ledger offset
-- **WHEN** a checkpoint is saved
-- **THEN** its `checkpoint_bound` event's `ledger_offset` corresponds to an actual committed batch in the consumption ledger
-
 ### Requirement: Checkpoint, Crash, and Resume Without Skip or Repeat
 The system SHALL be able to save a checkpoint bound to a ledger offset, deliberately halt execution partway through a run at a point that is not a checkpoint boundary, discard ledger entries written after the last durable checkpoint, and resume such that the concatenation of batches processed before the crash and after the resume exactly equals the original uninterrupted batch sequence, with no batch skipped or repeated.
 
@@ -160,13 +133,6 @@ The system SHALL be able to replay a previously committed interval in ledger mod
 - **WHEN** a recorded token span is altered and then replayed
 - **THEN** the reconstructed sample's loss-mask hash differs from the recorded hash, rather than being re-derived from the packer
 
-### Requirement: Fork From an Earlier Checkpoint
-The system SHALL support forking a new run branch from an earlier checkpoint, continuing execution under a distinct `run_branch_id` without altering the original branch's recorded ledger history.
-
-#### Scenario: Fork creates a distinct branch without mutating the original
-- **WHEN** a fork is created from a checkpoint recorded under `run-a`
-- **THEN** subsequent batches are recorded under a new `run_branch_id` (e.g. `run-b`) and `run-a`'s previously committed ledger events are unchanged
-
 ### Requirement: Packing Efficiency and Throughput Reporting
 The system SHALL compute packing utilization from the stream that was actually committed during the run, SHALL compute useful loss-bearing tokens-per-second from that utilization together with the real OPUS accept/reject counts, and SHALL store the inputs used so the reported numbers can be independently recomputed. Reported packing utilization SHALL be reconstructable from the token spans recorded in the consumption ledger.
 
@@ -197,6 +163,8 @@ The system SHALL produce `evidence.json` and `evidence.md` by scanning the artif
 - **WHEN** a recorded loss mask, position-id reset, or reported utilization is altered in the packed-batch report
 - **THEN** the packing-correctness row reports `FAIL`
 
+## ADDED Requirements
+
 ### Requirement: Measured Data Cleaning
 The system SHALL determine each shard's benchmark overlap, canary presence, PII content, and near-duplicate status by running detection over the document text, and SHALL record the results on the shard manifest. These fields SHALL NOT be constants, default arguments, or values declared alongside the source documents. Provenance attributes that are not derivable from text (`never_train`, `benchmark_derived`) MAY remain declared.
 
@@ -222,4 +190,3 @@ The system SHALL mask structured personal identifiers before the tokenizer vocab
 #### Scenario: Identifiers never enter the vocabulary
 - **WHEN** the corpus contains documents with email addresses, phone numbers, IP addresses, or URLs
 - **THEN** none of those identifier strings appear in the frozen tokenizer's vocabulary or in `manifests/tokenizer.json`
-
