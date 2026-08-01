@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Session 6 Widget 8 - Training Consumption Ledger</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+  <style>
+    :root{--s6l-ink:#172033;--s6l-muted:#667085;--s6l-line:#d9e3ef;--s6l-cyan:#0891b2;--s6l-violet:#7c3aed;--s6l-green:#16a34a;--s6l-amber:#d97706;--s6l-red:#dc2626}
+    *{box-sizing:border-box}body{margin:0;background:#f7fafc;color:var(--s6l-ink);font-family:Inter,system-ui,sans-serif}.s6l-wrap{max-width:1280px;margin:0 auto;padding:22px}.s6l-head{display:flex;justify-content:space-between;gap:16px;margin-bottom:16px}.s6l-kicker{font-size:12px;font-weight:800;color:var(--s6l-cyan);letter-spacing:.08em;text-transform:uppercase}.s6l-title{font-size:28px;margin:4px 0 6px}.s6l-sub{margin:0;color:var(--s6l-muted);font-size:14px;line-height:1.5;max-width:780px}.s6l-pill{border:1px solid var(--s6l-line);border-radius:999px;background:white;padding:8px 12px;font-size:12px;font-weight:800;height:max-content}.s6l-grid{display:grid;grid-template-columns:330px 1fr;gap:16px}.s6l-card{background:white;border:1px solid var(--s6l-line);border-radius:8px;box-shadow:0 10px 26px rgba(15,23,42,.06);padding:14px}.s6l-card h3{font-size:15px;margin:0 0 10px}.s6l-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}.s6l-btn{border:0;border-radius:7px;background:#0f172a;color:#fff;padding:10px 12px;font-weight:800;cursor:pointer}.s6l-btn.alt{background:#e2e8f0;color:#334155}.s6l-btn.warn{background:var(--s6l-amber)}.s6l-btn.red{background:var(--s6l-red)}.s6l-metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}.s6l-metric{border:1px solid var(--s6l-line);border-radius:8px;padding:10px;background:#fbfdff}.s6l-metric b{font-size:20px}.s6l-metric span{display:block;font-size:11px;color:var(--s6l-muted)}.s6l-stream{max-height:396px;overflow:auto;border:1px solid var(--s6l-line);border-radius:8px;background:#fbfdff}.s6l-event{display:grid;grid-template-columns:86px 1fr 86px;gap:10px;padding:10px;border-bottom:1px solid var(--s6l-line);cursor:pointer}.s6l-event:hover,.s6l-event.active{background:#eef6ff}.s6l-step{font-weight:900;color:var(--s6l-cyan);font-size:12px}.s6l-main{font-size:12px;line-height:1.35}.s6l-main b{display:block;color:#101828}.s6l-tag{justify-self:end;border-radius:999px;padding:4px 7px;font-size:11px;font-weight:900;color:#fff;height:max-content}.s6l-detail{min-height:296px;border-radius:8px;background:#0f172a;color:#dbeafe;padding:14px;overflow:auto;font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace}.s6l-note{margin-top:10px;border:1px solid #bae6fd;background:#ecfeff;color:#155e75;border-radius:8px;padding:10px;font-size:12px;line-height:1.45}.s6l-field{margin-top:12px}.s6l-field label{font-size:12px;font-weight:800;display:flex;justify-content:space-between}.s6l-field input{width:100%;accent-color:var(--s6l-cyan)}.s6l-cyan{color:#67e8f9}.s6l-green{color:#86efac}.s6l-amber{color:#fcd34d}
+    @media(max-width:880px){.s6l-grid{grid-template-columns:1fr}.s6l-head{display:block}.s6l-pill{display:inline-block;margin-top:10px}}
+  </style>
+</head>
+<body>
+  <main class="s6l-wrap">
+    <header class="s6l-head"><div><div class="s6l-kicker">ERA V5 - Session 6 - Widget 8</div><h1 class="s6l-title">Training Consumption Ledger</h1><p class="s6l-sub">The loader appends what was actually consumed: step, rank, microbatch, packed span ids, masks, OPUS decision, and checkpoint binding.</p></div><div class="s6l-pill">Append-only consumed stream</div></header>
+    <section class="s6l-grid">
+      <aside class="s6l-card">
+        <h3>Trainer controls</h3><div class="s6l-btns"><button class="s6l-btn" id="next">Commit batch</button><button class="s6l-btn alt" id="auto">Auto run</button><button class="s6l-btn warn" id="ckpt">Bind checkpoint</button><button class="s6l-btn red" id="crash">Simulate crash</button></div>
+        <div class="s6l-field"><label>Microbatches per step <span id="microOut">4</span></label><input id="micro" type="range" min="1" max="8" value="4"></div>
+        <div class="s6l-metrics"><div class="s6l-metric"><b id="stepOut">0</b><span>global step</span></div><div class="s6l-metric"><b id="offOut">0</b><span>ledger offset</span></div><div class="s6l-metric"><b id="ckptOut">none</b><span>checkpoint</span></div><div class="s6l-metric"><b id="branchOut">run-a</b><span>branch id</span></div></div>
+        <div class="s6l-note">Click any event to reconstruct the training data that produced that update. The ledger stores facts after consumption, not just intentions before training.</div>
+      </aside>
+      <section class="s6l-card"><h3>Append-only events</h3><div class="s6l-stream" id="stream"></div></section>
+      <section class="s6l-card" style="grid-column:1 / -1"><h3>Selected event payload</h3><pre class="s6l-detail" id="detail">Commit a batch to create the first immutable event.</pre></section>
+    </section>
+  </main>
+  <script>
+    const lanes=['general','code','indic','reasoning','agentic'], colors={general:'#0891b2',code:'#7c3aed',indic:'#16a34a',reasoning:'#d97706',agentic:'#dc2626'}; let step=0,offset=0,ckpt='none',branch='run-a',events=[],timer=null,selected=-1;
+    const e=id=>document.getElementById(id), stream=e('stream'), detail=e('detail');
+    function id(p){return p+'_'+Math.random().toString(16).slice(2,10)}
+    function payload(type,extra={}){return {event:type,ledger_offset:++offset,run_branch_id:branch,global_step:step,checkpoint_id:ckpt,created_at:new Date().toISOString(),...extra}}
+    function commit(){
+      step++; const micro=+e('micro').value; const lane=lanes[(step+micro)%lanes.length]; const ev=payload('batch_committed',{rank:step%8,microbatch_count:micro,packed_sample_ids:Array.from({length:micro},(_,i)=>id('sample_'+i)),shard_ids:[id('shard_'+lane),id('shard_mix')],token_span_ids:Array.from({length:micro},(_,i)=>`${lane}_${step}_${i}:0-4095`),loss_mask_hash:id('lossmask'),position_policy:'packed_reset_on_eos',mixture_lane:lane,curriculum_stage:step<6?'foundation':step<12?'skill_build':'anneal',opus_decision_id:id('opus')}); events.unshift(ev); selected=0; render();
+    }
+    function checkpoint(){ckpt='ckpt_'+String(step).padStart(5,'0');events.unshift(payload('checkpoint_bound',{checkpoint_id:ckpt,model_state:'saved',optimizer_state:'saved',dataloader_state:'ledger_offset_'+offset,rng_state:'captured_where_available'}));selected=0;render()}
+    function crash(){events.unshift(payload('worker_crash_recovered',{failed_rank:step%8,recovery_mode:'resume_from_last_committed_offset',next_expected_offset:offset+1}));selected=0;render()}
+    function render(){
+      e('stepOut').textContent=step; e('offOut').textContent=offset; e('ckptOut').textContent=ckpt; e('branchOut').textContent=branch; e('microOut').textContent=e('micro').value;
+      stream.innerHTML=events.map((ev,i)=>`<div class="s6l-event ${i===selected?'active':''}" data-i="${i}"><div class="s6l-step">#${ev.ledger_offset}<br>step ${ev.global_step}</div><div class="s6l-main"><b>${ev.event}</b>${ev.mixture_lane||ev.recovery_mode||ev.dataloader_state||'checkpoint binding'}</div><div class="s6l-tag" style="background:${colors[ev.mixture_lane]||'#475467'}">${ev.mixture_lane||ev.event.split('_')[0]}</div></div>`).join('');
+      [...stream.querySelectorAll('.s6l-event')].forEach(x=>x.onclick=()=>{selected=+x.dataset.i;render()});
+      detail.innerHTML=events[selected]?JSON.stringify(events[selected],null,2).replace(/"([^"]+)":/g,'<span class="s6l-cyan">"$1"</span>:').replace(/"batch_committed"|"checkpoint_bound"/g,'<span class="s6l-green">$&</span>').replace(/"worker_crash_recovered"/g,'<span class="s6l-amber">$&</span>'):'Commit a batch to create the first immutable event.';
+    }
+    e('next').onclick=commit; e('ckpt').onclick=checkpoint; e('crash').onclick=crash; e('micro').oninput=render; e('auto').onclick=()=>{if(timer){clearInterval(timer);timer=null;e('auto').textContent='Auto run'}else{timer=setInterval(commit,900);e('auto').textContent='Pause'}};
+    render();
+  </script>
+
+
+</body></html>

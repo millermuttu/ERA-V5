@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Session 6 Widget 6 - Shard Manifest Builder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Noto+Sans+Devanagari:wght@500;700&amp;display=swap" rel="stylesheet">
+  <style>
+    :root{--s6m-ink:#172033;--s6m-muted:#667085;--s6m-line:#d9e3ef;--s6m-bg:#f7fafc;--s6m-card:#fff;--s6m-cyan:#0891b2;--s6m-violet:#7c3aed;--s6m-green:#16a34a;--s6m-amber:#d97706;--s6m-red:#dc2626;--s6m-soft:#eef6ff}
+    *{box-sizing:border-box} body{margin:0;background:linear-gradient(180deg,#fbfdff,#f5f8fb);color:var(--s6m-ink);font-family:Inter,"Noto Sans Devanagari",system-ui,sans-serif}
+    .s6m-wrap{max-width:1280px;margin:0 auto;padding:22px}.s6m-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:16px}.s6m-kicker{font-size:12px;font-weight:800;color:var(--s6m-cyan);letter-spacing:.08em;text-transform:uppercase}.s6m-title{margin:4px 0 6px;font-size:28px;line-height:1.08}.s6m-sub{margin:0;color:var(--s6m-muted);max-width:760px;font-size:14px;line-height:1.5}.s6m-pill{border:1px solid var(--s6m-line);border-radius:999px;background:#fff;padding:8px 12px;font-size:12px;font-weight:800;color:#475467;white-space:nowrap}
+    .s6m-grid{display:grid;grid-template-columns:340px 1fr;gap:16px}.s6m-card{background:rgba(255,255,255,.94);border:1px solid var(--s6m-line);border-radius:8px;box-shadow:0 10px 26px rgba(15,23,42,.06);padding:14px}.s6m-card h3{margin:0 0 10px;font-size:15px}.s6m-field{margin:11px 0}.s6m-field label{display:flex;justify-content:space-between;margin-bottom:6px;color:#344054;font-size:12px;font-weight:800}.s6m-field input,.s6m-field select{width:100%;border:1px solid var(--s6m-line);border-radius:7px;padding:9px 10px;background:#fff;color:var(--s6m-ink);font:inherit;font-size:13px}.s6m-check{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.s6m-toggle{border:1px solid var(--s6m-line);border-radius:7px;padding:9px;background:#fff;cursor:pointer;font-size:12px;font-weight:800;color:#475467}.s6m-toggle[data-on="true"]{border-color:#9dd8e8;background:#ecfeff;color:#0e7490}.s6m-actions{display:flex;gap:8px;margin-top:12px}.s6m-btn{border:0;border-radius:7px;padding:10px 12px;background:#0f172a;color:#fff;font-weight:800;cursor:pointer}.s6m-btn.secondary{background:#e2e8f0;color:#334155}
+    .s6m-status{display:grid;grid-template-columns:170px 1fr;gap:14px;align-items:center}.s6m-ring{width:150px;height:150px;border-radius:999px;background:conic-gradient(var(--s6m-green) 0deg,var(--s6m-green) var(--angle),#e8eef5 var(--angle));display:grid;place-items:center}.s6m-ring span{display:grid;place-items:center;width:112px;height:112px;border-radius:999px;background:#fff;font-size:30px;font-weight:900}.s6m-admit{font-weight:900;font-size:22px;margin-bottom:6px}.s6m-admit.ok{color:var(--s6m-green)}.s6m-admit.warn{color:var(--s6m-amber)}.s6m-admit.block{color:var(--s6m-red)}.s6m-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}.s6m-item{border:1px solid var(--s6m-line);border-radius:8px;padding:10px;background:#fff}.s6m-item.good{border-color:#bbf7d0;background:#f0fdf4}.s6m-item.bad{border-color:#fecaca;background:#fff1f2}.s6m-item.mid{border-color:#fde68a;background:#fffbeb}.s6m-item b{display:block;font-size:12px}.s6m-item span{font-size:12px;color:var(--s6m-muted);line-height:1.35}
+    .s6m-manifest{margin-top:14px;border-radius:8px;background:#0f172a;color:#dbeafe;padding:14px;min-height:218px;overflow:auto;font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace}.s6m-note{margin-top:10px;font-size:12px;color:#667085;line-height:1.45}.s6m-hash{color:#67e8f9}.s6m-red{color:#fca5a5}.s6m-green{color:#86efac}.s6m-amber{color:#fcd34d}
+    @media(max-width:860px){.s6m-grid,.s6m-status{grid-template-columns:1fr}.s6m-head{display:block}.s6m-pill{display:inline-block;margin-top:10px}.s6m-list{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <main class="s6m-wrap">
+    <header class="s6m-head">
+      <div><div class="s6m-kicker">ERA V5 - Session 6 - Widget 6</div><h1 class="s6m-title">Shard Manifest Builder</h1><p class="s6m-sub">A training shard is admitted only when its tokenization, cleaning, provenance, deduplication, contamination, and eval-firewall state are explicit.</p></div>
+      <div class="s6m-pill">Admission gate for tokenized shards</div>
+    </header>
+    <section class="s6m-grid">
+      <aside class="s6m-card">
+        <h3>Build a candidate shard</h3>
+        <div class="s6m-field"><label>Capability lane <span id="laneOut">Indic</span></label><select id="lane"><option>Indic</option><option>Code</option><option>Reasoning</option><option>Agentic</option><option>General web</option></select></div>
+        <div class="s6m-field"><label>Token count <span id="tokOut">128M</span></label><input id="tokens" type="range" min="12" max="512" value="128"></div>
+        <div class="s6m-field"><label>License tier</label><select id="license"><option value="safe">Verified commercial safe</option><option value="review">Needs legal review</option><option value="unsafe">Unknown or blocked</option></select></div>
+        <div class="s6m-check">
+          <button class="s6m-toggle" data-key="tokHash" data-on="true">Tokenizer hash</button>
+          <button class="s6m-toggle" data-key="cleanHash" data-on="true">Cleaning hash</button>
+          <button class="s6m-toggle" data-key="dedup" data-on="true">Dedup passed</button>
+          <button class="s6m-toggle" data-key="contam" data-on="true">No eval overlap</button>
+          <button class="s6m-toggle" data-key="pii" data-on="true">PII screened</button>
+          <button class="s6m-toggle" data-key="parents" data-on="false">Parent manifest</button>
+        </div>
+        <div class="s6m-actions"><button class="s6m-btn" id="randomize">Generate variant</button><button class="s6m-btn secondary" id="reset">Reset</button></div>
+      </aside>
+      <section class="s6m-card">
+        <div class="s6m-status">
+          <div class="s6m-ring" id="ring" style="--angle: 313deg;"><span id="score">87</span></div>
+          <div><div class="s6m-admit ok" id="admit">Admitted to registry</div><p class="s6m-sub" id="explain">The shard has enough metadata to be scheduled, replayed, and audited.</p></div>
+        </div>
+        <div class="s6m-list" id="checks"><div class="s6m-item good"><b>tokenizer_hash</b><span>present - Exact vocab, merges, special tokens.</span></div><div class="s6m-item good"><b>cleaning_pipeline_hash</b><span>present - Reproducible filters and transforms.</span></div><div class="s6m-item good"><b>dedup_status</b><span>present - MinHash/cluster result attached.</span></div><div class="s6m-item good"><b>eval_overlap_status</b><span>present - Training must not ingest test shards.</span></div><div class="s6m-item good"><b>pii_screen_status</b><span>present - Sensitive text was screened.</span></div><div class="s6m-item mid"><b>parent_manifest_ids</b><span>missing - Lineage for derived shards.</span></div><div class="s6m-item good"><b>license_tier</b><span>Verified commercial safe</span></div></div>
+        <pre class="s6m-manifest" id="manifest">{
+  "shard_id": "<span class="s6m-hash">v5_indic_shard_128</span>",
+  "capability_lane": "Indic",
+  "token_count": 128000000,
+  "tokenizer_hash": "tok_17f448789307",
+  "content_hash": "<span class="s6m-hash">sha256_3895355bfb77</span>",
+  "cleaning_pipeline_hash": "clean_20a4938fc1cf",
+  "dedup_status": "passed",
+  "pii_screen_status": "screened",
+  "eval_overlap_status": "clear",
+  "license_tier": "safe",
+  "parent_manifest_ids": [],
+  "admission": "<span class="s6m-green">Admitted to registry</span>"
+}</pre>
+        <div class="s6m-note">Teaching point: the manifest is the contract between Sessions 1-5 and the dataloader. If the shard is replayed later, the same tokenizer, source lineage, and safety state must still be knowable.</div>
+      </section>
+    </section>
+  </main>
+  <script>
+    const state={tokHash:true,cleanHash:true,dedup:true,contam:true,pii:true,parents:false};
+    const els={lane:document.getElementById('lane'),tokens:document.getElementById('tokens'),license:document.getElementById('license'),score:document.getElementById('score'),ring:document.getElementById('ring'),admit:document.getElementById('admit'),explain:document.getElementById('explain'),checks:document.getElementById('checks'),manifest:document.getElementById('manifest'),laneOut:document.getElementById('laneOut'),tokOut:document.getElementById('tokOut')};
+    const reqs=[['tokHash','tokenizer_hash','Exact vocab, merges, special tokens.'],['cleanHash','cleaning_pipeline_hash','Reproducible filters and transforms.'],['dedup','dedup_status','MinHash/cluster result attached.'],['contam','eval_overlap_status','Training must not ingest test shards.'],['pii','pii_screen_status','Sensitive text was screened.'],['parents','parent_manifest_ids','Lineage for derived shards.']];
+    function hash(prefix){return prefix+'_'+Math.random().toString(16).slice(2,10)+Math.random().toString(16).slice(2,6)}
+    function render(){
+      els.laneOut.textContent=els.lane.value; els.tokOut.textContent=els.tokens.value+'M';
+      const licenseScore=els.license.value==='safe'?1:els.license.value==='review'?.5:0;
+      let passed=reqs.filter(r=>state[r[0]]).length;
+      let score=Math.round(((passed/reqs.length)*.78+licenseScore*.22)*100);
+      const blocked=!state.tokHash||!state.cleanHash||!state.contam||els.license.value==='unsafe';
+      if(blocked) score=Math.min(score,64);
+      els.score.textContent=score; els.ring.style.setProperty('--angle',Math.round(score*3.6)+'deg');
+      els.admit.className='s6m-admit '+(blocked?'block':score>86?'ok':'warn');
+      els.admit.textContent=blocked?'Blocked from training':score>86?'Admitted to registry':'Held for review';
+      els.explain.textContent=blocked?'A hard requirement is missing. This shard can be stored, and the trainer is blocked from consuming it.':score>86?'The shard has enough metadata to be scheduled, replayed, and audited.':'The shard is close, but review-only fields weaken reproducibility.';
+      els.checks.innerHTML=reqs.map(([k,n,d])=>`<div class="s6m-item ${state[k]?'good':(k==='parents'?'mid':'bad')}"><b>${n}</b><span>${state[k]?'present':'missing'} - ${d}</span></div>`).join('')+`<div class="s6m-item ${els.license.value==='safe'?'good':els.license.value==='review'?'mid':'bad'}"><b>license_tier</b><span>${els.license.options[els.license.selectedIndex].text}</span></div>`;
+      const shard='v5_'+els.lane.value.toLowerCase().replaceAll(' ','_')+'_shard_'+String(els.tokens.value).padStart(3,'0');
+      els.manifest.innerHTML=`{\n  "shard_id": "<span class="s6m-hash">${shard}</span>",\n  "capability_lane": "${els.lane.value}",\n  "token_count": ${Number(els.tokens.value)*1000000},\n  "tokenizer_hash": ${state.tokHash?'"'+hash('tok')+'"':'<span class="s6m-red">null</span>'},\n  "content_hash": "<span class="s6m-hash">${hash('sha256')}</span>",\n  "cleaning_pipeline_hash": ${state.cleanHash?'"'+hash('clean')+'"':'<span class="s6m-red">null</span>'},\n  "dedup_status": "${state.dedup?'passed':'missing'}",\n  "pii_screen_status": "${state.pii?'screened':'missing'}",\n  "eval_overlap_status": "${state.contam?'clear':'blocked_or_unknown'}",\n  "license_tier": "${els.license.value}",\n  "parent_manifest_ids": ${state.parents?'["manifest_2026_07_a"]':'[]'},\n  "admission": "<span class="${blocked?'s6m-red':score>86?'s6m-green':'s6m-amber'}">${els.admit.textContent}</span>"\n}`;
+    }
+    document.querySelectorAll('.s6m-toggle').forEach(b=>b.addEventListener('click',()=>{state[b.dataset.key]=!state[b.dataset.key];b.dataset.on=state[b.dataset.key];render()}));
+    document.getElementById('randomize').onclick=()=>{Object.keys(state).forEach(k=>state[k]=Math.random()>.24);document.querySelectorAll('.s6m-toggle').forEach(b=>b.dataset.on=state[b.dataset.key]);els.tokens.value=[48,96,128,192,256,384][Math.floor(Math.random()*6)];els.lane.selectedIndex=Math.floor(Math.random()*els.lane.options.length);els.license.selectedIndex=Math.floor(Math.random()*3);render()};
+    document.getElementById('reset').onclick=()=>{Object.assign(state,{tokHash:true,cleanHash:true,dedup:true,contam:true,pii:true,parents:false});document.querySelectorAll('.s6m-toggle').forEach(b=>b.dataset.on=state[b.dataset.key]);els.tokens.value=128;els.lane.value='Indic';els.license.value='safe';render()};
+    ['input','change'].forEach(e=>{els.tokens.addEventListener(e,render);els.lane.addEventListener(e,render);els.license.addEventListener(e,render)}); render();
+  </script>
+
+
+</body></html>

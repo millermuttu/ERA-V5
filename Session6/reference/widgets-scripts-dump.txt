@@ -1,0 +1,484 @@
+
+================================================================================
+widget_1_requirements_ledger.html
+================================================================================
+
+    const sessions=[
+      {n:"Session 1",accent:"#0891b2",t:"Transformer Foundations",b:"The model consumes fixed token windows and learns next-token prediction. Session 6 must preserve sequence length, ordering, loss masks, attention policy and EOS boundaries.",chips:["next-token loss","sequence length","attention masks","position ids"],rows:[["loss_mask_hash","Loss-bearing tokens are explicit","ok"],["eos_boundary","Document breaks survive packing","ok"],["position_policy","RoPE/context policy recorded","warn"]]},
+      {n:"Session 2",accent:"#7c3aed",t:"Tokenization & Vocabulary Design",b:"A training shard is only meaningful under the exact tokenizer that created it, including special tokens and Indic normalization choices.",chips:["tokenizer hash","special tokens","Indic-safe normalization","vocab version"],rows:[["tokenizer_sha","Frozen vocab and merges","ok"],["special_tokens","PAD/EOS/BOS policy stored","ok"],["normalizer_id","Unicode policy captured","warn"]]},
+      {n:"Session 3",accent:"#159447",t:"Data Collection & Sourcing",b:"Every token needs provenance. Source tier, license status, capability tags and held-out status travel into the shard manifest.",chips:["source id","license tier","capability tags","held-out flag"],rows:[["source_manifest","URL/version/license lineage","ok"],["capability_lane","Reasoning/code/Indic/etc.","ok"],["eval_firewall","Never-train status checked","warn"]]},
+      {n:"Session 4",accent:"#d97706",t:"Data Cleaning & Deduplication",b:"Only cleaned, deduped, PII-screened and contamination-scanned data can enter the stream. The transformation lineage must be reproducible.",chips:["cleaning hash","MinHash cluster","PII status","contamination scan"],rows:[["pipeline_hash","Cleaning version attached","ok"],["dedup_cluster","Near-duplicate group known","ok"],["contam_scan","Eval overlap status present","ok"]]},
+      {n:"Session 5",accent:"#dc2626",t:"Data Mixtures & Curriculum",b:"The mixture recipe becomes an executable schedule: protected floors, OPUS policy, curriculum stages, anneal reserve and lane quotas.",chips:["mixture schedule","OPUS decision id","protected floors","anneal reserve"],rows:[["stage_id","Token range maps to curriculum","ok"],["opus_decision","Accepted/rejected tracked","miss"],["lane_quota","Protected floors enforced","ok"]]}
+    ];
+    const toggles=[["Tokenizer frozen",14,true],["Eval firewall",14,true],["OPUS reject log",16,false],["Loss-mask hashes",12,true],["Ledger branch id",12,false],["Contamination scan",16,true],["Source license tier",16,true]];
+    let active=0;
+    const ses=document.getElementById("s6w1Sessions"), tog=document.getElementById("s6w1Toggles");
+    function renderSessions(){ses.innerHTML=sessions.map((s,i)=>`<button class="s6w1-session ${i===active?"active":""}" style="--accent:${s.accent}" data-i="${i}"><strong>${s.n}: ${s.t}</strong><small>${s.b.slice(0,104)}...</small></button>`).join("");document.querySelectorAll(".s6w1-session").forEach(b=>b.onclick=()=>{active=+b.dataset.i;render()})}
+    function render(){const s=sessions[active];document.documentElement.style.setProperty("--accent",s.accent);document.getElementById("s6w1Title").textContent=s.t;document.getElementById("s6w1Body").textContent=s.b;document.getElementById("s6w1Chips").innerHTML=s.chips.map(c=>`<span class="s6w1-chip">${c}</span>`).join("");document.getElementById("s6w1Rows").innerHTML=s.rows.map(r=>`<div class="s6w1-row"><code>${r[0]}</code><span>${r[1]}</span><span class="s6w1-status ${r[2]}">${r[2].toUpperCase()}</span></div>`).join("");renderSessions();score()}
+    function renderToggles(){tog.innerHTML=toggles.map((t,i)=>`<button class="s6w1-toggle ${t[2]?"on":""}" data-i="${i}">${t[0]}</button>`).join("");document.querySelectorAll(".s6w1-toggle").forEach(b=>b.onclick=()=>{toggles[+b.dataset.i][2]=!toggles[+b.dataset.i][2];renderToggles();score()})}
+    function score(){const total=toggles.reduce((a,t)=>a+t[1],0), got=toggles.reduce((a,t)=>a+(t[2]?t[1]:0),0), pct=Math.round(got/total*100);document.getElementById("s6w1Score").textContent=pct+"%";document.getElementById("s6w1ScoreText").textContent=pct>=95?"Ready for training admission":pct>=75?"Missing audit fields":"Blocked: core contracts absent"}
+    renderToggles();render();
+  
+
+================================================================================
+widget_2_batch_builder.html
+================================================================================
+
+    const cfg={gpus:8,micro:2,accum:16,seq:4096,ckpt:500,dataset:5};
+    const controls=[["gpus","GPUs",1,64,1],["micro","Microbatch / GPU",1,8,1],["accum","Gradient accumulation",1,64,1],["seq","Sequence length",512,32768,512],["ckpt","Checkpoint interval",50,2000,50],["dataset","Toy dataset tokens (B)",1,50,1]];
+    const fmt=n=>n>=1e9?(n/1e9).toFixed(n>=10?1:2)+"B":n>=1e6?(n/1e6).toFixed(1)+"M":n.toLocaleString();
+    function drawControls(){document.getElementById("s6w2Controls").innerHTML=controls.map(c=>`<div class="s6w2-control"><label>${c[1]} <span id="${c[0]}Val">${cfg[c[0]]}</span></label><input type="range" min="${c[2]}" max="${c[3]}" step="${c[4]}" value="${cfg[c[0]]}" data-k="${c[0]}"></div>`).join("");document.querySelectorAll("input").forEach(i=>i.oninput=()=>{cfg[i.dataset.k]=+i.value;render()})}
+    function render(){for(const k in cfg){const el=document.getElementById(k+"Val");if(el)el.textContent=cfg[k]}const global=cfg.gpus*cfg.micro*cfg.accum, microTok=cfg.micro*cfg.seq, stepTok=global*cfg.seq, ckptTok=stepTok*cfg.ckpt, epoch=Math.ceil(cfg.dataset*1e9/stepTok);gpusOut.textContent=cfg.gpus;microOut.textContent=cfg.micro;accumOut.textContent=cfg.accum;globalOut.textContent=global;document.getElementById("microTok").textContent=fmt(microTok);document.getElementById("stepTok").textContent=fmt(stepTok);document.getElementById("ckptTok").textContent=fmt(ckptTok);document.getElementById("epochSteps").textContent=fmt(epoch);const lanes=["accum 1","accum "+Math.ceil(cfg.accum/2),"accum "+cfg.accum];document.getElementById("s6w2Lanes").innerHTML=lanes.map((l,i)=>`<div class="s6w2-lane"><strong>${l}</strong><div class="s6w2-bar"><div class="s6w2-fill" style="width:${(i+1)/3*100}%"></div></div><span>${fmt(cfg.gpus*cfg.micro*cfg.seq*(i===0?1:i===1?Math.ceil(cfg.accum/2):cfg.accum))}</span></div>`).join("")}
+    drawControls();render();
+  
+
+================================================================================
+widget_3_document_to_batch.html
+================================================================================
+
+    const docs=[{t:"General Web",lane:"web",c:"#0891b2",txt:["Climate","policy","changed","after","the","monsoon","report","because","farmers","needed","warnings"]},{t:"Code",lane:"code",c:"#7c3aed",txt:["def","train","(","loader",")",":","for","batch","in","loader",":","loss",".","backward","(",")"]},{t:"Indic",lane:"indic",c:"#159447",txt:["भारत","में","भाषा","और","तकनीक","का","मिलन","तेजी","से","बढ़","रहा","है"]},{t:"Agentic",lane:"agent",c:"#d97706",txt:["user","asks","plan","tool_call","search","observation","results","assistant","compares","final","answer"]}];
+    let active=0; const seqLen=24;
+    function drawDocs(){document.getElementById("s6w3Docs").innerHTML=docs.map((d,i)=>`<button class="s6w3-doc ${i===active?"active":""}" data-i="${i}"><strong>${d.t}</strong><p>${d.txt.join(" ").slice(0,72)}...</p></button>`).join("");document.querySelectorAll(".s6w3-doc").forEach(b=>b.onclick=()=>{active=+b.dataset.i;render()})}
+    function render(){drawDocs();const d=docs[active], useEos=eos.checked, useLoss=loss.checked, usePack=pack.checked;let toks=d.txt.map((x,i)=>({x,id:1100+active*200+i,type:"tok"}));if(useEos)toks.push({x:"<eos>",id:2,type:"eos"});if(usePack){while(toks.length<seqLen)toks.push({x:"<pad>",id:0,type:"pad"});toks=toks.slice(0,seqLen)}document.getElementById("s6w3Title").textContent=`${d.t} lane -> ${usePack?seqLen+" token packed window":toks.length+" tokens"}`;document.getElementById("s6w3Seq").innerHTML=toks.map((t,i)=>{let cls=t.type==="eos"?"eos":t.type==="pad"?"pad":"";if(useLoss&&d.lane==="agent"&&["user","observation"].includes(t.x))cls+=" mask";return `<div class="s6w3-token ${cls}" title="id ${t.id}, position ${i}">${t.x}</div>`}).join("");const useful=toks.filter(t=>t.type!=="pad").length, lossBearing=toks.filter(t=>t.type!=="pad" && !(useLoss&&d.lane==="agent"&&["user","observation"].includes(t.x))).length;document.getElementById("s6w3Meta").innerHTML=`<div><b>${useful}</b><span>non-pad tokens</span></div><div><b>${lossBearing}</b><span>loss-bearing tokens</span></div><div><b>${useEos?"yes":"no"}</b><span>boundary marker</span></div><div><b>${d.lane}</b><span>capability lane</span></div>`}
+    [eos,loss,pack].forEach(x=>x.onchange=render);render();
+  
+
+================================================================================
+widget_4_padding_lab.html
+================================================================================
+
+    const modes={right:"Right padding",left:"Left padding",crop:"Crop overflow",concat:"Fill with next doc"};let mode="right";
+    function blocks(len,ctx,mode){let arr=[];if(mode==="left"){for(let i=0;i<Math.max(0,ctx-len);i++)arr.push("pad");for(let i=0;i<Math.min(len,ctx);i++)arr.push("tok")}else if(mode==="crop"){for(let i=0;i<Math.min(len,ctx);i++)arr.push("tok");for(let i=ctx;i<len;i++){} }else if(mode==="concat"){for(let i=0;i<Math.min(len,ctx);i++)arr.push("tok");if(len<ctx){arr.push("eos");for(let i=arr.length;i<ctx;i++)arr.push("tok2")}}else{for(let i=0;i<Math.min(len,ctx);i++)arr.push("tok");for(let i=len;i<ctx;i++)arr.push("pad")}while(arr.length<ctx)arr.push("pad");return arr.slice(0,ctx)}
+    function renderTabs(){s6w4Tabs.innerHTML=Object.entries(modes).map(([k,v])=>`<button class="s6w4-tab ${k===mode?"active":""}" data-k="${k}">${v}</button>`).join("");document.querySelectorAll(".s6w4-tab").forEach(b=>b.onclick=()=>{mode=b.dataset.k;render()})}
+    function render(){ctxVal.textContent=ctx.value;docVal.textContent=doc.value;renderTabs();const c=+ctx.value,d=+doc.value,arr=blocks(d,c,mode),useful=arr.filter(x=>x!=="pad").length,pad=arr.filter(x=>x==="pad").length,crop=Math.max(0,d-c),attnWaste=Math.round((pad/c)*100);s6w4Metrics.innerHTML=`<div class="s6w4-metric"><b>${Math.round(useful/c*100)}%</b><span>useful positions</span></div><div class="s6w4-metric"><b>${pad}</b><span>pad tokens</span></div><div class="s6w4-metric"><b>${crop}</b><span>cropped tokens</span></div><div class="s6w4-metric"><b>${attnWaste}%</b><span>rough wasted positions</span></div>`;s6w4Rows.innerHTML=`<div class="s6w4-row"><div class="s6w4-rowhead"><span>${modes[mode]}</span><span>${c} positions</span></div><div class="s6w4-tokens">${arr.map(x=>`<div class="s6w4-token ${x==="pad"?"pad":x==="eos"?"eos":x==="tok2"?"crop":""}" title="${x}"></div>`).join("")}</div></div>`;const notes={right:"<strong>Right padding</strong> is common for simple batches. It is easy to mask, but short documents waste long-context compute.",left:"<strong>Left padding</strong> appears often in inference because final positions align. It is usually less natural for pretraining pipelines.",crop:"<strong>Cropping</strong> can be fine for plain pretraining spans when boundaries are handled. It is risky for code, SFT, reasoning traces and agentic trajectories.",concat:"<strong>Filling with another document</strong> is normal for pretraining when EOS marks the boundary. For structured samples, attention and loss masks must protect the sample structure."};s6w4Note.innerHTML=notes[mode]}
+    [ctx,doc].forEach(x=>x.oninput=render);render();
+  
+
+================================================================================
+widget_5_packing_simulator.html
+================================================================================
+
+    const policies={pad:"Pad each doc",chop:"Concat and chop",greedy:"Greedy pack",best:"Best-fit pack",structured:"Structure-preserving"};let policy="best";const colors=["#38bdf8","#a78bfa","#4ade80","#fbbf24","#f87171","#22d3ee","#c084fc","#86efac"];
+    function docs(){const n=+s6w5DocN.value;return Array.from({length:n},(_,i)=>({id:i+1,len:8+((i*17+13)%47)}))}
+    function pack(ds,ctx){let bins=[];if(policy==="pad"){bins=ds.map(d=>[d])}else if(policy==="chop"){let cur=[],sum=0;ds.forEach(d=>{if(sum+d.len>ctx){bins.push(cur);cur=[];sum=0}cur.push(d);sum+=d.len});if(cur.length)bins.push(cur)}else{let items=[...ds];if(policy==="best")items.sort((a,b)=>b.len-a.len);items.forEach(d=>{let target=null,bestLeft=999;bins.forEach(b=>{const used=b.reduce((a,x)=>a+x.len,0),left=ctx-used-d.len;if(left>=0&&left<bestLeft){bestLeft=left;target=b}});if(!target||policy==="structured"&&target.length>=2){target=[];bins.push(target)}target.push(d)})}return bins}
+    function renderTabs(){s6w5Tabs.innerHTML=Object.entries(policies).map(([k,v])=>`<button class="s6w5-tab ${k===policy?"active":""}" data-k="${k}">${v}</button>`).join("");document.querySelectorAll(".s6w5-tab").forEach(b=>b.onclick=()=>{policy=b.dataset.k;render()})}
+    function render(){s6w5CtxVal.textContent=s6w5Ctx.value;s6w5DocVal.textContent=s6w5DocN.value;renderTabs();const ctx=+s6w5Ctx.value,ds=docs(),bins=pack(ds,ctx),used=bins.reduce((a,b)=>a+b.reduce((x,d)=>x+d.len,0),0),cap=bins.length*ctx,pad=cap-used,util=Math.round(used/cap*100),risk=policy==="chop"?"high":policy==="structured"?"low":policy==="pad"?"none":"medium";s6w5Docs.innerHTML=ds.map((d,i)=>`<span class="s6w5-doc" style="border-color:${colors[i%colors.length]}">doc ${d.id}: ${d.len}</span>`).join("");s6w5Metrics.innerHTML=`<div class="s6w5-metric"><b>${util}%</b><span>window utilization</span></div><div class="s6w5-metric"><b>${bins.length}</b><span>training sequences</span></div><div class="s6w5-metric"><b>${pad}</b><span>unused positions</span></div><div class="s6w5-metric"><b>${risk}</b><span>boundary risk</span></div>`;s6w5Bins.innerHTML=bins.map((b,i)=>{const used=b.reduce((a,d)=>a+d.len,0),pad=Math.max(0,ctx-used);return `<div class="s6w5-bin"><div class="s6w5-binhead"><span>sequence ${i+1}</span><span>${used}/${ctx} tokens</span></div><div class="s6w5-bar">${b.map(d=>`<div class="s6w5-seg" style="width:${d.len/ctx*100}%;background:${colors[(d.id-1)%colors.length]}" title="doc ${d.id}: ${d.len}"></div>`).join("")}<div class="s6w5-seg s6w5-pad" style="width:${pad/ctx*100}%"></div></div></div>`}).join("");const notes={pad:"<strong>Pad each doc</strong> is simple and boundary-safe, but it creates many partly empty windows.",chop:"<strong>Concat and chop</strong> is efficient for plain pretraining. EOS markers are essential so unrelated documents do not look connected.",greedy:"<strong>Greedy packing</strong> improves utilization without much machinery. Some holes remain because document order is preserved.",best:"<strong>Best-fit packing</strong> usually gives higher utilization by filling the tightest available window first.",structured:"<strong>Structure-preserving packing</strong> sacrifices some utilization to protect SFT, reasoning or agentic sample boundaries."};s6w5Note.innerHTML=notes[policy]}
+    [s6w5Ctx,s6w5DocN].forEach(x=>x.oninput=render);render();
+  
+
+================================================================================
+widget_6_shard_manifest_builder.html
+================================================================================
+
+    const state={tokHash:true,cleanHash:true,dedup:true,contam:true,pii:true,parents:false};
+    const els={lane:document.getElementById('lane'),tokens:document.getElementById('tokens'),license:document.getElementById('license'),score:document.getElementById('score'),ring:document.getElementById('ring'),admit:document.getElementById('admit'),explain:document.getElementById('explain'),checks:document.getElementById('checks'),manifest:document.getElementById('manifest'),laneOut:document.getElementById('laneOut'),tokOut:document.getElementById('tokOut')};
+    const reqs=[['tokHash','tokenizer_hash','Exact vocab, merges, special tokens.'],['cleanHash','cleaning_pipeline_hash','Reproducible filters and transforms.'],['dedup','dedup_status','MinHash/cluster result attached.'],['contam','eval_overlap_status','Training must not ingest test shards.'],['pii','pii_screen_status','Sensitive text was screened.'],['parents','parent_manifest_ids','Lineage for derived shards.']];
+    function hash(prefix){return prefix+'_'+Math.random().toString(16).slice(2,10)+Math.random().toString(16).slice(2,6)}
+    function render(){
+      els.laneOut.textContent=els.lane.value; els.tokOut.textContent=els.tokens.value+'M';
+      const licenseScore=els.license.value==='safe'?1:els.license.value==='review'?.5:0;
+      let passed=reqs.filter(r=>state[r[0]]).length;
+      let score=Math.round(((passed/reqs.length)*.78+licenseScore*.22)*100);
+      const blocked=!state.tokHash||!state.cleanHash||!state.contam||els.license.value==='unsafe';
+      if(blocked) score=Math.min(score,64);
+      els.score.textContent=score; els.ring.style.setProperty('--angle',Math.round(score*3.6)+'deg');
+      els.admit.className='s6m-admit '+(blocked?'block':score>86?'ok':'warn');
+      els.admit.textContent=blocked?'Blocked from training':score>86?'Admitted to registry':'Held for review';
+      els.explain.textContent=blocked?'A hard requirement is missing. This shard can be stored, and the trainer is blocked from consuming it.':score>86?'The shard has enough metadata to be scheduled, replayed, and audited.':'The shard is close, but review-only fields weaken reproducibility.';
+      els.checks.innerHTML=reqs.map(([k,n,d])=>`<div class="s6m-item ${state[k]?'good':(k==='parents'?'mid':'bad')}"><b>${n}</b><span>${state[k]?'present':'missing'} - ${d}</span></div>`).join('')+`<div class="s6m-item ${els.license.value==='safe'?'good':els.license.value==='review'?'mid':'bad'}"><b>license_tier</b><span>${els.license.options[els.license.selectedIndex].text}</span></div>`;
+      const shard='v5_'+els.lane.value.toLowerCase().replaceAll(' ','_')+'_shard_'+String(els.tokens.value).padStart(3,'0');
+      els.manifest.innerHTML=`{\n  "shard_id": "<span class="s6m-hash">${shard}</span>",\n  "capability_lane": "${els.lane.value}",\n  "token_count": ${Number(els.tokens.value)*1000000},\n  "tokenizer_hash": ${state.tokHash?'"'+hash('tok')+'"':'<span class="s6m-red">null</span>'},\n  "content_hash": "<span class="s6m-hash">${hash('sha256')}</span>",\n  "cleaning_pipeline_hash": ${state.cleanHash?'"'+hash('clean')+'"':'<span class="s6m-red">null</span>'},\n  "dedup_status": "${state.dedup?'passed':'missing'}",\n  "pii_screen_status": "${state.pii?'screened':'missing'}",\n  "eval_overlap_status": "${state.contam?'clear':'blocked_or_unknown'}",\n  "license_tier": "${els.license.value}",\n  "parent_manifest_ids": ${state.parents?'["manifest_2026_07_a"]':'[]'},\n  "admission": "<span class="${blocked?'s6m-red':score>86?'s6m-green':'s6m-amber'}">${els.admit.textContent}</span>"\n}`;
+    }
+    document.querySelectorAll('.s6m-toggle').forEach(b=>b.addEventListener('click',()=>{state[b.dataset.key]=!state[b.dataset.key];b.dataset.on=state[b.dataset.key];render()}));
+    document.getElementById('randomize').onclick=()=>{Object.keys(state).forEach(k=>state[k]=Math.random()>.24);document.querySelectorAll('.s6m-toggle').forEach(b=>b.dataset.on=state[b.dataset.key]);els.tokens.value=[48,96,128,192,256,384][Math.floor(Math.random()*6)];els.lane.selectedIndex=Math.floor(Math.random()*els.lane.options.length);els.license.selectedIndex=Math.floor(Math.random()*3);render()};
+    document.getElementById('reset').onclick=()=>{Object.assign(state,{tokHash:true,cleanHash:true,dedup:true,contam:true,pii:true,parents:false});document.querySelectorAll('.s6m-toggle').forEach(b=>b.dataset.on=state[b.dataset.key]);els.tokens.value=128;els.lane.value='Indic';els.license.value='safe';render()};
+    ['input','change'].forEach(e=>{els.tokens.addEventListener(e,render);els.lane.addEventListener(e,render);els.license.addEventListener(e,render)}); render();
+  
+
+================================================================================
+widget_7_mixture_timeline_compiler.html
+================================================================================
+
+    const colors={General:'#0891b2',Code:'#7c3aed',Indic:'#16a34a',Reasoning:'#d97706',Agentic:'#dc2626'};
+    const supply={General:95,Code:38,Indic:18,Reasoning:22,Agentic:10};
+    const profiles={balanced:{General:45,Code:20,Indic:12,Reasoning:15,Agentic:8},code:{General:34,Code:34,Indic:10,Reasoning:14,Agentic:8},indic:{General:38,Code:18,Indic:22,Reasoning:14,Agentic:8},anneal:{General:36,Code:21,Indic:14,Reasoning:19,Agentic:10}};
+    const stages=[['Foundation',0,.55,'Broad language and code base'],['Skill build',.55,.85,'Reasoning, agentic, Indic pressure'],['Anneal',.85,1,'scarce high-quality reserve']];
+    const els={budget:document.getElementById('budget'),profile:document.getElementById('profile'),warm:document.getElementById('warm'),reject:document.getElementById('reject'),budgetOut:document.getElementById('budgetOut'),warmOut:document.getElementById('warmOut'),rejOut:document.getElementById('rejOut'),timeline:document.getElementById('timeline'),quota:document.getElementById('quota'),bars:document.getElementById('bars'),supply:document.getElementById('supply'),note:document.getElementById('note')};
+    function adjusted(base){
+      const p={...base}; if(els.profile.value==='anneal'){p.General-=8;p.Reasoning+=5;p.Agentic+=3}
+      return p;
+    }
+    function render(){
+      const B=+els.budget.value, warm=+els.warm.value, rej=+els.reject.value; els.budgetOut.textContent=B+'B tokens'; els.warmOut.textContent=warm+'%'; els.rejOut.textContent=rej+'%';
+      const mix=adjusted(profiles[els.profile.value]);
+      els.timeline.innerHTML=stages.map((s,i)=>`<div class="s6t-seg" style="width:${(s[2]-s[1])*100}%;background:${i===0?'#0891b2':i===1?'#7c3aed':'#16a34a'}"><div>${s[0]}<small>${Math.round(s[1]*B)}B-${Math.round(s[2]*B)}B</small></div></div>`).join('');
+      els.quota.innerHTML=Object.keys(mix).map(k=>`<div class="s6t-q"><b style="color:${colors[k]}">${mix[k]}%</b><span>${k} lane</span></div>`).join('');
+      els.bars.innerHTML=Object.keys(mix).map(k=>`<div class="s6t-row"><span>${k}</span><div class="s6t-track"><div class="s6t-fill" style="width:${mix[k]}%;background:${colors[k]}"></div></div><span>${(B*mix[k]/100).toFixed(1)}B</span></div>`).join('');
+      els.supply.innerHTML=Object.keys(mix).map(k=>{const need=B*mix[k]/100/(1-rej/100);const ok=supply[k]>=need;return `<tr><td>${k}</td><td>${need.toFixed(1)}B</td><td>${supply[k]}B</td><td class="${ok?'s6t-ok':'s6t-bad'}">${ok?'satisfied':'shortfall'}</td></tr>`}).join('');
+      const short=Object.keys(mix).filter(k=>supply[k]<B*mix[k]/100/(1-rej/100));
+      els.note.textContent=short.length?`Compiler warning: ${short.join(', ')} supply is not enough after OPUS rejection. Lower share, collect more, use repetition deliberately, or protect only the highest-value subset.`:`Schedule is feasible at this budget. Warmup band reserves ${warm}% around stage transitions to soften mixture shifts.`;
+    }
+    ['input','change'].forEach(e=>Object.values(els).slice(0,4).forEach(x=>x.addEventListener(e,render))); render();
+  
+
+================================================================================
+widget_8_training_consumption_ledger.html
+================================================================================
+
+    const lanes=['general','code','indic','reasoning','agentic'], colors={general:'#0891b2',code:'#7c3aed',indic:'#16a34a',reasoning:'#d97706',agentic:'#dc2626'}; let step=0,offset=0,ckpt='none',branch='run-a',events=[],timer=null,selected=-1;
+    const e=id=>document.getElementById(id), stream=e('stream'), detail=e('detail');
+    function id(p){return p+'_'+Math.random().toString(16).slice(2,10)}
+    function payload(type,extra={}){return {event:type,ledger_offset:++offset,run_branch_id:branch,global_step:step,checkpoint_id:ckpt,created_at:new Date().toISOString(),...extra}}
+    function commit(){
+      step++; const micro=+e('micro').value; const lane=lanes[(step+micro)%lanes.length]; const ev=payload('batch_committed',{rank:step%8,microbatch_count:micro,packed_sample_ids:Array.from({length:micro},(_,i)=>id('sample_'+i)),shard_ids:[id('shard_'+lane),id('shard_mix')],token_span_ids:Array.from({length:micro},(_,i)=>`${lane}_${step}_${i}:0-4095`),loss_mask_hash:id('lossmask'),position_policy:'packed_reset_on_eos',mixture_lane:lane,curriculum_stage:step<6?'foundation':step<12?'skill_build':'anneal',opus_decision_id:id('opus')}); events.unshift(ev); selected=0; render();
+    }
+    function checkpoint(){ckpt='ckpt_'+String(step).padStart(5,'0');events.unshift(payload('checkpoint_bound',{checkpoint_id:ckpt,model_state:'saved',optimizer_state:'saved',dataloader_state:'ledger_offset_'+offset,rng_state:'captured_where_available'}));selected=0;render()}
+    function crash(){events.unshift(payload('worker_crash_recovered',{failed_rank:step%8,recovery_mode:'resume_from_last_committed_offset',next_expected_offset:offset+1}));selected=0;render()}
+    function render(){
+      e('stepOut').textContent=step; e('offOut').textContent=offset; e('ckptOut').textContent=ckpt; e('branchOut').textContent=branch; e('microOut').textContent=e('micro').value;
+      stream.innerHTML=events.map((ev,i)=>`<div class="s6l-event ${i===selected?'active':''}" data-i="${i}"><div class="s6l-step">#${ev.ledger_offset}<br>step ${ev.global_step}</div><div class="s6l-main"><b>${ev.event}</b>${ev.mixture_lane||ev.recovery_mode||ev.dataloader_state||'checkpoint binding'}</div><div class="s6l-tag" style="background:${colors[ev.mixture_lane]||'#475467'}">${ev.mixture_lane||ev.event.split('_')[0]}</div></div>`).join('');
+      [...stream.querySelectorAll('.s6l-event')].forEach(x=>x.onclick=()=>{selected=+x.dataset.i;render()});
+      detail.innerHTML=events[selected]?JSON.stringify(events[selected],null,2).replace(/"([^"]+)":/g,'<span class="s6l-cyan">"$1"</span>:').replace(/"batch_committed"|"checkpoint_bound"/g,'<span class="s6l-green">$&</span>').replace(/"worker_crash_recovered"/g,'<span class="s6l-amber">$&</span>'):'Commit a batch to create the first immutable event.';
+    }
+    e('next').onclick=commit; e('ckpt').onclick=checkpoint; e('crash').onclick=crash; e('micro').oninput=render; e('auto').onclick=()=>{if(timer){clearInterval(timer);timer=null;e('auto').textContent='Auto run'}else{timer=setInterval(commit,900);e('auto').textContent='Pause'}};
+    render();
+  
+
+================================================================================
+widget_9_checkpoint_comparison_lab.html
+================================================================================
+
+    const lanes=['web','code','indic','reason','agent','opus','test','anneal'], color=['#0891b2','#7c3aed','#16a34a','#d97706','#dc2626','#0f766e','#475467','#9333ea'];
+    const e=id=>document.getElementById(id);
+    function draw(chart,seed,drift){chart.innerHTML='';let prev=null;for(let i=0;i<12;i++){const y=128-(Math.log(i+2)*24)+(Math.sin(i+seed)*5)+(drift?Math.random()*drift/4:0);const x=18+i*38;if(prev){const dx=x-prev.x,dy=y-prev.y;const len=Math.hypot(dx,dy);const line=document.createElement('div');line.className='s6c-line';line.style.cssText=`left:${prev.x}px;top:${prev.y}px;width:${len}px;background:${drift?'#dc2626':'#16a34a'};transform:rotate(${Math.atan2(dy,dx)}rad)`;chart.appendChild(line)}const p=document.createElement('div');p.className='s6c-point';p.style.cssText=`left:${x}px;bottom:${y}px;background:${drift?'#dc2626':'#16a34a'}`;chart.appendChild(p);prev={x,y}}}
+    function seq(el,drift){el.innerHTML=lanes.map((l,i)=>{const j=drift?Math.min(lanes.length-1,Math.max(0,i+(Math.random()>.58?1:0)-(Math.random()>.72?1:0))):i;return `<div class="s6c-token" style="background:${color[j]}">${lanes[j]}</div>`}).join('')}
+    function render(){const drift=+e('drift').value, opus=+e('opus').value, ckpt=+e('ckpt').value;e('driftOut').textContent=drift+'%';e('opusOut').textContent=opus+'%';e('ckptOut').textContent='step '+ckpt;draw(e('chartA'),1,drift+opus);draw(e('chartB'),2,0);seq(e('seqA'),drift>8||opus>8);seq(e('seqB'),false);const comp=Math.max(0,100-drift-opus);e('metrics').innerHTML=`<div class="s6c-metric"><b>${comp}%</b><span>comparison confidence without ledger</span></div><div class="s6c-metric"><b>100%</b><span>stream identity with replay</span></div><div class="s6c-metric"><b>${ckpt}</b><span>checkpoint step</span></div>`;e('verdict').className='s6c-verdict '+(comp>80?'good':'bad');e('verdict').textContent=comp>80?'Low drift makes the no-ledger run less risky, but replay still gives the cleanest comparison.':'The two branches changed model state and data stream together. A loss delta cannot be attributed to the strategy alone.'}
+    ['input','change'].forEach(ev=>['ckpt','drift','opus'].forEach(id=>e(id).addEventListener(ev,render)));e('rerun').onclick=render;render();
+  
+
+================================================================================
+widget_10_opus_audit_board.html
+================================================================================
+
+    const lanes=['general','code','indic','reasoning','agentic'], reasons=['below_proxy_threshold','lane_quota_full','duplicate_update_direction','stage_mismatch','eval_firewall_overlap','deferred_for_anneal'], states={accepted:[],rejected:[],deferred:[],protected:[]}, colors={accepted:'#16a34a',rejected:'#dc2626',deferred:'#d97706',protected:'#7c3aed'}; let count=0,selected=null;
+    const e=id=>document.getElementById(id);
+    function make(){const lane=lanes[Math.floor(Math.random()*lanes.length)], boost=(lane==='indic'||lane==='agentic') ? .12 : 0, score=Math.max(0,Math.min(1,Math.random()*.72+boost));const threshold=+e('thr').value/100;let decision=score>=threshold?'accepted':'rejected';let reason=decision==='accepted'?'useful_proxy_update':reasons[Math.floor(Math.random()*reasons.length)];if(lane===e('floor').value&&decision==='rejected'&&reason!=='eval_firewall_overlap'){decision='protected';reason='protected_floor_override'}else if(reason==='deferred_for_anneal'){decision='deferred'}const ev={opus_decision_id:'opus_'+(++count).toString().padStart(4,'0'),candidate_batch_id:'cand_'+Math.random().toString(16).slice(2,10),model_age:e('age').value,proxy_version:'opus_proxy_v5.3',lane,stage:e('age').selectedIndex<2?'skill_build':'anneal',score:+score.toFixed(3),decision,rejection_reason:decision==='accepted'?null:reason,shard_ids:['shard_'+lane+'_'+Math.floor(Math.random()*900),'shard_mix_'+Math.floor(Math.random()*900)],effective_token_estimate:Math.round((score+.2)*1e6)};states[decision].unshift(ev);selected=ev;render()}
+    function card(ev){return `<div class="s6o-item" data-id="${ev.opus_decision_id}"><b>${ev.opus_decision_id} - ${ev.lane}</b>${ev.rejection_reason||'accepted for training'}<div class="s6o-score"><span style="width:${ev.score*100}%;background:${colors[ev.decision]}"></span></div></div>`}
+    function render(){e('thrOut').textContent=(+e('thr').value/100).toFixed(2);e('seen').textContent=count;e('kept').textContent=states.accepted.length+states.protected.length;e('cols').innerHTML=['accepted','rejected','deferred','protected'].map(k=>`<div class="s6o-col"><h4 style="background:${colors[k]}">${k}<span>${states[k].length}</span></h4><div class="s6o-list">${states[k].map(card).join('')}</div></div>`).join('');document.querySelectorAll('.s6o-item').forEach(n=>n.onclick=()=>{selected=[...states.accepted,...states.rejected,...states.deferred,...states.protected].find(x=>x.opus_decision_id===n.dataset.id);render()});if(selected){e('detail').innerHTML=JSON.stringify(selected,null,2).replace(/"([^"]+)":/g,'<span class="s6o-cyan">"$1"</span>:').replace(/"accepted"|"protected"/g,'<span class="s6o-green">$&</span>').replace(/"rejected"/g,'<span class="s6o-red">$&</span>')}}
+    e('stream').onclick=make;e('thr').oninput=render;e('floor').onchange=render;e('age').onchange=render;render();
+  
+
+================================================================================
+widget_11_token_perplexity_heatmap.html
+================================================================================
+
+    const tpTokens = [
+      ["<bos>","special","meta","pretrain","boundary",false,0.8],["The","en","web-a","pretrain","word",true,0.9],[" mixture","en","web-a","pretrain","word",true,1.2],[" schedule","en","web-a","pretrain","word",true,1.7],[" reserves","en","web-a","pretrain","word",true,2.2],
+      [" <eos>","special","web-a","pretrain","boundary",true,1.1],[" def","code","code-7","code","syntax",true,1.5],[" train","code","code-7","code","identifier",true,2.4],["(","code","code-7","code","syntax",true,0.8],[")","code","code-7","code","syntax",true,0.8],
+      [":","code","code-7","code","syntax",true,0.7],["\\n    ","code","code-7","code","indent",true,3.2],["return","code","code-7","code","keyword",true,1.4],[" loss","code","code-7","code","identifier",true,3.4],[" /","code","code-7","code","operator",true,1.7],
+      [" tokens","code","code-7","code","identifier",true,2.1],[" <eos>","special","code-7","code","boundary",true,1.3],["भारत","hi","indic-2","indic","word",true,3.6],[" में","hi","indic-2","indic","postposition",true,2.7],[" शिक्षा","hi","indic-2","indic","word",true,3.9],
+      [" की","hi","indic-2","indic","postposition",true,2.6],[" गुणवत्ता","hi","indic-2","indic","word",true,4.5],[" <eos>","special","indic-2","indic","boundary",true,1.6],["Observation","agent","agent-4","agentic","tool",false,2.2],[":","agent","agent-4","agentic","tool",false,1.1],
+      [" 404","agent","agent-4","agentic","tool",false,4.8],["\\nThought","agent","agent-4","agentic","reason",true,3.8],[":","agent","agent-4","agentic","reason",true,1.5],[" retry","agent","agent-4","agentic","action",true,3.1],[" with","agent","agent-4","agentic","action",true,1.4],
+      [" cache","agent","agent-4","agentic","action",true,2.6],[" <eos>","special","agent-4","agentic","boundary",true,1.5],["Lemma","math","reason-9","reasoning","word",true,3.9],[":","math","reason-9","reasoning","syntax",true,1.2],[" if","math","reason-9","reasoning","word",true,1.6],
+      [" n","math","reason-9","reasoning","symbol",true,2.4],[" is","math","reason-9","reasoning","word",true,1.1],[" prime","math","reason-9","reasoning","word",true,2.8],[",","math","reason-9","reasoning","syntax",true,0.9],[" then","math","reason-9","reasoning","word",true,1.5],
+      [" ...","math","reason-9","reasoning","ellipsis",true,5.0],[" <pad>","special","pack-hole","padding","pad",false,0.2],[" <pad>","special","pack-hole","padding","pad",false,0.2],[" <pad>","special","pack-hole","padding","pad",false,0.2]
+    ].map((t, i) => ({ id: i, text: t[0], lang: t[1], shard: t[2], lane: t[3], type: t[4], lossBearing: t[5], base: t[6], opus: i % 7 === 0 ? "rejected" : "accepted" }));
+    const tpPhaseScale = { early: 1.35, mid: .95, late: .72, anneal: .62 };
+    const tpPhaseName = { early: "Early", mid: "Mid", late: "Late", anneal: "Anneal" };
+    let tpState = { phase: "early", view: "token", selected: 17 };
+    const el = id => document.getElementById(id);
+    function tpLoss(tok) {
+      let v = tok.base * tpPhaseScale[tpState.phase];
+      if (tok.lane === "indic" && tpState.phase !== "anneal") v += .55;
+      if (tok.lane === "agentic" && tok.type === "tool") v += .35;
+      if (tok.type === "ellipsis") v += .8;
+      if (tok.type === "boundary" && el("tpBoundaryBoost").checked) v += .2;
+      if (!tok.lossBearing) v = Math.max(.05, v * .28);
+      return v;
+    }
+    function tpColor(loss, tok) {
+      if (!tok.lossBearing && !el("tpShowMasked").checked) return "#eef3f8";
+      const ppl = Math.exp(Math.min(loss, 5.1));
+      if (ppl < 6) return "#dcfce7";
+      if (ppl < 14) return "#bef3ee";
+      if (ppl < 28) return "#fef3c7";
+      if (ppl < 60) return "#fee2e2";
+      return "#ede9fe";
+    }
+    function tpRender() {
+      el("tpPhaseLabel").textContent = tpPhaseName[tpState.phase];
+      el("tpViewLabel").textContent = tpState.view === "token" ? "Per token" : "Grouped by " + tpState.view;
+      el("tpThreshLabel").textContent = "ppl " + el("tpThreshold").value;
+      const grid = el("tpTokenGrid");
+      grid.innerHTML = "";
+      let losses = [], hot = 0, masked = 0;
+      const threshold = Number(el("tpThreshold").value);
+      tpTokens.forEach(tok => {
+        const loss = tpLoss(tok), ppl = Math.exp(loss);
+        if (tok.lossBearing) losses.push(loss); else masked++;
+        if (tok.lossBearing && ppl >= threshold) hot++;
+        const b = document.createElement("button");
+        b.className = "tp-token" + (!tok.lossBearing && !el("tpShowMasked").checked ? " is-masked" : "") + (tok.id === tpState.selected ? " is-selected" : "");
+        b.style.background = tpColor(loss, tok);
+        b.title = tok.text + " loss " + loss.toFixed(2) + " ppl " + ppl.toFixed(1);
+        b.innerHTML = "<span>" + tok.text.replace(/</g,"&lt;").replace(/>/g,"&gt;") + "</span><small>" + (el("tpOpusOverlay").checked ? tok.opus : ppl.toFixed(1)) + "</small>";
+        b.onclick = () => { tpState.selected = tok.id; tpRender(); };
+        grid.appendChild(b);
+      });
+      const avgLoss = losses.reduce((a,b)=>a+b,0) / losses.length;
+      el("tpAvgLoss").textContent = avgLoss.toFixed(2);
+      el("tpAvgPpl").textContent = Math.exp(avgLoss).toFixed(1);
+      el("tpHot").textContent = hot;
+      el("tpMasked").textContent = masked;
+      tpRenderDetail();
+      tpRenderBars();
+    }
+    function tpRenderDetail() {
+      const tok = tpTokens[tpState.selected], loss = tpLoss(tok), ppl = Math.exp(loss);
+      el("tpDetail").innerHTML = "<h3>" + tok.text.replace(/</g,"&lt;").replace(/>/g,"&gt;") + "</h3><div class='tp-kv'>" +
+        "<div>loss<b>" + loss.toFixed(3) + "</b></div><div>perplexity<b>" + ppl.toFixed(1) + "</b></div>" +
+        "<div>shard<b>" + tok.shard + "</b></div><div>lane<b>" + tok.lane + "</b></div>" +
+        "<div>position<b>" + tok.id + "</b></div><div>loss mask<b>" + (tok.lossBearing ? "on" : "off") + "</b></div>" +
+        "<div>OPUS decision<b>" + tok.opus + "</b></div><div>token type<b>" + tok.type + "</b></div></div>";
+    }
+    function tpRenderBars() {
+      const groups = {};
+      tpTokens.filter(t => t.lossBearing).forEach(t => {
+        const key = tpState.view === "token" ? t.lane : t[tpState.view];
+        groups[key] = groups[key] || [];
+        groups[key].push(tpLoss(t));
+      });
+      const vals = Object.entries(groups).map(([k, arr]) => [k, arr.reduce((a,b)=>a+b,0)/arr.length]).sort((a,b)=>b[1]-a[1]).slice(0, 6);
+      const max = Math.max(...vals.map(v=>v[1]), 1);
+      el("tpBars").innerHTML = vals.map(([k,v]) => "<div class='tp-row'><span>" + k + "</span><div class='tp-bar'><div class='tp-fill' style='width:" + (v/max*100).toFixed(0) + "%'></div></div><span>" + Math.exp(v).toFixed(1) + "</span></div>").join("");
+    }
+    document.querySelectorAll("#tpPhase button").forEach(btn => btn.onclick = () => { tpState.phase = btn.dataset.phase; document.querySelectorAll("#tpPhase button").forEach(b=>b.classList.toggle("is-active", b===btn)); tpRender(); });
+    document.querySelectorAll("#tpView button").forEach(btn => btn.onclick = () => { tpState.view = btn.dataset.view; document.querySelectorAll("#tpView button").forEach(b=>b.classList.toggle("is-active", b===btn)); tpRender(); });
+    ["tpThreshold","tpShowMasked","tpBoundaryBoost","tpOpusOverlay"].forEach(id => el(id).addEventListener("input", tpRender));
+    tpRender();
+  
+
+================================================================================
+widget_12_shard_learning_report_card.html
+================================================================================
+
+    const rcShards = [
+      { id:"indic-tier-a-042", lane:"Indic", tokens:"84M", opus:82, grad:71, hot:{early:33,mid:24,late:17,anneal:9}, loss:{early:3.4,mid:2.6,late:2.15,anneal:1.72}, delta:{early:.16,mid:.22,late:.19,anneal:.31}, note:"Strong late learner. Preserve for anneal and expand with adjacent native text." },
+      { id:"code-repair-118", lane:"Code", tokens:"51M", opus:74, grad:64, hot:{early:29,mid:18,late:13,anneal:12}, loss:{early:2.9,mid:2.1,late:1.72,anneal:1.68}, delta:{early:.21,mid:.25,late:.14,anneal:.08}, note:"Useful in mid-training; diminishing returns in anneal." },
+      { id:"agentic-browser-021", lane:"Agentic", tokens:"19M", opus:68, grad:78, hot:{early:41,mid:33,late:25,anneal:18}, loss:{early:4.1,mid:3.35,late:2.74,anneal:2.21}, delta:{early:.10,mid:.28,late:.33,anneal:.27}, note:"Hard but productive. Keep observations masked and repeat after tool grammar stabilizes." },
+      { id:"web-clean-900", lane:"Web", tokens:"420M", opus:48, grad:38, hot:{early:17,mid:11,late:9,anneal:10}, loss:{early:2.5,mid:1.84,late:1.55,anneal:1.6}, delta:{early:.18,mid:.11,late:.05,anneal:-.02}, note:"Broad base data. Valuable early, weak late; avoid spending anneal budget here." },
+      { id:"reason-proof-077", lane:"Reasoning", tokens:"12M", opus:91, grad:86, hot:{early:46,mid:38,late:28,anneal:16}, loss:{early:4.6,mid:3.8,late:2.95,anneal:2.04}, delta:{early:.04,mid:.20,late:.37,anneal:.41}, note:"Looks too hard early, becomes excellent once the base model is ready." }
+    ];
+    const rcPhases = ["early","mid","late","anneal"];
+    let rcState = { phase:"mid", selected:0 };
+    const rce = id => document.getElementById(id);
+    function rcScore(s) {
+      const w = Number(rce("rcWeight").value) / 100;
+      const d = Math.max(0, s.delta[rcState.phase]) * 220;
+      const support = (100 - s.hot[rcState.phase]) * .45 + s.grad * .25 + s.opus * .3;
+      return Math.max(0, Math.min(100, d * w + support * (1 - w)));
+    }
+    function rcBadge(score) { return score >= 72 ? ["good","useful"] : score >= 48 ? ["watch","review"] : ["bad","delay"]; }
+    function rcRender() {
+      rce("rcPhaseText").textContent = rcState.phase[0].toUpperCase() + rcState.phase.slice(1);
+      rce("rcWeightText").textContent = "loss delta " + rce("rcWeight").value + "%";
+      const maxScore = Math.max(...rcShards.map(rcScore), 1);
+      rce("rcShardList").innerHTML = rcShards.map((s,i) => {
+        const score = rcScore(s), b = rcBadge(score);
+        return "<button class='rc-shard " + (i===rcState.selected ? "is-active" : "") + "' data-i='" + i + "'><div class='rc-top'><span class='rc-name'>" + s.id + "</span><span class='rc-pill " + b[0] + "'>" + b[1] + "</span></div><div class='rc-mini'><span>" + s.lane + "</span><div class='rc-bar'><div class='rc-fill' style='width:" + (score/maxScore*100).toFixed(0) + "%'></div></div><span>" + score.toFixed(0) + "</span></div><div class='rc-mini'><span>hot ppl</span><div class='rc-bar'><div class='rc-fill' style='width:" + s.hot[rcState.phase] + "%;background:var(--rc-amber)'></div></div><span>" + s.hot[rcState.phase] + "%</span></div></button>";
+      }).join("");
+      document.querySelectorAll(".rc-shard").forEach(btn => btn.onclick = () => { rcState.selected = Number(btn.dataset.i); rcRender(); });
+      rcRenderReport();
+    }
+    function rcRenderReport() {
+      const s = rcShards[rcState.selected], score = rcScore(s);
+      rce("rcTitle").textContent = s.id;
+      rce("rcSubtitle").textContent = s.lane + " lane, " + s.tokens + " tokens, evaluated at " + rcState.phase + " model state";
+      rce("rcUse").textContent = score.toFixed(0);
+      rce("rcDelta").textContent = (s.delta[rcState.phase] >= 0 ? "-" : "+") + Math.abs(s.delta[rcState.phase]).toFixed(2);
+      rce("rcHot").textContent = s.hot[rcState.phase] + "%";
+      rce("rcOpus").textContent = s.opus;
+      const maxLoss = 4.8;
+      rce("rcChart").innerHTML = rcPhases.map(p => "<div class='rc-col'><div class='rc-stick' style='height:" + (s.loss[p]/maxLoss*100).toFixed(0) + "%'><em>" + s.loss[p].toFixed(2) + "</em></div><span>" + p + "</span></div>").join("");
+      rce("rcFinding").textContent = s.note;
+      rce("rcEvents").innerHTML = [
+        ["batch_committed", "step 18420, checkpoint ckpt-18, " + s.tokens + " exposed"],
+        ["token_ppl_aggregated", s.hot[rcState.phase] + "% high-perplexity tokens in " + rcState.phase + " phase"],
+        ["learning_delta_attached", "rolling loss moved by " + s.delta[rcState.phase].toFixed(2) + " after shard window"],
+        ["v6_policy_hint", score >= 72 ? "protect or upsample" : score >= 48 ? "keep with phase guard" : "delay or re-clean"]
+      ].map(e => "<div class='rc-event'><b>" + e[0] + "</b><span>" + e[1] + "</span></div>").join("");
+    }
+    document.querySelectorAll("#rcPhase button").forEach(btn => btn.onclick = () => { rcState.phase = btn.dataset.phase; document.querySelectorAll("#rcPhase button").forEach(b => b.classList.toggle("is-active", b===btn)); rcRender(); });
+    rce("rcWeight").addEventListener("input", rcRender);
+    rcRender();
+  
+
+================================================================================
+widget_13_eval_firewall.html
+================================================================================
+
+    const fwCandidates = [
+      { id:"train-web-104", kind:"Web train", tokens:"18M", never:false, overlap:0.02, canary:false, derived:false },
+      { id:"mmlu-mirror-3", kind:"Benchmark mirror", tokens:"1.2M", never:true, overlap:0.91, canary:true, derived:false },
+      { id:"code-sft-clean-81", kind:"Code SFT", tokens:"420K", never:false, overlap:0.04, canary:false, derived:false },
+      { id:"gsm8k-rationale-blog", kind:"Derived explanation", tokens:"230K", never:false, overlap:0.32, canary:false, derived:true },
+      { id:"indic-news-72", kind:"Indic train", tokens:"9M", never:false, overlap:0.01, canary:false, derived:false },
+      { id:"swebench-solution-dump", kind:"Eval solution", tokens:"88K", never:true, overlap:0.74, canary:true, derived:true },
+      { id:"reasoning-forum-14", kind:"Reasoning", tokens:"3M", never:false, overlap:0.18, canary:false, derived:false }
+    ];
+    let fwIndex = 0, fwAllowed = 0, fwBlocked = 0, fwLog = [];
+    const fwe = id => document.getElementById(id);
+    function fwDecision(c) {
+      const reasons = [];
+      if (fwe("fwNever").checked && c.never) reasons.push("never_train flag");
+      if (fwe("fwOverlap").checked && c.overlap > .25) reasons.push("benchmark overlap " + Math.round(c.overlap*100) + "%");
+      if (fwe("fwCanary").checked && c.canary) reasons.push("canary match");
+      if (fwe("fwDerived").checked && c.derived) reasons.push("benchmark-derived content");
+      return { pass: reasons.length === 0, reasons };
+    }
+    function fwRender() {
+      fwe("fwAllowed").textContent = fwAllowed;
+      fwe("fwBlocked").textContent = fwBlocked;
+      fwe("fwScanned").textContent = fwIndex;
+      fwe("fwStream").innerHTML = fwCandidates.map((c,i) => {
+        const d = i < fwIndex ? fwDecision(c) : null;
+        const status = d ? (d.pass ? "pass" : "block") : "warn";
+        const text = d ? (d.pass ? "admitted" : "blocked") : (i === fwIndex ? "next" : "waiting");
+        return "<div class='fw-shard'><div class='fw-name'><b>" + c.id + "</b><span>" + c.kind + ", " + c.tokens + ", overlap " + Math.round(c.overlap*100) + "%</span></div><span class='fw-pill " + status + "'>" + text + "</span><span class='fw-pill'>" + (c.never ? "never_train" : "trainable") + "</span></div>";
+      }).join("");
+      const current = fwCandidates[Math.max(0, Math.min(fwIndex - 1, fwCandidates.length - 1))];
+      const d = fwIndex ? fwDecision(current) : { pass:true, reasons:["waiting for candidate"] };
+      const gate = (name, ok, detail) => "<div class='fw-gate " + (ok ? "pass" : "block") + "'><b>" + name + "</b><span>" + detail + "</span></div>";
+      fwe("fwGates").innerHTML = gate("Registry flag", !(current && current.never && fwe("fwNever").checked), current ? (current.never ? "never_train=true" : "trainable") : "none") +
+        gate("Overlap scan", !(current && current.overlap > .25 && fwe("fwOverlap").checked), current ? Math.round(current.overlap*100) + "% overlap" : "none") +
+        gate("Canary scan", !(current && current.canary && fwe("fwCanary").checked), current ? (current.canary ? "match found" : "clear") : "none") +
+        gate("Derived data", !(current && current.derived && fwe("fwDerived").checked), current ? (current.derived ? "benchmark derivative" : "clear") : "none");
+      fwe("fwLog").innerHTML = fwLog.slice().reverse().map(e => "<div class='fw-event " + (e.pass ? "pass" : "block") + "'><b>" + e.id + " - " + (e.pass ? "admitted" : "blocked") + "</b><span>" + e.msg + "</span></div>").join("");
+    }
+    fwe("fwScan").onclick = () => {
+      if (fwIndex >= fwCandidates.length) fwIndex = 0;
+      const c = fwCandidates[fwIndex], d = fwDecision(c);
+      if (d.pass) fwAllowed++; else fwBlocked++;
+      fwLog.push({ id:c.id, pass:d.pass, msg:d.pass ? "registered access and admitted to train stream" : "rejected: " + d.reasons.join(", ") });
+      fwIndex++;
+      fwRender();
+    };
+    fwe("fwReset").onclick = () => { fwIndex = 0; fwAllowed = 0; fwBlocked = 0; fwLog = []; fwRender(); };
+    ["fwNever","fwOverlap","fwCanary","fwDerived"].forEach(id => fwe(id).addEventListener("input", fwRender));
+    fwRender();
+  
+
+================================================================================
+widget_14_crash_replay_fork.html
+================================================================================
+
+    const crPlan = Array.from({length:80}, (_,i) => ({ id:"sample-" + String(7000+i), shard:["web","code","indic","agentic","reason"][i%5] + "-" + (20+i%13), lane:["web","code","indic","agentic","reasoning"][i%5] }));
+    let cr = { step:0, offset:0, ckpt:0, branch:"run-a", crashed:false, mode:"ledger", log:[] };
+    const cre = id => document.getElementById(id);
+    function crAdd(kind,msg){ cr.log.push({kind,msg}); if(cr.log.length>12) cr.log.shift(); }
+    function crCheckpoint(){ cr.ckpt = Math.floor(cr.step/200); }
+    function crRenderTrack(id, dots) {
+      cre(id).innerHTML = cre(id).querySelector("h3").outerHTML + dots.map(d => "<div class='cr-dot " + d.cls + "' style='left:" + d.x + "%'><span>" + d.label + "</span></div>").join("");
+    }
+    function crNextSamples() {
+      let start = cr.offset % crPlan.length;
+      if (cr.mode === "random" && cr.crashed) start = (start + 9) % crPlan.length;
+      if (cr.mode === "fork" && cr.crashed) start = (start + 17) % crPlan.length;
+      return [0,1,2,3].map(n => crPlan[(start+n)%crPlan.length]);
+    }
+    function crRender() {
+      crCheckpoint();
+      cre("crStep").textContent = cr.step;
+      cre("crOffset").textContent = cr.offset;
+      cre("crCkpt").textContent = "ckpt-" + cr.ckpt;
+      cre("crBranch").textContent = cr.branch;
+      const max = 1000, pct = v => Math.max(2, Math.min(98, v/max*100));
+      crRenderTrack("crModelTrack", [0,200,400,600,800,1000].filter(v=>v<=Math.max(cr.step,420)).map(v=>({x:pct(v),label:"ckpt-"+Math.floor(v/200),cls:"ckpt"})));
+      crRenderTrack("crLedgerTrack", [0, cr.offset].map((v,i)=>({x:pct(v),label:i?"offset "+v:"start",cls:""})));
+      crRenderTrack("crBranchTrack", [{x:pct(cr.step),label:cr.crashed?"crash/restore":"current",cls:cr.crashed?"crash":"branch"}]);
+      const next = crNextSamples(), historical = crPlan.slice(cr.offset % crPlan.length, cr.offset % crPlan.length + 4).map(s=>s.id);
+      cre("crNext").innerHTML = next.map(s => {
+        const same = historical.includes(s.id) || !cr.crashed || cr.mode === "ledger";
+        return "<div class='cr-sample " + (same ? "replay" : "changed") + "'><b>" + s.id + "</b><span>" + s.shard + "</span><span>" + s.lane + "</span></div>";
+      }).join("");
+      cre("crExplanation").textContent = cr.mode === "ledger" ? "Recovery reads the ledger offset and replays the historical sample stream, so the old checkpoint comparison stays clean." : cr.mode === "random" ? "Without a ledger, the same checkpoint can see a different next stream. A loss curve difference now mixes model effects with data effects." : "Fork mode is valid when intentional: the branch id says this is a new data experiment from the same checkpoint.";
+      cre("crLog").innerHTML = cr.log.slice().reverse().map(e => "<div class='cr-event'><b>" + e.kind + "</b><span>" + e.msg + "</span></div>").join("");
+    }
+    cre("crAdvance").onclick = () => { cr.step += 100; cr.offset += 100; cr.crashed = false; crAdd("batch_committed","advanced to step " + cr.step + " and ledger offset " + cr.offset); crRender(); };
+    cre("crCrash").onclick = () => { cr.crashed = true; crAdd("trainer_crashed","failure at step " + cr.step + ", checkpoint ckpt-" + Math.floor(cr.step/200) + ", offset " + cr.offset); crRender(); };
+    cre("crRollback").onclick = () => { cr.step = 400; cr.offset = cr.mode === "ledger" ? 400 : cr.offset; cr.crashed = true; if (cr.mode === "fork") cr.branch = "run-b"; crAdd("checkpoint_restored","restored ckpt-2 with mode " + cr.mode + " on " + cr.branch); crRender(); };
+    cre("crReset").onclick = () => { cr = { step:0, offset:0, ckpt:0, branch:"run-a", crashed:false, mode:cr.mode, log:[] }; crAdd("run_started","new run initialized"); crRender(); };
+    document.querySelectorAll("#crMode button").forEach(btn => btn.onclick = () => { cr.mode = btn.dataset.mode; document.querySelectorAll("#crMode button").forEach(b=>b.classList.toggle("is-active", b===btn)); if(cr.mode!=="fork") cr.branch="run-a"; crRender(); });
+    crAdd("run_started","training stream bound to checkpoint and ledger");
+    crRender();
+  
+
+================================================================================
+widget_15_dataloader_throughput_lab.html
+================================================================================
+
+    const dlDefs = [
+      ["seq","sequence length",1024,8192,4096," tokens"],
+      ["batch","global batch",64,1024,256," seq"],
+      ["pack","packing efficiency",50,99,86,"%"],
+      ["reject","OPUS rejection",0,70,18,"%"],
+      ["workers","loader workers",2,64,18,""],
+      ["prefetch","prefetch depth",1,16,6,""],
+      ["shard","shard size",64,4096,1024," MB"],
+      ["bandwidth","storage bandwidth",200,6000,1800," MB/s"],
+      ["compression","decompression cost",0,80,24,"%"]
+    ];
+    const dl = Object.fromEntries(dlDefs.map(d => [d[0], d[4]]));
+    const dle = id => document.getElementById(id);
+    function dlFmt(n){ return n >= 1000000 ? (n/1000000).toFixed(2) + "M" : Math.round(n).toLocaleString(); }
+    function dlRenderControls() {
+      dle("dlControls").innerHTML = dlDefs.map(d => "<div class='dl-control'><div class='dl-label'><strong>" + d[1] + "</strong><span id='dlv_" + d[0] + "'></span></div><input id='dli_" + d[0] + "' type='range' min='" + d[2] + "' max='" + d[3] + "' value='" + dl[d[0]] + "'></div>").join("");
+      dlDefs.forEach(d => { const inp = dle("dli_" + d[0]); inp.addEventListener("input", () => { dl[d[0]] = Number(inp.value); dlRender(); }); });
+    }
+    function dlCalc() {
+      const tokensPerStep = dl.seq * dl.batch;
+      const usefulAfterPack = tokensPerStep * dl.pack / 100;
+      const usefulAfterOpus = usefulAfterPack * (1 - dl.reject / 100);
+      const readMB = tokensPerStep * 2 / (1024*1024) * (1 + dl.compression/100);
+      const workerFactor = Math.min(1.8, .35 + Math.log2(dl.workers + 1) / 4 + dl.prefetch / 30);
+      const shardPenalty = dl.shard < 256 ? .72 : dl.shard > 3072 ? .88 : 1;
+      const effectiveBandwidth = dl.bandwidth * workerFactor * shardPenalty;
+      const loaderMs = readMB / effectiveBandwidth * 1000;
+      const computeMs = 145 + dl.seq / 8192 * 210 + dl.batch / 1024 * 90;
+      const waitMs = Math.max(0, loaderMs - computeMs * .55);
+      const stepMs = computeMs + waitMs;
+      const idle = waitMs / stepMs * 100;
+      return { tokensPerStep, usefulAfterPack, usefulAfterOpus, rejected: usefulAfterPack - usefulAfterOpus, padding: tokensPerStep - usefulAfterPack, loaderMs, computeMs, waitMs, stepMs, idle, usefulTps: usefulAfterOpus / (stepMs/1000), readMB, effectiveBandwidth };
+    }
+    function dlRender() {
+      dlDefs.forEach(d => dle("dlv_" + d[0]).textContent = dl[d[0]] + d[5]);
+      const c = dlCalc();
+      dle("dlUseful").textContent = dlFmt(c.usefulTps);
+      dle("dlIdle").textContent = c.idle.toFixed(0) + "%";
+      dle("dlWait").textContent = c.waitMs.toFixed(0) + " ms";
+      const total = c.tokensPerStep + c.idle/100*c.tokensPerStep;
+      const pct = v => Math.max(2, v / total * 100);
+      dle("dlChart").innerHTML = [
+        ["Current", c.usefulAfterOpus, c.rejected, c.padding, c.idle/100*c.tokensPerStep],
+        ["No OPUS reject", c.usefulAfterPack, 0, c.padding, c.idle/100*c.tokensPerStep],
+        ["Tighter packing", c.tokensPerStep*.96*(1-dl.reject/100), c.tokensPerStep*.96*(dl.reject/100), c.tokensPerStep*.04, c.idle/100*c.tokensPerStep],
+        ["Fast storage", c.usefulAfterOpus, c.rejected, c.padding, Math.max(0,c.idle-18)/100*c.tokensPerStep]
+      ].map(col => "<div class='dl-col'><div class='dl-stack'><div class='dl-seg useful' style='height:" + pct(col[1]) + "%'>use</div><div class='dl-seg rejected' style='height:" + pct(col[2]) + "%'></div><div class='dl-seg padding' style='height:" + pct(col[3]) + "%'></div><div class='dl-seg idle' style='height:" + pct(col[4]) + "%'></div></div><span>" + col[0] + "</span></div>").join("");
+      const rows = [
+        ["packing", dl.pack, "%", "var(--dl-green)"],
+        ["OPUS kept", 100-dl.reject, "%", "var(--dl-violet)"],
+        ["bandwidth", Math.min(100, c.effectiveBandwidth/4500*100), "%", "var(--dl-cyan)"],
+        ["worker cover", Math.min(100, (dl.workers/32*70 + dl.prefetch/16*30)), "%", "var(--dl-blue)"],
+        ["GPU busy", 100-c.idle, "%", c.idle > 20 ? "var(--dl-amber)" : "var(--dl-green)"]
+      ];
+      dle("dlBars").innerHTML = rows.map(r => "<div class='dl-row'><span>" + r[0] + "</span><div class='dl-bar'><div class='dl-fill' style='width:" + Math.max(2,r[1]).toFixed(0) + "%;background:" + r[3] + "'></div></div><span>" + r[1].toFixed(0) + r[2] + "</span></div>").join("");
+      let advice = "Healthy pipeline: most step time becomes useful training tokens.";
+      if (dl.pack < 75) advice = "Packing is the first bottleneck. More workers will not fix empty context windows.";
+      else if (dl.reject > 45) advice = "OPUS is discarding too much prepared data. Track accepted tokens/sec, not just raw tokens/sec.";
+      else if (c.idle > 20) advice = "The GPU is waiting. Increase cache/prefetch, reduce tiny shards, or improve storage bandwidth.";
+      else if (dl.shard < 256) advice = "Small shards create metadata and open-file overhead. Bundle into larger immutable objects.";
+      dle("dlAdvice").textContent = advice;
+    }
+    dlRenderControls();
+    dlRender();
+  

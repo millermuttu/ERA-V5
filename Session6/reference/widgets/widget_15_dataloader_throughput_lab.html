@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Session 6 Widget 15 - Dataloader Throughput Lab</title>
+  <style>
+    :root { --dl-ink:#102033; --dl-muted:#5b6b82; --dl-line:#d9e2ef; --dl-bg:#f5f8fc; --dl-panel:#fff; --dl-cyan:#0891b2; --dl-violet:#7c3aed; --dl-green:#16a34a; --dl-amber:#d97706; --dl-red:#dc2626; --dl-blue:#2563eb; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--dl-bg); color:var(--dl-ink); font-family:Inter,"Noto Sans",ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:14px; }
+    .dl-wrap { max-width:1280px; margin:0 auto; padding:18px; }
+    .dl-card { background:var(--dl-panel); border:1px solid var(--dl-line); border-radius:8px; box-shadow:0 8px 22px rgba(29,55,90,.06); }
+    .dl-head { display:grid; grid-template-columns:minmax(0,1fr) 420px; gap:14px; margin-bottom:14px; }
+    .dl-title { padding:16px; }
+    .dl-title h1 { margin:0 0 6px; font-size:20px; }
+    .dl-title p { margin:0; color:var(--dl-muted); line-height:1.45; }
+    .dl-score { padding:12px; display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+    .dl-kpi { border:1px solid var(--dl-line); border-radius:8px; background:#fbfdff; padding:10px; }
+    .dl-kpi b { display:block; font-size:20px; }
+    .dl-kpi span { color:var(--dl-muted); font-size:12px; }
+    .dl-main { display:grid; grid-template-columns:340px minmax(0,1fr) 320px; gap:14px; }
+    .dl-panel { padding:14px; }
+    .dl-panel h2 { margin:0 0 10px; font-size:14px; }
+    .dl-control { margin-bottom:13px; }
+    .dl-label { display:flex; justify-content:space-between; gap:10px; margin-bottom:7px; color:var(--dl-muted); font-size:12px; }
+    .dl-label strong { color:var(--dl-ink); }
+    input[type=range] { width:100%; accent-color:var(--dl-cyan); }
+    .dl-chart { height:360px; border:1px solid var(--dl-line); border-radius:8px; background:#f8fbff; padding:16px; display:flex; align-items:end; gap:16px; }
+    .dl-col { flex:1; min-width:60px; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; gap:8px; height:100%; }
+    .dl-stack { width:100%; max-width:76px; height:260px; display:flex; flex-direction:column-reverse; border-radius:8px; overflow:hidden; border:1px solid var(--dl-line); background:#fff; }
+    .dl-seg { width:100%; min-height:2px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:11px; font-weight:800; }
+    .dl-seg.useful { background:var(--dl-green); }
+    .dl-seg.rejected { background:var(--dl-amber); }
+    .dl-seg.padding { background:var(--dl-red); }
+    .dl-seg.idle { background:#94a3b8; }
+    .dl-col span { color:var(--dl-muted); font-size:12px; text-align:center; }
+    .dl-bars { display:grid; gap:10px; }
+    .dl-row { display:grid; grid-template-columns:110px minmax(0,1fr) 58px; gap:8px; align-items:center; }
+    .dl-row span { color:var(--dl-muted); font-size:12px; }
+    .dl-bar { height:10px; border-radius:999px; background:#e8eef6; overflow:hidden; }
+    .dl-fill { height:100%; border-radius:inherit; background:var(--dl-cyan); }
+    .dl-note { margin-top:12px; color:var(--dl-muted); line-height:1.45; font-size:13px; }
+    .dl-warn { border:1px solid #fde68a; background:#fffbeb; color:#92400e; border-radius:8px; padding:10px; margin-top:12px; line-height:1.4; font-size:13px; }
+    @media (max-width:980px) { .dl-head,.dl-main { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <main class="dl-wrap">
+    <section class="dl-head">
+      <div class="dl-card dl-title">
+        <h1>Dataloader Throughput Lab</h1>
+        <p>A correct stream still has to keep GPUs busy. Useful tokens/sec depends on storage, shard shape, workers, cache, packing efficiency, and OPUS rejection rate.</p>
+      </div>
+      <div class="dl-card dl-score">
+        <div class="dl-kpi"><b id="dlUseful">2.71M</b><span>useful tok/sec</span></div>
+        <div class="dl-kpi"><b id="dlIdle">0%</b><span>GPU idle</span></div>
+        <div class="dl-kpi"><b id="dlWait">0 ms</b><span>loader wait/step</span></div>
+      </div>
+    </section>
+    <section class="dl-main">
+      <aside class="dl-card dl-panel">
+        <h2>Pipeline Knobs</h2>
+        <div id="dlControls"><div class="dl-control"><div class="dl-label"><strong>sequence length</strong><span id="dlv_seq">4096 tokens</span></div><input id="dli_seq" type="range" min="1024" max="8192" value="4096"></div><div class="dl-control"><div class="dl-label"><strong>global batch</strong><span id="dlv_batch">256 seq</span></div><input id="dli_batch" type="range" min="64" max="1024" value="256"></div><div class="dl-control"><div class="dl-label"><strong>packing efficiency</strong><span id="dlv_pack">86%</span></div><input id="dli_pack" type="range" min="50" max="99" value="86"></div><div class="dl-control"><div class="dl-label"><strong>OPUS rejection</strong><span id="dlv_reject">18%</span></div><input id="dli_reject" type="range" min="0" max="70" value="18"></div><div class="dl-control"><div class="dl-label"><strong>loader workers</strong><span id="dlv_workers">18</span></div><input id="dli_workers" type="range" min="2" max="64" value="18"></div><div class="dl-control"><div class="dl-label"><strong>prefetch depth</strong><span id="dlv_prefetch">6</span></div><input id="dli_prefetch" type="range" min="1" max="16" value="6"></div><div class="dl-control"><div class="dl-label"><strong>shard size</strong><span id="dlv_shard">1024 MB</span></div><input id="dli_shard" type="range" min="64" max="4096" value="1024"></div><div class="dl-control"><div class="dl-label"><strong>storage bandwidth</strong><span id="dlv_bandwidth">1800 MB/s</span></div><input id="dli_bandwidth" type="range" min="200" max="6000" value="1800"></div><div class="dl-control"><div class="dl-label"><strong>decompression cost</strong><span id="dlv_compression">24%</span></div><input id="dli_compression" type="range" min="0" max="80" value="24"></div></div>
+      </aside>
+      <section class="dl-card dl-panel">
+        <h2>Token Budget Per Step</h2>
+        <div class="dl-chart" id="dlChart"><div class="dl-col"><div class="dl-stack"><div class="dl-seg useful" style="height:70.52000000000001%">use</div><div class="dl-seg rejected" style="height:15.479999999999993%"></div><div class="dl-seg padding" style="height:14.000000000000002%"></div><div class="dl-seg idle" style="height:2%"></div></div><span>Current</span></div><div class="dl-col"><div class="dl-stack"><div class="dl-seg useful" style="height:86%">use</div><div class="dl-seg rejected" style="height:2%"></div><div class="dl-seg padding" style="height:14.000000000000002%"></div><div class="dl-seg idle" style="height:2%"></div></div><span>No OPUS reject</span></div><div class="dl-col"><div class="dl-stack"><div class="dl-seg useful" style="height:78.72%">use</div><div class="dl-seg rejected" style="height:17.279999999999998%"></div><div class="dl-seg padding" style="height:4%"></div><div class="dl-seg idle" style="height:2%"></div></div><span>Tighter packing</span></div><div class="dl-col"><div class="dl-stack"><div class="dl-seg useful" style="height:70.52000000000001%">use</div><div class="dl-seg rejected" style="height:15.479999999999993%"></div><div class="dl-seg padding" style="height:14.000000000000002%"></div><div class="dl-seg idle" style="height:2%"></div></div><span>Fast storage</span></div></div>
+        <p class="dl-note">Green tokens train the model. Amber tokens were prepared but rejected by OPUS. Red is padding or packing waste. Gray is GPU time lost waiting for the loader.</p>
+      </section>
+      <aside class="dl-card dl-panel">
+        <h2>Bottleneck Readout</h2>
+        <div class="dl-bars" id="dlBars"><div class="dl-row"><span>packing</span><div class="dl-bar"><div class="dl-fill" style="width:86%;background:var(--dl-green)"></div></div><span>86%</span></div><div class="dl-row"><span>OPUS kept</span><div class="dl-bar"><div class="dl-fill" style="width:82%;background:var(--dl-violet)"></div></div><span>82%</span></div><div class="dl-row"><span>bandwidth</span><div class="dl-bar"><div class="dl-fill" style="width:64%;background:var(--dl-cyan)"></div></div><span>64%</span></div><div class="dl-row"><span>worker cover</span><div class="dl-bar"><div class="dl-fill" style="width:51%;background:var(--dl-blue)"></div></div><span>51%</span></div><div class="dl-row"><span>GPU busy</span><div class="dl-bar"><div class="dl-fill" style="width:100%;background:var(--dl-green)"></div></div><span>100%</span></div></div>
+        <div class="dl-warn" id="dlAdvice">Healthy pipeline: most step time becomes useful training tokens.</div>
+      </aside>
+    </section>
+  </main>
+  <script>
+    const dlDefs = [
+      ["seq","sequence length",1024,8192,4096," tokens"],
+      ["batch","global batch",64,1024,256," seq"],
+      ["pack","packing efficiency",50,99,86,"%"],
+      ["reject","OPUS rejection",0,70,18,"%"],
+      ["workers","loader workers",2,64,18,""],
+      ["prefetch","prefetch depth",1,16,6,""],
+      ["shard","shard size",64,4096,1024," MB"],
+      ["bandwidth","storage bandwidth",200,6000,1800," MB/s"],
+      ["compression","decompression cost",0,80,24,"%"]
+    ];
+    const dl = Object.fromEntries(dlDefs.map(d => [d[0], d[4]]));
+    const dle = id => document.getElementById(id);
+    function dlFmt(n){ return n >= 1000000 ? (n/1000000).toFixed(2) + "M" : Math.round(n).toLocaleString(); }
+    function dlRenderControls() {
+      dle("dlControls").innerHTML = dlDefs.map(d => "<div class='dl-control'><div class='dl-label'><strong>" + d[1] + "</strong><span id='dlv_" + d[0] + "'></span></div><input id='dli_" + d[0] + "' type='range' min='" + d[2] + "' max='" + d[3] + "' value='" + dl[d[0]] + "'></div>").join("");
+      dlDefs.forEach(d => { const inp = dle("dli_" + d[0]); inp.addEventListener("input", () => { dl[d[0]] = Number(inp.value); dlRender(); }); });
+    }
+    function dlCalc() {
+      const tokensPerStep = dl.seq * dl.batch;
+      const usefulAfterPack = tokensPerStep * dl.pack / 100;
+      const usefulAfterOpus = usefulAfterPack * (1 - dl.reject / 100);
+      const readMB = tokensPerStep * 2 / (1024*1024) * (1 + dl.compression/100);
+      const workerFactor = Math.min(1.8, .35 + Math.log2(dl.workers + 1) / 4 + dl.prefetch / 30);
+      const shardPenalty = dl.shard < 256 ? .72 : dl.shard > 3072 ? .88 : 1;
+      const effectiveBandwidth = dl.bandwidth * workerFactor * shardPenalty;
+      const loaderMs = readMB / effectiveBandwidth * 1000;
+      const computeMs = 145 + dl.seq / 8192 * 210 + dl.batch / 1024 * 90;
+      const waitMs = Math.max(0, loaderMs - computeMs * .55);
+      const stepMs = computeMs + waitMs;
+      const idle = waitMs / stepMs * 100;
+      return { tokensPerStep, usefulAfterPack, usefulAfterOpus, rejected: usefulAfterPack - usefulAfterOpus, padding: tokensPerStep - usefulAfterPack, loaderMs, computeMs, waitMs, stepMs, idle, usefulTps: usefulAfterOpus / (stepMs/1000), readMB, effectiveBandwidth };
+    }
+    function dlRender() {
+      dlDefs.forEach(d => dle("dlv_" + d[0]).textContent = dl[d[0]] + d[5]);
+      const c = dlCalc();
+      dle("dlUseful").textContent = dlFmt(c.usefulTps);
+      dle("dlIdle").textContent = c.idle.toFixed(0) + "%";
+      dle("dlWait").textContent = c.waitMs.toFixed(0) + " ms";
+      const total = c.tokensPerStep + c.idle/100*c.tokensPerStep;
+      const pct = v => Math.max(2, v / total * 100);
+      dle("dlChart").innerHTML = [
+        ["Current", c.usefulAfterOpus, c.rejected, c.padding, c.idle/100*c.tokensPerStep],
+        ["No OPUS reject", c.usefulAfterPack, 0, c.padding, c.idle/100*c.tokensPerStep],
+        ["Tighter packing", c.tokensPerStep*.96*(1-dl.reject/100), c.tokensPerStep*.96*(dl.reject/100), c.tokensPerStep*.04, c.idle/100*c.tokensPerStep],
+        ["Fast storage", c.usefulAfterOpus, c.rejected, c.padding, Math.max(0,c.idle-18)/100*c.tokensPerStep]
+      ].map(col => "<div class='dl-col'><div class='dl-stack'><div class='dl-seg useful' style='height:" + pct(col[1]) + "%'>use</div><div class='dl-seg rejected' style='height:" + pct(col[2]) + "%'></div><div class='dl-seg padding' style='height:" + pct(col[3]) + "%'></div><div class='dl-seg idle' style='height:" + pct(col[4]) + "%'></div></div><span>" + col[0] + "</span></div>").join("");
+      const rows = [
+        ["packing", dl.pack, "%", "var(--dl-green)"],
+        ["OPUS kept", 100-dl.reject, "%", "var(--dl-violet)"],
+        ["bandwidth", Math.min(100, c.effectiveBandwidth/4500*100), "%", "var(--dl-cyan)"],
+        ["worker cover", Math.min(100, (dl.workers/32*70 + dl.prefetch/16*30)), "%", "var(--dl-blue)"],
+        ["GPU busy", 100-c.idle, "%", c.idle > 20 ? "var(--dl-amber)" : "var(--dl-green)"]
+      ];
+      dle("dlBars").innerHTML = rows.map(r => "<div class='dl-row'><span>" + r[0] + "</span><div class='dl-bar'><div class='dl-fill' style='width:" + Math.max(2,r[1]).toFixed(0) + "%;background:" + r[3] + "'></div></div><span>" + r[1].toFixed(0) + r[2] + "</span></div>").join("");
+      let advice = "Healthy pipeline: most step time becomes useful training tokens.";
+      if (dl.pack < 75) advice = "Packing is the first bottleneck. More workers will not fix empty context windows.";
+      else if (dl.reject > 45) advice = "OPUS is discarding too much prepared data. Track accepted tokens/sec, not just raw tokens/sec.";
+      else if (c.idle > 20) advice = "The GPU is waiting. Increase cache/prefetch, reduce tiny shards, or improve storage bandwidth.";
+      else if (dl.shard < 256) advice = "Small shards create metadata and open-file overhead. Bundle into larger immutable objects.";
+      dle("dlAdvice").textContent = advice;
+    }
+    dlRenderControls();
+    dlRender();
+  </script>
+
+
+</body></html>

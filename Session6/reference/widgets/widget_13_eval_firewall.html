@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Session 6 Widget 13 - Eval Firewall</title>
+  <style>
+    :root { --fw-ink:#102033; --fw-muted:#5b6b82; --fw-line:#d9e2ef; --fw-bg:#f5f8fc; --fw-panel:#fff; --fw-cyan:#0891b2; --fw-violet:#7c3aed; --fw-green:#16a34a; --fw-amber:#d97706; --fw-red:#dc2626; --fw-blue:#2563eb; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--fw-bg); color:var(--fw-ink); font-family:Inter,"Noto Sans",ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:14px; }
+    .fw-wrap { max-width:1280px; margin:0 auto; padding:18px; }
+    .fw-card { background:var(--fw-panel); border:1px solid var(--fw-line); border-radius:8px; box-shadow:0 8px 22px rgba(29,55,90,.06); }
+    .fw-head { display:grid; grid-template-columns:minmax(0,1fr) 360px; gap:14px; margin-bottom:14px; }
+    .fw-title { padding:16px; }
+    .fw-title h1 { margin:0 0 6px; font-size:20px; }
+    .fw-title p { margin:0; color:var(--fw-muted); line-height:1.45; }
+    .fw-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:12px; }
+    .fw-stat { border:1px solid var(--fw-line); border-radius:8px; background:#fbfdff; padding:10px; }
+    .fw-stat b { display:block; font-size:20px; }
+    .fw-stat span { display:block; color:var(--fw-muted); font-size:12px; margin-top:3px; }
+    .fw-main { display:grid; grid-template-columns:300px minmax(0,1fr) 340px; gap:14px; }
+    .fw-panel { padding:14px; }
+    .fw-panel h2 { margin:0 0 10px; font-size:14px; }
+    .fw-checks { display:grid; gap:9px; margin-bottom:14px; }
+    .fw-check { display:flex; gap:8px; align-items:flex-start; color:var(--fw-muted); line-height:1.35; font-size:13px; }
+    .fw-check input { margin-top:2px; accent-color:var(--fw-cyan); }
+    .fw-button { border:1px solid var(--fw-line); border-radius:8px; background:#fff; color:var(--fw-ink); min-height:36px; padding:8px 10px; font:inherit; cursor:pointer; width:100%; margin-bottom:8px; }
+    .fw-button.primary { background:#e6f7fb; border-color:var(--fw-cyan); color:#075e75; font-weight:800; }
+    .fw-stream { display:grid; gap:8px; }
+    .fw-shard { display:grid; grid-template-columns:1fr 120px 120px; gap:8px; align-items:center; border:1px solid var(--fw-line); border-radius:8px; padding:10px; background:#fbfdff; }
+    .fw-name b { display:block; }
+    .fw-name span { display:block; color:var(--fw-muted); font-size:12px; margin-top:3px; }
+    .fw-pill { border-radius:999px; border:1px solid var(--fw-line); padding:5px 8px; font-size:12px; text-align:center; color:var(--fw-muted); }
+    .fw-pill.pass { background:#dcfce7; border-color:#bbf7d0; color:#166534; }
+    .fw-pill.block { background:#fee2e2; border-color:#fecaca; color:#991b1b; }
+    .fw-pill.warn { background:#fef3c7; border-color:#fde68a; color:#92400e; }
+    .fw-path { position:relative; border:1px solid var(--fw-line); border-radius:8px; background:#f8fbff; padding:16px; margin-bottom:12px; min-height:260px; }
+    .fw-gate { height:54px; border-radius:8px; border:1px solid var(--fw-line); background:#fff; margin:0 0 12px; display:flex; align-items:center; justify-content:space-between; padding:0 12px; }
+    .fw-gate b { font-size:13px; }
+    .fw-gate span { font-size:12px; color:var(--fw-muted); }
+    .fw-gate.pass { border-color:#bbf7d0; background:#f0fdf4; }
+    .fw-gate.block { border-color:#fecaca; background:#fff1f2; }
+    .fw-log { display:grid; gap:8px; max-height:304px; overflow:auto; padding-right:4px; }
+    .fw-event { border-left:3px solid var(--fw-cyan); border-radius:0 8px 8px 0; border-top:1px solid var(--fw-line); border-right:1px solid var(--fw-line); border-bottom:1px solid var(--fw-line); background:#fbfdff; padding:9px 10px; }
+    .fw-event.block { border-left-color:var(--fw-red); }
+    .fw-event.pass { border-left-color:var(--fw-green); }
+    .fw-event b { display:block; font-size:12px; }
+    .fw-event span { display:block; color:var(--fw-muted); font-size:12px; line-height:1.35; margin-top:3px; }
+    .fw-note { color:var(--fw-muted); line-height:1.45; font-size:13px; margin-top:12px; }
+    @media (max-width:980px) { .fw-head,.fw-main { grid-template-columns:1fr; } .fw-shard { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <main class="fw-wrap">
+    <section class="fw-head">
+      <div class="fw-card fw-title">
+        <h1>Eval Firewall</h1>
+        <p>Test shards are registered with the same discipline as training shards, then marked never-train. The firewall blocks direct test data, benchmark derivatives, canary hits, and contamination overlap before the stream reaches training.</p>
+      </div>
+      <div class="fw-card fw-stats">
+        <div class="fw-stat"><b id="fwAllowed">0</b><span>admitted</span></div>
+        <div class="fw-stat"><b id="fwBlocked">0</b><span>blocked</span></div>
+        <div class="fw-stat"><b id="fwScanned">0</b><span>scanned</span></div>
+      </div>
+    </section>
+    <section class="fw-main">
+      <aside class="fw-card fw-panel">
+        <h2>Firewall Checks</h2>
+        <div class="fw-checks">
+          <label class="fw-check"><input id="fwNever" type="checkbox" checked=""> Block shards with never_train=true</label>
+          <label class="fw-check"><input id="fwOverlap" type="checkbox" checked=""> Block MinHash / exact benchmark overlap</label>
+          <label class="fw-check"><input id="fwCanary" type="checkbox" checked=""> Block canary string matches</label>
+          <label class="fw-check"><input id="fwDerived" type="checkbox" checked=""> Block benchmark-derived explanations</label>
+        </div>
+        <button class="fw-button primary" id="fwScan">Scan next candidate</button>
+        <button class="fw-button" id="fwReset">Reset stream</button>
+        <p class="fw-note">Turn checks off to see how an apparently clean training shard can leak eval knowledge through near duplicates, synthetic explanations, or public benchmark mirrors.</p>
+      </aside>
+      <section class="fw-card fw-panel">
+        <h2>Candidate Stream</h2>
+        <div class="fw-stream" id="fwStream"><div class="fw-shard"><div class="fw-name"><b>train-web-104</b><span>Web train, 18M, overlap 2%</span></div><span class="fw-pill warn">next</span><span class="fw-pill">trainable</span></div><div class="fw-shard"><div class="fw-name"><b>mmlu-mirror-3</b><span>Benchmark mirror, 1.2M, overlap 91%</span></div><span class="fw-pill warn">waiting</span><span class="fw-pill">never_train</span></div><div class="fw-shard"><div class="fw-name"><b>code-sft-clean-81</b><span>Code SFT, 420K, overlap 4%</span></div><span class="fw-pill warn">waiting</span><span class="fw-pill">trainable</span></div><div class="fw-shard"><div class="fw-name"><b>gsm8k-rationale-blog</b><span>Derived explanation, 230K, overlap 32%</span></div><span class="fw-pill warn">waiting</span><span class="fw-pill">trainable</span></div><div class="fw-shard"><div class="fw-name"><b>indic-news-72</b><span>Indic train, 9M, overlap 1%</span></div><span class="fw-pill warn">waiting</span><span class="fw-pill">trainable</span></div><div class="fw-shard"><div class="fw-name"><b>swebench-solution-dump</b><span>Eval solution, 88K, overlap 74%</span></div><span class="fw-pill warn">waiting</span><span class="fw-pill">never_train</span></div><div class="fw-shard"><div class="fw-name"><b>reasoning-forum-14</b><span>Reasoning, 3M, overlap 18%</span></div><span class="fw-pill warn">waiting</span><span class="fw-pill">trainable</span></div></div>
+      </section>
+      <aside class="fw-card fw-panel">
+        <h2>Gate Result</h2>
+        <div class="fw-path" id="fwGates"><div class="fw-gate pass"><b>Registry flag</b><span>trainable</span></div><div class="fw-gate pass"><b>Overlap scan</b><span>2% overlap</span></div><div class="fw-gate pass"><b>Canary scan</b><span>clear</span></div><div class="fw-gate pass"><b>Derived data</b><span>clear</span></div></div>
+        <h2>Access Log</h2>
+        <div class="fw-log" id="fwLog"></div>
+      </aside>
+    </section>
+  </main>
+  <script>
+    const fwCandidates = [
+      { id:"train-web-104", kind:"Web train", tokens:"18M", never:false, overlap:0.02, canary:false, derived:false },
+      { id:"mmlu-mirror-3", kind:"Benchmark mirror", tokens:"1.2M", never:true, overlap:0.91, canary:true, derived:false },
+      { id:"code-sft-clean-81", kind:"Code SFT", tokens:"420K", never:false, overlap:0.04, canary:false, derived:false },
+      { id:"gsm8k-rationale-blog", kind:"Derived explanation", tokens:"230K", never:false, overlap:0.32, canary:false, derived:true },
+      { id:"indic-news-72", kind:"Indic train", tokens:"9M", never:false, overlap:0.01, canary:false, derived:false },
+      { id:"swebench-solution-dump", kind:"Eval solution", tokens:"88K", never:true, overlap:0.74, canary:true, derived:true },
+      { id:"reasoning-forum-14", kind:"Reasoning", tokens:"3M", never:false, overlap:0.18, canary:false, derived:false }
+    ];
+    let fwIndex = 0, fwAllowed = 0, fwBlocked = 0, fwLog = [];
+    const fwe = id => document.getElementById(id);
+    function fwDecision(c) {
+      const reasons = [];
+      if (fwe("fwNever").checked && c.never) reasons.push("never_train flag");
+      if (fwe("fwOverlap").checked && c.overlap > .25) reasons.push("benchmark overlap " + Math.round(c.overlap*100) + "%");
+      if (fwe("fwCanary").checked && c.canary) reasons.push("canary match");
+      if (fwe("fwDerived").checked && c.derived) reasons.push("benchmark-derived content");
+      return { pass: reasons.length === 0, reasons };
+    }
+    function fwRender() {
+      fwe("fwAllowed").textContent = fwAllowed;
+      fwe("fwBlocked").textContent = fwBlocked;
+      fwe("fwScanned").textContent = fwIndex;
+      fwe("fwStream").innerHTML = fwCandidates.map((c,i) => {
+        const d = i < fwIndex ? fwDecision(c) : null;
+        const status = d ? (d.pass ? "pass" : "block") : "warn";
+        const text = d ? (d.pass ? "admitted" : "blocked") : (i === fwIndex ? "next" : "waiting");
+        return "<div class='fw-shard'><div class='fw-name'><b>" + c.id + "</b><span>" + c.kind + ", " + c.tokens + ", overlap " + Math.round(c.overlap*100) + "%</span></div><span class='fw-pill " + status + "'>" + text + "</span><span class='fw-pill'>" + (c.never ? "never_train" : "trainable") + "</span></div>";
+      }).join("");
+      const current = fwCandidates[Math.max(0, Math.min(fwIndex - 1, fwCandidates.length - 1))];
+      const d = fwIndex ? fwDecision(current) : { pass:true, reasons:["waiting for candidate"] };
+      const gate = (name, ok, detail) => "<div class='fw-gate " + (ok ? "pass" : "block") + "'><b>" + name + "</b><span>" + detail + "</span></div>";
+      fwe("fwGates").innerHTML = gate("Registry flag", !(current && current.never && fwe("fwNever").checked), current ? (current.never ? "never_train=true" : "trainable") : "none") +
+        gate("Overlap scan", !(current && current.overlap > .25 && fwe("fwOverlap").checked), current ? Math.round(current.overlap*100) + "% overlap" : "none") +
+        gate("Canary scan", !(current && current.canary && fwe("fwCanary").checked), current ? (current.canary ? "match found" : "clear") : "none") +
+        gate("Derived data", !(current && current.derived && fwe("fwDerived").checked), current ? (current.derived ? "benchmark derivative" : "clear") : "none");
+      fwe("fwLog").innerHTML = fwLog.slice().reverse().map(e => "<div class='fw-event " + (e.pass ? "pass" : "block") + "'><b>" + e.id + " - " + (e.pass ? "admitted" : "blocked") + "</b><span>" + e.msg + "</span></div>").join("");
+    }
+    fwe("fwScan").onclick = () => {
+      if (fwIndex >= fwCandidates.length) fwIndex = 0;
+      const c = fwCandidates[fwIndex], d = fwDecision(c);
+      if (d.pass) fwAllowed++; else fwBlocked++;
+      fwLog.push({ id:c.id, pass:d.pass, msg:d.pass ? "registered access and admitted to train stream" : "rejected: " + d.reasons.join(", ") });
+      fwIndex++;
+      fwRender();
+    };
+    fwe("fwReset").onclick = () => { fwIndex = 0; fwAllowed = 0; fwBlocked = 0; fwLog = []; fwRender(); };
+    ["fwNever","fwOverlap","fwCanary","fwDerived"].forEach(id => fwe(id).addEventListener("input", fwRender));
+    fwRender();
+  </script>
+
+
+</body></html>

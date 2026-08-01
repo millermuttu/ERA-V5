@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Session 6 Widget 7 - Mixture Timeline Compiler</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+  <style>
+    :root{--s6t-ink:#172033;--s6t-muted:#667085;--s6t-line:#d9e3ef;--s6t-card:#fff;--s6t-cyan:#0891b2;--s6t-violet:#7c3aed;--s6t-green:#16a34a;--s6t-amber:#d97706;--s6t-red:#dc2626}
+    *{box-sizing:border-box}body{margin:0;background:#f7fafc;color:var(--s6t-ink);font-family:Inter,system-ui,sans-serif}.s6t-wrap{max-width:1280px;margin:0 auto;padding:22px}.s6t-head{display:flex;justify-content:space-between;gap:16px;margin-bottom:16px}.s6t-kicker{font-size:12px;font-weight:800;color:var(--s6t-cyan);letter-spacing:.08em;text-transform:uppercase}.s6t-title{font-size:28px;margin:4px 0 6px}.s6t-sub{margin:0;color:var(--s6t-muted);font-size:14px;line-height:1.5;max-width:780px}.s6t-pill{border:1px solid var(--s6t-line);border-radius:999px;background:white;padding:8px 12px;font-size:12px;font-weight:800;height:max-content}.s6t-grid{display:grid;grid-template-columns:330px 1fr;gap:16px}.s6t-card{background:white;border:1px solid var(--s6t-line);border-radius:8px;box-shadow:0 10px 26px rgba(15,23,42,.06);padding:14px}.s6t-card h3{margin:0 0 10px;font-size:15px}.s6t-field{margin:12px 0}.s6t-field label{display:flex;justify-content:space-between;font-size:12px;font-weight:800;color:#344054;margin-bottom:6px}.s6t-field input,.s6t-field select{width:100%;accent-color:var(--s6t-cyan)}.s6t-stage{display:grid;grid-template-columns:1fr 1fr;gap:8px}.s6t-mini{border:1px solid var(--s6t-line);border-radius:8px;padding:10px;background:#fbfdff}.s6t-mini b{font-size:12px}.s6t-mini span{display:block;color:var(--s6t-muted);font-size:12px;margin-top:2px}.s6t-bars{display:grid;gap:10px;margin-top:12px}.s6t-row{display:grid;grid-template-columns:100px 1fr 64px;align-items:center;gap:10px;font-size:12px;font-weight:800}.s6t-track{height:14px;background:#e8eef5;border-radius:99px;overflow:hidden}.s6t-fill{height:100%;border-radius:99px}.s6t-warn{padding:10px;border-radius:8px;border:1px solid #fde68a;background:#fffbeb;color:#92400e;font-size:12px;line-height:1.4;margin-top:12px}.s6t-timeline{height:150px;border:1px solid var(--s6t-line);border-radius:8px;display:flex;overflow:hidden;background:#fff}.s6t-seg{height:100%;position:relative;border-right:1px solid rgba(255,255,255,.7);display:flex;align-items:flex-end;padding:8px;color:white;font-size:11px;font-weight:900;text-shadow:0 1px 2px rgba(0,0,0,.3)}.s6t-seg small{display:block;font-weight:700;opacity:.95}.s6t-quota{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px}.s6t-q{border:1px solid var(--s6t-line);border-radius:8px;padding:10px;background:#fbfdff}.s6t-q b{font-size:18px}.s6t-q span{display:block;font-size:11px;color:var(--s6t-muted)}.s6t-table{width:100%;border-collapse:collapse;margin-top:12px;font-size:12px}.s6t-table th,.s6t-table td{border-bottom:1px solid var(--s6t-line);padding:8px;text-align:left}.s6t-table th{color:#475467}.s6t-ok{color:var(--s6t-green);font-weight:900}.s6t-bad{color:var(--s6t-red);font-weight:900}
+    @media(max-width:880px){.s6t-grid{grid-template-columns:1fr}.s6t-head{display:block}.s6t-quota{grid-template-columns:1fr 1fr}.s6t-pill{display:inline-block;margin-top:10px}}
+  </style>
+</head>
+<body>
+  <main class="s6t-wrap">
+    <header class="s6t-head"><div><div class="s6t-kicker">ERA V5 - Session 6 - Widget 7</div><h1 class="s6t-title">Mixture Timeline Compiler</h1><p class="s6t-sub">Convert a Session 5 mixture plan into per-step quotas, curriculum stages, protected floors, and supply checks.</p></div><div class="s6t-pill">Recipe becomes executable schedule</div></header>
+    <section class="s6t-grid">
+      <aside class="s6t-card">
+        <h3>Schedule controls</h3>
+        <div class="s6t-field"><label>Total budget <span id="budgetOut">120B tokens</span></label><input id="budget" type="range" min="20" max="240" step="10" value="120"></div>
+        <div class="s6t-field"><label>Curriculum profile</label><select id="profile"><option value="balanced">Balanced V5</option><option value="code">Code heavy</option><option value="indic">Indic protected</option><option value="anneal">Late anneal reserve</option></select></div>
+        <div class="s6t-field"><label>Warmup band <span id="warmOut">4%</span></label><input id="warm" type="range" min="0" max="12" value="4"></div>
+        <div class="s6t-field"><label>OPUS rejection rate <span id="rejOut">18%</span></label><input id="reject" type="range" min="0" max="45" value="18"></div>
+        <div class="s6t-stage"><div class="s6t-mini"><b>Protected floors</b><span>Indic, agentic, reasoning lanes cannot be starved.</span></div><div class="s6t-mini"><b>Anneal reserve</b><span>Strong scarce shards held for late model state.</span></div></div>
+      </aside>
+      <section class="s6t-card">
+        <h3>Compiled timeline</h3><div class="s6t-timeline" id="timeline"><div class="s6t-seg" style="width:55.00000000000001%;background:#0891b2"><div>Foundation<small>0B-66B</small></div></div><div class="s6t-seg" style="width:29.999999999999993%;background:#7c3aed"><div>Skill build<small>66B-102B</small></div></div><div class="s6t-seg" style="width:15.000000000000002%;background:#16a34a"><div>Anneal<small>102B-120B</small></div></div></div>
+        <div class="s6t-quota" id="quota"><div class="s6t-q"><b style="color:#0891b2">45%</b><span>General lane</span></div><div class="s6t-q"><b style="color:#7c3aed">20%</b><span>Code lane</span></div><div class="s6t-q"><b style="color:#16a34a">12%</b><span>Indic lane</span></div><div class="s6t-q"><b style="color:#d97706">15%</b><span>Reasoning lane</span></div><div class="s6t-q"><b style="color:#dc2626">8%</b><span>Agentic lane</span></div></div>
+        <div class="s6t-bars" id="bars"><div class="s6t-row"><span>General</span><div class="s6t-track"><div class="s6t-fill" style="width:45%;background:#0891b2"></div></div><span>54.0B</span></div><div class="s6t-row"><span>Code</span><div class="s6t-track"><div class="s6t-fill" style="width:20%;background:#7c3aed"></div></div><span>24.0B</span></div><div class="s6t-row"><span>Indic</span><div class="s6t-track"><div class="s6t-fill" style="width:12%;background:#16a34a"></div></div><span>14.4B</span></div><div class="s6t-row"><span>Reasoning</span><div class="s6t-track"><div class="s6t-fill" style="width:15%;background:#d97706"></div></div><span>18.0B</span></div><div class="s6t-row"><span>Agentic</span><div class="s6t-track"><div class="s6t-fill" style="width:8%;background:#dc2626"></div></div><span>9.6B</span></div></div>
+        <table class="s6t-table"><thead><tr><th>Lane</th><th>Required after OPUS</th><th>Verified supply</th><th>Status</th></tr></thead><tbody id="supply"><tr><td>General</td><td>65.9B</td><td>95B</td><td class="s6t-ok">satisfied</td></tr><tr><td>Code</td><td>29.3B</td><td>38B</td><td class="s6t-ok">satisfied</td></tr><tr><td>Indic</td><td>17.6B</td><td>18B</td><td class="s6t-ok">satisfied</td></tr><tr><td>Reasoning</td><td>22.0B</td><td>22B</td><td class="s6t-ok">satisfied</td></tr><tr><td>Agentic</td><td>11.7B</td><td>10B</td><td class="s6t-bad">shortfall</td></tr></tbody></table>
+        <div class="s6t-warn" id="note">Compiler warning: Agentic supply is not enough after OPUS rejection. Lower share, collect more, use repetition deliberately, or protect only the highest-value subset.</div>
+      </section>
+    </section>
+  </main>
+  <script>
+    const colors={General:'#0891b2',Code:'#7c3aed',Indic:'#16a34a',Reasoning:'#d97706',Agentic:'#dc2626'};
+    const supply={General:95,Code:38,Indic:18,Reasoning:22,Agentic:10};
+    const profiles={balanced:{General:45,Code:20,Indic:12,Reasoning:15,Agentic:8},code:{General:34,Code:34,Indic:10,Reasoning:14,Agentic:8},indic:{General:38,Code:18,Indic:22,Reasoning:14,Agentic:8},anneal:{General:36,Code:21,Indic:14,Reasoning:19,Agentic:10}};
+    const stages=[['Foundation',0,.55,'Broad language and code base'],['Skill build',.55,.85,'Reasoning, agentic, Indic pressure'],['Anneal',.85,1,'scarce high-quality reserve']];
+    const els={budget:document.getElementById('budget'),profile:document.getElementById('profile'),warm:document.getElementById('warm'),reject:document.getElementById('reject'),budgetOut:document.getElementById('budgetOut'),warmOut:document.getElementById('warmOut'),rejOut:document.getElementById('rejOut'),timeline:document.getElementById('timeline'),quota:document.getElementById('quota'),bars:document.getElementById('bars'),supply:document.getElementById('supply'),note:document.getElementById('note')};
+    function adjusted(base){
+      const p={...base}; if(els.profile.value==='anneal'){p.General-=8;p.Reasoning+=5;p.Agentic+=3}
+      return p;
+    }
+    function render(){
+      const B=+els.budget.value, warm=+els.warm.value, rej=+els.reject.value; els.budgetOut.textContent=B+'B tokens'; els.warmOut.textContent=warm+'%'; els.rejOut.textContent=rej+'%';
+      const mix=adjusted(profiles[els.profile.value]);
+      els.timeline.innerHTML=stages.map((s,i)=>`<div class="s6t-seg" style="width:${(s[2]-s[1])*100}%;background:${i===0?'#0891b2':i===1?'#7c3aed':'#16a34a'}"><div>${s[0]}<small>${Math.round(s[1]*B)}B-${Math.round(s[2]*B)}B</small></div></div>`).join('');
+      els.quota.innerHTML=Object.keys(mix).map(k=>`<div class="s6t-q"><b style="color:${colors[k]}">${mix[k]}%</b><span>${k} lane</span></div>`).join('');
+      els.bars.innerHTML=Object.keys(mix).map(k=>`<div class="s6t-row"><span>${k}</span><div class="s6t-track"><div class="s6t-fill" style="width:${mix[k]}%;background:${colors[k]}"></div></div><span>${(B*mix[k]/100).toFixed(1)}B</span></div>`).join('');
+      els.supply.innerHTML=Object.keys(mix).map(k=>{const need=B*mix[k]/100/(1-rej/100);const ok=supply[k]>=need;return `<tr><td>${k}</td><td>${need.toFixed(1)}B</td><td>${supply[k]}B</td><td class="${ok?'s6t-ok':'s6t-bad'}">${ok?'satisfied':'shortfall'}</td></tr>`}).join('');
+      const short=Object.keys(mix).filter(k=>supply[k]<B*mix[k]/100/(1-rej/100));
+      els.note.textContent=short.length?`Compiler warning: ${short.join(', ')} supply is not enough after OPUS rejection. Lower share, collect more, use repetition deliberately, or protect only the highest-value subset.`:`Schedule is feasible at this budget. Warmup band reserves ${warm}% around stage transitions to soften mixture shifts.`;
+    }
+    ['input','change'].forEach(e=>Object.values(els).slice(0,4).forEach(x=>x.addEventListener(e,render))); render();
+  </script>
+
+
+</body></html>

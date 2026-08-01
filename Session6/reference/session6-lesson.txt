@@ -1,0 +1,833 @@
+Axiom
+Dashboard
+Courses
+ERA V5
+EMLO 2021
+EMLO 2.0
+Calendar
+Grades
+Settings
+Collapse
+Courses
+ERA V5
+Session 6 - Building the Dataset
+Search...
+⌘
+K
+14
+12
+Table of Contents
+Session 6: Building the Training Dataset
+1. What This Session Is
+
+Session 5 ended with a training data recipe.
+
+We selected:
+
+Capability buckets
+Protected parts
+Curriculum stages
+Annealing reserves
+OPUS selection
+Benchmark-backed mixture targets
+
+That design is useful only if the training system can execute it accurately, consistently, and reproducibly.
+
+Session 6 converts those requirements into the actual data stream consumed by the training loop.
+
+A training run receives:
+
+Token windows
+Loss masks
+Attention masks
+Position IDs
+Mixture tags
+Packed microbatches
+
+This data must remain correct across:
+
+Many workers
+Many GPUs
+Training restarts
+Checkpoint boundaries
+
+The objective of this session is to build the system that keeps this stream controlled, inspectable, and replayable.
+
+The requirements come from every earlier session.
+
+Session 1 defined the training contract. The model predicts the next token, loss is applied only to the intended tokens, and attention operates within a bounded context window.
+
+Session 2 defined the tokenizer contract. The same raw text must always produce the same token IDs, using canonical special tokens and Indic-safe normalization.
+
+Session 3 defined the source contract. Every source must carry provenance, license information, held-out status, capability tags, and token accounting.
+
+Session 4 defined the admission contract. Only data that has been cleaned, deduplicated, PII-screened, language-validated, and contamination-scanned may enter training.
+
+Session 5 defined the mixture contract. The training stream must obey curriculum stages, protected floors, OPUS selection, annealing reserves, long-context timing, and reasoning-length bands.
+
+Session 6 combines all of these contracts into one operational object:
+
+The training data execution system
+
+A requirements ledger traces every decision from Sessions 1 through 5 into a concrete obligation for the data system.
+
+Selecting a previous session reveals the exact requirement it imposes on Session 6:
+
+Next-token loss maps
+Tokenizer hashes
+Source provenance
+Cleaning manifests
+Evaluation firewalls
+Mixture floors
+OPUS logs
+Annealing reserves
+
+The purpose is to make one principle explicit:
+
+The dataloader is downstream of every design choice made so far.
+
+The rest of the session follows one piece of data as it moves through the system:
+
+Cleaned text → packed batch → ledger event → next corpus version
+
+The final step turns what happened during training into a learning signal for the next version of the corpus.
+
+2. The Vocabulary of a Training Step
+
+Before discussing sharding and dataloaders, we need a shared vocabulary for what the training loop consumes.
+
+A token is the integer ID produced by the tokenizer.
+
+A sequence is a fixed-length window of tokens, such as 4,096, 8,192, or 32,768 tokens.
+
+A sample is one training example handed to the model.
+
+In pretraining, a sample is usually one fixed-length token sequence.
+
+In SFT or agentic training, a sample may contain multiple fields:
+
+Prompt tokens
+Response tokens
+Tool observations
+Masks
+Labels
+
+A microbatch is the small batch processed by one GPU before gradients are accumulated.
+
+A global batch is the complete set of samples that contributes to one optimizer update across:
+
+All GPUs
+All gradient accumulation steps
+
+A training step is one optimizer update.
+
+A checkpoint step is a training step at which enough state is saved to resume training:
+
+Model weights
+Optimizer state
+Scheduler state
+RNG state, where available
+Dataloader state
+Ledger offset
+
+For example:
+
+8 GPUs × microbatch size 2 × gradient accumulation 16
+= 256 sequences per optimizer step
+
+If the sequence length is 8,192 tokens, that optimizer step consumes:
+
+256 × 8,192 = 2,097,152 token positions
+
+Some token positions may be useful loss-bearing tokens.
+
+Some may be padding.
+
+Some may be context-only tokens.
+
+This distinction matters because:
+
+The GPU computes over every token position, but the model learns only from positions where loss is applied.
+
+A batch builder where students control number of GPUs, microbatch size, gradient accumulation, sequence length and checkpoint interval. The widget computes microbatch tokens, global batch tokens, optimizer steps, consumed tokens between checkpoints and the number of ledger events created. It gives students a concrete feel for why one "step" in a large run may already represent millions of token positions.
+
+If the ledger records that global step 843,219 consumed a batch, it means that every microbatch and every packed sample inside that optimizer update can be reconstructed.
+
+3. Documents Become Training Sequences
+
+Humans think in documents. Training operates on token windows.
+
+A cleaned document begins as text with:
+
+Provenance
+Quality metadata
+
+It then moves through a fixed transformation:
+
+clean document
+  -> token IDs
+  -> token spans
+  -> packed sequence
+  -> microbatch
+  -> global batch
+  -> optimizer step
+
+The document is first tokenized into token IDs.
+
+Those IDs are divided into spans.
+
+The spans are packed into fixed-length sequences.
+
+The sequences are grouped into microbatches.
+
+The microbatches are accumulated into global batches.
+
+Only then does the optimizer update the model.
+
+During this transformation, the system must preserve the meaning and boundaries of the original data.
+
+An EOS token may mark the end of a document.
+
+A document ID may identify the source that produced a token span.
+
+A loss mask determines whether a token contributes to the gradient.
+
+An attention mask determines which earlier tokens each token can attend to.
+
+Position IDs tell the model where each token sits inside the sequence.
+
+For plain pretraining, the pattern is usually simple:
+
+Most tokens receive next-token prediction loss.
+
+For SFT, the prompt usually provides context, while the assistant response receives loss.
+
+For agentic training, the user request and tool observations act as context, while the model's planning, tool calls, and final response receive loss.
+
+The batch therefore needs to carry more than token IDs.
+
+It must also carry the training meaning of those token IDs.
+
+A document-to-batch transformer showing several documents becoming token ids, token spans, packed sequences and microbatches. EOS markers, document boundaries, loss masks, attention masks, position ids and metadata ids are drawn explicitly. Switching from pretraining to SFT to agentic mode changes which tokens receive loss, making the shape of the training example visible.
+
+This is the first place where Session 5's loss maps become operational. The batch is the object that tells the optimizer where learning should happen.
+
+4. Padding and Why It Hurts
+
+Training systems prefer fixed shapes. Natural text does not arrive in fixed shapes.
+
+If a model expects sequences of 8,192 tokens and one example contains only 2,700 tokens, the simplest solution is to add pad tokens until the sequence reaches 8,192. This solves the shape problem, but creates a compute problem.
+
+Padding consumes token positions. These positions occupy memory, pass through parts of the model, and reduce the number of useful tokens processed per second.
+
+There are several kinds of padding.
+
+Right padding adds pad tokens after the real tokens. This is common when short examples are batched together.
+
+Left padding adds pad tokens before the real tokens. It is more common in batched inference than in pretraining.
+
+Batch-level padding pads every example to the length of the longest example in that batch.
+
+Fixed-context padding pads every sample to the model's full context length.
+
+Within-pack holes appear when multiple examples are packed into one fixed window, but unused space remains at the end.
+
+The cost is computational. Transformer attention grows with sequence length. Even if the loss mask ignores pad positions, memory bandwidth and compute have already been spent carrying those positions through the batch, unless the implementation can explicitly skip them.
+
+On large training runs, padding is wasted training budget.
+
+Students often ask three important questions.
+
+Can we cut a document in the middle of a line?
+
+For plain next-token pretraining, yes. It is usually acceptable to train on spans cut from a longer document. The model learns local continuation patterns across billions of spans, and the sequence boundary is primarily an engineering boundary.
+
+However, careless cuts can damage code blocks, tables, proofs, agent trajectories, and instruction-response examples where structure matters.
+
+Can we fill the remaining window with a different topic?
+
+For plain pretraining, yes. Documents are often concatenated with EOS boundaries, so one training window may contain the end of one document and the beginning of another.
+
+The EOS token tells the model that one text ended.
+
+For SFT, agentic data, and reasoning traces, placing unrelated samples inside the same attention-visible context can teach unnatural transitions unless masks and boundaries isolate them.
+
+Does the boundary matter if the model only predicts the next token?
+
+Yes.
+
+Without explicit boundaries, the model may learn that unrelated text is a natural continuation.
+
+Boundaries prevent accidental continuations between documents.
+
+A padding lab comparing right padding, left padding, batch-level padding, fixed-context padding and within-pack holes. The panel shows useful-token percentage, wasted positions, estimated compute waste and whether the policy is safe for plain pretraining, SFT, agentic traces and long reasoning examples. A "half-line crop" control demonstrates why arbitrary cuts are usually harmless for plain text spans but dangerous for structured samples.
+
+Padding is the easiest solution to explain and the most painful solution to pay for.
+
+5. Packing Policies
+
+Packing is the process of filling fixed-length sequences with useful tokens.
+
+The simplest policy is pad-only: each sample becomes one sequence, and the remaining space is filled with padding. This preserves structure but wastes compute.
+
+The next policy is concatenate-and-chop: documents are joined with EOS markers, and fixed-length windows are cut from the resulting token stream. This is efficient for plain pretraining, but treats sequence boundaries as mechanical cut points.
+
+Greedy packing places each example into the first available sequence with enough remaining space. It improves utilization, but the result depends on the incoming order.
+
+Best-fit packing sorts or buckets examples by length and places each one into the tightest available space. It improves utilization further, especially when the dataset contains many short examples.
+
+Structure-preserving packing adds rules for SFT, tool-use, and agentic data so unrelated examples do not leak into each other through attention.
+
+Long-context packing is handled separately because long-context batches are expensive. Every unused position wastes a high-value training opportunity.
+
+The correct policy depends on the data type.
+
+Plain web text usually tolerates concatenation. Code may tolerate spans, but benefits from preserving file or function boundaries. Agentic trajectories must preserve the order of tool observations, calls, and final answers. Reasoning traces need enough room to complete the argument.
+
+Evaluation shards must never be casually packed into training.
+
+A packing simulator where students choose a data type and packing policy. The widget compares pad-only, concatenate-and-chop, greedy packing, best-fit packing, structure-preserving packing and long-context packing. It reports utilization, truncation, boundary crossings, attention-mask complexity and loss-mask safety. The point is to show packing as a training decision with direct consequences for learning and throughput.
+
+Packing is where the model's context window becomes a budget. Every unused slot is a token the model did not learn from.
+
+6. Tokenized Shards and Manifests
+
+Tokenization should happen before training begins.
+
+Tokenization is expensive, but more importantly, it must be frozen. The training loop should consume tokenized shards whose contents are tied to one exact tokenizer version.
+
+A shard is an immutable training object.
+
+It may be stored as:
+
+Indexed binary token arrays for pretraining
+Structured records for SFT and agentic training
+Sharded tar-style objects when each example contains multiple related files
+
+The storage format may vary by training stage. The manifest discipline must remain consistent.
+
+A useful shard manifest records:
+
+Shard ID
+Source IDs
+Document IDs
+Tokenizer hash
+Token count
+Language and script
+Capability lane
+License and provenance tier
+Cleaning pipeline hash
+Deduplication status
+Contamination status
+Evaluation or test overlap status
+Content hash
+Parent shard IDs
+
+The content hash identifies the shard.
+
+The tokenizer hash gives meaning to the token IDs.
+
+The cleaning pipeline hash explains how raw text became admitted training data.
+
+The contamination status determines whether the shard is allowed to enter training.
+
+The capability lane tells the mixture scheduler where the shard may be used.
+
+A shard manifest builder where students assemble a training shard from source metadata, tokenizer version, cleaning pipeline, dedup status, license tier, language tag and contamination scan. The admission gate blocks shards with unsafe license, missing tokenizer hash, unknown cleaning lineage or eval overlap. The live manifest updates as JSON so students see what the training system will later audit.
+
+Once a shard is admitted, it should behave like a sealed object. If we modify it, it becomes a new shard with a new hash and a new lineage.
+
+7. Compiling the Mixture Timeline
+
+Session 5 described the mixture and curriculum in human terms. Session 6 must convert that design into per-step quotas.
+
+The schedule must know:
+
+Which stage the run is currently in
+How many tokens belong to that stage
+Which capability lanes are active
+What share each lane must receive
+Which floors are protected
+Which data is reserved for annealing
+How transitions are warmed up
+
+A stage record may look like this:
+
+{
+  "stage": "reasoning-heavy-midtrain",
+  "token_start": 1800000000000,
+  "token_end": 2400000000000,
+  "sequence_length": 8192,
+  "mixture": {
+    "general_web": 0.32,
+    "code": 0.22,
+    "math_science": 0.18,
+    "indic": 0.12,
+    "agentic": 0.06,
+    "reasoning": 0.10
+  },
+  "protected_floors": {
+    "indic": 0.08,
+    "agentic": 0.03,
+    "reasoning": 0.05
+  },
+  "warmup_tokens": 20000000000
+}
+
+The schedule must also understand data scarcity.
+
+If the Indic lane requests more verified native tokens than are available, the plan must specify whether to:
+
+Repeat existing data
+Generate synthetic data
+Reduce the lane share
+Move the share to a later stage
+
+If the agentic lane contains scarce Tier A trajectories, the schedule must reserve them instead of allowing them to be exhausted early.
+
+A mixture timeline compiler that converts curriculum stages into executable per-step quotas. Students set token ranges, mixture weights, protected floors, anneal reserves, Indic tier splits, reasoning-length bands and warmup widths. The compiler highlights lanes that cannot be satisfied from available shards and shows where repetition, synthetic generation or schedule changes are required.
+
+This is the bridge from Session 5's plan to the actual stream.
+
+8. The Training Consumption Ledger
+
+A planned schedule is necessary. The training run also needs a record of what actually happened.
+
+At 120B scale, the dataloader operates in the real world:
+
+Workers restart
+Ranks retry
+Checkpoints are restored
+Selection policies change
+Files become unavailable
+
+Even when the planned order is generated from a seed and an index, the run still needs an append-only record of the actual consumed stream.
+
+For every consumed batch, the ledger should record:
+
+Run ID
+Branch ID
+Global step
+Checkpoint ID
+Rank
+Microbatch ID
+Packed sample IDs
+Shard IDs
+Token span IDs
+Loss mask hash
+Attention and position policy
+Mixture lane
+Curriculum stage
+Tokenizer version
+Dataloader version
+OPUS decision ID, where applicable
+
+This ledger is the run's memory.
+
+It allows us to reconstruct which tokens contributed to a checkpoint, resume from a ledger offset, and investigate suspicious model behaviour by locating the data that shaped a specific interval of training.
+
+A training consumption ledger that appends events as microbatches are served. Clicking a global step reconstructs the packed samples, shard ids, token spans, loss-mask hash, mixture lane, curriculum stage and checkpoint id. A small "crash" event shows the next consumed batch being recovered from the ledger offset.
+
+The ledger makes the run inspectable even when the world around the run is messy.
+
+9. Why the Ledger Matters
+
+Imagine that we have an old checkpoint and want to compare two strategies.
+
+In the first strategy, we restore the checkpoint and allow the dataloader to produce whatever the current seed, worker count, and shard set generate.
+
+The model starts from the old weights, but the data stream has silently changed. If the new strategy performs better, we cannot determine whether the improvement came from the strategy or from seeing different data.
+
+In the second strategy, we restore the checkpoint and bind the run to a ledger branch.
+
+The run can either replay the historical data segment or intentionally fork into a new branch where every data difference is explicit. The experiment now has both a defined model state and a defined data stream, making the result comparable.
+
+This is the rule for serious training experiments:
+
+experiment = model checkpoint + optimizer state + data stream + code/config
+
+If any one of these changes silently, the comparison is weakened.
+
+A checkpoint comparison lab with two branches from the same old checkpoint. One branch has no ledger binding and receives a different data stream after resume. The other branch replays the historical stream or forks with a new branch id. The loss curves and benchmark deltas are annotated to show which comparison is trustworthy and which one is confounded by hidden data differences.
+
+The ledger turns training history into an experiment object.
+
+10. OPUS Audit Trail
+
+OPUS sits inside the data path. Its decisions are training events.
+
+In Session 5, OPUS selected candidate batches by estimating which updates would be most useful against a proxy direction. This means the data stream contains both accepted batches and candidates that were scored and rejected.
+
+Those rejections are valuable. They show:
+
+What the selector considered low value
+What protected floors rescued
+What the model was already comfortable with
+What may deserve review in a later phase
+
+For each candidate batch, the ledger should record:
+
+Candidate ID
+Shard IDs
+Capability lane
+Curriculum stage
+Model checkpoint used for scoring
+Proxy version
+OPUS score
+Accepted, rejected, or deferred status
+Rejection reason
+Protected-floor override
+Effective-token estimate
+
+Rejected clean data should not disappear.
+
+A batch may be low value for the current model and valuable for a later one. A rejected Indic or agentic batch may reveal proxy bias. A rejected code batch may be redundant during midtraining and useful during annealing.
+
+An OPUS accepted and rejected board where candidate batches stream in with lane tags, proxy scores and shard ids. OPUS accepts some, rejects some, defers some and rescues protected-floor batches. The widget keeps four ledgers: accepted, rejected, deferred and protected. Selecting a rejected batch shows whether it failed because of low proxy utility, quota pressure, duplication, stage mismatch or protected-lane bias.
+
+OPUS improves the stream only when its decisions are recorded as part of the stream.
+
+11. Token-Level Perplexity Trace
+
+The most detailed learning signal appears at the token level.
+
+For every loss-bearing token, the model computes cross-entropy:
+
+loss_t = -log p(true token_t)
+
+Token perplexity is:
+
+ppl_t = exp(loss_t)
+
+At this moment, the model tells us how surprising each token was. If this signal is discarded, recovering it later requires running the same model over the same data at the same training state. That is expensive and may never be reproduced cleanly at large scale.
+
+Per-token perplexity reveals patterns that shard-level averages hide.
+
+An Indic shard may have acceptable average loss while a specific conjunct, joiner pattern, or transliterated phrase remains difficult. A code shard may appear useful overall while indentation, rare library calls, or error messages carry most of the difficulty. An agentic trajectory may be easy in the final answer but difficult in the tool-call arguments. A long reasoning trace may become easier at the beginning while remaining high-perplexity near the verification step.
+
+For every loss-bearing token, the trace can record:
+
+Token ID
+Decoded preview, where allowed
+Position in the packed sequence
+Document ID
+Shard ID
+Language and script
+Capability lane
+Special-token flag
+Boundary or EOS flag
+Loss-mask flag
+Cross-entropy loss
+Token perplexity
+Model age when seen
+Checkpoint before and after
+Curriculum stage
+OPUS score or decision ID
+Repeated-pass number
+
+Full token traces are expensive, so the storage strategy should use multiple levels.
+
+For proxy runs, debug runs, and suspicious shards, we can store full token-level traces. For selected intervals of a large run, we can store compressed or quantized token losses. For the full run, we can store aggregated statistics by shard, language, token ID, position bucket, capability lane, and model phase.
+
+A token perplexity heatmap over one packed batch. Each token is coloured by perplexity, with filters for language, shard, position, capability lane, OPUS score and model phase. Switching from early to mid to late checkpoints shows some tokens becoming easy while others remain difficult. The lesson is that a shard is not uniformly useful or useless; the pattern of surprise inside the shard is the map for future data collection.
+
+This is one of the most valuable signals we can save for V6.
+
+12. The Two-Way Learning Ledger
+
+The consumption ledger records what the model saw. The learning ledger attaches the outcome back to the data.
+
+For each shard, sample, capability lane, or token cluster, the learning ledger can record:
+
+Average token loss
+High-perplexity token clusters
+Loss delta before and after exposure
+Gradient norm
+Gradient alignment, where available
+OPUS score
+Repeated-pass effect
+Model phase: early, mid, late, or anneal
+Tokens consumed when the data was seen
+Useful, neutral, or harmful classification for future planning
+
+This creates feedback for the next training run.
+
+If a shard had a high OPUS score and produced strong loss improvement early, it may be useful foundation data. If it had a high OPUS score but little loss reduction, the proxy may be overvaluing it.
+
+If OPUS rejected a shard but perplexity remained high for that language or pattern, the proxy may be missing a scarce capability. If repeated passes stop improving loss, the repetition budget is exhausted. If a shard causes gradient spikes, it may require cleaning, staging, or warmup.
+
+The data system therefore becomes a measuring instrument.
+
+It records what data was consumed, how surprising it was, how the model responded, and when during training that response occurred.
+
+A shard learning report card that follows one shard across early, mid, late and anneal phases. The panel shows OPUS score, average token perplexity, loss delta, gradient norm, repeated-pass effect and final usefulness classification. Students can compare a shard that helped early, a shard that helped late, a shard that caused spikes and a shard OPUS undervalued.
+
+This is how V5 teaches V6 what to collect, protect, repeat, defer or reject.
+
+13. Test shards and the eval firewall
+
+Evaluation data also needs manifests. The difference is permission.
+
+Training shards are admitted into the data stream. Test shards are registered in the audit system and blocked from training.
+
+They should include:
+
+Content hashes
+Benchmark IDs
+Version tags
+Contamination fingerprints
+Access logs
+Never-train flag
+
+The system must know that evaluation data exists precisely so it can prevent that data from entering a training batch.
+
+This firewall was introduced in Session 3 and reinforced in Session 4. Session 6 makes it executable.
+
+When a candidate shard is selected, the dataloader checks the evaluation registry. When a benchmark is updated, its hashes are added to the registry. When a suspicious score increase appears, the run can be audited against test-shard fingerprints and canary strings.
+
+The same discipline applies to validation shards.
+
+Validation data may be read during training for evaluation, but it must never become gradient-bearing training data.
+
+An eval firewall where train shards, validation shards and test shards sit in one registry with different permissions. A candidate training batch is checked against content hashes, contamination fingerprints and benchmark ids. Injecting an overlap blocks the batch and writes a rejection event. A separate audit view shows how a later benchmark jump can be traced back to the firewall.
+
+The model can only be trusted when the test data has a memory too.
+
+14. Resume, Replay, and Fork
+
+Large training runs are interrupted. The data system must define exactly what happens next.
+
+There are four modes.
+
+Resume continues the same run from the latest checkpoint and the latest ledger offset. This is the normal crash-recovery path.
+
+Replay restores an older checkpoint and feeds the same historical data stream from that point. This is useful when comparing a code or training change under identical data exposure.
+
+Fork restores a checkpoint and intentionally starts a new data branch. The new branch receives a new ID, and the ledger records the exact point of divergence.
+
+Audit reconstructs the data that trained a checkpoint or a range of checkpoints. It answers questions such as:
+
+Which shards influenced the model between 5.4B and 5.6B tokens?
+Which OPUS-selected batches appeared before a loss spike?
+
+Checkpointing therefore binds model state to data state.
+
+A checkpoint without a data position is incomplete.
+
+A crash, replay and fork drill where training advances through ledger offsets, crashes, resumes, rolls back and forks. The widget shows checkpoint step, ledger offset, branch id and next batch. Students can choose replay or fork after restoring an old checkpoint and see how the ledger keeps the experiment definition explicit.
+
+This is the operational heart of the session: data state travels with model state.
+
+15. Dataloader Throughput
+
+Correctness alone does not keep GPUs busy.
+
+The dataloader must deliver useful tokens faster than the GPUs consume them. Throughput depends on:
+
+Shard size
+Compression
+Storage bandwidth
+Local caching
+Prefetch depth
+Worker count
+Rank partitioning
+Packing efficiency
+OPUS rejection rate
+
+Small files create overhead. Very large files reduce flexibility and make recovery difficult. Compression saves storage and network bandwidth, but consumes CPU. Prefetching hides latency, but uses memory. More workers help until they saturate the storage system or compete with each other.
+
+OPUS may improve token value while reducing accepted-token throughput if candidate generation and scoring are slow.
+
+The metric that matters is:
+
+Useful loss-bearing tokens per second at the target mixture
+
+A loader may report high raw token throughput while still wasting compute on padding, context-only tokens, or batches rejected by OPUS.
+
+The run should monitor:
+
+Raw tokens/sec
+Useful loss-bearing tokens/sec
+Accepted tokens/sec after OPUS
+GPU idle time
+Loader wait time
+Cache hit rate
+Shard read latency
+Packing utilization
+Rejection rate by lane
+Replay and resume latency
+
+A dataloader throughput lab where students adjust shard size, compression, worker count, prefetch depth, cache hit rate, packing efficiency and OPUS rejection rate. The output shows raw tokens/sec, useful tokens/sec, accepted tokens/sec, GPU idle time and loader wait time. The key distinction is visible: a fast loader can still deliver little learning when much of the stream is padding, context-only tokens or rejected candidates.
+
+The best data system is both inspectable and fast enough to disappear from the GPU's point of view.
+
+16. The Assignment
+
+Build a small but complete Training Data Execution System for V5.
+
+The system must implement the full path:
+
+documents
+  -> tokenized shards
+  -> manifests
+  -> mixture schedule
+  -> packing
+  -> batches
+  -> training
+  -> consumption ledger
+  -> learning ledger
+  -> checkpoint
+  -> crash
+  -> resume
+  -> replay
+  -> audit
+
+The implementation may use a small corpus, tokenizer and model. The goal is not scale. The goal is to prove that the data system is correct, reproducible, auditable and efficient.
+
+The system must demonstrate:
+
+Immutable tokenized shards with manifests
+Frozen tokenizer and content hashes
+Packing policies for different data types
+Correct loss masks, attention masks and position ids
+Curriculum stages, lane weights and protected floors
+Evaluation and validation firewalls
+OPUS acceptance, rejection, deferral and protected-floor override
+Training consumption and learning ledgers
+Token-level or sample-level loss tracking
+Checkpoints tied to ledger offsets
+Crash recovery without skipped or repeated batches
+Replay of the same historical data stream
+Forking from an earlier checkpoint
+Packing utilization and useful loss-bearing tokens per second
+
+The final run must deliberately crash, resume from the saved checkpoint and prove that the next batch is exactly the expected batch. It must also replay an earlier interval and prove that the reconstructed batch ids, token spans and hashes match the original run.
+
+Submission
+
+Submit a GitHub repository containing:
+
+The complete implementation.
+A short README explaining the architecture and design decisions.
+One command that runs the complete demonstration.
+Automated tests for the important invariants.
+A generated execution log.
+A machine-readable evidence bundle.
+Generated manifests, ledgers, checkpoints and performance reports.
+
+The complete system should run using one command, such as:
+
+python run_demo.py
+
+The exact command may differ, but it must execute the full demonstration without manual intervention.
+
+The submission must generate the following structure:
+
+submission_artifacts/
+  run.log
+  evidence.json
+  evidence.md
+  manifests/
+  ledgers/
+  checkpoints/
+  performance.json
+Execution Log
+
+run.log must contain the complete sequence of events:
+
+shards created
+manifests validated
+evaluation data blocked
+mixture compiled
+batches packed
+OPUS decisions recorded
+checkpoint saved
+crash simulated
+run resumed
+historical stream replayed
+branch forked
+audit completed
+performance measured
+
+Important events should be recorded clearly:
+
+[PASS] tokenizer_hash_verified
+[PASS] eval_shard_blocked
+[PASS] checkpoint_saved
+[PASS] resume_next_batch_matched
+[PASS] replay_hash_matched
+Evidence Bundle
+
+evidence.json must record whether every major requirement passed and where the supporting evidence can be found.
+
+evidence.md must provide a short human-readable summary:
+
+REQUIREMENT	RESULT	EVIDENCE
+Tokenizer integrity	PASS/FAIL	Manifest record
+Evaluation firewall	PASS/FAIL	Blocked-shard event
+Packing correctness	PASS/FAIL	Packed-batch report
+Mixture compliance	PASS/FAIL	Planned versus actual shares
+OPUS audit trail	PASS/FAIL	Candidate decision records
+Crash recovery	PASS/FAIL	Expected and resumed batch ids
+Replay	PASS/FAIL	Original and replay hashes
+Learning trace	PASS/FAIL	Loss linked to source data
+Throughput	PASS/FAIL	Performance report
+
+The evidence bundle must be generated by the implementation. Hardcoded evidence will not be accepted.
+
+Evaluation
+
+The assignment carries 1,000 points.
+
+AREA	POINTS
+End-to-end execution	150
+Shards, manifests and tokenizer integrity	100
+Packing, masks and batch correctness	150
+Mixture schedule, protected floors and OPUS	150
+Consumption and learning ledgers	150
+Checkpoint, crash, resume, replay and fork	150
+Evaluation and validation firewall	50
+Throughput and packing efficiency	50
+Tests, evidence quality and documentation	50
+Total	1,000
+
+Evaluation will happen in three steps.
+
+Step 1: Execute
+
+The submitted command will be run to regenerate the complete submission_artifacts/ directory.
+
+Step 2: Verify Evidence
+
+The execution log, evidence.json and evidence.md will be checked against the generated manifests, ledgers and reports.
+
+Step 3: Inspect Code
+
+The code will be inspected to verify that the evidence was produced by the implementation and that the required behaviour was not simulated or hardcoded.
+
+A subsystem receives full credit only when its result is supported by reproducible evidence.
+
+Examples:
+
+If resume repeats or skips a batch, the resume section fails.
+If replay produces different batch hashes, the replay section fails.
+If evaluation data enters a loss-bearing batch, the firewall section fails.
+If reported packing or throughput numbers cannot be reconstructed, those claims will not receive credit.
+
+The assignment is complete only when the system can prove what it consumed, why it consumed it, what the model learned from it and how the run can be reconstructed.
+
+17. References
+Megatron Core documents indexed GPT datasets through document, sample and shuffle indices, which is the right baseline mental model for planned sample lookup.
+Mosaic StreamingDataset documents mid-epoch resumable streaming and deterministic sample ordering for practical recovery.
+NVIDIA NeMo Curator documents large-scale curation, exact/fuzzy/semantic deduplication and GPU-accelerated data processing.
+WebDataset-style sharded tar formats are useful for structured examples where multiple files belong to one sample.
+LakeFS, Iceberg and Delta-style transaction logs provide useful database/lakehouse analogies for versioned data, replay and audit history.
+Video
+
+Studio
+
+PREVIOUS
+
+Session 5 - Data Mixtures and Curriculum
+
+Mark Complete

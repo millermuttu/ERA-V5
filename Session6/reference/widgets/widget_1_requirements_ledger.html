@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en" style="--accent: #0891b2;"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Session 6 Widget 1 - Requirements Ledger</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Noto+Sans+Devanagari:wght@400;600;700&amp;display=swap" rel="stylesheet">
+  <style>
+    :root{--ink:#172033;--muted:#667085;--line:#d9e2ee;--panel:#fff;--soft:#f6f9fc;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+    *{box-sizing:border-box} body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font-family:Inter,"Noto Sans Devanagari",system-ui,sans-serif}
+    .s6w1-wrap{max-width:1280px;margin:0 auto;padding:24px}.s6w1-head{display:flex;gap:18px;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
+    .s6w1-kicker{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}h1{font-size:28px;line-height:1.08;margin:4px 0 8px}.s6w1-sub{max-width:780px;color:var(--muted);font-size:14px;line-height:1.55;margin:0}
+    .s6w1-score{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px;min-width:220px;box-shadow:0 10px 28px rgba(18,38,63,.08)}.s6w1-score b{font-size:24px}.s6w1-score span{display:block;font-size:12px;color:var(--muted)}
+    .s6w1-grid{display:grid;grid-template-columns:330px 1fr;gap:16px}.s6w1-card{background:rgba(255,255,255,.92);border:1px solid var(--line);border-radius:8px;box-shadow:0 12px 30px rgba(20,42,75,.08)}
+    .s6w1-list{padding:10px;display:grid;gap:8px}.s6w1-session{border:1px solid var(--line);background:#fff;border-radius:8px;padding:12px;text-align:left;cursor:pointer;transition:.18s}.s6w1-session:hover,.s6w1-session.active{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 18%,transparent)}
+    .s6w1-session strong{display:block;font-size:14px}.s6w1-session small{display:block;color:var(--muted);line-height:1.35;margin-top:4px}.s6w1-main{padding:16px}.s6w1-detail{display:grid;grid-template-columns:1.1fr .9fr;gap:14px;margin-bottom:14px}
+    .s6w1-panel{border:1px solid var(--line);border-radius:8px;background:#fff;padding:14px}.s6w1-panel h2{font-size:16px;margin:0 0 10px}.s6w1-panel p{font-size:13px;line-height:1.5;color:var(--muted);margin:0 0 10px}
+    .s6w1-chips{display:flex;flex-wrap:wrap;gap:8px}.s6w1-chip{border:1px solid color-mix(in srgb,var(--accent) 35%,var(--line));background:color-mix(in srgb,var(--accent) 10%,#fff);color:color-mix(in srgb,var(--accent) 84%,#111827);border-radius:999px;padding:6px 9px;font-size:12px;font-weight:700}
+    .s6w1-ledger{display:grid;gap:8px}.s6w1-row{display:grid;grid-template-columns:140px 1fr 110px;gap:8px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:9px;background:#fbfdff}.s6w1-row code{font-size:12px;color:#334155}.s6w1-status{font-size:12px;font-weight:800;border-radius:999px;padding:5px 8px;text-align:center}
+    .ok{background:#dcfce7;color:#166534}.warn{background:#fef3c7;color:#92400e}.miss{background:#fee2e2;color:#991b1b}.s6w1-toggles{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.s6w1-toggle{border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 10px;font-size:12px;font-weight:750;cursor:pointer}.s6w1-toggle.on{background:#ecfeff;border-color:#67e8f9;color:#0e7490}
+    @media(max-width:850px){.s6w1-grid,.s6w1-detail{grid-template-columns:1fr}.s6w1-head{display:block}.s6w1-score{margin-top:12px}.s6w1-row{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="s6w1-wrap">
+    <header class="s6w1-head">
+      <div><div class="s6w1-kicker">ERA V5 Session 6</div><h1>Requirements Ledger</h1><p class="s6w1-sub">Click a previous session to see the contract it imposes on the training dataset. Toggle production requirements to watch the admission score change.</p></div>
+      <div class="s6w1-score"><span>Current stream readiness</span><b id="s6w1Score">72%</b><span id="s6w1ScoreText">Blocked: core contracts absent</span></div>
+    </header>
+    <main class="s6w1-grid">
+      <section class="s6w1-card s6w1-list" id="s6w1Sessions"><button class="s6w1-session active" style="--accent:#0891b2" data-i="0"><strong>Session 1: Transformer Foundations</strong><small>The model consumes fixed token windows and learns next-token prediction. Session 6 must preserve sequenc...</small></button><button class="s6w1-session " style="--accent:#7c3aed" data-i="1"><strong>Session 2: Tokenization &amp; Vocabulary Design</strong><small>A training shard is only meaningful under the exact tokenizer that created it, including special tokens ...</small></button><button class="s6w1-session " style="--accent:#159447" data-i="2"><strong>Session 3: Data Collection &amp; Sourcing</strong><small>Every token needs provenance. Source tier, license status, capability tags and held-out status travel in...</small></button><button class="s6w1-session " style="--accent:#d97706" data-i="3"><strong>Session 4: Data Cleaning &amp; Deduplication</strong><small>Only cleaned, deduped, PII-screened and contamination-scanned data can enter the stream. The transformat...</small></button><button class="s6w1-session " style="--accent:#dc2626" data-i="4"><strong>Session 5: Data Mixtures &amp; Curriculum</strong><small>The mixture recipe becomes an executable schedule: protected floors, OPUS policy, curriculum stages, ann...</small></button></section>
+      <section class="s6w1-card s6w1-main">
+        <div class="s6w1-detail">
+          <div class="s6w1-panel"><h2 id="s6w1Title">Transformer Foundations</h2><p id="s6w1Body">The model consumes fixed token windows and learns next-token prediction. Session 6 must preserve sequence length, ordering, loss masks, attention policy and EOS boundaries.</p><div class="s6w1-chips" id="s6w1Chips"><span class="s6w1-chip">next-token loss</span><span class="s6w1-chip">sequence length</span><span class="s6w1-chip">attention masks</span><span class="s6w1-chip">position ids</span></div></div>
+          <div class="s6w1-panel"><h2>Data-System Contract</h2><div class="s6w1-ledger" id="s6w1Rows"><div class="s6w1-row"><code>loss_mask_hash</code><span>Loss-bearing tokens are explicit</span><span class="s6w1-status ok">OK</span></div><div class="s6w1-row"><code>eos_boundary</code><span>Document breaks survive packing</span><span class="s6w1-status ok">OK</span></div><div class="s6w1-row"><code>position_policy</code><span>RoPE/context policy recorded</span><span class="s6w1-status warn">WARN</span></div></div></div>
+        </div>
+        <div class="s6w1-panel"><h2>Admission Toggles</h2><p>These switches represent checks the Session 6 pipeline must enforce before a shard is allowed into the training stream.</p><div class="s6w1-toggles" id="s6w1Toggles"><button class="s6w1-toggle on" data-i="0">Tokenizer frozen</button><button class="s6w1-toggle on" data-i="1">Eval firewall</button><button class="s6w1-toggle " data-i="2">OPUS reject log</button><button class="s6w1-toggle on" data-i="3">Loss-mask hashes</button><button class="s6w1-toggle " data-i="4">Ledger branch id</button><button class="s6w1-toggle on" data-i="5">Contamination scan</button><button class="s6w1-toggle on" data-i="6">Source license tier</button></div></div>
+      </section>
+    </main>
+  </div>
+  <script>
+    const sessions=[
+      {n:"Session 1",accent:"#0891b2",t:"Transformer Foundations",b:"The model consumes fixed token windows and learns next-token prediction. Session 6 must preserve sequence length, ordering, loss masks, attention policy and EOS boundaries.",chips:["next-token loss","sequence length","attention masks","position ids"],rows:[["loss_mask_hash","Loss-bearing tokens are explicit","ok"],["eos_boundary","Document breaks survive packing","ok"],["position_policy","RoPE/context policy recorded","warn"]]},
+      {n:"Session 2",accent:"#7c3aed",t:"Tokenization & Vocabulary Design",b:"A training shard is only meaningful under the exact tokenizer that created it, including special tokens and Indic normalization choices.",chips:["tokenizer hash","special tokens","Indic-safe normalization","vocab version"],rows:[["tokenizer_sha","Frozen vocab and merges","ok"],["special_tokens","PAD/EOS/BOS policy stored","ok"],["normalizer_id","Unicode policy captured","warn"]]},
+      {n:"Session 3",accent:"#159447",t:"Data Collection & Sourcing",b:"Every token needs provenance. Source tier, license status, capability tags and held-out status travel into the shard manifest.",chips:["source id","license tier","capability tags","held-out flag"],rows:[["source_manifest","URL/version/license lineage","ok"],["capability_lane","Reasoning/code/Indic/etc.","ok"],["eval_firewall","Never-train status checked","warn"]]},
+      {n:"Session 4",accent:"#d97706",t:"Data Cleaning & Deduplication",b:"Only cleaned, deduped, PII-screened and contamination-scanned data can enter the stream. The transformation lineage must be reproducible.",chips:["cleaning hash","MinHash cluster","PII status","contamination scan"],rows:[["pipeline_hash","Cleaning version attached","ok"],["dedup_cluster","Near-duplicate group known","ok"],["contam_scan","Eval overlap status present","ok"]]},
+      {n:"Session 5",accent:"#dc2626",t:"Data Mixtures & Curriculum",b:"The mixture recipe becomes an executable schedule: protected floors, OPUS policy, curriculum stages, anneal reserve and lane quotas.",chips:["mixture schedule","OPUS decision id","protected floors","anneal reserve"],rows:[["stage_id","Token range maps to curriculum","ok"],["opus_decision","Accepted/rejected tracked","miss"],["lane_quota","Protected floors enforced","ok"]]}
+    ];
+    const toggles=[["Tokenizer frozen",14,true],["Eval firewall",14,true],["OPUS reject log",16,false],["Loss-mask hashes",12,true],["Ledger branch id",12,false],["Contamination scan",16,true],["Source license tier",16,true]];
+    let active=0;
+    const ses=document.getElementById("s6w1Sessions"), tog=document.getElementById("s6w1Toggles");
+    function renderSessions(){ses.innerHTML=sessions.map((s,i)=>`<button class="s6w1-session ${i===active?"active":""}" style="--accent:${s.accent}" data-i="${i}"><strong>${s.n}: ${s.t}</strong><small>${s.b.slice(0,104)}...</small></button>`).join("");document.querySelectorAll(".s6w1-session").forEach(b=>b.onclick=()=>{active=+b.dataset.i;render()})}
+    function render(){const s=sessions[active];document.documentElement.style.setProperty("--accent",s.accent);document.getElementById("s6w1Title").textContent=s.t;document.getElementById("s6w1Body").textContent=s.b;document.getElementById("s6w1Chips").innerHTML=s.chips.map(c=>`<span class="s6w1-chip">${c}</span>`).join("");document.getElementById("s6w1Rows").innerHTML=s.rows.map(r=>`<div class="s6w1-row"><code>${r[0]}</code><span>${r[1]}</span><span class="s6w1-status ${r[2]}">${r[2].toUpperCase()}</span></div>`).join("");renderSessions();score()}
+    function renderToggles(){tog.innerHTML=toggles.map((t,i)=>`<button class="s6w1-toggle ${t[2]?"on":""}" data-i="${i}">${t[0]}</button>`).join("");document.querySelectorAll(".s6w1-toggle").forEach(b=>b.onclick=()=>{toggles[+b.dataset.i][2]=!toggles[+b.dataset.i][2];renderToggles();score()})}
+    function score(){const total=toggles.reduce((a,t)=>a+t[1],0), got=toggles.reduce((a,t)=>a+(t[2]?t[1]:0),0), pct=Math.round(got/total*100);document.getElementById("s6w1Score").textContent=pct+"%";document.getElementById("s6w1ScoreText").textContent=pct>=95?"Ready for training admission":pct>=75?"Missing audit fields":"Blocked: core contracts absent"}
+    renderToggles();render();
+  </script>
+
+
+</body></html>

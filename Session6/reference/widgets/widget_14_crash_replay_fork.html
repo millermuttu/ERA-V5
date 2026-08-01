@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Session 6 Widget 14 - Crash Replay Fork</title>
+  <style>
+    :root { --cr-ink:#102033; --cr-muted:#5b6b82; --cr-line:#d9e2ef; --cr-bg:#f5f8fc; --cr-panel:#fff; --cr-cyan:#0891b2; --cr-violet:#7c3aed; --cr-green:#16a34a; --cr-amber:#d97706; --cr-red:#dc2626; --cr-blue:#2563eb; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--cr-bg); color:var(--cr-ink); font-family:Inter,"Noto Sans",ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:14px; }
+    .cr-wrap { max-width:1280px; margin:0 auto; padding:18px; }
+    .cr-card { background:var(--cr-panel); border:1px solid var(--cr-line); border-radius:8px; box-shadow:0 8px 22px rgba(29,55,90,.06); }
+    .cr-head { display:grid; grid-template-columns:minmax(0,1fr) 380px; gap:14px; margin-bottom:14px; }
+    .cr-title { padding:16px; }
+    .cr-title h1 { margin:0 0 6px; font-size:20px; }
+    .cr-title p { margin:0; color:var(--cr-muted); line-height:1.45; }
+    .cr-controls { padding:12px; display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .cr-button { border:1px solid var(--cr-line); border-radius:8px; background:#fff; color:var(--cr-ink); min-height:36px; padding:8px 10px; font:inherit; cursor:pointer; }
+    .cr-button.primary { background:#e6f7fb; border-color:var(--cr-cyan); color:#075e75; font-weight:800; }
+    .cr-button.warn { background:#fef3c7; border-color:#fde68a; color:#92400e; font-weight:800; }
+    .cr-main { display:grid; grid-template-columns:320px minmax(0,1fr) 340px; gap:14px; }
+    .cr-panel { padding:14px; }
+    .cr-panel h2 { margin:0 0 10px; font-size:14px; }
+    .cr-kpis { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
+    .cr-kpi { border:1px solid var(--cr-line); border-radius:8px; background:#fbfdff; padding:10px; }
+    .cr-kpi b { display:block; font-size:19px; }
+    .cr-kpi span { color:var(--cr-muted); font-size:12px; }
+    .cr-mode { display:grid; gap:8px; margin-top:12px; }
+    .cr-mode button { text-align:left; border:1px solid var(--cr-line); background:#fff; border-radius:8px; padding:10px; font:inherit; cursor:pointer; }
+    .cr-mode button.is-active { border-color:var(--cr-violet); background:#f5f3ff; }
+    .cr-mode b { display:block; }
+    .cr-mode span { display:block; color:var(--cr-muted); font-size:12px; margin-top:3px; line-height:1.35; }
+    .cr-timeline { border:1px solid var(--cr-line); border-radius:8px; background:#f8fbff; padding:14px; min-height:420px; }
+    .cr-track { position:relative; height:76px; margin:16px 0 24px; border-top:3px solid #dbe6f3; }
+    .cr-track h3 { position:absolute; top:-28px; left:0; margin:0; font-size:12px; color:var(--cr-muted); }
+    .cr-dot { position:absolute; top:-10px; width:18px; height:18px; border-radius:50%; border:2px solid #fff; box-shadow:0 0 0 1px var(--cr-line); background:var(--cr-cyan); transform:translateX(-50%); }
+    .cr-dot.ckpt { background:var(--cr-green); }
+    .cr-dot.crash { background:var(--cr-red); }
+    .cr-dot.branch { background:var(--cr-violet); }
+    .cr-dot span { position:absolute; top:22px; left:50%; transform:translateX(-50%); font-size:11px; color:var(--cr-muted); white-space:nowrap; }
+    .cr-next { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:10px; }
+    .cr-sample { border:1px solid var(--cr-line); border-radius:8px; background:#fff; padding:9px; min-height:72px; }
+    .cr-sample b { display:block; font-size:13px; }
+    .cr-sample span { color:var(--cr-muted); font-size:12px; display:block; margin-top:4px; }
+    .cr-sample.replay { border-color:#bbf7d0; background:#f0fdf4; }
+    .cr-sample.changed { border-color:#fecaca; background:#fff1f2; }
+    .cr-log { display:grid; gap:8px; max-height:448px; overflow:auto; padding-right:4px; }
+    .cr-event { border-left:3px solid var(--cr-cyan); border-radius:0 8px 8px 0; border-top:1px solid var(--cr-line); border-right:1px solid var(--cr-line); border-bottom:1px solid var(--cr-line); background:#fbfdff; padding:9px 10px; }
+    .cr-event b { display:block; font-size:12px; }
+    .cr-event span { display:block; color:var(--cr-muted); font-size:12px; line-height:1.35; margin-top:3px; }
+    .cr-note { margin-top:12px; color:var(--cr-muted); line-height:1.45; font-size:13px; }
+    @media (max-width:980px) { .cr-head,.cr-main { grid-template-columns:1fr; } .cr-next { grid-template-columns:repeat(2,1fr); } }
+  </style>
+</head>
+<body>
+  <main class="cr-wrap">
+    <section class="cr-head">
+      <div class="cr-card cr-title">
+        <h1>Crash, Replay, Fork</h1>
+        <p>A checkpoint captures model state. The ledger captures the consumed data frontier. Together they decide whether an experiment is resumed, replayed, or intentionally branched.</p>
+      </div>
+      <div class="cr-card cr-controls">
+        <button class="cr-button primary" id="crAdvance">Advance 100 steps</button>
+        <button class="cr-button warn" id="crCrash">Crash now</button>
+        <button class="cr-button" id="crRollback">Rollback to ckpt-2</button>
+        <button class="cr-button" id="crReset">Reset</button>
+      </div>
+    </section>
+    <section class="cr-main">
+      <aside class="cr-card cr-panel">
+        <h2>Run State</h2>
+        <div class="cr-kpis">
+          <div class="cr-kpi"><b id="crStep">0</b><span>global step</span></div>
+          <div class="cr-kpi"><b id="crOffset">0</b><span>ledger offset</span></div>
+          <div class="cr-kpi"><b id="crCkpt">ckpt-0</b><span>checkpoint</span></div>
+          <div class="cr-kpi"><b id="crBranch">run-a</b><span>branch id</span></div>
+        </div>
+        <h2 style="margin-top:14px">Recovery Mode</h2>
+        <div class="cr-mode" id="crMode">
+          <button data-mode="ledger" class="is-active"><b>Ledger replay</b><span>Feed the same sample ids after rollback.</span></button>
+          <button data-mode="random"><b>No ledger</b><span>Sampler restarts from seed and may feed different data.</span></button>
+          <button data-mode="fork"><b>Intentional fork</b><span>Keep checkpoint, create a new data branch.</span></button>
+        </div>
+      </aside>
+      <section class="cr-card cr-panel">
+        <h2>Experiment Timeline</h2>
+        <div class="cr-timeline">
+          <div class="cr-track" id="crModelTrack"><h3>model checkpoints</h3><div class="cr-dot ckpt" style="left:2%"><span>ckpt-0</span></div><div class="cr-dot ckpt" style="left:20%"><span>ckpt-1</span></div><div class="cr-dot ckpt" style="left:40%"><span>ckpt-2</span></div></div>
+          <div class="cr-track" id="crLedgerTrack"><h3>ledger events</h3><div class="cr-dot " style="left:2%"><span>start</span></div><div class="cr-dot " style="left:2%"><span>offset 0</span></div></div>
+          <div class="cr-track" id="crBranchTrack"><h3>branches and failures</h3><div class="cr-dot branch" style="left:2%"><span>current</span></div></div>
+          <h2>Next Four Batches After Recovery</h2>
+          <div class="cr-next" id="crNext"><div class="cr-sample replay"><b>sample-7000</b><span>web-20</span><span>web</span></div><div class="cr-sample replay"><b>sample-7001</b><span>code-21</span><span>code</span></div><div class="cr-sample replay"><b>sample-7002</b><span>indic-22</span><span>indic</span></div><div class="cr-sample replay"><b>sample-7003</b><span>agentic-23</span><span>agentic</span></div></div>
+          <p class="cr-note" id="crExplanation">Recovery reads the ledger offset and replays the historical sample stream, so the old checkpoint comparison stays clean.</p>
+        </div>
+      </section>
+      <aside class="cr-card cr-panel">
+        <h2>Operational Log</h2>
+        <div class="cr-log" id="crLog"><div class="cr-event"><b>run_started</b><span>training stream bound to checkpoint and ledger</span></div></div>
+      </aside>
+    </section>
+  </main>
+  <script>
+    const crPlan = Array.from({length:80}, (_,i) => ({ id:"sample-" + String(7000+i), shard:["web","code","indic","agentic","reason"][i%5] + "-" + (20+i%13), lane:["web","code","indic","agentic","reasoning"][i%5] }));
+    let cr = { step:0, offset:0, ckpt:0, branch:"run-a", crashed:false, mode:"ledger", log:[] };
+    const cre = id => document.getElementById(id);
+    function crAdd(kind,msg){ cr.log.push({kind,msg}); if(cr.log.length>12) cr.log.shift(); }
+    function crCheckpoint(){ cr.ckpt = Math.floor(cr.step/200); }
+    function crRenderTrack(id, dots) {
+      cre(id).innerHTML = cre(id).querySelector("h3").outerHTML + dots.map(d => "<div class='cr-dot " + d.cls + "' style='left:" + d.x + "%'><span>" + d.label + "</span></div>").join("");
+    }
+    function crNextSamples() {
+      let start = cr.offset % crPlan.length;
+      if (cr.mode === "random" && cr.crashed) start = (start + 9) % crPlan.length;
+      if (cr.mode === "fork" && cr.crashed) start = (start + 17) % crPlan.length;
+      return [0,1,2,3].map(n => crPlan[(start+n)%crPlan.length]);
+    }
+    function crRender() {
+      crCheckpoint();
+      cre("crStep").textContent = cr.step;
+      cre("crOffset").textContent = cr.offset;
+      cre("crCkpt").textContent = "ckpt-" + cr.ckpt;
+      cre("crBranch").textContent = cr.branch;
+      const max = 1000, pct = v => Math.max(2, Math.min(98, v/max*100));
+      crRenderTrack("crModelTrack", [0,200,400,600,800,1000].filter(v=>v<=Math.max(cr.step,420)).map(v=>({x:pct(v),label:"ckpt-"+Math.floor(v/200),cls:"ckpt"})));
+      crRenderTrack("crLedgerTrack", [0, cr.offset].map((v,i)=>({x:pct(v),label:i?"offset "+v:"start",cls:""})));
+      crRenderTrack("crBranchTrack", [{x:pct(cr.step),label:cr.crashed?"crash/restore":"current",cls:cr.crashed?"crash":"branch"}]);
+      const next = crNextSamples(), historical = crPlan.slice(cr.offset % crPlan.length, cr.offset % crPlan.length + 4).map(s=>s.id);
+      cre("crNext").innerHTML = next.map(s => {
+        const same = historical.includes(s.id) || !cr.crashed || cr.mode === "ledger";
+        return "<div class='cr-sample " + (same ? "replay" : "changed") + "'><b>" + s.id + "</b><span>" + s.shard + "</span><span>" + s.lane + "</span></div>";
+      }).join("");
+      cre("crExplanation").textContent = cr.mode === "ledger" ? "Recovery reads the ledger offset and replays the historical sample stream, so the old checkpoint comparison stays clean." : cr.mode === "random" ? "Without a ledger, the same checkpoint can see a different next stream. A loss curve difference now mixes model effects with data effects." : "Fork mode is valid when intentional: the branch id says this is a new data experiment from the same checkpoint.";
+      cre("crLog").innerHTML = cr.log.slice().reverse().map(e => "<div class='cr-event'><b>" + e.kind + "</b><span>" + e.msg + "</span></div>").join("");
+    }
+    cre("crAdvance").onclick = () => { cr.step += 100; cr.offset += 100; cr.crashed = false; crAdd("batch_committed","advanced to step " + cr.step + " and ledger offset " + cr.offset); crRender(); };
+    cre("crCrash").onclick = () => { cr.crashed = true; crAdd("trainer_crashed","failure at step " + cr.step + ", checkpoint ckpt-" + Math.floor(cr.step/200) + ", offset " + cr.offset); crRender(); };
+    cre("crRollback").onclick = () => { cr.step = 400; cr.offset = cr.mode === "ledger" ? 400 : cr.offset; cr.crashed = true; if (cr.mode === "fork") cr.branch = "run-b"; crAdd("checkpoint_restored","restored ckpt-2 with mode " + cr.mode + " on " + cr.branch); crRender(); };
+    cre("crReset").onclick = () => { cr = { step:0, offset:0, ckpt:0, branch:"run-a", crashed:false, mode:cr.mode, log:[] }; crAdd("run_started","new run initialized"); crRender(); };
+    document.querySelectorAll("#crMode button").forEach(btn => btn.onclick = () => { cr.mode = btn.dataset.mode; document.querySelectorAll("#crMode button").forEach(b=>b.classList.toggle("is-active", b===btn)); if(cr.mode!=="fork") cr.branch="run-a"; crRender(); });
+    crAdd("run_started","training stream bound to checkpoint and ledger");
+    crRender();
+  </script>
+
+
+</body></html>
