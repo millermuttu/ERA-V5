@@ -4,26 +4,30 @@ verification - the invariant the rubric requires to pass), `random`
 (offset +17, new run_branch_id).
 """
 from pipeline.batch import build_masked_sample
-from pipeline.packing import pack_lane
+from pipeline.packing import doc_stream
 
 RANDOM_OFFSET_SHIFT = 9
 FORK_OFFSET_SHIFT = 17
 
 
-def _shard_by_id(shards, shard_id):
-    for shard in shards:
-        if shard["shard_id"] == shard_id:
-            return shard
-    raise KeyError(shard_id)
-
-
 def reconstruct_sample(ledger_event, shards, tokenizer, config):
     """Independently rebuilds a packed sample from a ledger event and the
     deterministic, content-addressed shards - no reliance on the original
-    in-memory plan."""
-    shard = _shard_by_id(shards, ledger_event["shard_ids"][0])
-    bins = pack_lane(ledger_event["mixture_lane"], [shard], seq_len=config.seq_len, eos_id=tokenizer.eos_id)
-    return build_masked_sample(bins[0], seq_len=config.seq_len, pad_id=tokenizer.pad_id)
+    in-memory plan and no re-run of the packer.
+
+    Each `token_span_ids` entry is sliced straight out of the shard's token
+    stream, so this reproduces the exact fragment the original run trained
+    on even when a policy chopped one document across two bins."""
+    shards_by_id = {s["shard_id"]: s for s in shards}
+    docs = []
+    for span in ledger_event["token_span_ids"]:
+        shard_id, start, end = span.rsplit(":", 2)
+        start, end = int(start), int(end)
+        tokens, roles = doc_stream(shards_by_id[shard_id], tokenizer.eos_id)
+        docs.append({"shard_id": shard_id, "tokens": tokens[start:end],
+                     "roles": roles[start:end], "start": start, "end": end})
+    bin_ = {"policy": ledger_event["position_policy"], "docs": docs}
+    return build_masked_sample(bin_, seq_len=ledger_event["seq_len"], pad_id=tokenizer.pad_id)
 
 
 def replay_ledger_mode(ledger, shards, tokenizer, config, start, end):
@@ -38,8 +42,11 @@ def replay_ledger_mode(ledger, shards, tokenizer, config, start, end):
             "reconstructed_loss_mask_hash": rebuilt["loss_mask_hash"],
             "original_shard_ids": event["shard_ids"],
             "reconstructed_shard_ids": rebuilt["shard_ids"],
+            "original_token_span_ids": event["token_span_ids"],
+            "reconstructed_token_span_ids": rebuilt["token_span_ids"],
             "matched": (event["loss_mask_hash"] == rebuilt["loss_mask_hash"]
-                        and event["shard_ids"] == rebuilt["shard_ids"]),
+                        and event["shard_ids"] == rebuilt["shard_ids"]
+                        and event["token_span_ids"] == rebuilt["token_span_ids"]),
         })
     return results
 

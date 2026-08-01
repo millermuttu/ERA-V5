@@ -1,0 +1,197 @@
+{
+  "ledger_mode_results": [
+    {
+      "ledger_offset": 0,
+      "original_loss_mask_hash": "318ef501de020becf64371a098cb5ea527b244c3dbba51683c3ee98f1affba60",
+      "reconstructed_loss_mask_hash": "318ef501de020becf64371a098cb5ea527b244c3dbba51683c3ee98f1affba60",
+      "original_shard_ids": [
+        "indic-3912f308dfa5",
+        "indic-402d9da12d34",
+        "indic-40e4257e54ee"
+      ],
+      "reconstructed_shard_ids": [
+        "indic-3912f308dfa5",
+        "indic-402d9da12d34",
+        "indic-40e4257e54ee"
+      ],
+      "original_token_span_ids": [
+        "indic-3912f308dfa5:0:40",
+        "indic-402d9da12d34:0:40",
+        "indic-40e4257e54ee:0:40"
+      ],
+      "reconstructed_token_span_ids": [
+        "indic-3912f308dfa5:0:40",
+        "indic-402d9da12d34:0:40",
+        "indic-40e4257e54ee:0:40"
+      ],
+      "matched": true
+    },
+    {
+      "ledger_offset": 1,
+      "original_loss_mask_hash": "904cd93be47ee8645d87298b5fbf180818d9c7e3193974033276b517a9f7bcf9",
+      "reconstructed_loss_mask_hash": "904cd93be47ee8645d87298b5fbf180818d9c7e3193974033276b517a9f7bcf9",
+      "original_shard_ids": [
+        "reasoning-0d80ee3852de"
+      ],
+      "reconstructed_shard_ids": [
+        "reasoning-0d80ee3852de"
+      ],
+      "original_token_span_ids": [
+        "reasoning-0d80ee3852de:0:40"
+      ],
+      "reconstructed_token_span_ids": [
+        "reasoning-0d80ee3852de:0:40"
+      ],
+      "matched": true
+    },
+    {
+      "ledger_offset": 2,
+      "original_loss_mask_hash": "904cd93be47ee8645d87298b5fbf180818d9c7e3193974033276b517a9f7bcf9",
+      "reconstructed_loss_mask_hash": "904cd93be47ee8645d87298b5fbf180818d9c7e3193974033276b517a9f7bcf9",
+      "original_shard_ids": [
+        "reasoning-4935c4284092"
+      ],
+      "reconstructed_shard_ids": [
+        "reasoning-4935c4284092"
+      ],
+      "original_token_span_ids": [
+        "reasoning-4935c4284092:0:40"
+      ],
+      "reconstructed_token_span_ids": [
+        "reasoning-4935c4284092:0:40"
+      ],
+      "matched": true
+    },
+    {
+      "ledger_offset": 3,
+      "original_loss_mask_hash": "904cd93be47ee8645d87298b5fbf180818d9c7e3193974033276b517a9f7bcf9",
+      "reconstructed_loss_mask_hash": "904cd93be47ee8645d87298b5fbf180818d9c7e3193974033276b517a9f7bcf9",
+      "original_shard_ids": [
+        "reasoning-6268d322fc2b"
+      ],
+      "reconstructed_shard_ids": [
+        "reasoning-6268d322fc2b"
+      ],
+      "original_token_span_ids": [
+        "reasoning-6268d322fc2b:0:40"
+      ],
+      "reconstructed_token_span_ids": [
+        "reasoning-6268d322fc2b:0:40"
+      ],
+      "matched": true
+    },
+    {
+      "ledger_offset": 4,
+      "original_loss_mask_hash": "e0eb0149f5416bd331fa789cdbc2bbac89e8a47556973aa7d957f83a410c00e9",
+      "reconstructed_loss_mask_hash": "e0eb0149f5416bd331fa789cdbc2bbac89e8a47556973aa7d957f83a410c00e9",
+      "original_shard_ids": [
+        "agentic-13aa9bf782b9"
+      ],
+      "reconstructed_shard_ids": [
+        "agentic-13aa9bf782b9"
+      ],
+      "original_token_span_ids": [
+        "agentic-13aa9bf782b9:0:40"
+      ],
+      "reconstructed_token_span_ids": [
+        "agentic-13aa9bf782b9:0:40"
+      ],
+      "matched": true
+    },
+    {
+      "ledger_offset": 5,
+      "original_loss_mask_hash": "c45850548e3c3d53e8a1a361050fa4834a54cde9117793e7792d732024e4b0f1",
+      "reconstructed_loss_mask_hash": "c45850548e3c3d53e8a1a361050fa4834a54cde9117793e7792d732024e4b0f1",
+      "original_shard_ids": [
+        "agentic-3122ec85f0c9"
+      ],
+      "reconstructed_shard_ids": [
+        "agentic-3122ec85f0c9"
+      ],
+      "original_token_span_ids": [
+        "agentic-3122ec85f0c9:0:32"
+      ],
+      "reconstructed_token_span_ids": [
+        "agentic-3122ec85f0c9:0:32"
+      ],
+      "matched": true
+    },
+    {
+      "ledger_offset": 6,
+      "original_loss_mask_hash": "e0eb0149f5416bd331fa789cdbc2bbac89e8a47556973aa7d957f83a410c00e9",
+      "reconstructed_loss_mask_hash": "e0eb0149f5416bd331fa789cdbc2bbac89e8a47556973aa7d957f83a410c00e9",
+      "original_shard_ids": [
+        "agentic-53694d54d7d3"
+      ],
+      "reconstructed_shard_ids": [
+        "agentic-53694d54d7d3"
+      ],
+      "original_token_span_ids": [
+        "agentic-53694d54d7d3:0:40"
+      ],
+      "reconstructed_token_span_ids": [
+        "agentic-53694d54d7d3:0:40"
+      ],
+      "matched": true
+    },
+    {
+      "ledger_offset": 7,
+      "original_loss_mask_hash": "904cd93be47ee8645d87298b5fbf180818d9c7e3193974033276b517a9f7bcf9",
+      "reconstructed_loss_mask_hash": "904cd93be47ee8645d87298b5fbf180818d9c7e3193974033276b517a9f7bcf9",
+      "original_shard_ids": [
+        "reasoning-6abac186a797"
+      ],
+      "reconstructed_shard_ids": [
+        "reasoning-6abac186a797"
+      ],
+      "original_token_span_ids": [
+        "reasoning-6abac186a797:0:40"
+      ],
+      "reconstructed_token_span_ids": [
+        "reasoning-6abac186a797:0:40"
+      ],
+      "matched": true
+    },
+    {
+      "ledger_offset": 8,
+      "original_loss_mask_hash": "904cd93be47ee8645d87298b5fbf180818d9c7e3193974033276b517a9f7bcf9",
+      "reconstructed_loss_mask_hash": "904cd93be47ee8645d87298b5fbf180818d9c7e3193974033276b517a9f7bcf9",
+      "original_shard_ids": [
+        "reasoning-92828e55dbc6"
+      ],
+      "reconstructed_shard_ids": [
+        "reasoning-92828e55dbc6"
+      ],
+      "original_token_span_ids": [
+        "reasoning-92828e55dbc6:0:40"
+      ],
+      "reconstructed_token_span_ids": [
+        "reasoning-92828e55dbc6:0:40"
+      ],
+      "matched": true
+    },
+    {
+      "ledger_offset": 9,
+      "original_loss_mask_hash": "904cd93be47ee8645d87298b5fbf180818d9c7e3193974033276b517a9f7bcf9",
+      "reconstructed_loss_mask_hash": "904cd93be47ee8645d87298b5fbf180818d9c7e3193974033276b517a9f7bcf9",
+      "original_shard_ids": [
+        "reasoning-b0cbfd2c00dd"
+      ],
+      "reconstructed_shard_ids": [
+        "reasoning-b0cbfd2c00dd"
+      ],
+      "original_token_span_ids": [
+        "reasoning-b0cbfd2c00dd:0:40"
+      ],
+      "reconstructed_token_span_ids": [
+        "reasoning-b0cbfd2c00dd:0:40"
+      ],
+      "matched": true
+    }
+  ],
+  "random_mode": {
+    "mode": "random",
+    "shifted_start": 9,
+    "ledger_bound": false
+  }
+}

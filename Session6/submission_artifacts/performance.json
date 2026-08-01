@@ -1,0 +1,23 @@
+{
+  "tokens_per_step": 32768,
+  "useful_after_pack": 13500.42,
+  "useful_after_opus": 10170.31,
+  "worker_factor": 1.612,
+  "shard_penalty": 1.0,
+  "effective_bandwidth": 2205.19,
+  "useful_tokens_per_sec": 21901.84,
+  "packing_utilization_pct": 41.2,
+  "gpu_idle_pct": 10.45,
+  "advice": "packing is the bottleneck",
+  "inputs": {
+    "gpus": 8,
+    "micro_batch": 2,
+    "grad_accum": 16,
+    "seq_len": 128,
+    "pack_pct": 41.2,
+    "reject_pct": 24.666666666666668,
+    "workers": 18,
+    "prefetch": 6,
+    "shard_size_mb": 1024
+  }
+}

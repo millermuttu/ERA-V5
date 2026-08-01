@@ -1,1 +1,5 @@
-submission_artifacts/
+# submission_artifacts/ is a required deliverable, not build output: the
+# assignment asks for the generated execution log, evidence bundle, manifests,
+# ledgers, checkpoints and performance report to be in the repository.
+# run.log needs an explicit negation because the root .gitignore ignores *.log.
+!submission_artifacts/run.log

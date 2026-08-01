@@ -40,6 +40,19 @@ def lane_shares(stage):
     return LANE_PROFILES[STAGE_PROFILE[stage]]
 
 
+def planned_lane_shares():
+    """The mixture the whole run is supposed to realize: each stage's profile
+    weighted by how much of the run that stage band covers. Comparing actual
+    consumption against any single stage's profile would be wrong - the run
+    spans all three bands."""
+    planned = {lane: 0.0 for lane in LANES}
+    for stage_name, lo, hi in STAGE_BANDS:
+        width = hi - lo
+        for lane, share in lane_shares(stage_name).items():
+            planned[lane] += width * share
+    return {lane: round(share, 2) for lane, share in planned.items()}
+
+
 def feasibility_check(token_budget, supply_by_lane, opus_reject_rate=0.18):
     """supply_by_lane: real measured shard token counts per lane (not fictional demo supply)."""
     warnings = []

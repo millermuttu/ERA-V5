@@ -1,0 +1,1970 @@
+[
+  {
+    "shard_id": "general-558a7e33116c",
+    "capability_lane": "general",
+    "doc_ids": [
+      "general-doc-000"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "558a7e33116c8b5b983dacf6d6f0b1a5ef697951ba89b812dac653e4ec391e71",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "general-9f76cf3c0b33",
+    "capability_lane": "general",
+    "doc_ids": [
+      "general-doc-001"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "9f76cf3c0b33d32ed6edb41df9f42b8e5d517b199ccdd2dcd860484cd6d112ca",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "general-6baa041ef34d",
+    "capability_lane": "general",
+    "doc_ids": [
+      "general-doc-002"
+    ],
+    "token_count": 62,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "6baa041ef34dcc7a512fee08ec6807a6ede223ea8010c1a1f2acb9c2893e6409",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "blocked_or_unknown",
+    "eval_firewall_reasons": [
+      "benchmark_overlap_exceeded"
+    ],
+    "benchmark_overlap_pct": 27.27,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 64,
+    "admission": "blocked"
+  },
+  {
+    "shard_id": "general-f11a184c0457",
+    "capability_lane": "general",
+    "doc_ids": [
+      "general-doc-003"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "f11a184c0457fdf722c8142ce088aac88f53ef6efd700a34fd4fd71ed95f3a2b",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "general-b79592aaa37c",
+    "capability_lane": "general",
+    "doc_ids": [
+      "general-doc-004"
+    ],
+    "token_count": 51,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "b79592aaa37c12ce28080f527610988ed2fbe64c8efd4422b452bd56b27f6c5b",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "blocked_or_unknown",
+    "eval_firewall_reasons": [
+      "canary_match"
+    ],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": true,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 64,
+    "admission": "blocked"
+  },
+  {
+    "shard_id": "general-a0279200fef5",
+    "capability_lane": "general",
+    "doc_ids": [
+      "general-doc-005"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "a0279200fef56cbd9cfaf9756b67c0212f000aff337749ae5fcd3878049ae9c8",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "general-f9ee95e3535e",
+    "capability_lane": "general",
+    "doc_ids": [
+      "general-doc-006"
+    ],
+    "token_count": 48,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "f9ee95e3535e5b07c16877cd0b3b6add6c8159e83444438692fbcb67dd5a5f5f",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "masked",
+    "pii_counts": {
+      "email": 1,
+      "phone": 1,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "general-fc839d8e8cfd",
+    "capability_lane": "general",
+    "doc_ids": [
+      "general-doc-007"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "fc839d8e8cfd9ee5147c6c958ab397dd82a4e554ae2c34d63d877a3b77d781ab",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "general-b2d023f45309",
+    "capability_lane": "general",
+    "doc_ids": [
+      "general-doc-008"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "b2d023f45309db585e24d9d9dedad633c116977076d8204b221250996407cd7a",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "general-e595e9e19561",
+    "capability_lane": "general",
+    "doc_ids": [
+      "general-doc-009"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "e595e9e1956164d0aa3eb4dbd9f6ffbd2611c89f06962f6e5e3ac68fc3b7870d",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "near_duplicate_of:general-558a7e33116c",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "blocked"
+  },
+  {
+    "shard_id": "general-78d04fee272a",
+    "capability_lane": "general",
+    "doc_ids": [
+      "general-doc-010"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "78d04fee272a2b068bcf54de2b04dddb0ff639a84269b75485849043efde52ea",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "general-e2b3c4662dbe",
+    "capability_lane": "general",
+    "doc_ids": [
+      "general-doc-011"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "e2b3c4662dbe1d3875a68dc4dbd2507493504b9f4e10980244d8b495dfb55ca6",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "code-e834139898c4",
+    "capability_lane": "code",
+    "doc_ids": [
+      "code-doc-000"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "e834139898c4ab012c4ac510af1e051e79adb2a43c81cd4438e5cfd3c65118f8",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "code-80840bf298fa",
+    "capability_lane": "code",
+    "doc_ids": [
+      "code-doc-001"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "80840bf298fa1e71ceb0640f505351468e7c04207324d1c94836e3c3fa22a8e7",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "code-43975be25714",
+    "capability_lane": "code",
+    "doc_ids": [
+      "code-doc-002"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "43975be257145728911e73a0b817804ab417b855785bf6347954128d615d301c",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "code-d386609b692e",
+    "capability_lane": "code",
+    "doc_ids": [
+      "code-doc-003"
+    ],
+    "token_count": 48,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "d386609b692ef0e708395fd4a23d655f3e7d36210ed72eac84a29ebc356eb043",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "masked",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 1,
+      "ip": 1
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "code-bb7a3d87db00",
+    "capability_lane": "code",
+    "doc_ids": [
+      "code-doc-004"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "bb7a3d87db00c59ade652d53cb36183ae0f7e10dd83a6d78a1b2220e6d353043",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "code-456510546434",
+    "capability_lane": "code",
+    "doc_ids": [
+      "code-doc-005"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "4565105464344bc6d82c75bcee9d25e1cd08dcdaa6b179588f2bf0f16484d26c",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "code-890872c71864",
+    "capability_lane": "code",
+    "doc_ids": [
+      "code-doc-006"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "890872c718644c7d63aed8f45c102c56a6f4c29f2b8537b9993dc0082d5bbaac",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "code-e94b0ce98ac2",
+    "capability_lane": "code",
+    "doc_ids": [
+      "code-doc-007"
+    ],
+    "token_count": 62,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "e94b0ce98ac29bd8fbc073cedca8448fb790f1ce5d854b27f4de62df0a2561cb",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "blocked_or_unknown",
+    "eval_firewall_reasons": [
+      "benchmark_overlap_exceeded"
+    ],
+    "benchmark_overlap_pct": 27.27,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 64,
+    "admission": "blocked"
+  },
+  {
+    "shard_id": "code-d466ca3027da",
+    "capability_lane": "code",
+    "doc_ids": [
+      "code-doc-008"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "d466ca3027dac3fb9867276d043ec535362ab3e574a3e13ec3718466b02afb51",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "code-ccb1be4e8b2a",
+    "capability_lane": "code",
+    "doc_ids": [
+      "code-doc-009"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "ccb1be4e8b2a1fc2a2606ee0c5f900af3e9c59d42187c93cc30bcb78834d08bd",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "code-c380897a1e01",
+    "capability_lane": "code",
+    "doc_ids": [
+      "code-doc-010"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "c380897a1e0118973d014e2309b8908cf947bc665872f5537507108f3ecbf3cb",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "code-3bdfd6098797",
+    "capability_lane": "code",
+    "doc_ids": [
+      "code-doc-011"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "3bdfd609879757b2f414624cf840c23bd40a225925864f66544c844ba223b271",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "indic-402d9da12d34",
+    "capability_lane": "indic",
+    "doc_ids": [
+      "indic-doc-000"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "402d9da12d3414813126a6046cfb8b3200db137728f6d8841177a5f971ad3d38",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "indic-9762edce8bc8",
+    "capability_lane": "indic",
+    "doc_ids": [
+      "indic-doc-001"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "9762edce8bc85d0ae3be8c5db2abc7103080bd40c88ebd8b7a8da6492cf7701d",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "indic-bc0af12de764",
+    "capability_lane": "indic",
+    "doc_ids": [
+      "indic-doc-002"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "bc0af12de76435889ba8654edadc7141adbebce0f4cd83c101c9f97bc2973169",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "indic-f83ed40bbeb7",
+    "capability_lane": "indic",
+    "doc_ids": [
+      "indic-doc-003"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "f83ed40bbeb78c8e398422b4d06a5c2f15f5e430daf52645fdeb92f824a579c5",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "indic-af8ee261b5db",
+    "capability_lane": "indic",
+    "doc_ids": [
+      "indic-doc-004"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "af8ee261b5dbdc85adf534fe055e30e62474883f181ba5fc255997d3d9ddadaf",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "indic-b771b10a26fc",
+    "capability_lane": "indic",
+    "doc_ids": [
+      "indic-doc-005"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "b771b10a26fce536a19905c9fd6dcc55af32811e800cedfd1b5398dc3527ee8e",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "indic-3912f308dfa5",
+    "capability_lane": "indic",
+    "doc_ids": [
+      "indic-doc-006"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "3912f308dfa507714174e68e3c6b51247a0472ad6af3e5fbb158e81b5b652a27",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "indic-43a1960f7f31",
+    "capability_lane": "indic",
+    "doc_ids": [
+      "indic-doc-007"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "43a1960f7f311462ae8e13ec7479f52e745067da26ab4e40cf9cd54a03d29b43",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "indic-fa251eed96d1",
+    "capability_lane": "indic",
+    "doc_ids": [
+      "indic-doc-008"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "fa251eed96d150c80f2934aa60467351f494c9a55f187bf0d34409bc78465149",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "near_duplicate_of:indic-9762edce8bc8",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "blocked"
+  },
+  {
+    "shard_id": "indic-75051c493106",
+    "capability_lane": "indic",
+    "doc_ids": [
+      "indic-doc-009"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "75051c493106542191d0d5517a975bea23fe87df52272f7dbd5f4165d8f3402a",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "indic-c7b60bc53df5",
+    "capability_lane": "indic",
+    "doc_ids": [
+      "indic-doc-010"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "c7b60bc53df5d987e3db7823fccf6dc782f606ae46f26e6786e12bb0458f938c",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "indic-40e4257e54ee",
+    "capability_lane": "indic",
+    "doc_ids": [
+      "indic-doc-011"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "40e4257e54ee5af813d05a2ea0d62ac92e7919b57643b2ff455f0b32e104ef5a",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "reasoning-4935c4284092",
+    "capability_lane": "reasoning",
+    "doc_ids": [
+      "reasoning-doc-000"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "4935c4284092288eb6cc8cc1c772edfdd85a3e1717e6b65a7cf07d3636b9c7a0",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "reasoning-e068c6ed0a6b",
+    "capability_lane": "reasoning",
+    "doc_ids": [
+      "reasoning-doc-001"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "e068c6ed0a6b2f67f00247b884f9b37b8d1e02820cacd109bcee530fa519482a",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "reasoning-92828e55dbc6",
+    "capability_lane": "reasoning",
+    "doc_ids": [
+      "reasoning-doc-002"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "92828e55dbc6aaa4645d2d015411a7a232d09c800427e6e8e1f33d57d5f1cbd7",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "reasoning-6268d322fc2b",
+    "capability_lane": "reasoning",
+    "doc_ids": [
+      "reasoning-doc-003"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "6268d322fc2b4ee272ec5641265a70441a3418433cc685ccb2155a8f8c9c9419",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "reasoning-c06394d32b0b",
+    "capability_lane": "reasoning",
+    "doc_ids": [
+      "reasoning-doc-004"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "c06394d32b0bce3a30919df482f54997f3e1fd577daac8941a31845f04e1c8f5",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "reasoning-b583dd4c512f",
+    "capability_lane": "reasoning",
+    "doc_ids": [
+      "reasoning-doc-005"
+    ],
+    "token_count": 62,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "b583dd4c512f48148039cb99343e4aa111b42e14003a95d0049a2bd6984936e7",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "blocked_or_unknown",
+    "eval_firewall_reasons": [
+      "benchmark_overlap_exceeded"
+    ],
+    "benchmark_overlap_pct": 27.27,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 64,
+    "admission": "blocked"
+  },
+  {
+    "shard_id": "reasoning-6abac186a797",
+    "capability_lane": "reasoning",
+    "doc_ids": [
+      "reasoning-doc-006"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "6abac186a79736dcddf97ebae24e08da9c91283bb26c30418b224e91b865c3e4",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "reasoning-0d80ee3852de",
+    "capability_lane": "reasoning",
+    "doc_ids": [
+      "reasoning-doc-007"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "0d80ee3852defb8c7876cc2d07ff5076acda15e6dbd97effd3f59e4d5258ec88",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "reasoning-f866d2ad8096",
+    "capability_lane": "reasoning",
+    "doc_ids": [
+      "reasoning-doc-008"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "f866d2ad80968d0c20f31de6579537eaa5d1aa12db481c99c39c0de554ef604b",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "reasoning-cada8b3c6e22",
+    "capability_lane": "reasoning",
+    "doc_ids": [
+      "reasoning-doc-009"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "cada8b3c6e2227bbc2d1bc6612ba6bf51b54c803722286af7743446a4b64b8f5",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "reasoning-b0cbfd2c00dd",
+    "capability_lane": "reasoning",
+    "doc_ids": [
+      "reasoning-doc-010"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "b0cbfd2c00dd8791cb33e4a3f827be4989f168678e50defd2836180dc7b669b6",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "reasoning-fa5925337837",
+    "capability_lane": "reasoning",
+    "doc_ids": [
+      "reasoning-doc-011"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "fa5925337837ac78dea2fcbbd7d7a125190856dc9b729becebbf8b34f8c41705",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "agentic-a8b05a02ee22",
+    "capability_lane": "agentic",
+    "doc_ids": [
+      "agentic-doc-000"
+    ],
+    "token_count": 32,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "a8b05a02ee221a4b0614362753768d5d80cd3b4c685fae3b5d589bf0b589e7f8",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "agentic-8bfb5d92d9f0",
+    "capability_lane": "agentic",
+    "doc_ids": [
+      "agentic-doc-001"
+    ],
+    "token_count": 24,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "8bfb5d92d9f0606e3a237b7a9dffee11428d807896c90e11aa087cc97d127587",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "agentic-9ce4af97481e",
+    "capability_lane": "agentic",
+    "doc_ids": [
+      "agentic-doc-002"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "9ce4af97481ec33de049762db059dda980601b622123d736a8c3e669ebe1538b",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "agentic-befde6156eaf",
+    "capability_lane": "agentic",
+    "doc_ids": [
+      "agentic-doc-003"
+    ],
+    "token_count": 24,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "befde6156eafc26e90c52aec70c0c8a4c3af74b52ec339d16b1c348c382f1452",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "agentic-dd4272814f7e",
+    "capability_lane": "agentic",
+    "doc_ids": [
+      "agentic-doc-004"
+    ],
+    "token_count": 32,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "dd4272814f7ebf59e7a32121d588496a23fb1e988e7c70724d0add660ac74061",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "agentic-53694d54d7d3",
+    "capability_lane": "agentic",
+    "doc_ids": [
+      "agentic-doc-005"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "53694d54d7d3d775fcca537f097e1dc03c6ea18aae939aa5c5bc6277361086bc",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "agentic-8bb40520db89",
+    "capability_lane": "agentic",
+    "doc_ids": [
+      "agentic-doc-006"
+    ],
+    "token_count": 24,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "8bb40520db8926ef635d37907226673fd022c9a913b6091f4fd97f387ca23028",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "agentic-9fd79889ebb7",
+    "capability_lane": "agentic",
+    "doc_ids": [
+      "agentic-doc-007"
+    ],
+    "token_count": 24,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "9fd79889ebb7f1a93b5a2ae8c0621387c70ca03a0eb620d356c413a55b8d3c32",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "agentic-13aa9bf782b9",
+    "capability_lane": "agentic",
+    "doc_ids": [
+      "agentic-doc-008"
+    ],
+    "token_count": 40,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "13aa9bf782b9cf5bd4eaa84fdcf0b6a8732ead90e7d501621de075e0d5d942a9",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "agentic-a69279c409d6",
+    "capability_lane": "agentic",
+    "doc_ids": [
+      "agentic-doc-009"
+    ],
+    "token_count": 32,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "a69279c409d6898ce39e024c5e327265bc7746cdac3f2ab26c844ed7da350726",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "agentic-3122ec85f0c9",
+    "capability_lane": "agentic",
+    "doc_ids": [
+      "agentic-doc-010"
+    ],
+    "token_count": 32,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "3122ec85f0c9f39f0926aba70b02c40ca29fa7f96b5abae3bb8ea33b42e1896c",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "agentic-e51a8951e873",
+    "capability_lane": "agentic",
+    "doc_ids": [
+      "agentic-doc-011"
+    ],
+    "token_count": 24,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "e51a8951e873dc35907db577a93c6cb70acf3b6994fb3221af37604cd247aeb7",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "clear",
+    "eval_firewall_reasons": [],
+    "benchmark_overlap_pct": 0.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 100.0,
+    "admission": "admitted"
+  },
+  {
+    "shard_id": "eval-bfe9c6096378",
+    "capability_lane": "eval",
+    "doc_ids": [
+      "eval-doc-000"
+    ],
+    "token_count": 30,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "bfe9c6096378d20cccb34c0c9d188c2eaedb22ffd6455056ce3259e3f2082310",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "blocked_or_unknown",
+    "eval_firewall_reasons": [
+      "never_train",
+      "benchmark_overlap_exceeded"
+    ],
+    "benchmark_overlap_pct": 100.0,
+    "canary_match": false,
+    "never_train": true,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 64,
+    "admission": "blocked"
+  },
+  {
+    "shard_id": "eval-a31d28c1701c",
+    "capability_lane": "eval",
+    "doc_ids": [
+      "eval-doc-001"
+    ],
+    "token_count": 30,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "a31d28c1701c56ea732b4ca4c430b608e1ef3034b55ad6c2021c92b2a6df6eaa",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "blocked_or_unknown",
+    "eval_firewall_reasons": [
+      "benchmark_overlap_exceeded",
+      "benchmark_derived"
+    ],
+    "benchmark_overlap_pct": 100.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": true,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 64,
+    "admission": "blocked"
+  },
+  {
+    "shard_id": "eval-da0c586bd2b9",
+    "capability_lane": "eval",
+    "doc_ids": [
+      "eval-doc-002"
+    ],
+    "token_count": 30,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "da0c586bd2b91c8df13ba9be25be53444209dc291f3424e75f103200830184df",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "blocked_or_unknown",
+    "eval_firewall_reasons": [
+      "never_train",
+      "benchmark_overlap_exceeded"
+    ],
+    "benchmark_overlap_pct": 100.0,
+    "canary_match": false,
+    "never_train": true,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 64,
+    "admission": "blocked"
+  },
+  {
+    "shard_id": "eval-1120ca1b3e27",
+    "capability_lane": "eval",
+    "doc_ids": [
+      "eval-doc-003"
+    ],
+    "token_count": 30,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "1120ca1b3e2748f30f21128d8ed57ec02dce3fdde02f80f19064b75ef616307f",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "blocked_or_unknown",
+    "eval_firewall_reasons": [
+      "benchmark_overlap_exceeded"
+    ],
+    "benchmark_overlap_pct": 100.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 64,
+    "admission": "blocked"
+  },
+  {
+    "shard_id": "eval-91097181f790",
+    "capability_lane": "eval",
+    "doc_ids": [
+      "eval-doc-004"
+    ],
+    "token_count": 30,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "91097181f790a6a4c44b3a1440c37a20723d65952aa1de4cbf66e863a756be78",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "blocked_or_unknown",
+    "eval_firewall_reasons": [
+      "benchmark_overlap_exceeded"
+    ],
+    "benchmark_overlap_pct": 100.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 64,
+    "admission": "blocked"
+  },
+  {
+    "shard_id": "eval-d0001db3bb9c",
+    "capability_lane": "eval",
+    "doc_ids": [
+      "eval-doc-005"
+    ],
+    "token_count": 30,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "d0001db3bb9cc56be2a637d852dff5da9647caf509841fd1a3191acbfb7125be",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "blocked_or_unknown",
+    "eval_firewall_reasons": [
+      "benchmark_overlap_exceeded"
+    ],
+    "benchmark_overlap_pct": 100.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 64,
+    "admission": "blocked"
+  },
+  {
+    "shard_id": "eval-609fa2ff7ffc",
+    "capability_lane": "eval",
+    "doc_ids": [
+      "eval-doc-006"
+    ],
+    "token_count": 30,
+    "tokenizer_hash": "9da6314213a1c30df13f78cf476529c3703d0e5e45fabbd28f72d3f040917a14",
+    "content_hash": "609fa2ff7ffcf2df57d4b71b07cf1be2882a2063bd8ae89fc5856fc4b9b9f05c",
+    "cleaning_pipeline_hash": "0d3f1918970383586dd7d40c11467fe163cb243da1c2124184a9a5bfa8c2adfb",
+    "dedup_status": "unique",
+    "pii_screen_status": "clean",
+    "pii_counts": {
+      "email": 0,
+      "phone": 0,
+      "url": 0,
+      "ip": 0
+    },
+    "eval_overlap_status": "blocked_or_unknown",
+    "eval_firewall_reasons": [
+      "benchmark_overlap_exceeded"
+    ],
+    "benchmark_overlap_pct": 100.0,
+    "canary_match": false,
+    "never_train": false,
+    "benchmark_derived": false,
+    "license_tier": "safe",
+    "parent_manifest_ids": [],
+    "admission_score": 64,
+    "admission": "blocked"
+  }
+]

@@ -1,0 +1,92 @@
+[
+  {
+    "stage": "foundation",
+    "lane": "general",
+    "need": 10536.585365853658,
+    "supply": 368
+  },
+  {
+    "stage": "foundation",
+    "lane": "code",
+    "need": 4682.926829268293,
+    "supply": 448
+  },
+  {
+    "stage": "foundation",
+    "lane": "indic",
+    "need": 2809.7560975609754,
+    "supply": 440
+  },
+  {
+    "stage": "foundation",
+    "lane": "reasoning",
+    "need": 3512.1951219512193,
+    "supply": 440
+  },
+  {
+    "stage": "foundation",
+    "lane": "agentic",
+    "need": 1873.170731707317,
+    "supply": 368
+  },
+  {
+    "stage": "skill_build",
+    "lane": "general",
+    "need": 7960.9756097560985,
+    "supply": 368
+  },
+  {
+    "stage": "skill_build",
+    "lane": "code",
+    "need": 7960.9756097560985,
+    "supply": 448
+  },
+  {
+    "stage": "skill_build",
+    "lane": "indic",
+    "need": 2341.4634146341464,
+    "supply": 440
+  },
+  {
+    "stage": "skill_build",
+    "lane": "reasoning",
+    "need": 3278.0487804878053,
+    "supply": 440
+  },
+  {
+    "stage": "skill_build",
+    "lane": "agentic",
+    "need": 1873.170731707317,
+    "supply": 368
+  },
+  {
+    "stage": "anneal",
+    "lane": "general",
+    "need": 8429.268292682926,
+    "supply": 368
+  },
+  {
+    "stage": "anneal",
+    "lane": "code",
+    "need": 4917.073170731707,
+    "supply": 448
+  },
+  {
+    "stage": "anneal",
+    "lane": "indic",
+    "need": 3278.0487804878053,
+    "supply": 440
+  },
+  {
+    "stage": "anneal",
+    "lane": "reasoning",
+    "need": 4448.780487804877,
+    "supply": 440
+  },
+  {
+    "stage": "anneal",
+    "lane": "agentic",
+    "need": 2341.4634146341464,
+    "supply": 368
+  }
+]

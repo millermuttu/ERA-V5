@@ -9,16 +9,16 @@ widget_11).
 import random
 
 from pipeline.batch import build_masked_sample
+from pipeline.cleaning import build_eval_fingerprint_set, mask_structured, near_duplicates
 from pipeline.corpus import doc_text, generate_corpus
 from pipeline.manifest import build_manifests
 from pipeline.mixture import ProtectedFloorTracker, pick_lane, stage_for_fraction
 from pipeline.opus import decide
-from pipeline.packing import pack_lane
+from pipeline.packing import bin_capacity, pack_lane
 from pipeline.shards import build_shards
 from pipeline.tokenizer import build_tokenizer
 
 SEED = 6
-MAX_OPUS_ATTEMPTS = 25
 
 PHASE_BANDS = [("early", 0.0, 0.4), ("mid", 0.4, 0.7), ("late", 0.7, 0.85), ("anneal", 0.85, 1.0)]
 PHASE_MULT = {"early": 1.35, "mid": 0.95, "late": 0.72, "anneal": 0.62}
@@ -27,7 +27,7 @@ LANE_LOSS_ADJ = {"indic": 0.55, "agentic": 0.35}
 
 class Config:
     def __init__(self, gpus=8, micro_batch=2, grad_accum=16, seq_len=128, ckpt_interval=10,
-                 n_per_lane=12, total_steps=150, run_branch_id="run-a"):
+                 n_per_lane=12, total_steps=150, run_branch_id="run-a", docs_per_batch=3):
         self.gpus = gpus
         self.micro_batch = micro_batch
         self.grad_accum = grad_accum
@@ -36,18 +36,34 @@ class Config:
         self.n_per_lane = n_per_lane
         self.total_steps = total_steps
         self.run_branch_id = run_branch_id
+        # >1 so real batches actually exercise multi-document packing: segment-id
+        # attention blocking and per-document position resets are only meaningful
+        # when a bin holds more than one document.
+        self.docs_per_batch = docs_per_batch
 
 
 def build_world(config):
     """Builds the tokenizer + shards + manifests once; shared by plan
     materialization and by the artifacts written to disk in run_demo.py."""
     docs, eval_docs = generate_corpus(n_per_lane=config.n_per_lane)
-    all_texts = [doc_text(d) for d in docs + eval_docs]
+    # Mask before building the vocabulary: a tokenizer trained on raw text
+    # bakes the identifiers into `tokenizer.json`, which is a published
+    # artifact, even though the shards themselves only ever see masked text.
+    all_texts = [mask_structured(doc_text(d))[0] for d in docs + eval_docs]
     tokenizer = build_tokenizer(all_texts)
 
-    training_shards = build_shards(docs, tokenizer)
-    eval_shards = build_shards(eval_docs, tokenizer)
-    training_manifests = build_manifests(training_shards, license_tier="safe")
+    # Decontamination reference: every n-gram the eval/benchmark set contains.
+    # Training shards are then measured against it rather than self-declaring
+    # an overlap percentage.
+    eval_fps = build_eval_fingerprint_set([doc_text(d) for d in eval_docs])
+
+    training_shards = build_shards(docs, tokenizer, eval_fps)
+    eval_shards = build_shards(eval_docs, tokenizer, eval_fps)
+
+    duplicates = near_duplicates([(s["shard_id"], doc_text(d))
+                                  for s, d in zip(training_shards, docs)])
+
+    training_manifests = build_manifests(training_shards, duplicates=duplicates, license_tier="safe")
     eval_manifests = build_manifests(eval_shards, license_tier="safe")
 
     admitted_by_lane = {}
@@ -59,6 +75,8 @@ def build_world(config):
 
     return {
         "tokenizer": tokenizer,
+        "eval_fingerprints": eval_fps,
+        "duplicates": duplicates,
         "training_shards": training_shards,
         "eval_shards": eval_shards,
         "training_manifests": training_manifests,
@@ -88,13 +106,15 @@ def materialize_plan(world, config, stats=None):
     a full uninterrupted run would process, indexed by ledger_offset.
 
     If `stats` (a dict) is given, it is filled in-place with
-    `decision_counts` - one entry per step's *final* verdict (the retry
-    loop below is an internal determinism mechanism, not a distinct
-    candidate each time, so only the final decision counts toward the
-    real OPUS keep/reject rate) - so callers can compute a real OPUS
-    accept/reject rate without a second pass over the corpus."""
+    `decision_counts` and `decisions` - one entry per step's *final* verdict
+    (the retry loop below is an internal determinism mechanism, not a
+    distinct candidate each time, so only the final decision counts toward
+    the real OPUS keep/reject rate). `decisions` carries the rejected and
+    deferred records too, which never reach the plan but must still land in
+    the OPUS audit ledger."""
     if stats is not None:
         stats["decision_counts"] = {}
+        stats["decisions"] = []
     rng = random.Random(SEED)
     tracker = ProtectedFloorTracker()
     admitted_by_lane = world["admitted_by_lane"]
@@ -113,44 +133,57 @@ def materialize_plan(world, config, stats=None):
 
         lane_shards = admitted_by_lane[lane]
         cursor = lane_cursor[lane]
-        shard = lane_shards[cursor % len(lane_shards)]
-        lane_cursor[lane] = cursor + 1
+        batch_shards = [lane_shards[(cursor + i) % len(lane_shards)]
+                        for i in range(config.docs_per_batch)]
+        lane_cursor[lane] = cursor + config.docs_per_batch
 
-        decision = None
-        for attempt in range(MAX_OPUS_ATTEMPTS):
-            candidate_id = f"step-{step}-{attempt}-{lane}-{shard['shard_id']}"
-            decision = decide(candidate_id, [shard], lane, stage, model_age=step,
-                               lane_under_floor=lane_under_floor)
-            if decision["decision"] in ("accepted", "protected"):
-                break
+        # One candidate batch, one verdict. Re-rolling the candidate id until
+        # the hash cleared the threshold was rejection sampling on noise: it
+        # made the reject rate an artifact of the retry count rather than a
+        # property of the stream.
+        candidate_id = f"step-{step}-{lane}-{batch_shards[0]['shard_id']}"
+        decision = decide(candidate_id, batch_shards, lane, stage, model_age=step,
+                           lane_under_floor=lane_under_floor)
 
         if stats is not None:
             stats["decision_counts"][decision["decision"]] = (
                 stats["decision_counts"].get(decision["decision"], 0) + 1)
+            stats["decisions"].append(decision)
 
         if decision["decision"] not in ("accepted", "protected"):
             continue
 
-        bins = pack_lane(lane, [shard], seq_len=config.seq_len, eos_id=tokenizer.eos_id)
-        sample = build_masked_sample(bins[0], seq_len=config.seq_len, pad_id=tokenizer.pad_id)
+        # One candidate batch can yield several bins: the structure-preserving
+        # and long-context policies deliberately refuse to merge documents.
+        bins = pack_lane(lane, batch_shards, seq_len=config.seq_len, eos_id=tokenizer.eos_id)
+        shards_by_id = {s["shard_id"]: s for s in batch_shards}
+        loss = toy_loss(step, lane, phase)
 
-        tracker.record(lane, shard["token_count"])
-        repeat_count = shard_repeat_count.get(shard["shard_id"], 0)
-        shard_repeat_count[shard["shard_id"]] = repeat_count + 1
+        for bin_index, bin_ in enumerate(bins):
+            sample = build_masked_sample(bin_, seq_len=bin_capacity(bin_, config.seq_len),
+                                          pad_id=tokenizer.pad_id)
+            bin_shards = [shards_by_id[sid] for sid in sample["shard_ids"]]
+            repeats = {}
+            for shard in bin_shards:
+                repeats[shard["shard_id"]] = shard_repeat_count.get(shard["shard_id"], 0)
+                shard_repeat_count[shard["shard_id"]] = repeats[shard["shard_id"]] + 1
+                tracker.record(lane, shard["token_count"])
 
-        plan.append({
-            "ledger_offset": len(plan),
-            "global_step": step,
-            "lane": lane,
-            "stage": stage,
-            "phase": phase,
-            "shard": shard,
-            "opus_decision": decision,
-            "sample": sample,
-            "candidate_batch_id": decision["candidate_batch_id"],
-            "avg_token_loss": toy_loss(step, lane, phase),
-            "repeated_pass": repeat_count,
-        })
+            plan.append({
+                "ledger_offset": len(plan),
+                "global_step": step,
+                "bin_index": bin_index,
+                "lane": lane,
+                "stage": stage,
+                "phase": phase,
+                "shards": bin_shards,
+                "bin": bin_,
+                "opus_decision": decision,
+                "sample": sample,
+                "candidate_batch_id": decision["candidate_batch_id"],
+                "avg_token_loss": loss,
+                "repeated_pass": repeats,
+            })
     return plan
 
 
@@ -174,13 +207,18 @@ def run_plan(plan, config, ledger, learning_ledger, checkpoint_dir, run_branch_i
         ))
         if opus_ledger is not None:
             opus_ledger.append(entry["opus_decision"])
-        learning_ledger.append(learning_ledger_event(
-            shard_id=entry["shard"]["shard_id"], lane=entry["lane"], stage_phase=entry["phase"],
-            avg_token_loss=entry["avg_token_loss"], loss_delta=0.0,
-            gradient_norm=round(1.0 + entry["avg_token_loss"] * 0.1, 4),
-            opus_score=entry["opus_decision"]["score"], tokens_consumed=entry["shard"]["token_count"],
-            global_step=entry["global_step"], repeated_pass=entry["repeated_pass"],
-        ))
+        # One rollup per document in the bin - a learning ledger is per-shard,
+        # and a packed bin can carry several.
+        for shard, span in zip(entry["shards"], entry["sample"]["token_span_ids"]):
+            _, start, end = span.rsplit(":", 2)
+            learning_ledger.append(learning_ledger_event(
+                shard_id=shard["shard_id"], lane=entry["lane"], stage_phase=entry["phase"],
+                avg_token_loss=entry["avg_token_loss"], loss_delta=0.0,
+                gradient_norm=round(1.0 + entry["avg_token_loss"] * 0.1, 4),
+                opus_score=entry["opus_decision"]["score"], tokens_consumed=int(end) - int(start),
+                global_step=entry["global_step"], ledger_offset=offset,
+                repeated_pass=entry["repeated_pass"][shard["shard_id"]],
+            ))
 
         if is_ckpt_step:
             checkpoint = build_checkpoint(

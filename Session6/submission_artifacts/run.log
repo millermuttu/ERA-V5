@@ -1,0 +1,22 @@
+Session6 Training Data Execution System demo - config: gpus=8 micro_batch=2 grad_accum=16 seq_len=128 ckpt_interval=10
+[PASS] tokenizer_hash_verified
+shards created: 60 training + 7 eval
+data cleaned: 3 training shards overlap the eval set (3 above the 25.0% threshold), 1 canary hits, 2 shards with PII masked (4 identifiers), 2 near-duplicates - all measured, not declared
+manifests validated: 67 manifests written
+[PASS] eval_shard_blocked
+evaluation data blocked: 7 of 7 eval shards
+mixture compiled: supply={'general': 368, 'code': 448, 'indic': 440, 'reasoning': 440, 'agentic': 368}, feasibility warnings=15
+batches packed: 191 committed batches planned (of 150 steps attempted), documents per bin: {3: 81, 1: 110}
+OPUS decisions recorded: {'accepted': 113, 'rejected': 30, 'deferred': 7}
+checkpoint saved: 19 checkpoints for run-a, each bound to a committed ledger_offset [9, 19, 29, 39, 49, 59, 69, 79, 89, 99, 109, 119, 129, 139, 149, 159, 169, 179, 189]
+[PASS] checkpoint_saved
+crash simulated: after ledger_offset=14 (mid-interval; 5 in-flight events rolled back to checkpoint ckpt-run-a-9)
+run resumed: from ledger_offset=10, no_skip_no_repeat=True
+[PASS] resume_next_batch_matched
+[PASS] replay_hash_matched
+historical stream replayed: ledger-mode over [0,10), random-mode negative example shifted_start=9
+branch forked: run-a -> run-b at offset 26
+audit completed: 190 batches behind checkpoint ckpt-run-a-189 on branch run-a
+performance measured: packing_utilization_pct=41.2 reject_pct=24.67 useful_tokens_per_sec=21901.84
+evidence bundle written: 10 rows, 0 failing
+DEMO COMPLETE

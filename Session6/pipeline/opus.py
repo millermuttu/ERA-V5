@@ -9,11 +9,14 @@ no seeded `random` state to lose across a crash boundary.
 import hashlib
 
 from pipeline.firewall import check as firewall_check
-from pipeline.mixture import lane_shares
 
-PROXY_VERSION = "session6-toy-proxy-v1"
-ACCEPT_THRESHOLD = 0.6
+PROXY_VERSION = "session6-toy-proxy-v2"
+ACCEPT_THRESHOLD = 0.28
+# Annealing reserve: hold part of these lanes back during the earliest stage
+# only. Deferring them for every non-anneal stage would starve them across 85%
+# of the run and leave the protected floor as their sole route into training.
 DEFER_TO_ANNEAL_LANES = {"indic", "reasoning"}
+DEFER_STAGES = {"foundation"}
 
 REJECTION_REASONS = [
     "below_proxy_threshold", "lane_quota_full", "duplicate_update_direction",
@@ -26,9 +29,21 @@ def jitter(candidate_batch_id):
     return int(digest, 16) / (2 ** 256)
 
 
-def score_candidate(candidate_batch_id, lane, stage):
-    weight = lane_shares(stage).get(lane, 0) / 100
-    return round(0.6 * weight + 0.4 * jitter(candidate_batch_id), 4)
+def score_candidate(candidate_batch_id, lane=None, stage=None):
+    """Quality proxy for a candidate batch - deliberately independent of the
+    lane's mixture weight.
+
+    Blending the lane weight in here double-counts the mixture: `pick_lane`
+    has already sampled the lane by its profile share, so scoring by that
+    same share again re-filters an already-correct stream and collapses it
+    onto whichever lane is heaviest. (With the old `0.6*weight + 0.4*jitter`
+    against a 0.6 threshold, a lane could only ever be accepted if its share
+    exceeded 1/3, so every lane but `general` depended entirely on the
+    protected-floor override to enter training at all.)
+
+    `lane`/`stage` are accepted and ignored so callers read naturally.
+    """
+    return round(jitter(candidate_batch_id), 4)
 
 
 def decide(candidate_batch_id, shards, lane, stage, model_age, lane_under_floor=False):
@@ -47,14 +62,19 @@ def decide(candidate_batch_id, shards, lane, stage, model_age, lane_under_floor=
     score = score_candidate(candidate_batch_id, lane, stage)
 
     if score >= ACCEPT_THRESHOLD:
+        # The floor still overrode normal mixture sampling to put this lane
+        # here, even though the proxy score would have admitted it anyway.
+        # Recording that only on the rescue path under-reports how often the
+        # floor actually steered the stream.
         return _record(opus_decision_id, candidate_batch_id, model_age, lane, stage,
-                        score, "accepted", None, shards)
+                        score, "accepted", None, shards,
+                        protected_floor_override=lane_under_floor)
 
     if lane_under_floor:
         return _record(opus_decision_id, candidate_batch_id, model_age, lane, stage,
                         score, "protected", None, shards, protected_floor_override=True)
 
-    if stage != "anneal" and lane in DEFER_TO_ANNEAL_LANES:
+    if stage in DEFER_STAGES and lane in DEFER_TO_ANNEAL_LANES:
         return _record(opus_decision_id, candidate_batch_id, model_age, lane, stage,
                         score, "deferred", "deferred_for_anneal", shards)
 

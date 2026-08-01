@@ -26,6 +26,20 @@ def _doc_tokens(shard):
     return tokens, roles
 
 
+def doc_stream(shard, eos_id):
+    """The shard's token stream as the packers see it: its own tokens plus a
+    trailing EOS at index `token_count`. Every `start`/`end` span recorded in
+    the consumption ledger indexes into *this* array, so replay can slice a
+    packed fragment straight back out of the content-addressed shard."""
+    tokens, roles = _doc_tokens(shard)
+    return tokens + [eos_id], roles + ["eos"]
+
+
+def _entry(shard_id, tokens, roles, start):
+    return {"shard_id": shard_id, "tokens": tokens, "roles": roles,
+            "start": start, "end": start + len(tokens)}
+
+
 def _bin(policy, docs):
     return {"policy": policy, "docs": docs}
 
@@ -35,7 +49,7 @@ def _one_doc_per_bin(shards, seq_len, tag):
     for shard in shards:
         tokens, roles = _doc_tokens(shard)
         tokens, roles = tokens[:seq_len], roles[:seq_len]
-        bins.append(_bin(tag, [{"shard_id": shard["shard_id"], "tokens": tokens, "roles": roles}]))
+        bins.append(_bin(tag, [_entry(shard["shard_id"], tokens, roles, 0)]))
     return bins
 
 
@@ -52,26 +66,26 @@ def pack_structure_preserving(shards, seq_len=DEFAULT_SEQ_LEN):
 
 
 def pack_concat_and_chop(shards, seq_len=DEFAULT_SEQ_LEN, eos_id=0):
+    # (shard_id, index-within-that-shard's doc_stream, token, role)
     stream = []
     for shard in shards:
-        tokens, roles = _doc_tokens(shard)
-        for tok, role in zip(tokens, roles):
-            stream.append((shard["shard_id"], tok, role))
-        stream.append((shard["shard_id"], eos_id, "eos"))
+        tokens, roles = doc_stream(shard, eos_id)
+        for idx, (tok, role) in enumerate(zip(tokens, roles)):
+            stream.append((shard["shard_id"], idx, tok, role))
 
     bins = []
-    for start in range(0, len(stream), seq_len):
-        window = stream[start:start + seq_len]
-        docs, current_shard, cur_tokens, cur_roles = [], None, [], []
-        for shard_id, tok, role in window:
+    for window_start in range(0, len(stream), seq_len):
+        window = stream[window_start:window_start + seq_len]
+        docs, current_shard, cur_tokens, cur_roles, cur_start = [], None, [], [], 0
+        for shard_id, idx, tok, role in window:
             if shard_id != current_shard:
                 if current_shard is not None:
-                    docs.append({"shard_id": current_shard, "tokens": cur_tokens, "roles": cur_roles})
-                current_shard, cur_tokens, cur_roles = shard_id, [], []
+                    docs.append(_entry(current_shard, cur_tokens, cur_roles, cur_start))
+                current_shard, cur_tokens, cur_roles, cur_start = shard_id, [], [], idx
             cur_tokens.append(tok)
             cur_roles.append(role)
         if current_shard is not None:
-            docs.append({"shard_id": current_shard, "tokens": cur_tokens, "roles": cur_roles})
+            docs.append(_entry(current_shard, cur_tokens, cur_roles, cur_start))
         bins.append(_bin("concat_and_chop", docs))
     return bins
 
@@ -81,7 +95,7 @@ def pack_greedy(shards, seq_len=DEFAULT_SEQ_LEN):
     for shard in shards:
         tokens, roles = _doc_tokens(shard)
         tokens, roles = tokens[:seq_len], roles[:seq_len]
-        entry = {"shard_id": shard["shard_id"], "tokens": tokens, "roles": roles}
+        entry = _entry(shard["shard_id"], tokens, roles, 0)
         for slot in bins:
             if slot[0] >= len(tokens):
                 slot[1].append(entry)
@@ -97,8 +111,8 @@ def pack_best_fit(shards, seq_len=DEFAULT_SEQ_LEN):
     for shard in shards:
         tokens, roles = _doc_tokens(shard)
         tokens, roles = tokens[:seq_len], roles[:seq_len]
-        sized.append({"shard_id": shard["shard_id"], "tokens": tokens, "roles": roles})
-    sized.sort(key=lambda e: -len(e["tokens"]))
+        sized.append(_entry(shard["shard_id"], tokens, roles, 0))
+    sized.sort(key=lambda e: (-len(e["tokens"]), e["shard_id"]))
 
     bins = []  # list of [remaining_capacity, docs]
     for entry in sized:

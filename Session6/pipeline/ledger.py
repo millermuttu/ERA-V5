@@ -28,6 +28,19 @@ class JsonlLedger:
                     events.append(json.loads(line))
         return events
 
+    def truncate_after(self, ledger_offset):
+        """Crash recovery: drop everything written past the last durable
+        checkpoint. Appends between a checkpoint and a crash were never
+        covered by a fsync'd checkpoint, so on resume they must not be
+        counted as consumed - otherwise those batches are trained twice.
+        Returns the number of dropped events."""
+        events = self.read_all()
+        kept = [e for e in events if e.get("ledger_offset", -1) <= ledger_offset]
+        with open(self.path, "w") as f:
+            for event in kept:
+                f.write(json.dumps(event) + "\n")
+        return len(events) - len(kept)
+
 
 def batch_committed_event(ledger_offset, run_branch_id, global_step, sample, opus_decision,
                            mixture_lane, curriculum_stage, rank=0, microbatch_count=1,
@@ -43,7 +56,10 @@ def batch_committed_event(ledger_offset, run_branch_id, global_step, sample, opu
         "microbatch_count": microbatch_count,
         "packed_sample_ids": [f"sample-{ledger_offset}"],
         "shard_ids": sample["shard_ids"],
-        "token_span_ids": [f"{sid}:0:{len(sample['tokens'])}" for sid in sample["shard_ids"]],
+        # Real per-document spans into each shard's token stream - NOT the padded
+        # sample length. Replay slices the shard back out using exactly these.
+        "token_span_ids": sample["token_span_ids"],
+        "seq_len": sample["seq_len"],
         "loss_mask_hash": sample["loss_mask_hash"],
         "position_policy": sample["policy"],
         "mixture_lane": mixture_lane,
@@ -68,7 +84,7 @@ def checkpoint_bound_event(checkpoint_id, ledger_offset, run_branch_id, model_st
 
 
 def learning_ledger_event(shard_id, lane, stage_phase, avg_token_loss, loss_delta, gradient_norm,
-                           opus_score, tokens_consumed, global_step, repeated_pass=0,
+                           opus_score, tokens_consumed, global_step, ledger_offset, repeated_pass=0,
                            checkpoint_before=None, checkpoint_after=None):
     if avg_token_loss < 2.0:
         usefulness = "useful"
@@ -78,6 +94,7 @@ def learning_ledger_event(shard_id, lane, stage_phase, avg_token_loss, loss_delt
         usefulness = "delay"
     return {
         "event": "learning_rollup",
+        "ledger_offset": ledger_offset,
         "shard_id": shard_id,
         "lane": lane,
         "stage_phase": stage_phase,

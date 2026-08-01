@@ -1,0 +1,10 @@
+{
+  "checkpoint_id": "ckpt-run-b-29",
+  "global_step": 19,
+  "ledger_offset": 29,
+  "run_branch_id": "run-b",
+  "model_state_hash": "04a1aed1d7430336321cf00ed8515456f9589604562de17f68717361eca83978",
+  "optimizer_state_hash": "5823bce560d201fbf6a2e60a40100a194f9a7f2fa5d57ee1aaf0e26e0be7ce13",
+  "rng_state": "rng-state-29",
+  "dataloader_state": "ledger_offset_29"
+}

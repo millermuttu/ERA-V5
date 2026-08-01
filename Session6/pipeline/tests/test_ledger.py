@@ -2,7 +2,9 @@ from pipeline.ledger import JsonlLedger, batch_committed_event, checkpoint_bound
 
 
 def _sample(shard_ids=("s1",)):
-    return {"shard_ids": list(shard_ids), "tokens": [1, 2, 3], "loss_mask_hash": "hash1", "policy": "pad_only"}
+    return {"shard_ids": list(shard_ids), "tokens": [1, 2, 3], "loss_mask_hash": "hash1",
+            "policy": "pad_only", "seq_len": 8,
+            "token_span_ids": [f"{sid}:0:3" for sid in shard_ids]}
 
 
 def _opus_decision(decision_id="opus-1"):

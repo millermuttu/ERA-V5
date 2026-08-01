@@ -19,22 +19,57 @@ def test_latest_checkpoint_tracks_most_recent(tmp_path):
     assert latest["checkpoint_id"] == "ckpt-2"
 
 
-def test_crash_resume_no_skip_no_repeat(tmp_path):
-    from pipeline.crash_resume import (simulate_crash_and_resume, verify_no_skip_no_repeat,
-                                        verify_resume_matched_expected)
+def _crash_at(tmp_path, crash_offset):
+    from pipeline.crash_resume import simulate_crash_and_resume
     from pipeline.ledger import JsonlLedger
     from pipeline.train_loop import Config, build_world, materialize_plan
 
     config = Config(total_steps=200, ckpt_interval=5)
-    world = build_world(config)
-    plan = materialize_plan(world, config)
+    plan = materialize_plan(build_world(config), config)
     assert len(plan) > 15
 
     ledger = JsonlLedger(str(tmp_path / "consumption.jsonl"))
     learning_ledger = JsonlLedger(str(tmp_path / "learning.jsonl"))
-    checkpoint_dir = str(tmp_path / "checkpoints")
+    result = simulate_crash_and_resume(plan, config, ledger, learning_ledger,
+                                        str(tmp_path / "checkpoints"), "run-a",
+                                        crash_offset=crash_offset)
+    return result, ledger, learning_ledger, plan
 
-    result = simulate_crash_and_resume(plan, config, ledger, learning_ledger, checkpoint_dir, "run-a")
 
+def test_crash_resume_no_skip_no_repeat(tmp_path):
+    from pipeline.crash_resume import verify_no_skip_no_repeat, verify_resume_matched_expected
+
+    result, ledger, _, plan = _crash_at(tmp_path, crash_offset=None)
     assert verify_no_skip_no_repeat(ledger, len(plan))
     assert verify_resume_matched_expected(ledger, plan, result["resume_offset"])
+
+
+def test_default_crash_lands_between_checkpoints(tmp_path):
+    """A crash exactly on a checkpoint boundary proves nothing - there is
+    nothing in flight to roll back, so the invariant holds trivially."""
+    from pipeline.train_loop import Config
+    from pipeline.crash_resume import default_crash_offset
+
+    config = Config(ckpt_interval=5)
+    assert (default_crash_offset(config) + 1) % config.ckpt_interval != 0
+
+    result, _, _, _ = _crash_at(tmp_path, crash_offset=None)
+    assert result["batches_replayed_after_rollback"] > 0
+    assert result["in_flight_events_rolled_back"] > 0
+
+
+def test_crash_mid_interval_does_not_repeat_batches(tmp_path):
+    """The regression this whole module exists for: batches committed after
+    the last checkpoint must be rolled back, not trained a second time."""
+    from pipeline.crash_resume import verify_no_skip_no_repeat
+
+    result, ledger, learning_ledger, plan = _crash_at(tmp_path, crash_offset=13)
+    assert result["resume_offset"] == 10, "should resume from the offset-9 checkpoint"
+    assert result["batches_replayed_after_rollback"] == 4
+
+    offsets = [e["ledger_offset"] for e in ledger.read_all() if e["event"] == "batch_committed"]
+    assert len(offsets) == len(set(offsets)), f"duplicated offsets: {sorted(offsets)}"
+    assert verify_no_skip_no_repeat(ledger, len(plan))
+
+    learn_offsets = [e["ledger_offset"] for e in learning_ledger.read_all()]
+    assert sorted(set(learn_offsets)) == list(range(len(plan)))

@@ -1,3 +1,4 @@
+import hashlib
 import json
 import os
 
@@ -8,7 +9,7 @@ from pipeline.ledger import JsonlLedger
 from pipeline.packing import packing_utilization
 from pipeline.replay import replay_ledger_mode
 from pipeline.throughput import compute_performance
-from pipeline.train_loop import Config, build_world, materialize_plan, run_plan
+from pipeline.train_loop import Config, build_world, materialize_plan
 
 
 def _build_full_artifacts(tmp_path):
@@ -17,7 +18,10 @@ def _build_full_artifacts(tmp_path):
     os.makedirs(os.path.join(artifacts_dir, "ledgers"), exist_ok=True)
     checkpoint_dir = os.path.join(artifacts_dir, "checkpoints")
 
-    config = Config(total_steps=200, ckpt_interval=10)
+    # The shipped configuration, so the evidence rows under test are the ones
+    # the submitted artifacts actually contain - including the protected-floor
+    # override, which a healthy mixture only triggers occasionally.
+    config = Config()
     world = build_world(config)
     stats = {}
     plan = materialize_plan(world, config, stats=stats)
@@ -33,11 +37,10 @@ def _build_full_artifacts(tmp_path):
     learning = JsonlLedger(os.path.join(artifacts_dir, "ledgers", "learning.jsonl"))
     opus_ledger = JsonlLedger(os.path.join(artifacts_dir, "ledgers", "opus_decisions.jsonl"))
 
+    for decision in stats["decisions"]:
+        opus_ledger.append(decision)
+
     crash_result = simulate_crash_and_resume(plan, config, consumption, learning, checkpoint_dir, "run-a")
-    # opus decisions weren't logged during simulate_crash_and_resume (it calls run_plan internally
-    # without opus_ledger); replay a second, independent pass over the plan just to log them.
-    for entry in plan:
-        opus_ledger.append(entry["opus_decision"])
 
     crash_report = {
         "no_skip_no_repeat": verify_no_skip_no_repeat(consumption, len(plan)),
@@ -51,13 +54,16 @@ def _build_full_artifacts(tmp_path):
     with open(os.path.join(artifacts_dir, "ledgers", "replay_report.json"), "w") as f:
         json.dump({"ledger_mode_results": replay_results}, f)
 
-    bins_by_lane = {}
-    from pipeline.packing import pack_lane
-    for lane, shards in world["admitted_by_lane"].items():
-        bins_by_lane.setdefault(lane, []).extend(
-            pack_lane(lane, shards, seq_len=config.seq_len, eos_id=world["tokenizer"].eos_id))
-    all_bins = [b for bins in bins_by_lane.values() for b in bins]
-    pack_pct = packing_utilization(all_bins, seq_len=config.seq_len)
+    with open(os.path.join(artifacts_dir, "packed_batches.json"), "w") as f:
+        json.dump({"pad_id": world["tokenizer"].pad_id, "samples": [
+            {"ledger_offset": e["ledger_offset"], "policy": e["sample"]["policy"],
+             "seq_len": e["sample"]["seq_len"], "shard_ids": e["sample"]["shard_ids"],
+             "token_span_ids": e["sample"]["token_span_ids"], "tokens": e["sample"]["tokens"],
+             "position_ids": e["sample"]["position_ids"], "segment_ids": e["sample"]["segment_ids"],
+             "loss_mask": e["sample"]["loss_mask"], "loss_mask_hash": e["sample"]["loss_mask_hash"]}
+            for e in plan]}, f)
+
+    pack_pct = packing_utilization([e["bin"] for e in plan], seq_len=config.seq_len)
 
     decisions = stats["decision_counts"]
     total = sum(decisions.values()) or 1
@@ -93,6 +99,87 @@ def test_all_rows_pass_on_a_healthy_run(tmp_path):
     rows = build_evidence(artifacts_dir)
     failing = [r for r in rows if r["result"] == "FAIL"]
     assert not failing, failing
+
+
+def _tamper(artifacts_dir, mutate):
+    path = os.path.join(artifacts_dir, "packed_batches.json")
+    with open(path) as f:
+        packed = json.load(f)
+    mutate(packed)
+    with open(path, "w") as f:
+        json.dump(packed, f)
+    return next(r for r in build_evidence(artifacts_dir) if r["requirement"] == "Packing correctness")
+
+
+def test_packing_evidence_catches_corrupted_loss_mask(tmp_path):
+    artifacts_dir = _build_full_artifacts(tmp_path)
+
+    def flip_a_mask_bit(packed):
+        packed["samples"][0]["loss_mask"][0] ^= 1
+
+    assert _tamper(artifacts_dir, flip_a_mask_bit)["result"] == "FAIL"
+
+
+def test_packing_evidence_catches_loss_bearing_padding(tmp_path):
+    artifacts_dir = _build_full_artifacts(tmp_path)
+
+    def mark_padding_loss_bearing(packed):
+        sample = packed["samples"][0]
+        pad_index = len(sample["tokens"]) - 1
+        sample["loss_mask"][pad_index] = 1
+        sample["tokens"][pad_index] = packed["pad_id"]
+        sample["loss_mask_hash"] = hashlib.sha256(bytes(sample["loss_mask"])).hexdigest()
+
+    assert _tamper(artifacts_dir, mark_padding_loss_bearing)["result"] == "FAIL"
+
+
+def test_packing_evidence_catches_broken_position_reset(tmp_path):
+    artifacts_dir = _build_full_artifacts(tmp_path)
+
+    def break_position_reset(packed):
+        sample = next(s for s in packed["samples"] if len(s["shard_ids"]) > 1)
+        boundary = sample["segment_ids"].index(1)
+        sample["position_ids"][boundary] = 99
+
+    assert _tamper(artifacts_dir, break_position_reset)["result"] == "FAIL"
+
+
+def test_packing_evidence_catches_unreconstructable_utilization(tmp_path):
+    """If the reported packing number can't be rebuilt from the spans, the
+    rubric gives no credit - so the evidence must not give a PASS either."""
+    artifacts_dir = _build_full_artifacts(tmp_path)
+    perf_path = os.path.join(artifacts_dir, "performance.json")
+    with open(perf_path) as f:
+        perf = json.load(f)
+    perf["packing_utilization_pct"] = perf["packing_utilization_pct"] + 10
+    with open(perf_path, "w") as f:
+        json.dump(perf, f)
+    row = next(r for r in build_evidence(artifacts_dir) if r["requirement"] == "Packing correctness")
+    assert row["result"] == "FAIL"
+
+
+def test_opus_evidence_requires_rejections_and_deferrals(tmp_path):
+    """An audit trail of accepted candidates only is not an audit trail."""
+    artifacts_dir = _build_full_artifacts(tmp_path)
+    opus_path = os.path.join(artifacts_dir, "ledgers", "opus_decisions.jsonl")
+    with open(opus_path) as f:
+        kept = [l for l in f if json.loads(l)["decision"] in ("accepted", "protected")]
+    with open(opus_path, "w") as f:
+        f.writelines(kept)
+    row = next(r for r in build_evidence(artifacts_dir) if r["requirement"] == "OPUS audit trail")
+    assert row["result"] == "FAIL"
+
+
+def test_firewall_evidence_catches_admitted_blocked_shard(tmp_path):
+    artifacts_dir = _build_full_artifacts(tmp_path)
+    manifests_path = os.path.join(artifacts_dir, "manifests", "shard_manifests.json")
+    with open(manifests_path) as f:
+        manifests = json.load(f)
+    next(m for m in manifests if m["eval_overlap_status"] != "clear")["admission"] = "admitted"
+    with open(manifests_path, "w") as f:
+        json.dump(manifests, f)
+    row = next(r for r in build_evidence(artifacts_dir) if r["requirement"] == "Evaluation firewall")
+    assert row["result"] == "FAIL"
 
 
 def test_evidence_reflects_induced_failure(tmp_path):

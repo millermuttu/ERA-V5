@@ -11,9 +11,10 @@ from pipeline.corpus import LOSS_BEARING_ROLES
 
 
 def build_masked_sample(bin_, seq_len, pad_id):
-    tokens, position_ids, segment_ids, loss_mask, shard_ids = [], [], [], [], []
+    tokens, position_ids, segment_ids, loss_mask, shard_ids, spans = [], [], [], [], [], []
     for seg_idx, doc in enumerate(bin_["docs"]):
         shard_ids.append(doc["shard_id"])
+        spans.append(f"{doc['shard_id']}:{doc['start']}:{doc['end']}")
         for pos, (tok, role) in enumerate(zip(doc["tokens"], doc["roles"])):
             tokens.append(tok)
             position_ids.append(pos)
@@ -32,6 +33,9 @@ def build_masked_sample(bin_, seq_len, pad_id):
     loss_mask_hash = hashlib.sha256(bytes(loss_mask)).hexdigest()
     return {
         "shard_ids": shard_ids,
+        "token_span_ids": spans,
+        "seq_len": seq_len,
+        "pad_id": pad_id,
         "tokens": tokens,
         "position_ids": position_ids,
         "segment_ids": segment_ids,

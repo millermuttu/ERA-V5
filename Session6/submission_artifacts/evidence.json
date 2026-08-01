@@ -1,0 +1,72 @@
+[
+  {
+    "requirement": "Tokenizer integrity",
+    "area": "shards_manifests_tokenizer",
+    "result": "PASS",
+    "evidence_path": "manifests/tokenizer.json",
+    "detail": "67 manifests checked against tokenizer.json"
+  },
+  {
+    "requirement": "Evaluation firewall",
+    "area": "eval_firewall",
+    "result": "PASS",
+    "evidence_path": "ledgers/consumption.jsonl",
+    "detail": "11 firewall-blocked shards, all admission=blocked, none present in trained shard ids"
+  },
+  {
+    "requirement": "Data cleaning",
+    "area": "shards_manifests_tokenizer",
+    "result": "PASS",
+    "evidence_path": "manifests/shard_manifests.json",
+    "detail": "measured: 10 eval-overlapping, 1 canary, 2 PII-masked (4 identifiers), 2 near-duplicate (all blocked)"
+  },
+  {
+    "requirement": "Packing correctness",
+    "area": "packing_masks_batches",
+    "result": "PASS",
+    "evidence_path": "packed_batches.json",
+    "detail": "191 packed samples re-verified (masks, segment ids, position resets, span lengths); 81 multi-document; utilization recomputed 41.2% vs reported 41.2%"
+  },
+  {
+    "requirement": "Mixture compliance",
+    "area": "mixture_floors_opus",
+    "result": "PASS",
+    "evidence_path": "ledgers/learning.jsonl",
+    "detail": "planned {'general': 40.35, 'code': 24.35, 'indic': 11.7, 'reasoning': 15.3, 'agentic': 8.3} vs actual {'indic': 8.85, 'reasoning': 19.48, 'agentic': 6.49, 'general': 39.85, 'code': 25.32}; drift {'general': -0.5, 'code': 0.97, 'indic': -2.85, 'reasoning': 4.18, 'agentic': -1.81} (max allowed +/-8.0); floors {'indic': 3.0, 'reasoning': 3.0, 'agentic': 2.0} met"
+  },
+  {
+    "requirement": "OPUS audit trail",
+    "area": "mixture_floors_opus",
+    "result": "PASS",
+    "evidence_path": "ledgers/opus_decisions.jsonl",
+    "detail": "150 candidate decisions logged: {'accepted': 113, 'deferred': 7, 'rejected': 30}; 3 protected-floor overrides"
+  },
+  {
+    "requirement": "Crash recovery",
+    "area": "checkpoint_crash_resume_replay_fork",
+    "result": "PASS",
+    "evidence_path": "ledgers/crash_resume_report.json",
+    "detail": "resume_offset=10"
+  },
+  {
+    "requirement": "Replay",
+    "area": "checkpoint_crash_resume_replay_fork",
+    "result": "PASS",
+    "evidence_path": "ledgers/replay_report.json",
+    "detail": "10 intervals replayed and hash-matched"
+  },
+  {
+    "requirement": "Learning trace",
+    "area": "consumption_learning_ledgers",
+    "result": "PASS",
+    "evidence_path": "ledgers/learning.jsonl",
+    "detail": "353 learning-ledger rollups traced to manifest shard ids"
+  },
+  {
+    "requirement": "Throughput",
+    "area": "throughput_packing_efficiency",
+    "result": "PASS",
+    "evidence_path": "performance.json",
+    "detail": "useful_tokens_per_sec=21901.84 (recomputed from inputs)"
+  }
+]

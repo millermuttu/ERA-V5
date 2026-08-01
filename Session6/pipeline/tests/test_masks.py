@@ -24,11 +24,15 @@ def test_loss_mask_excludes_padding():
 
 
 def test_loss_mask_excludes_non_loss_bearing_roles():
-    # user/observation turns are not loss-bearing per corpus.py LOSS_BEARING_ROLES
+    # user/observation turns are not loss-bearing per corpus.py LOSS_BEARING_ROLES.
+    # Look only at real tokens - padding is all-zero and would satisfy a naive
+    # "0 in loss_mask" check on its own.
     sample, _ = _agentic_sample()
-    # since structure_preserving keeps one doc per bin, segment 0 covers the whole doc;
-    # confirm at least one masked (0) and one unmasked (1) position exist for a multi-turn doc
-    assert 0 in sample["loss_mask"]
+    span_len = sum(int(e) - int(s) for _, s, e in
+                   (span.rsplit(":", 2) for span in sample["token_span_ids"]))
+    real = sample["loss_mask"][:span_len]
+    assert 0 in real, "no non-loss-bearing turn was masked out"
+    assert 1 in real, "no loss-bearing turn survived the mask"
 
 
 def test_position_ids_reset_per_document():
@@ -38,11 +42,16 @@ def test_position_ids_reset_per_document():
     general_docs = [d for d in docs if d["lane"] == "general"][:2]
     shards = build_shards(general_docs, tok)
     bin_ = {"policy": "test", "docs": [
-        {"shard_id": shards[0]["shard_id"], "tokens": [1, 2, 3], "roles": ["response"] * 3},
-        {"shard_id": shards[1]["shard_id"], "tokens": [4, 5], "roles": ["response"] * 2},
+        {"shard_id": shards[0]["shard_id"], "tokens": [1, 2, 3], "roles": ["response"] * 3,
+         "start": 0, "end": 3},
+        {"shard_id": shards[1]["shard_id"], "tokens": [4, 5], "roles": ["response"] * 2,
+         "start": 0, "end": 2},
     ]}
     sample = build_masked_sample(bin_, seq_len=10, pad_id=tok.pad_id)
     assert sample["position_ids"][:5] == [0, 1, 2, 0, 1]
+    assert sample["segment_ids"][:5] == [0, 0, 0, 1, 1]
+    assert sample["token_span_ids"] == [f"{shards[0]['shard_id']}:0:3",
+                                        f"{shards[1]['shard_id']}:0:2"]
 
 
 def test_attention_blocked_across_document_segments():

@@ -1,0 +1,6 @@
+{
+  "no_skip_no_repeat": true,
+  "resume_matched_expected": true,
+  "resume_offset": 10,
+  "checkpoint_id": "ckpt-run-a-9"
+}
