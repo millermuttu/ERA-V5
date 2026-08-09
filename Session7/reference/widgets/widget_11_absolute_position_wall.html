@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 7 Widget 11 - The Wall at max_position</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px}
+.s7wb-wrap{max-width:1280px;margin:0 auto;padding:22px}
+.s7wb-kicker{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--amber)}
+.s7wb-wrap h1{font-size:27px;line-height:1.1;margin:5px 0 8px}
+.s7wb-sub{color:var(--muted);max-width:920px;margin:0 0 16px;line-height:1.55}
+.s7wb-grid{display:grid;grid-template-columns:260px minmax(0,1fr) 300px;gap:14px}
+.s7wb-card{background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 30px rgba(20,42,75,.08);padding:14px}
+.s7wb-card h2{font-size:13px;margin:0 0 11px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.s7wb-ctrl{margin-bottom:14px}
+.s7wb-lab{display:flex;justify-content:space-between;font-size:12.5px;font-weight:700;margin-bottom:6px}
+.s7wb-lab span{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--amber)}
+.s7wb-wrap input[type=range]{width:100%;accent-color:var(--amber)}
+.s7wb-code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:11px;background:#0f172a;color:#dbeafe;border-radius:8px;padding:10px;line-height:1.6;white-space:pre;overflow-x:auto}
+.s7wb-ctitle{font-size:12.5px;font-weight:800;margin:14px 0 2px}
+.s7wb-ctitle:first-child{margin-top:0}
+.s7wb-cnote{font-size:11.5px;color:var(--muted);margin:0 0 7px;line-height:1.5}
+.s7wb-chart{border:1px solid var(--line);background:#fff;border-radius:8px}
+.s7wb-bars{display:grid;grid-template-columns:repeat(16,1fr);gap:4px;align-items:end;height:130px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:9px}
+.s7wb-bar{border-radius:3px 3px 0 0;position:relative;min-height:2px}
+.s7wb-xax{display:grid;grid-template-columns:repeat(16,1fr);gap:4px;margin-top:4px;padding:0 9px}
+.s7wb-xax div{text-align:center;font-size:9.5px;color:var(--muted);font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+.s7wb-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:12px}
+.s7wb-metric{border:1px solid var(--line);background:#fbfdff;border-radius:8px;padding:10px}
+.s7wb-metric b{display:block;font-size:19px;line-height:1.15;font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+.s7wb-metric span{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+.s7wb-note{margin-top:12px;border:1px solid #fed7aa;background:#fff7ed;color:#9a3412;border-radius:8px;padding:11px;font-size:12.5px;line-height:1.6}
+.s7wb-tbl{display:grid;gap:3px}
+.s7wb-trow{display:grid;grid-template-columns:30px 1fr 46px;gap:5px;align-items:center}
+.s7wb-tidx{font-size:10px;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--muted);text-align:right}
+.s7wb-tcells{display:grid;gap:2px}
+.s7wb-tc{height:12px;border-radius:2px}
+.s7wb-tag{font-size:9px;font-weight:800;text-align:center;border-radius:4px;padding:2px 0}
+.s7wb-tt{background:#dcfce7;color:#166534}
+.s7wb-tu{background:#fee2e2;color:#991b1b}
+@media(max-width:1020px){.s7wb-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main class="s7wb-wrap">
+  <div class="s7wb-kicker">ERA V5 Session 7</div>
+  <h1>The Wall at max_position</h1>
+  <p class="s7wb-sub">A learned absolute position table is trained live in your browser on a task whose answer depends only on where a token sits. Training visits positions zero through the boundary you choose and never goes past it. Then the same trained model is evaluated across the full range. The cliff is measured, not drawn.</p>
+
+  <section class="s7wb-grid">
+    <aside class="s7wb-card">
+      <h2>Run configuration</h2>
+      <div class="s7wb-ctrl"><div class="s7wb-lab">Trained positions <span id="s7wb-pv"></span></div><input id="s7wb-p" type="range" min="4" max="14" value="8"></div>
+      <div class="s7wb-ctrl"><div class="s7wb-lab">Training steps <span id="s7wb-stv"></span></div><input id="s7wb-st" type="range" min="60" max="900" step="20" value="400"></div>
+      <div class="s7wb-ctrl"><div class="s7wb-lab">Learning rate <span id="s7wb-lrv"></span></div><input id="s7wb-lr" type="range" min="5" max="120" value="50"></div>
+      <div class="s7wb-ctrl"><div class="s7wb-lab">Init seed <span id="s7wb-sdv"></span></div><input id="s7wb-sd" type="range" min="1" max="30" value="4"></div>
+      <div class="s7wb-code" id="s7wb-code"></div>
+    </aside>
+
+    <section class="s7wb-card">
+      <p class="s7wb-ctitle">Training loss</p>
+      <p class="s7wb-cnote">Real cross-entropy, real gradients. The model only ever sees positions inside the trained range.</p>
+      <svg class="s7wb-chart" id="s7wb-loss" width="100%" height="150" viewBox="0 0 900 150" preserveAspectRatio="none"></svg>
+
+      <p class="s7wb-ctitle">Accuracy at every position, after training</p>
+      <p class="s7wb-cnote">Each position has one correct answer, so a bar is either full or empty. Green bars are positions the model trained on, red bars are positions it never saw. With sixteen candidate tokens a never-seen position lands correct about one time in sixteen by coincidence, so an occasional red bar is noise and not generalisation.</p>
+      <div class="s7wb-bars" id="s7wb-bars"></div>
+      <div class="s7wb-xax" id="s7wb-xax"></div>
+
+      <div class="s7wb-metrics">
+        <div class="s7wb-metric"><b id="s7wb-acin"></b><span>accuracy inside range</span></div>
+        <div class="s7wb-metric"><b id="s7wb-acout"></b><span>accuracy past the boundary</span></div>
+        <div class="s7wb-metric"><b id="s7wb-chance"></b><span>chance</span></div>
+      </div>
+      <div class="s7wb-note" id="s7wb-note"></div>
+    </section>
+
+    <aside class="s7wb-card">
+      <h2>The position table itself</h2>
+      <p style="margin:0 0 9px;font-size:12px;color:var(--muted);line-height:1.5">Each row is one position's learned vector. Rows inside the trained range were gathered by a batch and written to by the scatter-add. Rows past the boundary were never gathered, so nothing ever wrote to them and they still hold the values they were initialised with.</p>
+      <div class="s7wb-tbl" id="s7wb-tbl"></div>
+      <div style="margin-top:11px;border:1px solid var(--line);background:#fbfdff;border-radius:8px;padding:10px;font-size:12px;color:var(--muted);line-height:1.55">
+        There is no parameter anywhere in this model that connects row <b id="s7wb-b1"></b> to row <b id="s7wb-b2"></b>. They are independent rows in a lookup table, so no amount of extra training inside the range can teach the model anything about what lies past it. That is the wall, and it is the reason the modern schemes compute position from a function of <span style="font-family:ui-monospace,monospace">t</span> instead of storing it.
+      </div>
+    </aside>
+  </section>
+</main>
+
+<script>
+(function(){
+  var V=16, MAXP=16, D=12, BATCH=16;
+  var P=document.getElementById('s7wb-p'), ST=document.getElementById('s7wb-st'),
+      LR=document.getElementById('s7wb-lr'), SD=document.getElementById('s7wb-sd');
+
+  function rng(seed){var s=(seed>>>0)||1;return function(){s^=s<<13;s>>>=0;s^=s>>17;s^=s<<5;s>>>=0;return s/4294967296;};}
+  function rule(t){ return (t*5+3)%V; }   // the token that belongs at position t
+
+  function train(trained,steps,eta,seed){
+    var g=rng(seed*2246822519+7);
+    var Pe=new Float64Array(MAXP*D), W=new Float64Array(V*D), b=new Float64Array(V), i,j;
+    for(i=0;i<MAXP*D;i++) Pe[i]=(g()*2-1)*0.5;
+    for(i=0;i<V*D;i++)    W[i]=(g()*2-1)*0.5;
+    var touched=new Int32Array(MAXP), losses=[], z=new Float64Array(V), s,t;
+
+    for(s=0;s<steps;s++){
+      var dW=new Float64Array(V*D), db=new Float64Array(V), dP=new Float64Array(MAXP*D), L=0, k;
+      for(k=0;k<BATCH;k++){
+        t=Math.floor(g()*trained); var y=rule(t), po=t*D; touched[t]++;
+        var mx=-1e30;
+        for(i=0;i<V;i++){var acc=b[i],wo=i*D;for(j=0;j<D;j++)acc+=W[wo+j]*Pe[po+j];z[i]=acc;if(acc>mx)mx=acc;}
+        var sum=0;for(i=0;i<V;i++){z[i]=Math.exp(z[i]-mx);sum+=z[i];}
+        for(i=0;i<V;i++)z[i]/=sum;
+        L+=-Math.log(Math.max(z[y],1e-12));
+        for(i=0;i<V;i++){
+          var dz=z[i]-(i===y?1:0); if(dz===0)continue;
+          var wo2=i*D; db[i]+=dz;
+          for(j=0;j<D;j++){ dW[wo2+j]+=dz*Pe[po+j]; dP[po+j]+=dz*W[wo2+j]; }
+        }
+      }
+      var inv=eta/BATCH;
+      for(i=0;i<V*D;i++)  W[i]-=inv*dW[i];
+      for(i=0;i<V;i++)    b[i]-=inv*db[i];
+      for(i=0;i<MAXP*D;i++) Pe[i]-=inv*dP[i];
+      losses.push(L/BATCH);
+    }
+
+    // evaluate every position with the trained model
+    var acc=[],i2;
+    for(t=0;t<MAXP;t++){
+      var po2=t*D,best=-1e30,arg=0;
+      for(i2=0;i2<V;i2++){var a2=b[i2],wo3=i2*D;for(j=0;j<D;j++)a2+=W[wo3+j]*Pe[po2+j];if(a2>best){best=a2;arg=i2;}}
+      acc.push(arg===rule(t)?1:0);
+    }
+    return {losses:losses,acc:acc,Pe:Pe,touched:touched};
+  }
+
+  function colour(v,mx){
+    if(mx<1e-9)mx=1e-9;
+    var t=Math.max(-1,Math.min(1,v/mx));
+    if(t>=0){var a=t;return 'rgb('+Math.round(255-247*a*0.42)+','+Math.round(255-140*a)+','+Math.round(255-80*a)+')';}
+    var c=-t;return 'rgb('+Math.round(255-90*c)+','+Math.round(255-140*c)+','+Math.round(255-30*c)+')';
+  }
+
+  function plotLoss(el,arr){
+    var Wd=900,Ht=150,pad=26,mx=0,mn=1e30,i;
+    for(i=0;i<arr.length;i++){if(arr[i]>mx)mx=arr[i];if(arr[i]<mn)mn=arr[i];}
+    if(mx-mn<1e-9)mx=mn+1;
+    var n=arr.length,h='';
+    function X(i){return pad+(i/(n-1))*(Wd-pad-8);}
+    function Y(v){return Ht-22-((v-mn)/(mx-mn))*(Ht-34);}
+    for(i=0;i<=3;i++){var vv=mn+(mx-mn)*i/3,yy=Y(vv);
+      h+='<line x1="'+pad+'" y1="'+yy+'" x2="'+(Wd-8)+'" y2="'+yy+'" stroke="#eef2f7"/>';
+      h+='<text x="2" y="'+(yy+3)+'" font-size="9" fill="#94a3b8">'+vv.toFixed(1)+'</text>';}
+    var d='';for(i=0;i<n;i++)d+=(i?'L':'M')+X(i).toFixed(1)+' '+Y(arr[i]).toFixed(1)+' ';
+    h+='<path d="'+d+'" fill="none" stroke="#d97706" stroke-width="2"/>';
+    h+='<text x="'+pad+'" y="'+(Ht-5)+'" font-size="9" fill="#94a3b8">step 0</text>';
+    h+='<text x="'+(Wd-56)+'" y="'+(Ht-5)+'" font-size="9" fill="#94a3b8">step '+n+'</text>';
+    el.innerHTML=h;
+  }
+
+  function render(){
+    var trained=+P.value, steps=+ST.value, eta=+LR.value/100, seed=+SD.value;
+    document.getElementById('s7wb-pv').textContent='0 - '+(trained-1);
+    document.getElementById('s7wb-stv').textContent=steps;
+    document.getElementById('s7wb-lrv').textContent=eta.toFixed(2);
+    document.getElementById('s7wb-sdv').textContent=seed;
+
+    var r=train(trained,steps,eta,seed);
+    plotLoss(document.getElementById('s7wb-loss'),r.losses);
+
+    var i,inAcc=0,outAcc=0,nOut=MAXP-trained;
+    for(i=0;i<MAXP;i++){ if(i<trained) inAcc+=r.acc[i]; else outAcc+=r.acc[i]; }
+    var chance=1/V;
+
+    var bh='',xh='';
+    for(i=0;i<MAXP;i++){
+      var inRange=i<trained, hgt=Math.max(3,r.acc[i]*100);
+      bh+='<div class="s7wb-bar" style="height:'+hgt+'%;background:'+(inRange?'#159447':'#dc2626')+';opacity:'+(r.acc[i]?1:0.28)+'"></div>';
+      xh+='<div style="color:'+(inRange?'#159447':'#dc2626')+'">'+i+'</div>';
+    }
+    document.getElementById('s7wb-bars').innerHTML=bh;
+    document.getElementById('s7wb-xax').innerHTML=xh;
+
+    document.getElementById('s7wb-acin').textContent=(inAcc/trained*100).toFixed(0)+'%';
+    document.getElementById('s7wb-acout').textContent=nOut?((outAcc/nOut*100).toFixed(0)+'%'):'n/a';
+    document.getElementById('s7wb-chance').textContent=(chance*100).toFixed(1)+'%';
+
+    document.getElementById('s7wb-note').innerHTML=
+      'The model reached <b>'+(inAcc/trained*100).toFixed(0)+'%</b> on the '+trained+' positions it trained on and <b>'+(nOut?(outAcc/nOut*100).toFixed(0):'0')+'%</b> on the '+nOut+' it did not, against a chance rate of '+(chance*100).toFixed(1)+'%. Training for longer moves the first number and cannot move the second, because the gradient that would have to reach those rows is never generated: the scatter-add only writes to rows a batch actually gathered. Slide the boundary and the cliff moves with it exactly.';
+
+    // position table heatmap
+    var mx=0;
+    for(i=0;i<MAXP*D;i++) mx=Math.max(mx,Math.abs(r.Pe[i]));
+    var th='';
+    for(i=0;i<MAXP;i++){
+      var inR=i<trained,cells='';
+      for(var j=0;j<D;j++) cells+='<div class="s7wb-tc" style="background:'+colour(r.Pe[i*D+j],mx)+'"></div>';
+      th+='<div class="s7wb-trow"><div class="s7wb-tidx">'+i+'</div>'+
+          '<div class="s7wb-tcells" style="grid-template-columns:repeat('+D+',1fr)">'+cells+'</div>'+
+          '<div class="s7wb-tag '+(inR?'s7wb-tt':'s7wb-tu')+'">'+(inR?r.touched[i]:'never')+'</div></div>';
+    }
+    document.getElementById('s7wb-tbl').innerHTML=th;
+    document.getElementById('s7wb-b1').textContent=(trained-1);
+    document.getElementById('s7wb-b2').textContent=trained;
+
+    document.getElementById('s7wb-code').textContent=
+      'pos_emb = nn.Embedding('+MAXP+', '+D+')\n'+
+      'head    = Linear('+D+', '+V+')\n\n'+
+      'logits  = head(pos_emb(t))\n'+
+      'target  = (t*5 + 3) % '+V+'\n\n'+
+      'train t in [0, '+trained+')\n'+
+      'eval  t in [0, '+MAXP+')\n\n'+
+      'rows '+trained+'..'+(MAXP-1)+' never gathered\n'+
+      '-> never scatter-added\n'+
+      '-> still at initialisation';
+  }
+
+  [P,ST,LR,SD].forEach(function(el){el.addEventListener('input',render);});
+  render();
+})();
+</script>
+</body>
+</html>

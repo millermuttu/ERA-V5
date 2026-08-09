@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 7 Widget 4 - Fertility and Cost</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;700&family=Noto+Sans+Telugu:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px}
+.s7w4-wrap{max-width:1280px;margin:0 auto;padding:22px}
+.s7w4-kicker{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.s7w4-wrap h1{font-size:27px;line-height:1.1;margin:5px 0 8px}
+.s7w4-sub{color:var(--muted);max-width:940px;margin:0 0 12px;line-height:1.55}
+.s7w4-caveat{border:1px solid #fed7aa;background:#fff7ed;color:#9a3412;border-radius:8px;padding:10px 12px;font-size:12.5px;line-height:1.55;margin-bottom:16px}
+.s7w4-grid{display:grid;grid-template-columns:300px minmax(0,1fr);gap:14px}
+.s7w4-card{background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 30px rgba(20,42,75,.08);padding:14px}
+.s7w4-card h2{font-size:13px;margin:0 0 11px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.s7w4-ctrl{margin-bottom:12px}
+.s7w4-lab{display:flex;justify-content:space-between;font-size:12.5px;font-weight:700;margin-bottom:5px}
+.s7w4-lab span{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--cyan)}
+.s7w4-wrap input[type=range]{width:100%;accent-color:var(--cyan)}
+.s7w4-lang{display:grid;grid-template-columns:78px 1fr 44px;gap:8px;align-items:center;margin-bottom:7px}
+.s7w4-ln{font-size:12px;font-weight:700}
+.s7w4-lv{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:11.5px;color:var(--cyan);text-align:right}
+.s7w4-preset{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px}
+.s7w4-preset button{border:1px solid var(--line);background:#fff;border-radius:7px;padding:7px;font:inherit;font-size:11.5px;font-weight:700;cursor:pointer}
+.s7w4-preset button:hover{border-color:var(--cyan);color:#0e7490}
+.s7w4-title{font-size:12.5px;font-weight:800;margin:0 0 3px}
+.s7w4-hint{font-size:10.5px;color:var(--muted);line-height:1.5;margin-top:5px}
+.s7w4-hint b{color:var(--ink)}
+.s7w4-nt{font-size:11.5px;color:var(--muted);margin:0 0 8px;line-height:1.5}
+.s7w4-chart{border:1px solid var(--line);background:#fff;border-radius:8px;margin-bottom:12px}
+.s7w4-tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.s7w4-tbl th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);border-bottom:1px solid var(--line);padding:6px 5px}
+.s7w4-tbl td{border-bottom:1px solid #eef2f7;padding:7px 5px;font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+.s7w4-tbl td:first-child{font-family:inherit;font-weight:600}
+.s7w4-note{margin-top:12px;border:1px solid #a5f3fc;background:#ecfeff;color:#155e75;border-radius:8px;padding:11px;font-size:12.5px;line-height:1.6}
+.s7w4-legend{display:flex;gap:14px;font-size:11.5px;color:var(--muted);margin-bottom:6px;flex-wrap:wrap}
+.s7w4-k{display:inline-block;width:20px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
+@media(max-width:980px){.s7w4-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main class="s7w4-wrap">
+  <div class="s7w4-kicker">ERA V5 Session 7</div>
+  <h1>Fertility and Embedding Cost</h1>
+  <p class="s7w4-sub">The tokenizer decides how much attention compute each language costs. The embedding system decides how much parameter memory that vocabulary costs. They pull in opposite directions, they are set by the same number, and for an India-first model the optimum sits somewhere a monolingual model would never choose.</p>
+  <div class="s7w4-caveat"><b>Read the fertility numbers as assumptions, not measurements.</b> The starting values are estimates, and the curve moving them with vocabulary size is a model: fertility decays toward an asymptote of one token per word, so each language's <em>reducible</em> headroom is its starting fertility minus one. English begins at 1.30 and has only 0.30 to gain; Tamil begins at 3.70 and has 2.70. That asymmetry is what makes the corpus mix move the optimum, so it is the assumption to attack first. Replace all of it with the fertilities you measured in the Session 2 tokenizer assignment before you use this to defend a number.</div>
+
+  <section class="s7w4-grid">
+    <aside class="s7w4-card">
+      <h2>Corpus mix and fertility</h2>
+      <div class="s7w4-preset">
+        <button data-p="v5">V5 mix</button>
+        <button data-p="en">English-only</button>
+        <button data-p="indic">Indic-heavy</button>
+        <button data-p="code">Code-heavy</button>
+      </div>
+      <div id="s7w4-langs"></div>
+      <div class="s7w4-ctrl" style="margin-top:14px"><div class="s7w4-lab">Vocabulary <span id="s7w4-Vv"></span></div><input id="s7w4-V" type="range" min="8192" max="262144" step="4096" value="131072"></div>
+      <div class="s7w4-ctrl"><div class="s7w4-lab">Model width <span id="s7w4-Dv"></span></div><input id="s7w4-D" type="range" min="1024" max="12288" step="32" value="8096"></div>
+      <div class="s7w4-ctrl">
+        <div class="s7w4-lab">Fertility sensitivity <span id="s7w4-av"></span></div>
+        <input id="s7w4-a" type="range" min="4" max="60" value="22">
+        <div class="s7w4-hint"><b>How much a bigger vocabulary actually helps.</b> It is the exponent in the decay: every doubling of the vocabulary removes <span id="s7w4-halve"></span> of whatever fertility headroom a language has left. Set it to zero and extra rows buy nothing. This is an <em>empirical property of your tokenizer</em>, and it is precisely what the Session 2 assignment measured, so replace it with your own number.</div>
+      </div>
+      <div class="s7w4-ctrl">
+        <div class="s7w4-lab">Price of memory <span id="s7w4-mpv"></span></div>
+        <input id="s7w4-mp" type="range" min="5" max="120" value="30">
+        <div class="s7w4-hint"><b>The exchange rate between the two bills.</b> Doubling the vocabulary from the 32,768 reference adds <span id="s7w4-adds"></span> to the combined index, so the token bill has to fall by more than that for the extra rows to be worth buying. This is a <em>judgement, not a measurement</em>: it depends on your hardware and on whether you are memory-bound or compute-bound. It moves <em>where</em> the optimum sits, but not <em>which way</em> it travels when the corpus mix changes.</div>
+      </div>
+    </aside>
+
+    <section class="s7w4-card">
+      <p class="s7w4-title">The two bills against vocabulary size</p>
+      <p class="s7w4-nt">Both bills are expressed against the same reference vocabulary of 32,768, where each equals 1.0, so they share an axis honestly. The <b>token bill</b> is the mean fertility of your mix, which is what every layer of attention pays on every sequence for the whole of training and the whole of inference; it falls as the vocabulary grows. The <b>parameter bill</b> is the two token-facing matrices; it rises in a straight line. The <b>combined index</b> adds them at the memory price you set, and its minimum is marked. Change the corpus mix and the minimum moves, because a mix with more reducible fertility has more to gain from extra rows.</p>
+      <div class="s7w4-legend">
+        <span><i class="s7w4-k" style="background:#0891b2"></i>token bill (attention compute)</span>
+        <span><i class="s7w4-k" style="background:#7c3aed"></i>parameter bill (embedding memory)</span>
+        <span><i class="s7w4-k" style="background:#159447"></i>combined index</span>
+      </div>
+      <svg class="s7w4-chart" id="s7w4-chart" width="100%" height="240" viewBox="0 0 900 240" preserveAspectRatio="none"></svg>
+
+      <table class="s7w4-tbl">
+        <thead><tr><th>language</th><th>share</th><th>fertility here</th><th>tokens per 1M words</th><th>cost vs English</th></tr></thead>
+        <tbody id="s7w4-body"></tbody>
+      </table>
+      <div class="s7w4-note" id="s7w4-note"></div>
+    </section>
+  </section>
+</main>
+
+<script>
+(function(){
+  // fertility at a 32K reference vocabulary; assumptions to be replaced with measurements
+  var LANGS=[
+    {k:'en',n:'English',f0:1.30,sh:0.34},
+    {k:'code',n:'Code',f0:1.55,sh:0.20},
+    {k:'hi',n:'Hindi',f0:2.40,sh:0.13},
+    {k:'te',n:'Telugu',f0:3.60,sh:0.12},
+    {k:'bn',n:'Bengali',f0:3.10,sh:0.11},
+    {k:'ta',n:'Tamil',f0:3.70,sh:0.10}
+  ];
+  var PRESETS={
+    v5:   [0.34,0.20,0.13,0.12,0.11,0.10],
+    en:   [0.85,0.15,0.00,0.00,0.00,0.00],
+    indic:[0.18,0.10,0.19,0.18,0.18,0.17],
+    code: [0.28,0.52,0.05,0.05,0.05,0.05]
+  };
+  var VREF=32768;
+  var V=document.getElementById('s7w4-V'),D=document.getElementById('s7w4-D'),
+      A=document.getElementById('s7w4-a'),MP=document.getElementById('s7w4-mp');
+
+  function fmt(n){return n>=1e9?(n/1e9).toFixed(2)+'B':n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':n.toFixed(0);}
+
+  // Fertility decays toward an asymptote of one token per word. Each language has its own
+  // REDUCIBLE headroom (f0 - 1): English begins at 1.30 so it has 0.30 to gain from a larger
+  // vocabulary, Tamil begins at 3.70 so it has 2.70. This is what makes the corpus mix change
+  // the SHAPE of the token curve rather than merely its scale, and therefore what lets the
+  // optimum actually move. A single shared exponent on f0 itself cannot do that.
+  function fert(l,v,alpha){ return 1 + (l.f0-1)*Math.pow(VREF/v,alpha); }
+  function meanFert(v,alpha){
+    var tot=0,w=0;
+    LANGS.forEach(function(l){ tot+=l.sh*fert(l,v,alpha); w+=l.sh; });
+    return w>0?tot/w:1;
+  }
+
+  function buildSliders(){
+    document.getElementById('s7w4-langs').innerHTML=LANGS.map(function(l,i){
+      return '<div class="s7w4-lang"><div class="s7w4-ln">'+l.n+'</div>'+
+             '<input type="range" min="0" max="100" value="'+Math.round(l.sh*100)+'" data-i="'+i+'">'+
+             '<div class="s7w4-lv" id="s7w4-sh'+i+'">'+Math.round(l.sh*100)+'%</div></div>';
+    }).join('');
+    document.getElementById('s7w4-langs').addEventListener('input',function(e){
+      var i=+e.target.dataset.i; if(isNaN(i)) return;
+      LANGS[i].sh=+e.target.value/100; render();
+    });
+  }
+  document.querySelectorAll('.s7w4-preset button').forEach(function(b){
+    b.onclick=function(){
+      var p=PRESETS[b.dataset.p];
+      LANGS.forEach(function(l,i){l.sh=p[i];});
+      buildSliders(); render();
+    };
+  });
+
+  function render(){
+    var v=+V.value,d=+D.value,alpha=+A.value/100,price=+MP.value/1000;
+    document.getElementById('s7w4-Vv').textContent=v.toLocaleString();
+    document.getElementById('s7w4-Dv').textContent=d.toLocaleString();
+    document.getElementById('s7w4-av').textContent=alpha.toFixed(2);
+    document.getElementById('s7w4-mpv').textContent=price.toFixed(3);
+    // a doubling of V multiplies remaining headroom by 2^-alpha; show the share removed
+    document.getElementById('s7w4-halve').textContent=((1-Math.pow(2,-alpha))*100).toFixed(0)+'%';
+    document.getElementById('s7w4-adds').textContent=price.toFixed(3);
+    LANGS.forEach(function(l,i){var e=document.getElementById('s7w4-sh'+i); if(e) e.textContent=Math.round(l.sh*100)+'%';});
+
+    // Both bills are expressed against the SAME reference vocabulary, not against their own
+    // maximum. Self-normalising each curve would divide out the share-weighted constant that
+    // carries all the mix information, and the optimum would then sit in the same place for
+    // every corpus, which is exactly the bug this replaced.
+    var VMIN=8192,VMAX=262144,N=120,samples=[];
+    var fRef=meanFert(VREF,alpha);
+    for(var i=0;i<=N;i++){
+      var vv=VMIN*Math.pow(VMAX/VMIN,i/N);
+      samples.push({v:vv, tn:meanFert(vv,alpha)/fRef, pn:vv/VREF});
+    }
+    var best=null;
+    samples.forEach(function(s){ s.c=s.tn+price*s.pn; if(!best||s.c<best.c) best=s; });
+
+    (function(){
+      var Wd=900,Ht=240,pad=34,h='';
+      var yMax=Math.max(2.4*best.c, 1.15);           // keep the interesting region visible
+      function X(vv){return pad+(Math.log(vv/VMIN)/Math.log(VMAX/VMIN))*(Wd-pad-14);}
+      function Y(y){return Ht-30-Math.min(1,y/yMax)*(Ht-48);}
+      for(var g=0;g<=4;g++){var yy=Y(yMax*g/4);
+        h+='<line x1="'+pad+'" y1="'+yy+'" x2="'+(Wd-14)+'" y2="'+yy+'" stroke="#eef2f7"/>';
+        h+='<text x="2" y="'+(yy+3)+'" font-size="9" fill="#94a3b8">'+(yMax*g/4).toFixed(1)+'</text>';}
+      [8192,16384,32768,65536,131072,262144].forEach(function(tick){
+        h+='<line x1="'+X(tick)+'" y1="10" x2="'+X(tick)+'" y2="'+(Ht-30)+'" stroke="#f4f7fa"/>';
+        h+='<text x="'+X(tick)+'" y="'+(Ht-12)+'" font-size="9" text-anchor="middle" fill="#94a3b8">'+fmt(tick)+'</text>';});
+      function path(fn,col,wid){
+        var d2='';samples.forEach(function(s,i){d2+=(i?'L':'M')+X(s.v).toFixed(1)+' '+Y(fn(s)).toFixed(1)+' ';});
+        return '<path d="'+d2+'" fill="none" stroke="'+col+'" stroke-width="'+wid+'"/>';
+      }
+      h+=path(function(s){return s.tn;},'#0891b2',2.2)
+       + path(function(s){return price*s.pn;},'#7c3aed',2.2)
+       + path(function(s){return s.c;},'#159447',3);
+      h+='<line x1="'+X(best.v)+'" y1="10" x2="'+X(best.v)+'" y2="'+(Ht-30)+'" stroke="#159447" stroke-dasharray="4 3" stroke-width="2"/>';
+      h+='<text x="'+(X(best.v)+6)+'" y="24" font-size="11" font-weight="800" fill="#159447">min at V = '+fmt(best.v)+'</text>';
+      h+='<line x1="'+X(v)+'" y1="10" x2="'+X(v)+'" y2="'+(Ht-30)+'" stroke="#d97706" stroke-dasharray="2 3" stroke-width="2"/>';
+      h+='<text x="'+(X(v)+6)+'" y="'+(Ht-40)+'" font-size="10.5" font-weight="800" fill="#92400e">your V</text>';
+      document.getElementById('s7w4-chart').innerHTML=h;
+    })();
+
+    var enF=fert(LANGS[0],v,alpha);
+    document.getElementById('s7w4-body').innerHTML=LANGS.map(function(l){
+      var f=fert(l,v,alpha);
+      var ratio=f/enF;
+      var col=ratio>2?'color:#dc2626;font-weight:800':ratio>1.5?'color:#d97706;font-weight:700':'';
+      return '<tr><td>'+l.n+'</td><td>'+(l.sh*100).toFixed(0)+'%</td><td>'+f.toFixed(2)+'</td><td>'+fmt(f*1e6)+'</td><td style="'+col+'">'+ratio.toFixed(2)+'x</td></tr>';
+    }).join('');
+
+    // only compare languages that are actually in the mix; an all-zero mix has nothing to say
+    var active=LANGS.filter(function(l){return l.sh>0;});
+    if(!active.length){
+      document.getElementById('s7w4-note').innerHTML='<b>Every language share is zero.</b> Give the mix some weight, or load one of the presets, and the two bills become comparable again.';
+      return;
+    }
+    var worst=active.reduce(function(a,b){return fert(b,v,alpha)>fert(a,v,alpha)?b:a;});
+    var wr=fert(worst,v,alpha)/Math.max(1e-9,enF);
+
+    document.getElementById('s7w4-note').innerHTML=
+      '<b>At V = '+fmt(v)+' the two token-facing matrices cost '+fmt(2*v*d)+' parameters and the mean fertility of this mix is '+meanFert(v,alpha).toFixed(2)+'.</b> '+
+      worst.n+' still costs '+wr.toFixed(2)+' times what English costs for the same meaning, which is '+wr.toFixed(2)+' times the inference bill and '+(1/wr*100).toFixed(0)+'% of the effective context window. '+
+      'The combined index puts the optimum for this mix at about <b>'+fmt(best.v)+'</b>. Load the English-only preset and the optimum drops, because a corpus already near one token per word has little left to buy with extra rows. Load the Indic-heavy preset and it climbs, because that corpus has a great deal left to buy. The absolute figure depends on the memory price you chose and should not be quoted on its own. <b>The direction it moves when the mix changes is the result</b>, and that movement is the vocabulary budget the sovereign objective is spending.';
+  }
+
+  buildSliders();
+  [V,D,A,MP].forEach(function(e){e.addEventListener('input',render);});
+  render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 7 Widget 13 - V5 Embedding Design Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px}
+.s7wd-wrap{max-width:1280px;margin:0 auto;padding:22px}
+.s7wd-kicker{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--green)}
+.s7wd-wrap h1{font-size:27px;line-height:1.1;margin:5px 0 8px}
+.s7wd-sub{color:var(--muted);max-width:920px;margin:0 0 16px;line-height:1.55}
+.s7wd-grid{display:grid;grid-template-columns:300px minmax(0,1fr) 320px;gap:14px}
+.s7wd-card{background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 30px rgba(20,42,75,.08);padding:14px}
+.s7wd-card h2{font-size:13px;margin:0 0 11px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.s7wd-ctrl{margin-bottom:12px}
+.s7wd-lab{display:flex;justify-content:space-between;font-size:12.5px;font-weight:700;margin-bottom:5px}
+.s7wd-lab span{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--green)}
+.s7wd-wrap input[type=range]{width:100%;accent-color:var(--green)}
+.s7wd-wrap select{width:100%;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--ink);padding:8px;font:inherit;font-size:12.5px}
+.s7wd-metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:13px}
+.s7wd-metric{border:1px solid var(--line);background:#fbfdff;border-radius:8px;padding:11px}
+.s7wd-metric b{display:block;font-size:19px;line-height:1.15;font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+.s7wd-metric span{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+.s7wd-gate{display:flex;gap:10px;align-items:flex-start;border-radius:8px;padding:10px 11px;margin-bottom:8px;font-size:12.5px;line-height:1.5}
+.s7wd-pass{border:1px solid #bbf7d0;background:#f0fdf4;color:#166534}
+.s7wd-fail{border:1px solid #fecaca;background:#fef2f2;color:#991b1b}
+.s7wd-flag{border:1px solid #fed7aa;background:#fff7ed;color:#9a3412}
+.s7wd-icon{font-weight:900;font-family:ui-monospace,monospace;flex:none}
+.s7wd-gate b{display:block;margin-bottom:2px}
+.s7wd-json{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:11px;background:#0f172a;color:#dbeafe;border-radius:8px;padding:12px;line-height:1.6;white-space:pre;overflow-x:auto}
+.s7wd-title{font-size:12.5px;font-weight:800;margin:0 0 3px}
+.s7wd-nt{font-size:11.5px;color:var(--muted);margin:0 0 9px;line-height:1.5}
+.s7wd-hyp{margin-top:11px;border:1px solid #ddd6fe;background:#f5f3ff;color:#5b21b6;border-radius:8px;padding:11px;font-size:12px;line-height:1.6}
+@media(max-width:1040px){.s7wd-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main class="s7wd-wrap">
+  <div class="s7wd-kicker">ERA V5 Session 7</div>
+  <h1>V5 Embedding Design Board</h1>
+  <p class="s7wd-sub">Assemble the policy and see its consequences computed rather than scored. Every number below comes from the same arithmetic used in the rest of this session, and every gate that fails names the number that failed it. The record at the right is the object the training ledger stores and the assignment asks you to defend.</p>
+
+  <section class="s7wd-grid">
+    <aside class="s7wd-card">
+      <h2>The decisions</h2>
+      <div class="s7wd-ctrl"><div class="s7wd-lab">Vocabulary <span id="s7wd-Vv"></span></div><input id="s7wd-V" type="range" min="16384" max="262144" step="4096" value="131072"></div>
+      <div class="s7wd-ctrl"><div class="s7wd-lab">Model width <span id="s7wd-Dv"></span></div><input id="s7wd-D" type="range" min="1024" max="12288" step="32" value="8096"></div>
+      <div class="s7wd-ctrl">
+        <div class="s7wd-lab">Input path</div>
+        <select id="s7wd-path">
+          <option value="kron">Kronecker byte codec + projection</option>
+          <option value="fact">Low-rank factorization</option>
+          <option value="dense">Dense table</option>
+        </select>
+      </div>
+      <div class="s7wd-ctrl" id="s7wd-rankwrap"><div class="s7wd-lab">pos_dim / rank <span id="s7wd-rv"></span></div><input id="s7wd-r" type="range" min="8" max="1024" step="8" value="32"></div>
+      <div class="s7wd-ctrl">
+        <div class="s7wd-lab">Output head</div>
+        <select id="s7wd-tie"><option value="untied">Untied learned projection</option><option value="tied">Tied to the input path</option></select>
+      </div>
+      <div class="s7wd-ctrl">
+        <div class="s7wd-lab">Freeze policy</div>
+        <select id="s7wd-freeze">
+          <option value="trainable">Trainable throughout</option>
+          <option value="scheduled">Frozen on a logged schedule</option>
+          <option value="frozen">Frozen after warmup</option>
+        </select>
+      </div>
+      <div class="s7wd-ctrl">
+        <div class="s7wd-lab">Identifier layout</div>
+        <select id="s7wd-layout">
+          <option value="frequency_sorted">Frequency-sorted</option>
+          <option value="script_blocked">Script-blocked</option>
+          <option value="shuffled">Shuffled</option>
+        </select>
+      </div>
+      <div class="s7wd-ctrl">
+        <div class="s7wd-lab">Position policy</div>
+        <select id="s7wd-pos">
+          <option value="deferred_session_8">Deferred to Session 8</option>
+          <option value="absolute_learned">Absolute learned table</option>
+        </select>
+      </div>
+    </aside>
+
+    <section class="s7wd-card">
+      <div class="s7wd-metrics">
+        <div class="s7wd-metric"><b id="s7wd-p1"></b><span>input path parameters</span></div>
+        <div class="s7wd-metric"><b id="s7wd-p2"></b><span>output head parameters</span></div>
+        <div class="s7wd-metric"><b id="s7wd-p3"></b><span>training state, AdamW mixed</span></div>
+        <div class="s7wd-metric"><b id="s7wd-p4"></b><span>stored parameters per token</span></div>
+      </div>
+      <p class="s7wd-title">Gates</p>
+      <p class="s7wd-nt">These are thresholds this session argued for, not laws. A gate that fails tells you which number to defend, and a design that fails a gate on purpose is fine as long as the assignment says why.</p>
+      <div id="s7wd-gates"></div>
+      <div class="s7wd-hyp" id="s7wd-hyp"></div>
+    </section>
+
+    <aside class="s7wd-card">
+      <h2>embedding_policy_id</h2>
+      <p class="s7wd-nt">The record the ledger stores beside the data policy from Session 6. A checkpoint that cannot answer what its input path was doing cannot be compared against another one.</p>
+      <div class="s7wd-json" id="s7wd-json"></div>
+    </aside>
+  </section>
+</main>
+
+<script>
+(function(){
+  var ids=['V','D','r','path','tie','freeze','layout','pos'],el={};
+  ids.forEach(function(k){el[k]=document.getElementById('s7wd-'+k);});
+
+  function fmt(n){return n>=1e9?(n/1e9).toFixed(2)+'B':n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':n.toFixed(0);}
+  function gb(b){return b>=1e9?(b/1e9).toFixed(2)+' GB':(b/1e6).toFixed(0)+' MB';}
+  // largest factor pair of n at or below sqrt(n), for the Kronecker shape
+  function split(n){var b=1;for(var i=1;i*i<=n;i++) if(n%i===0) b=i; return [n/b,b];}
+
+  function render(){
+    var V=+el.V.value,D=+el.D.value,r=+el.r.value,path=el.path.value,
+        tie=el.tie.value,freeze=el.freeze.value,layout=el.layout.value,pos=el.pos.value;
+
+    document.getElementById('s7wd-Vv').textContent=V.toLocaleString();
+    document.getElementById('s7wd-Dv').textContent=D.toLocaleString();
+    document.getElementById('s7wd-rv').textContent=r;
+    document.getElementById('s7wd-rankwrap').style.display=(path==='dense')?'none':'block';
+
+    var dense=V*D, inputP, shape='';
+    if(path==='dense'){ inputP=dense; shape=fmt(V)+' x '+fmt(D); }
+    else if(path==='fact'){ var rr=Math.min(r,D); inputP=V*rr+rr*D; shape=fmt(V)+' x '+rr+'  ->  '+rr+' x '+fmt(D); }
+    else {
+      // the released technique: fixed 256 x pos_dim byte codec, then one Linear(D, d_model).
+      // note that V does not appear -- that is the whole point.
+      var posDim=r, Dcode=256*posDim;
+      inputP=Dcode*D;
+      shape='codec 256 x '+posDim+' = '+Dcode+'  ->  Linear('+Dcode+', '+D+')';
+    }
+    var headP=(tie==='tied')?0:dense;
+    var totalP=inputP+headP, mem=totalP*16;
+
+    document.getElementById('s7wd-p1').textContent=fmt(inputP);
+    document.getElementById('s7wd-p2').textContent=(tie==='tied')?'tied':fmt(headP);
+    document.getElementById('s7wd-p3').textContent=gb(mem);
+    document.getElementById('s7wd-p4').textContent=(inputP/V).toFixed(1)+' of '+D;
+
+    var gates=[];
+    function g(ok,warn,title,body){gates.push({s:ok?'pass':(warn?'flag':'fail'),t:title,b:body});}
+
+    g(mem<40e9, mem<70e9, 'Training state for the token-facing matrices',
+      gb(mem)+' of AdamW state at 16 bytes per parameter. Against an 80 GB accelerator that is '+(mem/80e9*100).toFixed(1)+'% before a single layer is placed.');
+
+    var perTok=inputP/V;
+    g(perTok>=8, perTok>=2, 'Stored parameters per token',
+      perTok.toFixed(1)+' stored parameters expand into '+D+' numbers per token. Below about two the input path has almost no capacity to distinguish tokens from one another, whatever the compression ratio looks like.');
+
+    var embShare=inputP/dense;
+    g(true,false,'Compression against dense',
+      path==='dense' ? 'No compression. This is the control arm and it is the right thing to measure everything else against.'
+      : ((1-embShare)*100).toFixed(2)+'% of the dense table removed, '+fmt(inputP)+' in place of '+fmt(dense)+'.');
+
+    if(tie==='tied'&&path!=='dense'){
+      g(false,true,'Tying a structured input path',
+        'A Kronecker or factorized input path and a dense output head are not naturally the same object, so tying them constrains the output head to whatever structure the input path has. If you want this, say in the spec what the output head is actually being tied to.');
+    } else if(tie==='tied'){
+      g(true,true,'Weight tying',
+        'Tying saves '+fmt(dense)+' parameters. Session 5 of this widget set shows the embedding share at V5 scale is around 3%, so check that the saving is worth the constraint at your width rather than inheriting the default.');
+    } else {
+      g(true,false,'Weight tying','Untied. At V5 scale the saving from tying is a small share of the model while the constraint on the geometry is not, which is the position Section 5 argued for.');
+    }
+
+    if(freeze==='frozen'&&path!=='dense'){
+      g(false,false,'Freezing a compressed input path',
+        'This is the exact combination that produced the V4 incident. A compressed path has fewer degrees of freedom to absorb a distribution change than a dense one, so freezing it removes adaptation at precisely the boundary where mixture shifts arrive. Section 9 measured this.');
+    } else if(freeze==='frozen'){
+      g(false,true,'Freezing the input path',
+        'Freezing removes the model\'s ability to adapt its first representation when the mixture moves. If this is deliberate it needs a warmup band on every transition and gradient monitoring on the layer above.');
+    } else if(freeze==='scheduled'){
+      g(true,true,'Scheduled freeze',
+        'Acceptable if the schedule is written into the ledger and no mixture transition falls inside a frozen window. The schedule is part of the experiment definition, not a runtime convenience.');
+    } else {
+      g(true,false,'Trainable input path','The factors receive gradient throughout, so the layer where the token distribution meets the model can move when that distribution moves.');
+    }
+
+    if(path==='kron'){
+      var chars=Math.floor(r/3);
+      g(r>=48, r>=32, 'Byte window for Indic scripts',
+        'At pos_dim = '+r+' the window holds '+r+' English characters but only '+chars+' Indic ones, because UTF-8 spends three bytes per character there. The shipped default of 32 lets real word pairs collide, which the model can never undo. Set this from a collision count on the actual vocabulary, not from the default.');
+    } else {
+      g(true,false,'Byte window','Not applicable: a dense or low-rank table indexes by token id and never looks at the token text, so no byte window exists.');
+    }
+
+    if(pos==='absolute_learned'){
+      g(false,true,'Position policy',
+        'A learned absolute table cannot extrapolate past the length it was trained on, as Section 11 measured directly. For a long-context target this is ruled out; keep it only if the context length is fixed and small.');
+    } else {
+      g(true,false,'Position policy','Deferred to Session 8, which is where the schemes that compute position rather than store it are built.');
+    }
+
+    document.getElementById('s7wd-gates').innerHTML=gates.map(function(x){
+      var cls=x.s==='pass'?'s7wd-pass':x.s==='flag'?'s7wd-flag':'s7wd-fail';
+      var ic=x.s==='pass'?'OK':x.s==='flag'?'!':'X';
+      return '<div class="s7wd-gate '+cls+'"><span class="s7wd-icon">'+ic+'</span><span><b>'+x.t+'</b>'+x.b+'</span></div>';
+    }).join('');
+
+    var fails=gates.filter(function(x){return x.s==='fail';}).length;
+    var flags=gates.filter(function(x){return x.s==='flag';}).length;
+    document.getElementById('s7wd-hyp').innerHTML=
+      (fails? '<b>'+fails+' gate'+(fails>1?'s':'')+' failed and '+flags+' flagged.</b> ' : '<b>No gates failed'+(flags?', '+flags+' flagged':'')+'.</b> ')+
+      'Passing every gate does not make this design correct, it makes it defensible on the arguments this session made. Every number in it is a hypothesis until a proxy run has tested it, which is the standard Session 5 set for mixture decisions and there is no reason an architecture decision should be held to a lower one. The rank, the layout and the tying decision each get a proxy run at the one-billion and three-billion scale, and per-language perplexity is the metric that decides them.';
+
+    var sv2=split(V),sd2=split(D);
+    document.getElementById('s7wd-json').textContent=
+      '{\n'+
+      '  "embedding_policy_id": "v5-emb-'+path+'-r'+r+'",\n'+
+      '  "vocab_size": '+V+',\n'+
+      '  "d_model": '+D+',\n'+
+      '  "input_path": "'+path+'",\n'+
+      (path==='kron'?'  "pos_dim": '+r+',\n  "char_dim": 256,\n':(path!=='dense'?'  "rank": '+r+',\n':''))+
+      (path==='kron'?'  "codec": "byte_kronecker_fixed",\n  "code_dim": '+(256*r)+',\n':'')+
+      '  "params_input": '+inputP+',\n'+
+      '  "output_head": "'+tie+'",\n'+
+      '  "params_head": '+headP+',\n'+
+      '  "trainable_state": "'+freeze+'",\n'+
+      '  "unfreeze_schedule": '+(freeze==='trainable'?'null':'"REQUIRED"')+',\n'+
+      '  "identifier_layout": "'+layout+'",\n'+
+      '  "position_policy": "'+pos+'",\n'+
+      '  "tokenizer_hash": "REQUIRED",\n'+
+      '  "cleaning_pipeline_hash": "REQUIRED",\n'+
+      '  "training_state_bytes": '+mem+'\n'+
+      '}';
+  }
+
+  ids.forEach(function(k){el[k].addEventListener('input',render);el[k].addEventListener('change',render);});
+  render();
+})();
+</script>
+</body>
+</html>

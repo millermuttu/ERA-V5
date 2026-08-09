@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 7 Widget 9 - The Byte Budget</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;700&family=Noto+Sans+Telugu:wght@400;700&family=Noto+Sans+Tamil:wght@400;700&family=Noto+Sans+Bengali:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px}
+.s7w9-wrap{max-width:1280px;margin:0 auto;padding:22px}
+.s7w9-kicker{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--red)}
+.s7w9-wrap h1{font-size:27px;line-height:1.1;margin:5px 0 8px}
+.s7w9-sub{color:var(--muted);max-width:920px;margin:0 0 16px;line-height:1.55}
+.s7w9-grid{display:grid;grid-template-columns:250px minmax(0,1fr);gap:14px}
+.s7w9-card{background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 30px rgba(20,42,75,.08);padding:14px}
+.s7w9-card h2{font-size:13px;margin:0 0 4px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.s7w9-lead{margin:0 0 12px;font-size:12.5px;color:var(--muted);line-height:1.55}
+.s7w9-lab{display:flex;justify-content:space-between;font-size:12.5px;font-weight:700;margin-bottom:6px}
+.s7w9-lab span{font-family:ui-monospace,monospace;color:var(--red)}
+.s7w9-wrap input[type=range]{width:100%;accent-color:var(--red)}
+.s7w9-ctrl{margin-bottom:14px}
+.s7w9-bars{display:grid;gap:9px}
+.s7w9-row{display:grid;grid-template-columns:120px 1fr 88px;gap:9px;align-items:center}
+.s7w9-name{font-size:12.5px;font-weight:700}
+.s7w9-name small{display:block;font-weight:500;color:var(--muted);font-size:10.5px}
+.s7w9-track{position:relative;height:26px;background:#f1f5f9;border-radius:5px;overflow:hidden;display:flex}
+.s7w9-fit{background:#0891b2;height:100%}
+.s7w9-cut{background:repeating-linear-gradient(45deg,#dc2626,#dc2626 5px,#b91c1c 5px,#b91c1c 10px);height:100%}
+.s7w9-limit{position:absolute;top:0;bottom:0;width:2px;background:#0f172a}
+.s7w9-verdict{font-size:11px;font-weight:800;text-align:center;border-radius:5px;padding:4px 0;font-family:ui-monospace,monospace}
+.s7w9-ok{background:#dcfce7;color:#166534}
+.s7w9-bad{background:#fee2e2;color:#991b1b}
+.s7w9-legend{display:flex;gap:14px;font-size:11.5px;color:var(--muted);margin:10px 0 4px;flex-wrap:wrap}
+.s7w9-k{display:inline-block;width:14px;height:10px;border-radius:2px;vertical-align:-1px;margin-right:5px}
+.s7w9-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:14px}
+.s7w9-metric{border:1px solid var(--line);background:#fbfdff;border-radius:8px;padding:10px}
+.s7w9-metric b{display:block;font-size:19px;line-height:1.15;font-family:ui-monospace,monospace}
+.s7w9-metric span{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+.s7w9-coll{margin-top:14px;border:1px solid #fecaca;background:#fef2f2;border-radius:9px;padding:12px}
+.s7w9-coll h3{margin:0 0 4px;font-size:13px;color:#991b1b}
+.s7w9-coll p{margin:0 0 9px;font-size:12.5px;color:#991b1b;line-height:1.55}
+.s7w9-pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.s7w9-word{background:#fff;border:1px solid #fecaca;border-radius:7px;padding:9px}
+.s7w9-word b{font-size:17px;display:block;margin-bottom:3px}
+.s7w9-word code{font-family:ui-monospace,monospace;font-size:10.5px;color:var(--muted);word-break:break-all;display:block;line-height:1.45}
+.s7w9-same{margin-top:9px;padding:9px;border-radius:7px;font-size:12.5px;font-weight:700;text-align:center}
+.s7w9-note{margin-top:12px;border:1px solid #a5f3fc;background:#ecfeff;color:#155e75;border-radius:8px;padding:11px;font-size:12.5px;line-height:1.6}
+@media(max-width:980px){.s7w9-grid,.s7w9-pair{grid-template-columns:1fr}.s7w9-metrics{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main class="s7w9-wrap">
+  <div class="s7w9-kicker">ERA V5 Session 7</div>
+  <h1>The Byte Budget</h1>
+  <p class="s7w9-sub">The grid has a fixed number of columns, so only the first <b>pos_dim</b> bytes of a token are ever seen. English spends one byte per character. Indic scripts spend three. The same window therefore holds very different amounts of language, and what falls off the end is dropped without a warning.</p>
+
+  <section class="s7w9-grid">
+    <aside class="s7w9-card">
+      <h2>Window</h2>
+      <div class="s7w9-ctrl">
+        <div class="s7w9-lab">pos_dim <span id="s7w9-pv"></span></div>
+        <input id="s7w9-p" type="range" min="8" max="64" step="8" value="32">
+      </div>
+      <p class="s7w9-lead">The shipped default is <b>32</b>. Every extra step doubles the code size and doubles the projection, so the window is bought with parameters.</p>
+      <div class="s7w9-metrics" style="grid-template-columns:1fr">
+        <div class="s7w9-metric"><b id="s7w9-dsz"></b><span>code size D</span></div>
+        <div class="s7w9-metric"><b id="s7w9-prm"></b><span>projection at d_model 8,096</span></div>
+        <div class="s7w9-metric"><b id="s7w9-vs"></b><span>vs a dense table</span></div>
+      </div>
+    </aside>
+
+    <section class="s7w9-card">
+      <h2>How much of each word survives</h2>
+      <p class="s7w9-lead">Real UTF-8 encoding, computed in your browser. The black line is the window; anything hatched in red past it is thrown away.</p>
+      <div class="s7w9-legend">
+        <span><i class="s7w9-k" style="background:#0891b2"></i>bytes kept</span>
+        <span><i class="s7w9-k" style="background:#dc2626"></i>bytes dropped</span>
+      </div>
+      <div class="s7w9-bars" id="s7w9-bars"></div>
+
+      <div class="s7w9-metrics">
+        <div class="s7w9-metric"><b id="s7w9-en"></b><span>English characters that fit</span></div>
+        <div class="s7w9-metric"><b id="s7w9-ind"></b><span>Indic characters that fit</span></div>
+        <div class="s7w9-metric"><b id="s7w9-ratio"></b><span>English advantage</span></div>
+      </div>
+
+      <div class="s7w9-coll">
+        <h3>What happens past the edge</h3>
+        <p>Two different words whose first <b id="s7w9-pw"></b> bytes agree produce <b>the same code</b>, so they get the same vector for the whole of training. Nothing errors. The model simply cannot tell them apart, ever.</p>
+        <div class="s7w9-pair" id="s7w9-pair"></div>
+        <div class="s7w9-same" id="s7w9-same"></div>
+      </div>
+
+      <div class="s7w9-note" id="s7w9-note"></div>
+    </section>
+  </section>
+</main>
+
+<script>
+(function(){
+  var P=document.getElementById('s7w9-p');
+  var enc=new TextEncoder();
+  var WORDS=[
+    {w:'internationalisation', n:'English', s:'long word'},
+    {w:'tokenizer',           n:'English', s:'ordinary word'},
+    {w:'अंतर्राष्ट्रीयकरण',      n:'Hindi',   s:'Devanagari'},
+    {w:'शक्तिशाली',            n:'Hindi',   s:'with conjuncts'},
+    {w:'తెలుగుభాష',            n:'Telugu',  s:'Telugu'},
+    {w:'தமிழ்மொழி',            n:'Tamil',   s:'Tamil'},
+    {w:'বাংলাভাষা',            n:'Bengali', s:'Bengali'}
+  ];
+  // a pair that collides once the window bites
+  var PAIR=['अंतर्राष्ट्रीयकरण','अंतर्राष्ट्रीयता'];  // internationalisation / internationality
+
+  function fmt(n){return n>=1e9?(n/1e9).toFixed(2)+'B':n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':String(n);}
+  function bytesOf(s){return Array.from(enc.encode(s));}
+
+  function render(){
+    var pos=+P.value;
+    document.getElementById('s7w9-pv').textContent=pos;
+    document.getElementById('s7w9-pw').textContent=pos;
+
+    var D=256*pos, params=D*8096, dense=131072*8096;
+    document.getElementById('s7w9-dsz').textContent=fmt(D);
+    document.getElementById('s7w9-prm').textContent=fmt(params);
+    document.getElementById('s7w9-vs').textContent=(dense/params).toFixed(1)+'x smaller';
+
+    var maxBytes=Math.max(pos, Math.max.apply(null,WORDS.map(function(o){return bytesOf(o.w).length;})));
+    document.getElementById('s7w9-bars').innerHTML=WORDS.map(function(o){
+      var b=bytesOf(o.w), chars=Array.from(o.w).length;
+      var kept=Math.min(b.length,pos), cut=b.length-kept;
+      var keptPct=kept/maxBytes*100, cutPct=cut/maxBytes*100, limitPct=pos/maxBytes*100;
+      var fits=cut===0;
+      return '<div class="s7w9-row">'+
+        '<div class="s7w9-name">'+o.w+'<small>'+o.n+', '+o.s+'</small></div>'+
+        '<div class="s7w9-track">'+
+          '<div class="s7w9-fit" style="width:'+keptPct+'%"></div>'+
+          (cut>0?'<div class="s7w9-cut" style="width:'+cutPct+'%"></div>':'')+
+          '<div class="s7w9-limit" style="left:'+limitPct+'%"></div>'+
+        '</div>'+
+        '<div class="s7w9-verdict '+(fits?'s7w9-ok':'s7w9-bad')+'">'+(fits?(b.length+'B fits'):(cut+'B lost'))+'</div>'+
+      '</div>';
+    }).join('');
+
+    // characters that fit, by script
+    var enFit=pos;                      // 1 byte per ASCII character
+    var indFit=Math.floor(pos/3);       // 3 bytes per Indic character
+    document.getElementById('s7w9-en').textContent=enFit;
+    document.getElementById('s7w9-ind').textContent=indFit;
+    document.getElementById('s7w9-ratio').textContent=(enFit/Math.max(1,indFit)).toFixed(1)+'x';
+
+    // collision demo
+    var a=PAIR[0], bw=PAIR[1];
+    var ab=bytesOf(a).slice(0,pos), bb=bytesOf(bw).slice(0,pos);
+    var same=ab.length===bb.length && ab.every(function(v,i){return v===bb[i];});
+    document.getElementById('s7w9-pair').innerHTML=[a,bw].map(function(w){
+      var full=bytesOf(w), vis=full.slice(0,pos);
+      return '<div class="s7w9-word"><b>'+w+'</b>'+
+        '<code>'+Array.from(w).length+' chars, '+full.length+' bytes<br>first '+pos+': '+vis.join(' ')+'</code></div>';
+    }).join('');
+    var el=document.getElementById('s7w9-same');
+    if(same){
+      el.style.background='#fee2e2'; el.style.color='#991b1b';
+      el.textContent='Identical codes. These two words are the same token to the model.';
+    } else {
+      el.style.background='#dcfce7'; el.style.color='#166534';
+      el.textContent='Codes differ. At this window the model can still tell them apart.';
+    }
+
+    document.getElementById('s7w9-note').innerHTML=
+      '<b>At pos_dim = '+pos+' the window holds '+enFit+' English characters but only '+indFit+' Indic ones.</b> '+
+      'Session 2 showed that a conjunct like क्ष is three code points, so it alone costs <b>nine bytes</b>. Two or three conjuncts and the budget is gone. '+
+      'Widen the window and the collisions disappear, at the cost of a bigger projection: '+fmt(params)+' parameters here, still '+(dense/params).toFixed(1)+' times smaller than a dense table. '+
+      '<b>Whether 32 is enough is not an argument, it is a count</b>, and the assignment asks you to run it over the real V5 vocabulary and report it per script.';
+  }
+
+  P.addEventListener('input',render);
+  render();
+})();
+</script>
+</body>
+</html>

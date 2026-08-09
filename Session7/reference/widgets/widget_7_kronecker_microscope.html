@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 7 Widget 7 - Kronecker Microscope</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;700&family=Noto+Sans+Telugu:wght@400;700&family=Noto+Sans+Tamil:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px}
+.s7w7-wrap{max-width:1280px;margin:0 auto;padding:22px}
+.s7w7-kicker{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--violet)}
+.s7w7-wrap h1{font-size:27px;line-height:1.1;margin:5px 0 8px}
+.s7w7-sub{color:var(--muted);max-width:900px;margin:0 0 16px;line-height:1.55}
+.s7w7-grid{display:grid;grid-template-columns:262px minmax(0,1fr);gap:14px}
+.s7w7-card{background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 30px rgba(20,42,75,.08);padding:14px}
+.s7w7-card h2{font-size:13px;margin:0 0 10px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.s7w7-lab{display:flex;justify-content:space-between;font-size:12.5px;font-weight:700;margin-bottom:6px}
+.s7w7-lab span{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--violet)}
+.s7w7-wrap input[type=range]{width:100%;accent-color:var(--violet)}
+.s7w7-wrap input[type=text]{width:100%;border:1px solid var(--line);border-radius:7px;padding:9px 10px;font:inherit;font-size:15px}
+.s7w7-ctrl{margin-bottom:13px}
+.s7w7-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.s7w7-chip{border:1px solid var(--line);background:#fff;border-radius:6px;padding:4px 8px;font-size:13px;cursor:pointer}
+.s7w7-chip:hover{border-color:var(--violet);background:#f5f3ff}
+.s7w7-step{margin-bottom:16px}
+.s7w7-step h3{font-size:13px;margin:0 0 3px}
+.s7w7-step p{margin:0 0 8px;font-size:12.5px;color:var(--muted);line-height:1.5}
+.s7w7-bytes{display:flex;flex-wrap:wrap;gap:5px}
+.s7w7-byte{border:1px solid #ddd6fe;background:#f5f3ff;border-radius:6px;padding:5px 7px;text-align:center;min-width:52px}
+.s7w7-byte b{display:block;font-family:ui-monospace,monospace;font-size:12px;color:#5b21b6}
+.s7w7-byte span{display:block;font-size:9.5px;color:var(--muted);margin-top:1px}
+.s7w7-byte.cut{border-color:#fecaca;background:#fef2f2}
+.s7w7-byte.cut b{color:#991b1b}
+.s7w7-gridwrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:#fff;padding:8px}
+.s7w7-cells{display:grid;gap:1px;min-width:560px}
+.s7w7-c{aspect-ratio:1;background:#f1f5f9;border-radius:1px}
+.s7w7-c.on{background:var(--violet)}
+.s7w7-axis{display:flex;justify-content:space-between;font-size:9.5px;color:var(--muted);font-family:ui-monospace,monospace;margin-top:4px;min-width:560px}
+.s7w7-flow{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:6px}
+.s7w7-node{border:1px solid var(--line);background:#fbfdff;border-radius:8px;padding:9px 12px;font-size:12px;font-weight:700;text-align:center}
+.s7w7-node small{display:block;font-weight:500;color:var(--muted);font-size:10.5px;font-family:ui-monospace,monospace;margin-top:2px}
+.s7w7-node.learn{border-color:var(--green);background:#f0fdf4}
+.s7w7-arr{color:var(--muted);font-weight:900;font-family:ui-monospace,monospace}
+.s7w7-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:12px}
+.s7w7-metric{border:1px solid var(--line);background:#fbfdff;border-radius:8px;padding:10px}
+.s7w7-metric b{display:block;font-size:18px;line-height:1.15;font-family:ui-monospace,monospace}
+.s7w7-metric span{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+.s7w7-note{margin-top:12px;border-radius:8px;padding:11px;font-size:12.5px;line-height:1.6}
+.s7w7-ok{border:1px solid #bbf7d0;background:#f0fdf4;color:#166534}
+.s7w7-warn{border:1px solid #fecaca;background:#fef2f2;color:#991b1b}
+.s7w7-eq{font-family:ui-monospace,monospace;font-size:11px;background:#0f172a;color:#dbeafe;border-radius:8px;padding:10px;line-height:1.6;white-space:pre;overflow-x:auto;margin-top:10px}
+@media(max-width:980px){.s7w7-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main class="s7w7-wrap">
+  <div class="s7w7-kicker">ERA V5 Session 7</div>
+  <h1>Kronecker Microscope</h1>
+  <p class="s7w7-sub">A dense table stores one row per token. This stores none. It reads the token's bytes and marks a grid, and that grid <em>is</em> the token's code. Type anything below and watch it happen.</p>
+
+  <section class="s7w7-grid">
+    <aside class="s7w7-card">
+      <h2>Token</h2>
+      <div class="s7w7-ctrl">
+        <input id="s7w7-tok" type="text" value="training">
+        <div class="s7w7-chips" id="s7w7-chips"></div>
+      </div>
+      <div class="s7w7-ctrl">
+        <div class="s7w7-lab">pos_dim (byte window) <span id="s7w7-pv"></span></div>
+        <input id="s7w7-p" type="range" min="8" max="64" step="8" value="32">
+      </div>
+      <div class="s7w7-ctrl">
+        <div class="s7w7-lab">d_model <span id="s7w7-dv"></span></div>
+        <input id="s7w7-d" type="range" min="512" max="12288" step="32" value="8096">
+      </div>
+      <div class="s7w7-eq" id="s7w7-eq"></div>
+    </aside>
+
+    <section class="s7w7-card">
+      <div class="s7w7-step">
+        <h3>1. Read the bytes</h3>
+        <p id="s7w7-bdesc"></p>
+        <div class="s7w7-bytes" id="s7w7-bytes"></div>
+      </div>
+
+      <div class="s7w7-step">
+        <h3>2. Mark the grid</h3>
+        <p>One mark per byte, at the row for its <b>value</b> and the column for its <b>position</b>. The grid is 256 rows tall; only the rows in use are drawn. Marking one cell like this is a Kronecker product of two one-hot vectors, which is where the name comes from.</p>
+        <div class="s7w7-gridwrap">
+          <div class="s7w7-cells" id="s7w7-cells"></div>
+          <div class="s7w7-axis"><span>position 1</span><span id="s7w7-lastpos"></span></div>
+        </div>
+      </div>
+
+      <div class="s7w7-step">
+        <h3>3. Project</h3>
+        <p>Flatten the grid and push it through one shared matrix. <b>That matrix is the only thing here that is ever trained.</b></p>
+        <div class="s7w7-flow" id="s7w7-flow"></div>
+      </div>
+
+      <div class="s7w7-metrics">
+        <div class="s7w7-metric"><b id="s7w7-pk"></b><span>trainable parameters</span></div>
+        <div class="s7w7-metric"><b id="s7w7-pd"></b><span>a dense table, for comparison</span></div>
+        <div class="s7w7-metric"><b id="s7w7-red"></b><span>smaller by</span></div>
+      </div>
+      <div class="s7w7-note" id="s7w7-note"></div>
+    </section>
+  </section>
+</main>
+
+<script>
+(function(){
+  var TOK=document.getElementById('s7w7-tok'),P=document.getElementById('s7w7-p'),D=document.getElementById('s7w7-d');
+  var SAMPLES=['training','trainer','the','भारत','शक्ति','తెలుగు','தமிழ்','def fn('];
+  var CHAR_DIM=256, VOCAB=131072;
+
+  document.getElementById('s7w7-chips').innerHTML=SAMPLES.map(function(t){
+    return '<button class="s7w7-chip" data-t="'+t+'">'+t+'</button>';}).join('');
+  document.getElementById('s7w7-chips').addEventListener('click',function(e){
+    var b=e.target.closest('.s7w7-chip'); if(!b) return; TOK.value=b.dataset.t; render();
+  });
+
+  function fmt(n){return n>=1e9?(n/1e9).toFixed(2)+'B':n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':String(n);}
+
+  function render(){
+    var text=TOK.value||' ', posDim=+P.value, d=+D.value;
+    document.getElementById('s7w7-pv').textContent=posDim;
+    document.getElementById('s7w7-dv').textContent=d.toLocaleString();
+
+    var all=Array.from(new TextEncoder().encode(text));
+    var kept=all.slice(0,posDim), dropped=all.length-kept.length;
+    var chars=Array.from(text);
+    var bytesPerChar=chars.length?(all.length/chars.length):0;
+
+    document.getElementById('s7w7-bdesc').innerHTML=
+      '<b>'+chars.length+' character'+(chars.length===1?'':'s')+'</b> becomes <b>'+all.length+' UTF-8 byte'+(all.length===1?'':'s')+'</b>, about '+
+      bytesPerChar.toFixed(1)+' bytes per character. '+
+      (dropped>0 ? '<b style="color:#991b1b">Only the first '+posDim+' fit in the window; '+dropped+' are dropped.</b>'
+                 : 'All of them fit inside the '+posDim+'-byte window.');
+
+    document.getElementById('s7w7-bytes').innerHTML=all.map(function(b,i){
+      var cut=i>=posDim;
+      return '<div class="s7w7-byte'+(cut?' cut':'')+'"><b>'+b+'</b><span>pos '+(i+1)+(cut?' cut':'')+'</span></div>';
+    }).join('');
+
+    // grid: only rows actually used, columns = window
+    var rows=[];
+    kept.forEach(function(b){ if(rows.indexOf(b)<0) rows.push(b); });
+    rows.sort(function(a,b){return a-b;});
+    var cellsEl=document.getElementById('s7w7-cells');
+    cellsEl.style.gridTemplateColumns='38px repeat('+posDim+',1fr)';
+    var h='';
+    rows.forEach(function(rv){
+      h+='<div style="font-family:ui-monospace,monospace;font-size:9.5px;color:#65758b;display:flex;align-items:center;justify-content:flex-end;padding-right:5px">'+rv+'</div>';
+      for(var c=0;c<posDim;c++){
+        var on = kept[c]===rv;
+        h+='<div class="s7w7-c'+(on?' on':'')+'" title="'+(on?('byte '+rv+' at position '+(c+1)):'')+'"></div>';
+      }
+    });
+    if(!rows.length) h='<div style="grid-column:1/-1;color:#65758b;font-size:12px;padding:8px">Type something to see its grid.</div>';
+    cellsEl.innerHTML=h;
+    document.getElementById('s7w7-lastpos').textContent='position '+posDim;
+
+    var Dcode=CHAR_DIM*posDim, params=Dcode*d, dense=VOCAB*d;
+    document.getElementById('s7w7-flow').innerHTML=
+      '<div class="s7w7-node">the grid<small>'+CHAR_DIM+' x '+posDim+'</small></div><span class="s7w7-arr">-&gt;</span>'+
+      '<div class="s7w7-node">flattened code<small>'+fmt(Dcode)+' numbers</small></div><span class="s7w7-arr">-&gt;</span>'+
+      '<div class="s7w7-node learn">Linear<small>'+fmt(Dcode)+' x '+fmt(d)+'</small></div><span class="s7w7-arr">-&gt;</span>'+
+      '<div class="s7w7-node">token vector<small>'+fmt(d)+'</small></div>';
+
+    document.getElementById('s7w7-pk').textContent=fmt(params);
+    document.getElementById('s7w7-pd').textContent=fmt(dense);
+    document.getElementById('s7w7-red').textContent=(dense/params).toFixed(1)+'x';
+
+    document.getElementById('s7w7-eq').textContent=
+      'kappa(b) = (1/sqrt(L)) *\n'+
+      '  vec( sum over p of c[byte_p] (x) p[pos_p] )\n\n'+
+      'char_dim   '+CHAR_DIM+'\n'+
+      'pos_dim    '+posDim+'\n'+
+      'D          '+CHAR_DIM+' x '+posDim+' = '+fmt(Dcode)+'\n'+
+      'trainable  D x d_model = '+fmt(params)+'\n\n'+
+      'no V anywhere in that line';
+
+    var nn=document.getElementById('s7w7-note');
+    if(dropped>0){
+      nn.className='s7w7-note s7w7-warn';
+      nn.innerHTML='<b>This token does not fit.</b> '+dropped+' byte'+(dropped===1?' is':'s are')+' dropped, so any other token sharing these first '+posDim+' bytes gets <b>exactly this same code</b> and therefore exactly the same vector, permanently. The projection never sees a difference, so it can never learn one. Section 8 is about how often this happens, and to which scripts.';
+    } else {
+      nn.className='s7w7-note s7w7-ok';
+      nn.innerHTML='<b>The whole token fits.</b> Its code is built from '+all.length+' marks in a '+CHAR_DIM+' by '+posDim+' grid, and the only trained thing in the path is the shared '+fmt(Dcode)+' x '+fmt(d)+' projection. Try a Devanagari or Telugu sample: those scripts spend <b>three bytes per character</b>, so the same window holds far fewer letters.';
+    }
+  }
+
+  [TOK,P,D].forEach(function(e){e.addEventListener('input',render);});
+  render();
+})();
+</script>
+</body>
+</html>

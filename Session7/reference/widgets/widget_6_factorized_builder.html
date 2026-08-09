@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 7 Widget 6 - Factorized Embedding Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px}
+.s7w6-wrap{max-width:1280px;margin:0 auto;padding:22px}
+.s7w6-kicker{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.s7w6-wrap h1{font-size:27px;line-height:1.1;margin:5px 0 8px}
+.s7w6-sub{color:var(--muted);max-width:920px;margin:0 0 16px;line-height:1.55}
+.s7w6-grid{display:grid;grid-template-columns:280px minmax(0,1fr);gap:14px}
+.s7w6-card{background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 30px rgba(20,42,75,.08);padding:14px}
+.s7w6-card h2{font-size:13px;margin:0 0 11px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.s7w6-ctrl{margin-bottom:13px}
+.s7w6-lab{display:flex;justify-content:space-between;font-size:12.5px;font-weight:700;margin-bottom:5px}
+.s7w6-lab span{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--cyan)}
+.s7w6-wrap input[type=range]{width:100%;accent-color:var(--cyan)}
+.s7w6-code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:11px;background:#0f172a;color:#dbeafe;border-radius:8px;padding:11px;line-height:1.65;white-space:pre;overflow-x:auto}
+.s7w6-hint{font-size:10.5px;color:var(--muted);line-height:1.55;margin-top:5px}
+.s7w6-hint b{color:var(--ink)}
+.s7w6-hb{display:block;margin:5px 0;padding:5px 7px;background:#ecfeff;border:1px solid #a5f3fc;border-radius:6px;color:#155e75}
+.s7w6-title{font-size:12.5px;font-weight:800;margin:0 0 3px}
+.s7w6-nt{font-size:11.5px;color:var(--muted);margin:0 0 8px;line-height:1.5}
+.s7w6-chart{border:1px solid var(--line);background:#fff;border-radius:8px;margin-bottom:14px}
+.s7w6-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:12px}
+.s7w6-metric{border:1px solid var(--line);background:#fbfdff;border-radius:8px;padding:10px}
+.s7w6-metric b{display:block;font-size:18px;line-height:1.15;font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+.s7w6-metric span{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+.s7w6-note{border-radius:8px;padding:11px;font-size:12.5px;line-height:1.6}
+.s7w6-ok{border:1px solid #bbf7d0;background:#f0fdf4;color:#166534}
+.s7w6-warn{border:1px solid #fed7aa;background:#fff7ed;color:#9a3412}
+.s7w6-bad{border:1px solid #fecaca;background:#fef2f2;color:#991b1b}
+@media(max-width:980px){.s7w6-grid{grid-template-columns:1fr}.s7w6-metrics{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<main class="s7w6-wrap">
+  <div class="s7w6-kicker">ERA V5 Session 7</div>
+  <h1>Factorized Embedding Builder</h1>
+  <p class="s7w6-sub">Look the token up in a narrow table, then project it up to the model width with a matrix every token shares. The parameter arithmetic is exact. The capacity cost is exact too, because the reference table below is constructed with a known spectrum, so the error of a rank-<em>r</em> approximation can be computed rather than estimated.</p>
+
+  <section class="s7w6-grid">
+    <aside class="s7w6-card">
+      <h2>Configuration</h2>
+      <div class="s7w6-ctrl"><div class="s7w6-lab">Vocabulary <span id="s7w6-Vv"></span></div><input id="s7w6-V" type="range" min="8192" max="262144" step="4096" value="131072"></div>
+      <div class="s7w6-ctrl"><div class="s7w6-lab">Model width <span id="s7w6-Dv"></span></div><input id="s7w6-D" type="range" min="512" max="12288" step="32" value="8096"></div>
+      <div class="s7w6-ctrl"><div class="s7w6-lab">Bottleneck rank <span id="s7w6-rv"></span></div><input id="s7w6-r" type="range" min="16" max="4096" step="16" value="512"></div>
+      <div class="s7w6-ctrl">
+        <div class="s7w6-lab">Spectrum decay <span id="s7w6-kv"></span></div>
+        <input id="s7w6-k" type="range" min="10" max="120" value="55">
+        <div class="s7w6-hint">
+          <b>How concentrated the table's content is.</b> Every matrix can be written as a sum of independent directions with a magnitude each, largest first. That ordered list of magnitudes is its <em>spectrum</em>, and the decay is how fast the list falls away.
+          <span class="s7w6-hb">At this setting half of the table's content sits in its first <b id="s7w6-half"></b> directions, out of <b id="s7w6-dim"></b>.</span>
+          <b>High decay</b> means the table is nearly low-rank already, so a narrow bottleneck loses almost nothing and factorization is close to free. <b>Low decay</b> means the table genuinely uses all its directions, so any bottleneck throws away real capacity in proportion.
+          This is <em>not a knob you own</em>. It is a property of the embedding table the model actually learns, and it is the single thing that decides whether factorization works. Nobody knows V5's value yet, which is exactly what a proxy run is for.
+        </div>
+      </div>
+      <div class="s7w6-code" id="s7w6-code"></div>
+    </aside>
+
+    <section class="s7w6-card">
+      <div class="s7w6-metrics">
+        <div class="s7w6-metric"><b id="s7w6-pd"></b><span>dense parameters</span></div>
+        <div class="s7w6-metric"><b id="s7w6-pf"></b><span>factorized parameters</span></div>
+        <div class="s7w6-metric"><b id="s7w6-sv2"></b><span>reduction</span></div>
+        <div class="s7w6-metric"><b id="s7w6-en"></b><span>retained energy at this rank</span></div>
+      </div>
+
+      <p class="s7w6-title">Retained capacity against rank</p>
+      <p class="s7w6-nt">The reference table is built as a sum of rank-one components whose magnitudes decay at the rate you set, so retained energy at rank <em>r</em> is the exact ratio of squared magnitudes kept to total. The vertical marker is your chosen rank. Flatten the decay and the same rank keeps less, which is the honest version of "it depends on the data".</p>
+      <svg class="s7w6-chart" id="s7w6-spec" width="100%" height="190" viewBox="0 0 900 190" preserveAspectRatio="none"></svg>
+
+      <p class="s7w6-title">Parameters against rank</p>
+      <p class="s7w6-nt">Factorizing only saves anything below the break-even rank marked in red, where <span style="font-family:ui-monospace,monospace">V*r + r*D</span> first exceeds <span style="font-family:ui-monospace,monospace">V*D</span>.</p>
+      <svg class="s7w6-chart" id="s7w6-par" width="100%" height="170" viewBox="0 0 900 170" preserveAspectRatio="none"></svg>
+
+      <div class="s7w6-note" id="s7w6-note"></div>
+    </section>
+  </section>
+</main>
+
+<script>
+(function(){
+  var V=document.getElementById('s7w6-V'),D=document.getElementById('s7w6-D'),
+      R=document.getElementById('s7w6-r'),K=document.getElementById('s7w6-k');
+  function fmt(n){return n>=1e9?(n/1e9).toFixed(2)+'B':n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':n.toFixed(0);}
+
+  // exact retained energy for a spectrum sigma_i = exp(-decay * i / D)
+  function energy(r,d,decay){
+    // sum of sigma_i^2 for i<r over sum for i<d, geometric in exp(-2*decay/d)
+    var q=Math.exp(-2*decay/d);
+    if(Math.abs(1-q)<1e-12) return r/d;
+    return (1-Math.pow(q,r))/(1-Math.pow(q,d));
+  }
+
+  function render(){
+    var v=+V.value,d=+D.value,r=Math.min(+R.value,d),decay=+K.value/10;
+    document.getElementById('s7w6-Vv').textContent=v.toLocaleString();
+    document.getElementById('s7w6-Dv').textContent=d.toLocaleString();
+    document.getElementById('s7w6-rv').textContent=r.toLocaleString();
+    document.getElementById('s7w6-kv').textContent=decay.toFixed(1);
+    // rank at which half the spectral energy is accounted for: solve energy(r)=0.5
+    var q=Math.exp(-2*decay/d);
+    var halfR=Math.round(Math.log(1-0.5*(1-Math.pow(q,d)))/Math.log(q));
+    document.getElementById('s7w6-half').textContent=Math.max(1,Math.min(d,halfR)).toLocaleString();
+    document.getElementById('s7w6-dim').textContent=d.toLocaleString();
+
+    var dense=v*d, fact=v*r+r*d, e=energy(r,d,decay);
+    var breakEven=Math.floor(dense/(v+d));
+
+    document.getElementById('s7w6-pd').textContent=fmt(dense);
+    document.getElementById('s7w6-pf').textContent=fmt(fact);
+    document.getElementById('s7w6-sv2').textContent=(fact<dense?((1-fact/dense)*100).toFixed(1)+'%':'none');
+    document.getElementById('s7w6-en').textContent=(e*100).toFixed(1)+'%';
+
+    document.getElementById('s7w6-code').textContent=
+      'E_small = nn.Embedding('+fmt(v)+', '+r+')\n'+
+      'P       = nn.Linear('+r+', '+fmt(d)+',\n'+
+      '                    bias=False)\n\n'+
+      'x = P(E_small(token_ids))\n'+
+      '# [B,T] -> [B,T,'+r+'] -> [B,T,'+fmt(d)+']\n\n'+
+      'params\n'+
+      '  V*r  '+fmt(v*r)+'\n'+
+      '  r*D  '+fmt(r*d)+'\n'+
+      '  ---- '+fmt(fact)+'\n'+
+      'dense  '+fmt(dense)+'\n\n'+
+      'break-even rank: '+fmt(breakEven)+'\n'+
+      'max useful rank: '+fmt(d);
+
+    // spectrum chart
+    (function(){
+      var Wd=900,Ht=190,pad=32,h='';
+      function X(rr){return pad+(rr/d)*(Wd-pad-10);}
+      function Y(y){return Ht-24-y*(Ht-40);}
+      for(var g=0;g<=4;g++){var yy=Y(g/4);
+        h+='<line x1="'+pad+'" y1="'+yy+'" x2="'+(Wd-10)+'" y2="'+yy+'" stroke="#eef2f7"/>';
+        h+='<text x="2" y="'+(yy+3)+'" font-size="9" fill="#94a3b8">'+(g*25)+'%</text>';}
+      var dd='';
+      for(var i=0;i<=120;i++){var rr=Math.max(1,Math.round(i/120*d));
+        dd+=(i?'L':'M')+X(rr).toFixed(1)+' '+Y(energy(rr,d,decay)).toFixed(1)+' ';}
+      h+='<path d="'+dd+'" fill="none" stroke="#0891b2" stroke-width="2.5"/>';
+      h+='<line x1="'+X(r)+'" y1="12" x2="'+X(r)+'" y2="'+(Ht-24)+'" stroke="#7c3aed" stroke-dasharray="4 3" stroke-width="2"/>';
+      h+='<circle cx="'+X(r)+'" cy="'+Y(e)+'" r="5" fill="#7c3aed"/>';
+      h+='<text x="'+(X(r)+7)+'" y="'+(Y(e)-8)+'" font-size="11" font-weight="700" fill="#7c3aed">r='+r+', '+(e*100).toFixed(1)+'%</text>';
+      h+='<text x="'+pad+'" y="'+(Ht-6)+'" font-size="9" fill="#94a3b8">rank 0</text>';
+      h+='<text x="'+(Wd-70)+'" y="'+(Ht-6)+'" font-size="9" fill="#94a3b8">rank '+d+' (full)</text>';
+      document.getElementById('s7w6-spec').innerHTML=h;
+    })();
+
+    // parameter chart
+    (function(){
+      var Wd=900,Ht=170,pad=32,h='';
+      var maxP=Math.max(dense,v*d+d*d)*1.05;
+      function X(rr){return pad+(rr/d)*(Wd-pad-10);}
+      function Y(p){return Ht-24-(p/maxP)*(Ht-40);}
+      h+='<line x1="'+pad+'" y1="'+Y(dense)+'" x2="'+(Wd-10)+'" y2="'+Y(dense)+'" stroke="#94a3b8" stroke-dasharray="5 4" stroke-width="2"/>';
+      h+='<text x="'+(pad+6)+'" y="'+(Y(dense)-6)+'" font-size="10" font-weight="700" fill="#64748b">dense '+fmt(dense)+'</text>';
+      var dd='';
+      for(var i=0;i<=120;i++){var rr=Math.max(1,Math.round(i/120*d));
+        dd+=(i?'L':'M')+X(rr).toFixed(1)+' '+Y(v*rr+rr*d).toFixed(1)+' ';}
+      h+='<path d="'+dd+'" fill="none" stroke="#159447" stroke-width="2.5"/>';
+      if(breakEven<d){
+        h+='<line x1="'+X(breakEven)+'" y1="12" x2="'+X(breakEven)+'" y2="'+(Ht-24)+'" stroke="#dc2626" stroke-dasharray="3 3"/>';
+        h+='<text x="'+(X(breakEven)+5)+'" y="24" font-size="10" font-weight="700" fill="#dc2626">break-even '+fmt(breakEven)+'</text>';
+      }
+      h+='<line x1="'+X(r)+'" y1="12" x2="'+X(r)+'" y2="'+(Ht-24)+'" stroke="#7c3aed" stroke-dasharray="4 3" stroke-width="2"/>';
+      h+='<circle cx="'+X(r)+'" cy="'+Y(fact)+'" r="5" fill="#7c3aed"/>';
+      document.getElementById('s7w6-par').innerHTML=h;
+    })();
+
+    var nn=document.getElementById('s7w6-note');
+    if(fact>=dense){
+      nn.className='s7w6-note s7w6-bad';
+      nn.innerHTML='<b>At rank '+r+' the factorization costs more than the dense table it replaces.</b> Two matrices of '+fmt(v*r)+' and '+fmt(r*d)+' add to '+fmt(fact)+' against a dense '+fmt(dense)+'. Anything above the break-even rank of '+fmt(breakEven)+' is paying extra parameters for a strictly smaller space of representable embeddings, which is the worst of both. The technique only exists below that line.';
+    } else if(e<0.75){
+      nn.className='s7w6-note s7w6-warn';
+      nn.innerHTML='<b>'+((1-fact/dense)*100).toFixed(1)+'% of the parameters are gone and '+(100-e*100).toFixed(1)+'% of the capacity went with them.</b> Every embedding this layer can produce now lies inside a '+r+'-dimensional subspace of a '+fmt(d)+'-dimensional space, because all of them are the same projection applied to some narrow vector. The layer has '+fmt(v)+' rows and at most '+r+' directions. Whether that is acceptable is not a question the arithmetic can answer, it is a question about whether the structure you imposed matches the structure the data has, which is what the proxy runs are for.';
+    } else {
+      nn.className='s7w6-note s7w6-ok';
+      nn.innerHTML='<b>'+((1-fact/dense)*100).toFixed(1)+'% of the parameters are gone and '+(e*100).toFixed(1)+'% of the capacity is retained.</b> This is the knee the technique is aimed at. Note what the saving is not: it is not a smaller version of the same table, it is a table constrained to a '+r+'-dimensional subspace. Flatten the spectrum decay and watch the retained energy fall at the same rank, because the same compression against less structured data buys less.';
+    }
+  }
+
+  [V,D,R,K].forEach(function(e){e.addEventListener('input',render);});
+  render();
+})();
+</script>
+</body>
+</html>

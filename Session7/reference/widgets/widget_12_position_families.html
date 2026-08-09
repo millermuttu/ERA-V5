@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 7 Widget 12 - Position Families</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px}
+.s7wc-wrap{max-width:1280px;margin:0 auto;padding:22px}
+.s7wc-kicker{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--amber)}
+.s7wc-wrap h1{font-size:27px;line-height:1.1;margin:5px 0 8px}
+.s7wc-sub{color:var(--muted);max-width:940px;margin:0 0 16px;line-height:1.55}
+.s7wc-grid{display:grid;grid-template-columns:300px minmax(0,1fr);gap:14px}
+.s7wc-card{background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 30px rgba(20,42,75,.08);padding:14px}
+.s7wc-card h2{font-size:13px;margin:0 0 11px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.s7wc-fam{border:1px solid var(--line);background:#fbfdff;border-radius:8px;padding:11px;margin-bottom:8px;cursor:pointer;transition:.18s}
+.s7wc-fam:hover{border-color:var(--amber)}
+.s7wc-fam.on{border-color:var(--amber);background:#fffbeb;box-shadow:0 0 0 2px #fef3c7}
+.s7wc-fam b{display:block;font-size:12.5px}
+.s7wc-fam small{display:block;color:var(--muted);font-size:11px;margin-top:2px;line-height:1.4}
+.s7wc-tag{display:inline-block;font-size:9px;font-weight:800;border-radius:5px;padding:2px 6px;margin-top:6px;letter-spacing:.03em}
+.s7wc-t7{background:#dcfce7;color:#166534}
+.s7wc-tn{background:#f1f5f9;color:#475569}
+.s7wc-t8{background:#ede9fe;color:#5b21b6}
+.s7wc-pipe{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-bottom:14px}
+.s7wc-stg{border:1px solid var(--line);background:#fbfdff;border-radius:8px;padding:10px 8px;text-align:center;font-size:11.5px;font-weight:700;transition:.25s}
+.s7wc-stg small{display:block;font-weight:500;color:var(--muted);font-size:10px;margin-top:3px;line-height:1.35}
+.s7wc-stg.inj{border-color:var(--amber);background:#fffbeb;box-shadow:0 0 0 2px #fef3c7}
+.s7wc-stg.inj small{color:#92400e}
+.s7wc-tbl{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:14px}
+.s7wc-tbl th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);border-bottom:1px solid var(--line);padding:7px 6px}
+.s7wc-tbl td{border-bottom:1px solid #eef2f7;padding:9px 6px;vertical-align:top;line-height:1.45}
+.s7wc-tbl tr.on td{background:#fffbeb;font-weight:600}
+.s7wc-tbl td:first-child{font-weight:700}
+.s7wc-detail{border:1px solid var(--line);background:#fbfdff;border-radius:8px;padding:13px;font-size:12.5px;line-height:1.6;color:var(--muted)}
+.s7wc-detail b{color:var(--ink)}
+.s7wc-trade{margin-top:12px;border:1px solid #fed7aa;background:#fff7ed;color:#9a3412;border-radius:8px;padding:12px;font-size:12.5px;line-height:1.6}
+.s7wc-next{margin-top:11px;border:1px solid #ddd6fe;background:#f5f3ff;color:#5b21b6;border-radius:8px;padding:12px;font-size:12.5px;line-height:1.6}
+@media(max-width:980px){.s7wc-grid{grid-template-columns:1fr}.s7wc-pipe{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<main class="s7wc-wrap">
+  <div class="s7wc-kicker">ERA V5 Session 7</div>
+  <h1>Position Families</h1>
+  <p class="s7wc-sub">A map rather than a mechanism. There are four places a position signal can enter the model and two things it can be made of, and the choice between them is the same trade this session already made twice: stored parameters against imposed structure. Only the first family is built in Session 7; the rest are next week, and they are marked as such.</p>
+
+  <section class="s7wc-grid">
+    <aside class="s7wc-card">
+      <h2>Families</h2>
+      <div id="s7wc-list"></div>
+    </aside>
+
+    <section class="s7wc-card">
+      <h2>Where the signal enters</h2>
+      <div class="s7wc-pipe" id="s7wc-pipe"></div>
+
+      <table class="s7wc-tbl">
+        <thead><tr><th>family</th><th>made of</th><th>parameters</th><th>past the trained length</th></tr></thead>
+        <tbody id="s7wc-body"></tbody>
+      </table>
+
+      <div class="s7wc-detail" id="s7wc-detail"></div>
+      <div class="s7wc-trade" id="s7wc-trade"></div>
+      <div class="s7wc-next">
+        <b>What Session 8 does with this.</b> It builds the rotary family properly, including the schemes that rescale the rotation frequencies to extend a trained context, and it takes on the attention-side variants that change which pairs are computed at all. Session 7's job was to hand it a model whose input representation is decided and whose positional wall has been measured rather than described. The object Session 8 receives is a <span style="font-family:ui-monospace,monospace">[B, T, D]</span> tensor with an explicit embedding policy behind it.
+      </div>
+    </section>
+  </section>
+</main>
+
+<script>
+(function(){
+  var FAM=[
+    {k:'abs',n:'Absolute learned',sub:'A second lookup table, indexed by position, added to the token vector before the stack.',
+     stage:1,made:'Stored parameters, one row per position',
+     par:'max_position x d_model, trained by the same gather and scatter-add as the token table',
+     ext:'Hard wall. Rows past the trained length were never gathered so they hold their initialisation, and nothing connects row t to row t+1.',
+     built:7,
+     detail:'This is the family Section 11 builds and measures. It is easy to reason about, cheap next to the vocabulary table, and used by GPT-2. Its failure is not a tuning problem: the parameters that would have to generalise do not exist, because each position is an independent row. Every other family on this list is a response to that one fact.',
+     trade:'Maximally expressive inside the trained range because every position gets its own free parameters, and useless outside it for exactly the same reason.'},
+    {k:'sin',n:'Sinusoidal',sub:'A fixed function of the position, computed rather than stored, added at the input.',
+     stage:1,made:'A deterministic function of t, no learned parameters',
+     par:'None. The values are computed from t at every forward pass.',
+     ext:'Defined everywhere, so nothing is missing past the trained length. Whether the model can use the far part of the function is a separate question it was never trained on.',
+     built:0,
+     detail:'The original Transformer\'s scheme, and the first appearance of the idea that carries the rest of the list: stop storing position and start computing it. Once the signal is a function of t there is no such thing as an untrained position, which removes the wall as a structural problem even though it does not by itself guarantee good behaviour at lengths the model never saw.',
+     trade:'Generalises by construction and constrains what can be represented, because the model no longer gets to choose what each position means.'},
+    {k:'rot',n:'Rotary (RoPE family)',sub:'Applied inside attention to the queries and keys, so scores depend on the offset between positions.',
+     stage:3,made:'A computed rotation applied to query and key vectors',
+     par:'None stored, though the frequency schedule is a design choice with real consequences',
+     ext:'Degrades rather than breaks, and the rescaling schemes that extend it are an active area. This is where the field has settled.',
+     built:8,
+     detail:'Rather than telling each token where it is, this family makes the score between two tokens depend on how far apart they are. That is a different and more useful thing to be invariant to, and it is why almost every recent large model uses some member of this family. Session 8 builds the mechanism, the frequency schedule and the extension schemes.',
+     trade:'Relative by construction, which is usually what you wanted, at the cost of the position signal being entangled with the attention computation rather than sitting cleanly at the input.'},
+    {k:'bias',n:'Attention bias (ALiBi family)',sub:'Added directly to the attention scores as a penalty that grows with distance.',
+     stage:4,made:'A fixed distance-dependent bias on the score matrix',
+     par:'One slope per head, and nothing else',
+     ext:'Extrapolates gracefully by design, since the bias is defined for any distance.',
+     built:8,
+     detail:'The simplest member of the list: never mind rotating anything, just subtract more from the score the further apart two tokens are. It buys long-context behaviour almost for free and it imposes a strong prior that distant tokens matter less, which is right for most text and wrong for some retrieval-shaped tasks.',
+     trade:'The strongest structural prior on this list and the fewest parameters, which is the same bargain as the strongest compression in the first half of this session.'}
+  ];
+  var STAGES=[
+    {n:'Token ids',s:'[B, T]'},
+    {n:'Input embedding',s:'[B, T, D]'},
+    {n:'Q, K, V projection',s:'per head'},
+    {n:'Attention scores',s:'[B, H, T, T]'},
+    {n:'Softmax and output',s:'[B, T, D]'}
+  ];
+  var sel=0;
+
+  function render(){
+    document.getElementById('s7wc-list').innerHTML=FAM.map(function(f,i){
+      var tc=f.built===7?'s7wc-t7':f.built===0?'s7wc-tn':'s7wc-t8';
+      var tt=f.built===7?'BUILT AND MEASURED TODAY':f.built===0?'NAMED TODAY, NOT BUILT':'BUILT IN SESSION 8';
+      return '<div class="s7wc-fam'+(i===sel?' on':'')+'" data-i="'+i+'"><b>'+f.n+'</b><small>'+f.sub+'</small>'+
+             '<span class="s7wc-tag '+tc+'">'+tt+'</span></div>';
+    }).join('');
+    Array.prototype.forEach.call(document.querySelectorAll('.s7wc-fam'),function(el){
+      el.onclick=function(){sel=+el.dataset.i;render();};
+    });
+
+    var f=FAM[sel];
+    document.getElementById('s7wc-pipe').innerHTML=STAGES.map(function(s,i){
+      var inj=(i===f.stage);
+      return '<div class="s7wc-stg'+(inj?' inj':'')+'">'+s.n+'<small>'+(inj?'position enters here':s.s)+'</small></div>';
+    }).join('');
+
+    document.getElementById('s7wc-body').innerHTML=FAM.map(function(x,i){
+      return '<tr class="'+(i===sel?'on':'')+'"><td>'+x.n+'</td><td>'+x.made+'</td><td>'+x.par+'</td><td>'+x.ext+'</td></tr>';
+    }).join('');
+
+    document.getElementById('s7wc-detail').innerHTML='<b>'+f.n+'.</b> '+f.detail;
+    document.getElementById('s7wc-trade').innerHTML='<b>The trade.</b> '+f.trade+' This is the same exchange the first half of this session made twice, once when a dense table became a factorized one and once when a factorized table became a Kronecker one. Substituting structure for stored parameters buys generalisation and costs expressiveness, every time, in every part of the model.';
+  }
+  render();
+})();
+</script>
+</body>
+</html>

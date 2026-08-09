@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 7 Widget 1 - The Seam</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px}
+.s7w1-wrap{max-width:1280px;margin:0 auto;padding:22px}
+.s7w1-kicker{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.s7w1-wrap h1{font-size:27px;line-height:1.1;margin:5px 0 8px}
+.s7w1-sub{color:var(--muted);max-width:920px;margin:0 0 18px;line-height:1.55}
+.s7w1-stage{display:grid;grid-template-columns:1fr 90px 1fr;gap:0;align-items:stretch;margin-bottom:14px}
+.s7w1-side{background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 30px rgba(20,42,75,.08);padding:14px}
+.s7w1-side h2{font-size:12px;margin:0 0 3px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.s7w1-side p.s7w1-who{font-size:11.5px;color:var(--muted);margin:0 0 11px;line-height:1.45}
+.s7w1-seam{display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative}
+.s7w1-line{position:absolute;top:6px;bottom:6px;width:2px;background:repeating-linear-gradient(180deg,var(--violet) 0 7px,transparent 7px 14px)}
+.s7w1-badge{position:relative;background:#f5f3ff;border:1px solid #ddd6fe;color:#5b21b6;border-radius:999px;padding:7px 10px;font-size:10.5px;font-weight:800;text-align:center;line-height:1.3;z-index:1}
+.s7w1-item{border:1px solid var(--line);background:#fbfdff;border-radius:8px;padding:9px 11px;margin-bottom:7px;cursor:pointer;transition:.18s}
+.s7w1-item:hover{border-color:var(--cyan)}
+.s7w1-item.on{border-color:var(--cyan);background:#ecfeff;box-shadow:0 0 0 2px #cffafe}
+.s7w1-item b{display:block;font-size:12.5px}
+.s7w1-item code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:11px;color:var(--cyan);font-weight:700}
+.s7w1-item.dim{opacity:.42}
+.s7w1-detail{background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 30px rgba(20,42,75,.08);padding:16px}
+.s7w1-flow{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:10px 0 14px}
+.s7w1-node{border:1px solid var(--line);background:#fbfdff;border-radius:8px;padding:9px 12px;font-size:12px;font-weight:700;text-align:center}
+.s7w1-node small{display:block;font-weight:500;color:var(--muted);font-size:10.5px;font-family:ui-monospace,monospace;margin-top:2px}
+.s7w1-arr{color:var(--muted);font-weight:900;font-family:ui-monospace,monospace}
+.s7w1-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.s7w1-box{border-radius:8px;padding:11px;font-size:12.5px;line-height:1.55}
+.s7w1-good{border:1px solid #bbf7d0;background:#f0fdf4;color:#166534}
+.s7w1-bad{border:1px solid #fecaca;background:#fef2f2;color:#991b1b}
+.s7w1-box b{display:block;margin-bottom:3px}
+.s7w1-rule{margin-top:14px;border:1px solid #ddd6fe;background:#f5f3ff;color:#5b21b6;border-radius:8px;padding:12px;font-size:12.5px;line-height:1.6}
+@media(max-width:980px){.s7w1-stage{grid-template-columns:1fr}.s7w1-seam{padding:12px 0}.s7w1-line{display:none}.s7w1-cols{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main class="s7w1-wrap">
+  <div class="s7w1-kicker">ERA V5 Session 7</div>
+  <h1>The Seam</h1>
+  <p class="s7w1-sub">Session 2 closed by insisting that the tokenizer's job is finished the moment text has become a sequence of integers, and that what those integers turn into belongs to a different component on the far side of a clean boundary. Session 6 built the machine that delivers them. This is that boundary. Select any field the dataloader carries to see which model object consumes it and what breaks when it is wrong.</p>
+
+  <section class="s7w1-stage">
+    <aside class="s7w1-side">
+      <h2>What Session 6 hands over</h2>
+      <p class="s7w1-who">A packed batch, produced by the mixture schedule, admitted by the cleaning pipeline, recorded in the consumption ledger.</p>
+      <div id="s7w1-left"></div>
+    </aside>
+    <div class="s7w1-seam"><div class="s7w1-line"></div><div class="s7w1-badge">the<br>seam</div></div>
+    <aside class="s7w1-side">
+      <h2>What Session 7 builds</h2>
+      <p class="s7w1-who">The first model objects those integers meet, and the only two questions the model asks before attention runs.</p>
+      <div id="s7w1-right"></div>
+    </aside>
+  </section>
+
+  <section class="s7w1-detail">
+    <h2 style="font-size:15px;margin:0" id="s7w1-t"></h2>
+    <div class="s7w1-flow" id="s7w1-flow"></div>
+    <div class="s7w1-cols">
+      <div class="s7w1-box s7w1-good"><b>What it carries</b><span id="s7w1-carry"></span></div>
+      <div class="s7w1-box s7w1-bad"><b>What breaks if it is wrong</b><span id="s7w1-break"></span></div>
+    </div>
+    <div class="s7w1-rule" id="s7w1-rule"></div>
+  </section>
+</main>
+
+<script>
+(function(){
+  var DATA=[
+    {k:'ids',n:'Token ids',s:'[B, T] int64',right:'Embedding table',
+     flow:[['token id','integer'],['gather','row lookup'],['token vector','[B,T,D]']],
+     carry:'An address and nothing more. The tokenizer has finished; the integer says which row, not what the row contains. Session 2 spent a session establishing exactly this boundary, and the whole of Session 7 lives on the far side of it.',
+     brk:'A tokenizer version change silently reassigns ids, so every row of the embedding now means a different token than it did. This is why the tokenizer hash travels in the shard manifest and in the embedding policy record.',
+     rule:'The rule this enforces: the embedding module takes integers and never token strings. A design that needs the string at lookup time has reached back across the seam, which is a defensible thing to do and a bad thing to do by accident.'},
+    {k:'pos',n:'Position ids',s:'[B, T] int64',right:'Position policy',
+     flow:[['position id','integer'],['stored or computed','policy'],['order signal','into attention']],
+     carry:'Where each token sits. Attention is permutation-equivariant, so without this the model reads a set rather than a sequence and cannot distinguish one ordering of the same tokens from another.',
+     brk:'A position beyond the trained maximum has no learned row, so a stored table returns its initialisation and injects noise at exactly the positions you extended the model to handle. Section 11 measures that cliff directly.',
+     rule:'The rule this enforces: position is a policy with a version, not a constant. Whether it is stored or computed decides what happens past the trained context length, which is the whole of Session 8.'},
+    {k:'loss',n:'Loss mask',s:'[B, T] bool',right:'Output head',
+     flow:[['hidden state','[B,T,D]'],['output projection','D x V'],['logits','[B,T,V]'],['masked loss','scalar']],
+     carry:'Which positions receive gradient. Session 5 established the rule for agentic data: the model reads tool observations as context and is never trained to produce them. The mask is where that decision becomes arithmetic.',
+     brk:'A mask that leaks loss onto context positions teaches the model to invent tool results instead of calling tools. A mask that suppresses too much silently discards training signal you paid full compute to generate.',
+     rule:'The rule this enforces: the output head is the second token-facing matrix, the same size as the first, and it is the one the loss mask actually gates. Whether it is a separate tensor or tied to the input path is Section 5.'},
+    {k:'lane',n:'Mixture lane and stage',s:'metadata',right:'Adaptation boundary',
+     flow:[['lane tag','which capability'],['mixture shift','distribution change'],['embedding','must adapt']],
+     carry:'Which capability lane the batch came from and where in the curriculum the run is. Session 5 fixed the protected floors; Session 6 compiled them into per-step quotas.',
+     brk:'When the mixture moves, the statistics arriving at the embedding move with it. A frozen input path cannot follow, so the adjustment is pushed into the layers above and appears as a gradient spike. This is the V4 incident, and Section 9 reproduces it.',
+     rule:'The rule this enforces: the embedding is where the data distribution enters the model, so every mixture decision from Session 5 is also an embedding decision. The two policies have to be read together.'},
+    {k:'ledger',n:'Ledger tags',s:'run, step, shard ids',right:'embedding_policy_id',
+     flow:[['data policy','Session 6'],['embedding policy','Session 7'],['checkpoint','comparable']],
+     carry:'The binding between a checkpoint and the stream that produced it. Session 6 argued that a checkpoint without a data position is incomplete.',
+     brk:'Two runs compared without recording what their input paths were doing produce a result nobody can attribute. If one had a trainable embedding and the other did not, the comparison measured the freeze decision and called it something else.',
+     rule:'The rule this enforces: Session 7 adds one field to Session 6\'s ledger. The embedding type, factor shape, rank, tokenizer hash, freeze state, unfreeze schedule, identifier layout and tying decision all travel with the checkpoint or the checkpoint cannot be compared.'}
+  ];
+  var sel=0;
+
+  function render(){
+    document.getElementById('s7w1-left').innerHTML=DATA.map(function(d,i){
+      return '<div class="s7w1-item'+(i===sel?' on':'')+'" data-i="'+i+'"><b>'+d.n+'</b><code>'+d.s+'</code></div>';
+    }).join('');
+    document.getElementById('s7w1-right').innerHTML=DATA.map(function(d,i){
+      return '<div class="s7w1-item'+(i===sel?' on':' dim')+'" data-i="'+i+'"><b>'+d.right+'</b><code>'+(i===sel?'consuming '+d.s:'&nbsp;')+'</code></div>';
+    }).join('');
+    Array.prototype.forEach.call(document.querySelectorAll('.s7w1-item'),function(el){
+      el.onclick=function(){sel=+el.dataset.i;render();};
+    });
+
+    var d=DATA[sel];
+    document.getElementById('s7w1-t').textContent=d.n+'  ->  '+d.right;
+    document.getElementById('s7w1-flow').innerHTML=d.flow.map(function(f,i){
+      return '<div class="s7w1-node">'+f[0]+'<small>'+f[1]+'</small></div>'+(i<d.flow.length-1?'<span class="s7w1-arr">-&gt;</span>':'');
+    }).join('');
+    document.getElementById('s7w1-carry').textContent=d.carry;
+    document.getElementById('s7w1-break').textContent=d.brk;
+    document.getElementById('s7w1-rule').textContent=d.rule;
+  }
+  render();
+})();
+</script>
+</body>
+</html>

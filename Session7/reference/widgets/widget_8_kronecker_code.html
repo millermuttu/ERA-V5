@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 7 Widget 8 - KroneckerEmbedding Walkthrough</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px}
+.s7w8-wrap{max-width:1280px;margin:0 auto;padding:22px}
+.s7w8-kicker{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--violet)}
+.s7w8-wrap h1{font-size:27px;line-height:1.1;margin:5px 0 8px}
+.s7w8-sub{color:var(--muted);max-width:900px;margin:0 0 16px;line-height:1.55}
+.s7w8-grid{display:grid;grid-template-columns:250px minmax(0,1fr) 300px;gap:14px}
+.s7w8-card{background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 30px rgba(20,42,75,.08);padding:14px}
+.s7w8-card h2{font-size:13px;margin:0 0 10px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.s7w8-ctrl{margin-bottom:13px}
+.s7w8-lab{display:flex;justify-content:space-between;font-size:12.5px;font-weight:700;margin-bottom:5px}
+.s7w8-lab span{font-family:ui-monospace,monospace;color:var(--violet)}
+.s7w8-wrap input[type=range]{width:100%;accent-color:var(--violet)}
+.s7w8-code{background:#0f172a;border-radius:9px;padding:12px 10px;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px;line-height:1.75;overflow-x:auto}
+.s7w8-ln{display:grid;grid-template-columns:24px 1fr;gap:8px;border-radius:5px;padding:1px 6px;color:#94a3b8;white-space:pre;cursor:pointer}
+.s7w8-no{color:#475569;text-align:right;font-size:11px}
+.s7w8-ln.on{background:#7c3aed33;color:#e0e7ff;box-shadow:inset 2px 0 0 #a78bfa}
+.s7w8-kw{color:#c4b5fd}.s7w8-fn{color:#7dd3fc}.s7w8-num{color:#fca5a5}.s7w8-cm{color:#64748b}
+.s7w8-nav{display:flex;gap:7px;margin-top:11px}
+.s7w8-nav button{flex:1;border:1px solid var(--line);background:#fff;border-radius:7px;padding:8px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.s7w8-nav button:hover{border-color:var(--violet);color:#5b21b6}
+.s7w8-say{border:1px solid #ddd6fe;background:#f5f3ff;color:#5b21b6;border-radius:8px;padding:11px;font-size:12.5px;line-height:1.6;min-height:96px}
+.s7w8-tbl{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}
+.s7w8-tbl td{padding:5px 4px;border-bottom:1px solid #eef2f7;font-family:ui-monospace,monospace}
+.s7w8-tbl td:first-child{color:var(--muted);font-family:inherit}
+.s7w8-split{margin-top:12px;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.s7w8-srow{display:flex;justify-content:space-between;padding:8px 10px;font-size:12px;border-bottom:1px solid #eef2f7}
+.s7w8-srow:last-child{border-bottom:none}
+.s7w8-srow b{font-family:ui-monospace,monospace}
+.s7w8-fix{background:#f8fafc;color:#64748b}
+.s7w8-train{background:#f0fdf4;color:#166534}
+.s7w8-note{margin-top:12px;border:1px solid #bbf7d0;background:#f0fdf4;color:#166534;border-radius:8px;padding:11px;font-size:12.5px;line-height:1.6}
+@media(max-width:1040px){.s7w8-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main class="s7w8-wrap">
+  <div class="s7w8-kicker">ERA V5 Session 7</div>
+  <h1>KroneckerEmbedding, line by line</h1>
+  <p class="s7w8-sub">The released module, stepped through. Two things are worth watching: what is a <b>buffer</b> (fixed, never trained) versus what is a <b>Parameter</b> (trained), and the fact that the forward pass is only two lines long.</p>
+
+  <section class="s7w8-grid">
+    <aside class="s7w8-card">
+      <h2>Configuration</h2>
+      <div class="s7w8-ctrl"><div class="s7w8-lab">pos_dim <span id="s7w8-pv"></span></div><input id="s7w8-p" type="range" min="8" max="64" step="8" value="32"></div>
+      <div class="s7w8-ctrl"><div class="s7w8-lab">d_model <span id="s7w8-dv"></span></div><input id="s7w8-d" type="range" min="512" max="12288" step="32" value="8096"></div>
+      <div class="s7w8-ctrl"><div class="s7w8-lab">vocab_size <span id="s7w8-vv"></span></div><input id="s7w8-v" type="range" min="16384" max="262144" step="4096" value="131072"></div>
+      <table class="s7w8-tbl" id="s7w8-cfg"></table>
+      <div class="s7w8-split" id="s7w8-split"></div>
+    </aside>
+
+    <section class="s7w8-card">
+      <h2>The module</h2>
+      <div class="s7w8-code" id="s7w8-code"></div>
+      <div class="s7w8-nav">
+        <button id="s7w8-prev">Previous</button>
+        <button id="s7w8-next">Next line</button>
+        <button id="s7w8-reset">Restart</button>
+      </div>
+    </section>
+
+    <aside class="s7w8-card">
+      <h2>What this line does</h2>
+      <div class="s7w8-say" id="s7w8-say"></div>
+      <div class="s7w8-note">
+        <b>The contract.</b> Integers in, vectors out, exactly like <code style="font-family:ui-monospace,monospace">nn.Embedding</code>. Nothing downstream can tell the difference, which is what lets you swap it in, measure it, and swap it back out.
+      </div>
+    </aside>
+  </section>
+</main>
+
+<script>
+(function(){
+  var P=document.getElementById('s7w8-p'),D=document.getElementById('s7w8-d'),V=document.getElementById('s7w8-v');
+  var step=0;
+  function fmt(n){return n>=1e9?(n/1e9).toFixed(2)+'B':n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':String(n);}
+  function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+  var TOK=/(#[^\n]*$)|\b(class|def|return|self|import|from|with|no_grad)\b|\b(nn|torch|Linear|Parameter|register_buffer|kronecker_codec|projection)\b|\b(\d+)\b/g;
+  function hl(s){
+    return esc(s).replace(TOK,function(m,cm,kw,fn,num){
+      if(cm!==undefined) return '<span class="s7w8-cm">'+cm+'</span>';
+      if(kw!==undefined) return '<span class="s7w8-kw">'+kw+'</span>';
+      if(fn!==undefined) return '<span class="s7w8-fn">'+fn+'</span>';
+      return '<span class="s7w8-num">'+num+'</span>';
+    });
+  }
+
+  var L=[
+   {c:'emb = KroneckerEmbedding(',
+    s:function(x){return 'The module is built once, up front. It needs the tokenizer because it has to know what text each token id stands for, which is the trade Section 7 named: this layer reaches back across the seam and looks at the token string.';}},
+   {c:'    vocab_size = '+'', dyn:function(x){return '    vocab_size = '+x.V+',';},
+    s:function(x){return 'Used only to size the byte lookup buffers, one entry per token. It does <b>not</b> appear in the parameter count. That is the whole point.';}},
+   {c:'', dyn:function(x){return '    d_model    = '+x.d+',';},
+    s:function(x){return 'The width the rest of the model expects. The projection maps the code into this.';}},
+   {c:'', dyn:function(x){return '    tokenizer  = tok,';},
+    s:function(x){return 'Where the token strings come from. At construction the module walks the vocabulary once, encodes every token to UTF-8, and stores the bytes.';}},
+   {c:'', dyn:function(x){return '    char_dim   = 256,   # byte alphabet';},
+    s:function(x){return 'Always 256, because a byte has 256 possible values. This is the height of the grid and it is not really a choice.';}},
+   {c:'', dyn:function(x){return '    pos_dim    = '+x.p+',    # byte window';},
+    s:function(x){return 'The width of the grid, and the <b>maximum number of bytes</b> any token can contribute. Bytes past this are dropped. At '+x.p+' this is '+x.p+' English characters but only '+Math.floor(x.p/3)+' Indic ones, which is Section 8.';}},
+   {c:'', dyn:function(x){return '    mode       = "cached",';},
+    s:function(x){return '"cached" precomputes every token code once and stores the table. "dynamic" rebuilds codes on the fly from the byte buffers. Same maths, a memory-for-compute trade.';}},
+   {c:')', s:function(x){return 'Construction done. From here the module behaves exactly like an embedding layer.';}},
+   {c:'', s:null},
+   {c:'# fixed buffers, never trained',
+    s:function(x){return 'Everything below is registered as a <b>buffer</b>, not a Parameter. Buffers move with the model to the GPU and get saved, but no optimizer ever touches them.';}},
+   {c:'', dyn:function(x){return '_byte_buffer    ('+fmt(x.V)+', '+x.p+')   uint8';},
+    s:function(x){return 'The first '+x.p+' UTF-8 bytes of every token. '+fmt(x.V*x.p)+' bytes of storage, which is small, and <b>zero trainable parameters</b>.';}},
+   {c:'', dyn:function(x){return '_length_buffer  ('+fmt(x.V)+',)      int16';},
+    s:function(x){return 'How many bytes each token actually has, so the codec knows what to divide by for the 1/sqrt(L) scaling.';}},
+   {c:'', dyn:function(x){return '_codec_table    ('+fmt(x.V)+', '+fmt(256*x.p)+')  cached only';},
+    s:function(x){return 'The precomputed code for every token. Built once under no_grad. Still a buffer, still not trained.';}},
+   {c:'', s:null},
+   {c:'# the only trainable thing in the whole path',
+    s:function(x){return 'One line, and it is the entire learnable input path.';}},
+   {c:'', dyn:function(x){return 'projection = nn.Linear('+fmt(256*x.p)+', '+fmt(x.d)+', bias=False)';},
+    s:function(x){return '<b>'+fmt(256*x.p*x.d)+' parameters.</b> Note what is not in that product: the vocabulary. Slide vocab_size and this number does not move at all.';}},
+   {c:'', s:null},
+   {c:'def forward(self, input_ids):        # [B, T]',
+    s:function(x){return 'Integers arrive, exactly as Session 6 hands them over.';}},
+   {c:'    codec_out = self._codec_lookup(input_ids)', dyn:function(x){return '    codec_out = self._codec_lookup(input_ids)   # [B, T, '+fmt(256*x.p)+']';},
+    s:function(x){return 'Fetch the fixed code for each token. In cached mode this is a table lookup; in dynamic mode it rebuilds the code from the bytes. Either way <b>no gradient flows past here</b>, because there is nothing behind it to train.';}},
+   {c:'    return self.projection(codec_out)', dyn:function(x){return '    return self.projection(codec_out)          # [B, T, '+fmt(x.d)+']';},
+    s:function(x){return 'One matrix multiply and we are done. The output shape matches what a dense nn.Embedding would have returned, so attention, the feedforward blocks and the loss are all unchanged.';}}
+  ];
+
+  function build(){return {V:+V.value,d:+D.value,p:+P.value};}
+
+  function render(){
+    var x=build();
+    document.getElementById('s7w8-pv').textContent=x.p;
+    document.getElementById('s7w8-dv').textContent=x.d.toLocaleString();
+    document.getElementById('s7w8-vv').textContent=x.V.toLocaleString();
+
+    var Dc=256*x.p, params=Dc*x.d, dense=x.V*x.d;
+    document.getElementById('s7w8-cfg').innerHTML=
+      '<tr><td>D (code size)</td><td>256 x '+x.p+' = '+fmt(Dc)+'</td></tr>'+
+      '<tr><td>trainable</td><td>'+fmt(params)+'</td></tr>'+
+      '<tr><td>dense table</td><td>'+fmt(dense)+'</td></tr>'+
+      '<tr><td>smaller by</td><td>'+(dense/params).toFixed(1)+'x</td></tr>';
+
+    document.getElementById('s7w8-split').innerHTML=
+      '<div class="s7w8-srow s7w8-fix"><span>fixed buffers</span><b>0 params</b></div>'+
+      '<div class="s7w8-srow s7w8-train"><span>projection</span><b>'+fmt(params)+'</b></div>';
+
+    var h='';
+    for(var i=0;i<L.length;i++){
+      var line=L[i].dyn?L[i].dyn(x):L[i].c;
+      h+='<div class="s7w8-ln'+(i===step?' on':'')+'" data-i="'+i+'"><span class="s7w8-no">'+(i+1)+'</span><span>'+hl(line||' ')+'</span></div>';
+    }
+    var code=document.getElementById('s7w8-code');
+    code.innerHTML=h;
+    Array.prototype.forEach.call(code.querySelectorAll('.s7w8-ln'),function(el){
+      el.onclick=function(){step=+el.dataset.i;render();};
+    });
+    document.getElementById('s7w8-say').innerHTML = L[step].s ? L[step].s(x) : 'Keep stepping.';
+  }
+
+  document.getElementById('s7w8-next').onclick=function(){step=Math.min(L.length-1,step+1);render();};
+  document.getElementById('s7w8-prev').onclick=function(){step=Math.max(0,step-1);render();};
+  document.getElementById('s7w8-reset').onclick=function(){step=0;render();};
+  [P,D,V].forEach(function(e){e.addEventListener('input',render);});
+  render();
+})();
+</script>
+</body>
+</html>

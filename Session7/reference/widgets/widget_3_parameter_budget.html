@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 7 Widget 3 - Parameter and Memory Budget</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px}
+.s7w3-wrap{max-width:1280px;margin:0 auto;padding:22px}
+.s7w3-kicker{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--green)}
+.s7w3-wrap h1{font-size:27px;line-height:1.1;margin:5px 0 8px}
+.s7w3-sub{color:var(--muted);max-width:920px;margin:0 0 16px;line-height:1.55}
+.s7w3-grid{display:grid;grid-template-columns:290px minmax(0,1fr);gap:14px}
+.s7w3-card{background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 30px rgba(20,42,75,.08);padding:14px}
+.s7w3-card h2{font-size:13px;margin:0 0 11px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.s7w3-ctrl{margin-bottom:13px}
+.s7w3-lab{display:flex;justify-content:space-between;font-size:12.5px;font-weight:700;margin-bottom:5px}
+.s7w3-lab span{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--green)}
+.s7w3-wrap input[type=range]{width:100%;accent-color:var(--green)}
+.s7w3-seg{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.s7w3-seg button{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:7px;padding:7px 6px;font:inherit;font-size:11.5px;font-weight:700;cursor:pointer}
+.s7w3-seg button.on{border-color:var(--green);background:#f0fdf4;color:#166534}
+.s7w3-wrap select{width:100%;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--ink);padding:8px;font:inherit;font-size:12.5px}
+.s7w3-bar{display:flex;height:54px;border-radius:9px;overflow:hidden;border:1px solid var(--line);background:#eef3f7;margin:6px 0 8px}
+.s7w3-seg2{height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:800;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;white-space:nowrap;overflow:hidden;transition:width .35s ease}
+.s7w3-legend{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:14px}
+.s7w3-lg{display:flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:8px;background:#fbfdff;padding:7px 9px;font-size:11.5px}
+.s7w3-sw{width:11px;height:11px;border-radius:3px;flex:none}
+.s7w3-title{font-size:12.5px;font-weight:800;margin:0 0 3px}
+.s7w3-nt{font-size:11.5px;color:var(--muted);margin:0 0 7px;line-height:1.5}
+.s7w3-tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.s7w3-tbl th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);border-bottom:1px solid var(--line);padding:6px 5px}
+.s7w3-tbl td{border-bottom:1px solid #eef2f7;padding:8px 5px;font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+.s7w3-tbl tr.s7w3-tot td{font-weight:800;border-top:2px solid var(--line);background:#fbfdff}
+.s7w3-gauge{margin-top:14px;border:1px solid var(--line);border-radius:8px;background:#fbfdff;padding:12px}
+.s7w3-gbar{height:26px;border-radius:6px;background:#eef3f7;overflow:hidden;display:flex;margin-top:8px;border:1px solid var(--line)}
+.s7w3-gfill{height:100%;display:flex;align-items:center;padding-left:8px;color:#fff;font-size:11px;font-weight:800;font-family:ui-monospace,monospace;white-space:nowrap}
+.s7w3-note{margin-top:12px;border-radius:8px;padding:11px;font-size:12.5px;line-height:1.6}
+.s7w3-ok{border:1px solid #bbf7d0;background:#f0fdf4;color:#166534}
+.s7w3-warn{border:1px solid #fecaca;background:#fef2f2;color:#991b1b}
+@media(max-width:980px){.s7w3-grid{grid-template-columns:1fr}.s7w3-legend{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main class="s7w3-wrap">
+  <div class="s7w3-kicker">ERA V5 Session 7</div>
+  <h1>Parameter and Memory Budget</h1>
+  <p class="s7w3-sub">The two token-facing matrices against everything else in the model, in parameters and then in the number that actually constrains the run: bytes of training state. A parameter under AdamW in mixed precision is not two bytes, it is sixteen, and the embedding table is where that multiplier is felt first.</p>
+
+  <section class="s7w3-grid">
+    <aside class="s7w3-card">
+      <h2>Configuration</h2>
+      <div class="s7w3-ctrl"><div class="s7w3-lab">Vocabulary <span id="s7w3-Vv"></span></div><input id="s7w3-V" type="range" min="8192" max="262144" step="4096" value="131072"></div>
+      <div class="s7w3-ctrl"><div class="s7w3-lab">Model width <span id="s7w3-Dv"></span></div><input id="s7w3-D" type="range" min="512" max="12288" step="32" value="8096"></div>
+      <div class="s7w3-ctrl"><div class="s7w3-lab">Layers <span id="s7w3-Lv"></span></div><input id="s7w3-L" type="range" min="4" max="96" value="48"></div>
+      <div class="s7w3-ctrl"><div class="s7w3-lab">FFN multiplier <span id="s7w3-Fv"></span></div><input id="s7w3-F" type="range" min="2" max="8" step="1" value="4"></div>
+      <div class="s7w3-ctrl">
+        <div class="s7w3-lab">Output head</div>
+        <div class="s7w3-seg"><button id="s7w3-untied" class="on">Untied</button><button id="s7w3-tied">Tied</button></div>
+      </div>
+      <div class="s7w3-ctrl">
+        <div class="s7w3-lab">Memory regime</div>
+        <select id="s7w3-mode">
+          <option value="16">Training, AdamW mixed precision (16 B/param)</option>
+          <option value="8">Training, SGD mixed precision (8 B/param)</option>
+          <option value="2">Inference only, bf16 (2 B/param)</option>
+          <option value="4">Inference only, fp32 (4 B/param)</option>
+        </select>
+      </div>
+      <div class="s7w3-ctrl">
+        <div class="s7w3-lab">Accelerator <span id="s7w3-Gv"></span></div>
+        <input id="s7w3-G" type="range" min="24" max="192" step="8" value="80">
+      </div>
+    </aside>
+
+    <section class="s7w3-card">
+      <p class="s7w3-title">Parameters</p>
+      <p class="s7w3-nt">The two token-facing matrices against the transformer stack. Sweep the width and watch the embedding share collapse while its absolute size climbs.</p>
+      <div class="s7w3-bar" id="s7w3-bar"></div>
+      <div class="s7w3-legend">
+        <div class="s7w3-lg"><i class="s7w3-sw" style="background:#0891b2"></i><div><b id="s7w3-lgE"></b><br><span style="color:var(--muted)">input embedding</span></div></div>
+        <div class="s7w3-lg"><i class="s7w3-sw" style="background:#7c3aed"></i><div><b id="s7w3-lgH"></b><br><span style="color:var(--muted)">output head</span></div></div>
+        <div class="s7w3-lg"><i class="s7w3-sw" style="background:#94a3b8"></i><div><b id="s7w3-lgS"></b><br><span style="color:var(--muted)">transformer stack</span></div></div>
+      </div>
+
+      <p class="s7w3-title">Training state</p>
+      <p class="s7w3-nt" id="s7w3-modenote"></p>
+      <table class="s7w3-tbl">
+        <thead><tr><th>tensor</th><th>parameters</th><th>share</th><th>memory</th></tr></thead>
+        <tbody id="s7w3-body"></tbody>
+      </table>
+
+      <div class="s7w3-gauge">
+        <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700"><span>Token-facing matrices against one accelerator</span><span id="s7w3-gtxt" style="font-family:ui-monospace,monospace;color:var(--muted)"></span></div>
+        <div class="s7w3-gbar"><div class="s7w3-gfill" id="s7w3-gfill"></div></div>
+      </div>
+
+      <div class="s7w3-note" id="s7w3-note"></div>
+    </section>
+  </section>
+</main>
+
+<script>
+(function(){
+  var V=document.getElementById('s7w3-V'),D=document.getElementById('s7w3-D'),
+      L=document.getElementById('s7w3-L'),F=document.getElementById('s7w3-F'),
+      G=document.getElementById('s7w3-G'),M=document.getElementById('s7w3-mode');
+  var bU=document.getElementById('s7w3-untied'),bT=document.getElementById('s7w3-tied'),tied=false;
+
+  function fmt(n){return n>=1e9?(n/1e9).toFixed(2)+'B':n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':n.toFixed(0);}
+  function gb(bytes){return bytes>=1e9?(bytes/1e9).toFixed(2)+' GB':(bytes/1e6).toFixed(0)+' MB';}
+
+  bU.onclick=function(){tied=false;render();};
+  bT.onclick=function(){tied=true;render();};
+
+  function render(){
+    var v=+V.value,d=+D.value,l=+L.value,f=+F.value,bpp=+M.value,card=+G.value;
+    document.getElementById('s7w3-Vv').textContent=v.toLocaleString();
+    document.getElementById('s7w3-Dv').textContent=d.toLocaleString();
+    document.getElementById('s7w3-Lv').textContent=l;
+    document.getElementById('s7w3-Fv').textContent=f+'x';
+    document.getElementById('s7w3-Gv').textContent=card+' GB';
+    bU.className=tied?'':'on'; bT.className=tied?'on':'';
+
+    var emb=v*d, head=tied?0:v*d;
+    var perLayer=4*d*d + 2*f*d*d + 2*d;      // attention qkvo, feedforward, two norms
+    var stack=perLayer*l;
+    var total=emb+head+stack;
+
+    var pct=function(x){return (x/total*100);};
+    var segs=[['#0891b2',emb],['#7c3aed',head],['#94a3b8',stack]];
+    document.getElementById('s7w3-bar').innerHTML=segs.map(function(s){
+      var w=pct(s[1]); if(w<=0) return '';
+      return '<div class="s7w3-seg2" style="width:'+w+'%;background:'+s[0]+'">'+(w>7?w.toFixed(1)+'%':'')+'</div>';
+    }).join('');
+    document.getElementById('s7w3-lgE').textContent=fmt(emb)+'  ('+pct(emb).toFixed(1)+'%)';
+    document.getElementById('s7w3-lgH').textContent=tied?'shared with input':fmt(head)+'  ('+pct(head).toFixed(1)+'%)';
+    document.getElementById('s7w3-lgS').textContent=fmt(stack)+'  ('+pct(stack).toFixed(1)+'%)';
+
+    var modes={16:'Weights in bf16, gradients in bf16, an fp32 master copy and both AdamW moments: 2 + 2 + 4 + 4 + 4 = 16 bytes for every parameter being trained.',
+               8:'Weights in bf16, gradients in bf16 and an fp32 master copy, with no optimizer moments: 2 + 2 + 4 = 8 bytes per parameter.',
+               2:'Weights only, no gradients and no optimizer state. This is the number people quote when they say a model "is" a certain size.',
+               4:'Weights only in full precision. Still no gradients and no optimizer state.'};
+    document.getElementById('s7w3-modenote').textContent=modes[bpp];
+
+    var rows=[['input embedding',emb],['output head',tied?0:head],['transformer stack',stack]];
+    var h=rows.map(function(r){
+      if(r[1]===0) return '<tr><td>'+r[0]+'</td><td colspan="3" style="color:#94a3b8">tied to the input embedding, no separate parameters</td></tr>';
+      return '<tr><td>'+r[0]+'</td><td>'+fmt(r[1])+'</td><td>'+pct(r[1]).toFixed(1)+'%</td><td>'+gb(r[1]*bpp)+'</td></tr>';
+    }).join('');
+    h+='<tr class="s7w3-tot"><td>total</td><td>'+fmt(total)+'</td><td>100%</td><td>'+gb(total*bpp)+'</td></tr>';
+    document.getElementById('s7w3-body').innerHTML=h;
+
+    var tokenFacing=(emb+head)*bpp, cardBytes=card*1e9;
+    var share=tokenFacing/cardBytes;
+    document.getElementById('s7w3-gtxt').textContent=gb(tokenFacing)+' of '+card+' GB';
+    var fill=document.getElementById('s7w3-gfill');
+    fill.style.width=Math.min(100,share*100)+'%';
+    fill.style.background=share>0.5?'#dc2626':share>0.25?'#d97706':'#159447';
+    fill.textContent=(share*100).toFixed(1)+'%';
+
+    var nn=document.getElementById('s7w3-note');
+    if(share>0.25){
+      nn.className='s7w3-note s7w3-warn';
+      nn.innerHTML='<b>The two matrices that face the vocabulary are consuming '+(share*100).toFixed(1)+'% of one accelerator</b> before a single attention head has been placed. They are '+pct(emb+head).toFixed(1)+'% of the parameters and they do the least interesting work in the model: one is a lookup and the other is a dot product against every row of that lookup. This is the pressure that makes tying, factorization and Kronecker structure worth their complexity, and it is why the tokenizer decision from Session 2 is an architecture decision rather than a preprocessing one.';
+    } else {
+      nn.className='s7w3-note s7w3-ok';
+      nn.innerHTML='<b>At this configuration the token-facing matrices are '+(share*100).toFixed(1)+'% of one accelerator and '+pct(emb+head).toFixed(1)+'% of the parameters.</b> That is a share you can afford to leave dense. Notice how quickly it moves: hold the vocabulary and drop the width, or hold the width and raise the vocabulary, and the same tokenizer that looked free becomes the largest thing in the model. The decision is not about the tokenizer alone, it is about the tokenizer against the width and the depth.';
+    }
+  }
+
+  [V,D,L,F,G].forEach(function(e){e.addEventListener('input',render);});
+  M.addEventListener('change',render);
+  render();
+})();
+</script>
+</body>
+</html>

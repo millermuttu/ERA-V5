@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 7 Widget 5 - Weight Tying Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px}
+.s7w5-wrap{max-width:1280px;margin:0 auto;padding:22px}
+.s7w5-kicker{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--amber)}
+.s7w5-wrap h1{font-size:27px;line-height:1.1;margin:5px 0 8px}
+.s7w5-sub{color:var(--muted);max-width:920px;margin:0 0 16px;line-height:1.55}
+.s7w5-grid{display:grid;grid-template-columns:270px minmax(0,1fr);gap:14px}
+.s7w5-card{background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 30px rgba(20,42,75,.08);padding:14px}
+.s7w5-card h2{font-size:13px;margin:0 0 11px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.s7w5-ctrl{margin-bottom:13px}
+.s7w5-lab{display:flex;justify-content:space-between;font-size:12.5px;font-weight:700;margin-bottom:5px}
+.s7w5-lab span{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--amber)}
+.s7w5-wrap input[type=range]{width:100%;accent-color:var(--amber)}
+.s7w5-seg{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.s7w5-seg button{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:7px;padding:8px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.s7w5-seg button.on{border-color:var(--amber);background:#fffbeb;color:#92400e}
+.s7w5-mats{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;margin-bottom:14px}
+.s7w5-mat{border:2px solid var(--line);border-radius:9px;padding:14px 10px;text-align:center;background:#fbfdff;transition:.3s}
+.s7w5-mat.tied{border-color:var(--amber);background:#fffbeb}
+.s7w5-mat b{display:block;font-size:12.5px}
+.s7w5-mat code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:15px;font-weight:800;color:var(--ink);display:block;margin:6px 0 3px}
+.s7w5-mat small{color:var(--muted);font-size:11px}
+.s7w5-link{font-size:22px;color:var(--muted);font-weight:800}
+.s7w5-title{font-size:12.5px;font-weight:800;margin:0 0 3px}
+.s7w5-nt{font-size:11.5px;color:var(--muted);margin:0 0 8px;line-height:1.5}
+.s7w5-chart{border:1px solid var(--line);background:#fff;border-radius:8px;margin-bottom:6px}
+.s7w5-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:12px 0}
+.s7w5-metric{border:1px solid var(--line);background:#fbfdff;border-radius:8px;padding:10px}
+.s7w5-metric b{display:block;font-size:18px;line-height:1.15;font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+.s7w5-metric span{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+.s7w5-note{border-radius:8px;padding:11px;font-size:12.5px;line-height:1.6}
+.s7w5-ok{border:1px solid #bbf7d0;background:#f0fdf4;color:#166534}
+.s7w5-warn{border:1px solid #fed7aa;background:#fff7ed;color:#9a3412}
+.s7w5-roles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.s7w5-role{border:1px solid var(--line);border-radius:8px;padding:11px;background:#fbfdff;font-size:12px;line-height:1.55;color:var(--muted)}
+.s7w5-role b{display:block;color:var(--ink);font-size:12.5px;margin-bottom:4px}
+@media(max-width:980px){.s7w5-grid,.s7w5-roles{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main class="s7w5-wrap">
+  <div class="s7w5-kicker">ERA V5 Session 7</div>
+  <h1>Weight Tying Board</h1>
+  <p class="s7w5-sub">Two matrices of identical shape face the same vocabulary, one reading tokens and one predicting them. Tying uses a single matrix for both jobs and removes an entire billion-parameter tensor. The question is not whether the saving is real, it is whether the constraint costs more than the saving buys, and the answer moves with scale.</p>
+
+  <section class="s7w5-grid">
+    <aside class="s7w5-card">
+      <h2>Configuration</h2>
+      <div class="s7w5-ctrl"><div class="s7w5-lab">Vocabulary <span id="s7w5-Vv"></span></div><input id="s7w5-V" type="range" min="8192" max="262144" step="4096" value="131072"></div>
+      <div class="s7w5-ctrl"><div class="s7w5-lab">Model scale <span id="s7w5-Sv"></span></div><input id="s7w5-S" type="range" min="0" max="7" value="7"></div>
+      <div class="s7w5-ctrl">
+        <div class="s7w5-lab">Output head</div>
+        <div class="s7w5-seg"><button id="s7w5-un" class="on">Untied</button><button id="s7w5-ti">Tied</button></div>
+      </div>
+      <div class="s7w5-roles" style="grid-template-columns:1fr">
+        <div class="s7w5-role"><b>At the input</b>The row has to be a useful starting representation for a token about to pass through the whole network, which rewards encoding what the token means.</div>
+        <div class="s7w5-role"><b>At the output</b>The row has to produce a score separating this token from every other token that could come next, which rewards encoding what distinguishes it from its competitors.</div>
+      </div>
+    </aside>
+
+    <section class="s7w5-card">
+      <div class="s7w5-mats">
+        <div class="s7w5-mat" id="s7w5-m1"><b>Input embedding</b><code id="s7w5-c1"></code><small id="s7w5-s1"></small></div>
+        <div class="s7w5-link" id="s7w5-lnk"></div>
+        <div class="s7w5-mat" id="s7w5-m2"><b>Output projection</b><code id="s7w5-c2"></code><small id="s7w5-s2"></small></div>
+      </div>
+
+      <div class="s7w5-metrics">
+        <div class="s7w5-metric"><b id="s7w5-tot"></b><span>total model parameters</span></div>
+        <div class="s7w5-metric"><b id="s7w5-sav"></b><span>saved by tying</span></div>
+        <div class="s7w5-metric"><b id="s7w5-shr"></b><span>embedding share of the model</span></div>
+      </div>
+
+      <p class="s7w5-title">Embedding share against model scale</p>
+      <p class="s7w5-nt">The same vocabulary held fixed while the model grows. Tying pays where the curve is high and stops paying where it flattens into the low single digits, because the saving shrinks with the curve while the constraint on the geometry does not.</p>
+      <svg class="s7w5-chart" id="s7w5-chart" width="100%" height="210" viewBox="0 0 900 210" preserveAspectRatio="none"></svg>
+
+      <div class="s7w5-note" id="s7w5-note"></div>
+    </section>
+  </section>
+</main>
+
+<script>
+(function(){
+  var SCALES=[
+    {n:'0.5B',d:1280,L:24},{n:'1B',d:2048,L:16},{n:'3B',d:2560,L:32},{n:'7B',d:4096,L:32},
+    {n:'13B',d:5120,L:40},{n:'30B',d:6656,L:60},{n:'70B',d:8192,L:80},{n:'V5 class',d:8096,L:88}
+  ];
+  var V=document.getElementById('s7w5-V'),S=document.getElementById('s7w5-S');
+  var bU=document.getElementById('s7w5-un'),bT=document.getElementById('s7w5-ti'),tied=false;
+  bU.onclick=function(){tied=false;render();};
+  bT.onclick=function(){tied=true;render();};
+
+  function fmt(n){return n>=1e9?(n/1e9).toFixed(2)+'B':n>=1e6?(n/1e6).toFixed(0)+'M':(n/1e3).toFixed(0)+'K';}
+  function stack(d,L){return L*(4*d*d+8*d*d+2*d);}   // attention qkvo + 4x feedforward + norms
+
+  function render(){
+    var v=+V.value, si=+S.value, sc=SCALES[si];
+    document.getElementById('s7w5-Vv').textContent=v.toLocaleString();
+    document.getElementById('s7w5-Sv').textContent=sc.n+'  (d='+sc.d+', L='+sc.L+')';
+    bU.className=tied?'':'on'; bT.className=tied?'on':'';
+
+    var emb=v*sc.d, st=stack(sc.d,sc.L);
+    var total=emb+(tied?0:emb)+st;
+    var share=(emb+(tied?0:emb))/total;
+
+    document.getElementById('s7w5-c1').textContent=fmt(v)+' x '+sc.d;
+    document.getElementById('s7w5-s1').textContent=fmt(emb)+' parameters';
+    document.getElementById('s7w5-c2').textContent=sc.d+' x '+fmt(v);
+    document.getElementById('s7w5-s2').textContent=tied?'the same tensor, transposed':fmt(emb)+' parameters';
+    document.getElementById('s7w5-m1').className='s7w5-mat'+(tied?' tied':'');
+    document.getElementById('s7w5-m2').className='s7w5-mat'+(tied?' tied':'');
+    document.getElementById('s7w5-lnk').textContent=tied?'= transpose =':'independent';
+    document.getElementById('s7w5-lnk').style.fontSize=tied?'13px':'12px';
+
+    document.getElementById('s7w5-tot').textContent=fmt(total);
+    document.getElementById('s7w5-sav').textContent=tied?(fmt(emb)+'  ('+(emb*16/1e9).toFixed(1)+' GB)'):'nothing yet';
+    document.getElementById('s7w5-shr').textContent=(share*100).toFixed(1)+'%';
+
+    // scale sweep
+    (function(){
+      var Wd=900,Ht=210,pad=36,h='';
+      var pts=SCALES.map(function(s,i){
+        var e=v*s.d, t=e*2+stack(s.d,s.L);
+        return {x:i,y:(e*2)/t,n:s.n};
+      });
+      var maxY=Math.max.apply(null,pts.map(function(p){return p.y;}));
+      function X(i){return pad+(i/(SCALES.length-1))*(Wd-pad-14);}
+      function Y(y){return Ht-30-(y/Math.max(0.1,maxY))*(Ht-52);}
+      for(var g=0;g<=4;g++){var vv=maxY*g/4,yy=Y(vv);
+        h+='<line x1="'+pad+'" y1="'+yy+'" x2="'+(Wd-14)+'" y2="'+yy+'" stroke="#eef2f7"/>';
+        h+='<text x="2" y="'+(yy+3)+'" font-size="9" fill="#94a3b8">'+(vv*100).toFixed(0)+'%</text>';}
+      // the band where tying stops paying
+      h+='<rect x="'+pad+'" y="'+Y(0.05)+'" width="'+(Wd-pad-14)+'" height="'+(Ht-30-Y(0.05))+'" fill="#159447" opacity="0.07"/>';
+      h+='<line x1="'+pad+'" y1="'+Y(0.05)+'" x2="'+(Wd-14)+'" y2="'+Y(0.05)+'" stroke="#159447" stroke-dasharray="4 3"/>';
+      h+='<text x="'+(Wd-190)+'" y="'+(Y(0.05)-6)+'" font-size="10" font-weight="700" fill="#159447">below 5%: tying stops paying</text>';
+      var d='';
+      pts.forEach(function(p,i){d+=(i?'L':'M')+X(i).toFixed(1)+' '+Y(p.y).toFixed(1)+' ';});
+      h+='<path d="'+d+'" fill="none" stroke="#d97706" stroke-width="2.5"/>';
+      pts.forEach(function(p,i){
+        var on=(i===si);
+        h+='<circle cx="'+X(i)+'" cy="'+Y(p.y)+'" r="'+(on?6:4)+'" fill="'+(on?'#d97706':'#fff')+'" stroke="#d97706" stroke-width="2"/>';
+        h+='<text x="'+X(i)+'" y="'+(Ht-10)+'" font-size="9.5" text-anchor="middle" fill="'+(on?'#92400e':'#94a3b8')+'" font-weight="'+(on?'800':'500')+'">'+p.n+'</text>';
+        if(on) h+='<text x="'+X(i)+'" y="'+(Y(p.y)-12)+'" font-size="11" text-anchor="middle" font-weight="800" fill="#92400e">'+(p.y*100).toFixed(1)+'%</text>';
+      });
+      document.getElementById('s7w5-chart').innerHTML=h;
+    })();
+
+    var untiedShare=(2*emb)/(2*emb+st);
+    var nn=document.getElementById('s7w5-note');
+    if(untiedShare>0.15){
+      nn.className='s7w5-note s7w5-warn';
+      nn.innerHTML='<b>At this scale the token-facing matrices are '+(untiedShare*100).toFixed(1)+'% of the model untied, so tying is worth serious consideration.</b> It removes '+fmt(emb)+' parameters and about '+(emb*16/1e9).toFixed(1)+' GB of AdamW training state, and at this size the regularisation is a genuine benefit rather than an incidental one: a model this small would otherwise be spending a large fraction of its capacity on two lookup tables. This is the regime GPT-2 and Gemma sit in.';
+    } else {
+      nn.className='s7w5-note s7w5-ok';
+      nn.innerHTML='<b>At this scale the token-facing matrices are only '+(untiedShare*100).toFixed(1)+'% of the model untied, so the saving from tying is close to a rounding error while the constraint is not.</b> Forcing the geometry the model reads tokens with to equal the geometry it predicts them with costs the same amount of flexibility at every scale; the compensation shrinks as the model grows. This is why Llama-2 at 7B untied, and it is why V5 unties. The argument is not that tying is wrong, it is that the exchange rate has moved.';
+    }
+  }
+
+  [V,S].forEach(function(e){e.addEventListener('input',render);});
+  render();
+})();
+</script>
+</body>
+</html>
