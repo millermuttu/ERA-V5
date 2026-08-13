@@ -11,6 +11,26 @@ pipeline behind an LLM, session by session.
 | [Session 4](Session4/) | Data cleaning & deduplication, applied to CC-News | [`README.md`](Session4/README.md) | [Link](https://era-v5-session4-mallikarjun.netlify.app/) |
 | [Session 5](Session5/) | Data mixture & curriculum plan for the V5 pretraining run | [`submission.md`](Session5/submission.md) | - |
 | [Session 6](Session6/) | Training data execution system — shards/manifests through checkpoint, crash, resume, replay, fork, audit | [`README.md`](Session6/README.md) | - |
+| [Session 7](Session7/) | Embeddings and model internals — the Kronecker byte codec, its collisions, and five open "V2" problems | [`README.md`](Session7/README.md) | - |
+
+## Session 7 — the Kronecker V2 problems
+
+The Session 7 assignment offered five open problems and asked for **one**. All five are
+solved, each with code that proves it and a README that states what it does *not* claim.
+
+| | problem | solution | the result |
+|---|---|---|---|
+| [P1](Session7/kronmath/) | arithmetic inside the embedding | additive **and multiplicative** characters of `Z/p` — 22 fixed dims on top of 8192 | exact `+ − × ÷` and powers on `Z/15015`; a constructed readout scores 1.0000 on operands it never saw |
+| [P2](Session7/kronmm/) | one codec for text, images, audio | the filler alphabet is already universal (all three are 8-bit); only the role space differs | one `Linear` for all three, no per-modality table; the role must match the modality's invariance axis, measured |
+| [P3](Session7/kronbudget/) | the 32-byte position budget | the waste premise is wrong — `R` buys projection *width*, not per-token space; so fix the crop at fixed `R` | the per-script collision count the lesson asks for, and wrapping at R=16 that collides less than the release at R=32 |
+| [P4](Session7/kronfourier/) | a real Fourier alternative | Fourier HRR — phasor per byte, position as phase, word as sum | `D` independent of length; exact recovery to 256 bytes vs 32; the suffix limitation fixed by shift equivariance, not by being Fourier |
+| [P5](Session7/kroninv/) | drop the output head | `κ` is sparse, so recovering it is compressed sensing — no inverse of `W_proj` required | `d ≈ 64·L`, and `V/D` = 122× fewer output params at a 1M vocabulary — at a cost of more than half the top-1 accuracy |
+
+Three of the five record a prediction that the measurement killed: fp16 was expected to break
+the Fourier superposition (it does not), the byte codec's locality advantage turned out to be
+mostly an artifact of its z-normalisation, and removing collisions turned out to be necessary
+but not sufficient downstream. Two silent bugs are documented alongside the numbers that
+caught them.
 
 ## Planning artifacts
 
