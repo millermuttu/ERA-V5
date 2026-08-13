@@ -1,0 +1,7 @@
+device=cuda  1,359,938 tokens  V=151,651  d_model=256  D=8192  3000 steps x 2 seeds
+
+arm           out params    top-1  not a token  wrong length
+------------------------------------------------------------
+tied-head        38.82M  0.187±0.000         0.0%          0.0%
+byte-head         2.11M  0.079±0.001        30.2%         75.1%
+reuse-W           0.00M  0.069±0.001        63.3%         89.1%

@@ -1,0 +1,4 @@
+kroninv: ok  (codec exact; d=512 recovers every word through a 16x reduction)
+  d=512, length known : 5/5
+  d=512, length blind : 5/5
+  d=192, length known : 3/5  (43x reduction)

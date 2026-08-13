@@ -21,6 +21,8 @@ Pick one of five open "Kronecker V2" problems, solve it, and prove it with code.
   lesson asks for, and a role map that removes it.
 - [`kronfourier/`](kronfourier/) — **Problem 4**, each character as a wave: a Fourier codec
   with an inverse, and what it does to the suffix limitation.
+- [`kroninv/`](kroninv/) — **Problem 5**, dropping the output head: the reverse map, and the
+  accuracy it costs.
 
 ## Problem 1 — arithmetic that lives in the embedding
 
@@ -88,3 +90,22 @@ is one elementwise multiply on the code, recovering 0.62–0.73 on suffix famili
 prefix families untouched.
 
 See [`kronfourier/README.md`](kronfourier/README.md).
+
+## Problem 5 — dropping the output head
+
+The codec was never the obstacle: reshape, argmax per column, and the bytes come back exactly.
+The obstacle is `W_proj`, which maps 8192 down to `d_model` and is not injective — so
+"invert it" is, read literally, impossible. The reframing that makes it possible is that
+`kappa` is **sparse**: at most `pos_dim` non-zeros out of 8192. Recovering it is compressed
+sensing, and the requirement scales with the token's byte length, not with `D` and not with the
+vocabulary — which is why the 1M-vocabulary claim has a foundation.
+
+Measured, the law is roughly `d ≈ 64·L`, flat against 20% noise, and reproduced on two
+vocabularies. The output-side parameter ratio is exactly `V / D`: 122× at a 1M vocabulary.
+
+The head does come off — one arm reads the input projection backwards and adds *zero* output
+parameters — and it costs more than half the top-1 accuracy (0.187 → 0.069 at V=151k). So
+"without any issues" is wrong, and the useful finding is *where* it breaks: over four fifths of
+the errors get the token's **length** wrong rather than its bytes.
+
+See [`kroninv/README.md`](kroninv/README.md).
