@@ -1,0 +1,20 @@
+device=cuda  primes=(97,)  mod 97  vocab=99
+operands seen=78  held out=19  (chance = 0.0103)
+
+      step   3000  train=0.372  +:0.080  *:0.070
+      step   6000  train=0.441  +:0.089  *:0.096
+      step   9000  train=0.488  +:0.087  *:0.093
+      step  12000  train=0.505  +:0.075  *:0.100
+  math+AM   seed0  in=   0.5K  train=0.505  test=0.088   +:0.075  *:0.100
+  -> math+AM: test 0.088 +- 0.000
+
+      step   3000  train=0.959  +:0.839  *:0.084
+      step   6000  train=0.985  +:0.908  *:0.083
+      step   9000  train=1.000  +:0.922  *:0.091
+      step  12000  train=1.000  +:0.935  *:0.090
+  kron+AM   seed0  in= 262.7K  train=1.000  test=0.516   +:0.935  *:0.090
+  -> kron+AM: test 0.516 +- 0.000
+
+arm        in params   train    test     +-  test +  test *
+math+AM         0.5K   0.505   0.088  0.000   0.075   0.100
+kron+AM       262.7K   1.000   0.516  0.000   0.935   0.090

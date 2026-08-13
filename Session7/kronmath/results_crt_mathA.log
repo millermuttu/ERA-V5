@@ -1,0 +1,8 @@
+device=cuda  primes=(7, 11, 13)  mod 1001  vocab=1003
+operands seen=801  held out=200  (chance = 0.0010)
+
+      step   2000  train=0.107  +:0.137  *:0.063
+      step   4000  train=0.450  +:0.412  *:0.475
+      step   6000  train=0.458  +:0.470  *:0.440
+      step   8000  train=0.479  +:0.486  *:0.469
+      step  10000  train=0.496  +:0.513  *:0.474
