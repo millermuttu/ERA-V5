@@ -19,6 +19,8 @@ Pick one of five open "Kronecker V2" problems, solve it, and prove it with code.
 - [`kronmm/`](kronmm/) — **Problem 2**, one Kronecker codec for text, images and audio.
 - [`kronbudget/`](kronbudget/) — **Problem 3**, the position budget: the collision count the
   lesson asks for, and a role map that removes it.
+- [`kronfourier/`](kronfourier/) — **Problem 4**, each character as a wave: a Fourier codec
+  with an inverse, and what it does to the suffix limitation.
 
 ## Problem 1 — arithmetic that lives in the embedding
 
@@ -65,3 +67,24 @@ the released codec does at R=32* — half the projection — while leaving every
 already fits bit-identical.
 
 See [`kronbudget/README.md`](kronbudget/README.md).
+
+## Problem 4 — each character a wave
+
+A sum of per-character waves is order-blind, so position has to enter through phase, and once
+it does the construction is Fourier Holographic Reduced Representations: a fixed unit-modulus
+phasor per byte value, position as a phase rotation, a word as the sum. `D = 2N` with
+`N = 4096` matches the released `D = 8192` exactly.
+
+`D` no longer depends on length, so there is no budget to crop — recovery is exact while
+`L ≤ N/16`, which at the released width is 256 bytes against the shipped 32, decaying
+gracefully rather than falling off a cliff. Two expectations died in the measurement: fp16
+costs nothing (crosstalk dominates rounding by orders of magnitude), and the byte codec's
+short-token locality turns out to be mostly an artifact of its z-normalisation.
+
+On the suffix limitation the paper calls structural, the honest result is narrower than the
+obvious one: plain cosine fails for the Fourier codec too. What fixes it is shift
+equivariance — prepending `k` bytes multiplies the whole code by `ψ^k`, so aligning two words
+is one elementwise multiply on the code, recovering 0.62–0.73 on suffix families while leaving
+prefix families untouched.
+
+See [`kronfourier/README.md`](kronfourier/README.md).

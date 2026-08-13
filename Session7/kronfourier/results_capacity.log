@@ -1,0 +1,25 @@
+device=cuda  phasors and positions fixed by seed, nothing trained
+
+per-byte recovery rate, random tokens, 64 trials
+N (D=2N)          L=8     L=32     L=64    L=128    L=256    L=512   L=1024
+---------------------------------------------------------------------------
+64   (  128)     0.902    0.236    0.093    0.046    0.024    0.014    0.010
+128  (  256)     0.998    0.504    0.208    0.092    0.044    0.024    0.014
+256  (  512)     1.000    0.877    0.521    0.225    0.089    0.042    0.023
+512  ( 1024)     1.000    0.995    0.866    0.501    0.222    0.095    0.045
+1024 ( 2048)     1.000    1.000    0.995    0.864    0.506    0.222    0.093
+2048 ( 4096)     1.000    1.000    1.000    0.997    0.863    0.504    0.220
+4096 ( 8192)     1.000    1.000    1.000    1.000    0.996    0.865    0.504
+  the byte codec is 1.000 up to pos_dim and 0.000 past it, at D = 256*pos_dim
+
+whole-token round-trip on real tokens (session2-bpe), N=4096 (D=8192 = released D)
+  L <= 32 (fits the byte codec)    n= 300   FHRR  100.0%   byte codec  100.0%
+  L >  32 (byte codec crops)       n= 300   FHRR  100.0%   byte codec    0.0%
+
+precision: per-byte recovery with the CODE cast, tables kept fp32 (N=256,
+chosen because N=4096 is saturated -- a comfortable code hides precision loss)
+dtype           L=8     L=32     L=64    L=128    L=256    L=512   L=1024
+-------------------------------------------------------------------------
+fp32          1.000    0.877    0.521    0.225    0.089    0.042    0.023
+bf16          1.000    0.877    0.521    0.225    0.089    0.042    0.023
+fp16          1.000    0.877    0.521    0.225    0.089    0.042    0.023

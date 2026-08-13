@@ -1,0 +1,30 @@
+session2-bpe: 10,000 tokens   byte codec D=8192   FHRR D=8192
+
+identification: top-1 retrieval against the whole set, relative Gaussian noise
+codec               0%        1%        5%       10%       20%       50%
+------------------------------------------------------------------------
+byte            0.9969    0.9969    0.9965    0.9753    0.5357    0.0200
+byte-raw        0.9969    0.9969    0.9964    0.9753    0.5347    0.0201
+fhrr            1.0000    1.0000    0.9973    0.9726    0.5269    0.0199
+
+locality: Spearman(cosine, -byte edit distance)
+codec            L <= 32      L > 32
+------------------------------------
+byte               0.208       0.487
+byte-raw           0.023       0.496
+fhrr               0.066       0.578
+
+word families: cosine between the two codes
+pair                          byte codec      FHRR    FHRR aligned
+------------------------------------------------------------------
+-- shared prefix
+  compute/commute                 0.8570    0.8599      0.8599 (k=+0)
+  train/training                  0.7904    0.7975      0.7975 (k=+0)
+  train/trainer                   0.8451    0.8495      0.8495 (k=+0)
+  nation/national                 0.8659    0.8664      0.8664 (k=+0)
+-- shared suffix
+  nation/creation                -0.0008    0.0227      0.7257 (k=-2)
+  separate/operate               -0.0009    0.0132      0.6765 (k=+1)
+  training/running               -0.0009    0.0040      0.6785 (k=+1)
+  nation/information             -0.0010    0.0164      0.6211 (k=-5)
+  every k above equals the true offset between the shared substrings (asserted)

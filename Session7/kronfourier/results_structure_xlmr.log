@@ -1,0 +1,29 @@
+xlm-roberta-base: 20,000 tokens   byte codec D=8192   FHRR D=8192
+
+identification: top-1 retrieval against the whole set, relative Gaussian noise
+codec               0%        1%        5%       10%       20%       50%
+------------------------------------------------------------------------
+byte            1.0000    1.0000    1.0000    0.9981    0.6836    0.0176
+byte-raw        1.0000    1.0000    1.0000    0.9981    0.6826    0.0177
+fhrr            1.0000    1.0000    0.9999    0.9949    0.6704    0.0194
+
+locality: Spearman(cosine, -byte edit distance)
+codec            L <= 32      L > 32
+------------------------------------
+byte               0.361       0.455
+byte-raw           0.146       0.470
+fhrr               0.133       0.364
+
+word families: cosine between the two codes
+pair                          byte codec      FHRR    FHRR aligned
+------------------------------------------------------------------
+-- shared prefix
+  compute/commute                 0.8570    0.8599      0.8599 (k=+0)
+  train/training                  0.7904    0.7975      0.7975 (k=+0)
+  train/trainer                   0.8451    0.8495      0.8495 (k=+0)
+  nation/national                 0.8659    0.8664      0.8664 (k=+0)
+-- shared suffix
+  nation/creation                -0.0008    0.0227      0.7257 (k=-2)
+  separate/operate               -0.0009    0.0132      0.6765 (k=+1)
+  training/running               -0.0009    0.0040      0.6785 (k=+1)
+  nation/information             -0.0010    0.0164      0.6211 (k=-5)
