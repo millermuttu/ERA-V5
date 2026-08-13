@@ -1,0 +1,14 @@
+device=cuda  31,448 train tokens, vocab 10,000, seq=64, 2500 steps x 3 seeds
+val tokens: kn=210  te=704  hi=2,979  en=3,970
+
+arm                proj collided  ambig            kn            te            hi            en     ambig ctx
+-------------------------------------------------------------------------------------------------------------
+16:trunc          0.79M    1,609    243   11.253±0.16    9.590±0.07    7.120±0.00    6.999±0.04    9.111±0.02
+16:fit-ends       0.79M      169    243   11.159±0.04    9.580±0.03    7.116±0.04    6.981±0.03    9.057±0.07
+16:fit-wrap       0.79M        0    243   11.097±0.08    9.511±0.04    7.105±0.02    6.992±0.05    8.929±0.10
+16:fit-rel        0.79M        0    243   11.020±0.10    9.623±0.05    7.173±0.02    6.965±0.05    9.096±0.04
+32:trunc          1.57M       57      1   11.257±0.10    9.772±0.02    7.276±0.01    7.050±0.03   10.256±1.18
+32:fit-ends       1.57M        2      1   11.233±0.08    9.718±0.02    7.277±0.01    7.053±0.03    8.413±0.89
+
+val cross-entropy, lower is better. 'ambig' = val positions whose preceding token
+is one the scheme cannot tell apart from another; 0 means the scheme has no such token.

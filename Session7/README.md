@@ -17,6 +17,8 @@ Pick one of five open "Kronecker V2" problems, solve it, and prove it with code.
   what is already published against each, and where the genuine openings are.
 - [`kronmath/`](kronmath/) — **Problem 1**, mathematical structure in embeddings.
 - [`kronmm/`](kronmm/) — **Problem 2**, one Kronecker codec for text, images and audio.
+- [`kronbudget/`](kronbudget/) — **Problem 3**, the position budget: the collision count the
+  lesson asks for, and a role map that removes it.
 
 ## Problem 1 — arithmetic that lives in the embedding
 
@@ -46,3 +48,20 @@ the **filler** must match the alphabet type — categorical gets a one-hot, ordi
 smeared bump, without which a +1 brightness shift is as distant as +32.
 
 See [`kronmm/README.md`](kronmm/README.md).
+
+## Problem 3 — the position budget
+
+Section 8 of the lesson asks for one thing outright: encode the vocabulary and count the
+collisions per script. Over four real vocabularies, the released `pos_dim = 32` leaves
+0.01–0.57% of tokens permanently ambiguous, every one of them Indic, Georgian, Sinhala or
+Thai — Latin never collides at any budget — and `pos_dim = 48` removes all of them for 33 M
+parameters.
+
+The premise about waste is wrong, though, and the submission says so: the codec is sparse, so
+`"a"` costs nothing in the vector. `R` buys `D`, and therefore projection width, which makes
+this a global parameter decision rather than a per-token one. Holding `R` fixed and changing
+only the role map, wrapping overflow bytes back to slot `i mod R` collides *less at R=16 than
+the released codec does at R=32* — half the projection — while leaving every token that
+already fits bit-identical.
+
+See [`kronbudget/README.md`](kronbudget/README.md).

@@ -1,0 +1,36 @@
+session2-bpe: 10,000 tokens
+
+exact round-trip decode      fits budget        overflows
+--------------------------------------------------------------
+R=16  trunc          100.0% of 7,634      0.0% of 2,366
+R=16  fit-ends       100.0% of 7,634      0.0% of 2,366
+R=16  fit-wrap       100.0% of 7,634      0.0% of 2,366
+R=16  fit-rel        100.0% of 7,634      0.0% of 2,366
+R=16  rel-always      11.7% of 7,634      0.0% of 2,366
+
+R=32  trunc          100.0% of 9,690      0.0% of   310
+R=32  fit-ends       100.0% of 9,690      0.0% of   310
+R=32  fit-wrap       100.0% of 9,690      0.0% of   310
+R=32  fit-rel        100.0% of 9,690      0.0% of   310
+R=32  rel-always       2.6% of 9,690      0.0% of   310
+
+locality: Spearman(codec cosine, -byte edit distance)
+scheme               R=16 fits     R=16 overflow         R=32 fits     R=32 overflow
+------------------------------------------------------------------------------------
+trunc                    0.301             0.163             0.261             0.571
+fit-ends                 0.301             0.216             0.261             0.458
+fit-wrap                 0.301             0.250             0.261             0.659
+fit-rel                  0.301             0.238             0.261             0.579
+rel-always               0.261             0.238             0.158             0.579
+  fit-* are bit-identical to trunc on tokens that fit, so those columns must match
+
+the lesson's pair, cosine between the two codes
+  अंतर्राष्ट्रीयकरण  51B   vs   अंतर्राष्ट्रीयता  48B
+scheme            R=16      R=32
+--------------------------------
+trunc           1.0000*    1.0000*
+fit-ends        0.8118     0.7490 
+fit-wrap        0.9361     0.9320 
+fit-rel         0.7689     0.4209 
+rel-always      0.7689     0.4209 
+  * = bit-identical, i.e. the model can never tell them apart

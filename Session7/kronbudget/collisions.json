@@ -1,0 +1,5334 @@
+{
+ "session2-bpe": {
+  "n": 10000,
+  "table": {
+   "trunc": {
+    "16": {
+     "collided": 1609,
+     "bytes_lost": 21192,
+     "per_script": {
+      "KANNADA": {
+       "n": 1813,
+       "collided": 341,
+       "cropped": 597,
+       "bytes_lost": 5464
+      },
+      "TELUGU": {
+       "n": 3404,
+       "collided": 1055,
+       "cropped": 1390,
+       "bytes_lost": 13221
+      },
+      "DEVANAGARI": {
+       "n": 1859,
+       "collided": 213,
+       "cropped": 371,
+       "bytes_lost": 2484
+      },
+      "LATIN": {
+       "n": 2833,
+       "collided": 0,
+       "cropped": 8,
+       "bytes_lost": 23
+      }
+     }
+    },
+    "32": {
+     "collided": 57,
+     "bytes_lost": 1849,
+     "per_script": {
+      "KANNADA": {
+       "n": 1813,
+       "collided": 2,
+       "cropped": 84,
+       "bytes_lost": 509
+      },
+      "TELUGU": {
+       "n": 3404,
+       "collided": 49,
+       "cropped": 211,
+       "bytes_lost": 1286
+      },
+      "DEVANAGARI": {
+       "n": 1859,
+       "collided": 6,
+       "cropped": 15,
+       "bytes_lost": 54
+      },
+      "LATIN": {
+       "n": 2833,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    },
+    "48": {
+     "collided": 0,
+     "bytes_lost": 119,
+     "per_script": {
+      "LATIN": {
+       "n": 2833,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "DEVANAGARI": {
+       "n": 1859,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TELUGU": {
+       "n": 3404,
+       "collided": 0,
+       "cropped": 13,
+       "bytes_lost": 88
+      },
+      "KANNADA": {
+       "n": 1813,
+       "collided": 0,
+       "cropped": 5,
+       "bytes_lost": 31
+      }
+     }
+    },
+    "64": {
+     "collided": 0,
+     "bytes_lost": 10,
+     "per_script": {
+      "LATIN": {
+       "n": 2833,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "DEVANAGARI": {
+       "n": 1859,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TELUGU": {
+       "n": 3404,
+       "collided": 0,
+       "cropped": 2,
+       "bytes_lost": 10
+      },
+      "KANNADA": {
+       "n": 1813,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    }
+   },
+   "fit-ends": {
+    "16": {
+     "collided": 169,
+     "bytes_lost": 21192,
+     "per_script": {
+      "KANNADA": {
+       "n": 1813,
+       "collided": 37,
+       "cropped": 597,
+       "bytes_lost": 5464
+      },
+      "TELUGU": {
+       "n": 3404,
+       "collided": 118,
+       "cropped": 1390,
+       "bytes_lost": 13221
+      },
+      "DEVANAGARI": {
+       "n": 1859,
+       "collided": 14,
+       "cropped": 371,
+       "bytes_lost": 2484
+      },
+      "LATIN": {
+       "n": 2833,
+       "collided": 0,
+       "cropped": 8,
+       "bytes_lost": 23
+      }
+     }
+    },
+    "32": {
+     "collided": 2,
+     "bytes_lost": 1849,
+     "per_script": {
+      "KANNADA": {
+       "n": 1813,
+       "collided": 2,
+       "cropped": 84,
+       "bytes_lost": 509
+      },
+      "LATIN": {
+       "n": 2833,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "DEVANAGARI": {
+       "n": 1859,
+       "collided": 0,
+       "cropped": 15,
+       "bytes_lost": 54
+      },
+      "TELUGU": {
+       "n": 3404,
+       "collided": 0,
+       "cropped": 211,
+       "bytes_lost": 1286
+      }
+     }
+    },
+    "48": {
+     "collided": 0,
+     "bytes_lost": 119,
+     "per_script": {
+      "LATIN": {
+       "n": 2833,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "DEVANAGARI": {
+       "n": 1859,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TELUGU": {
+       "n": 3404,
+       "collided": 0,
+       "cropped": 13,
+       "bytes_lost": 88
+      },
+      "KANNADA": {
+       "n": 1813,
+       "collided": 0,
+       "cropped": 5,
+       "bytes_lost": 31
+      }
+     }
+    },
+    "64": {
+     "collided": 0,
+     "bytes_lost": 10,
+     "per_script": {
+      "LATIN": {
+       "n": 2833,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "DEVANAGARI": {
+       "n": 1859,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TELUGU": {
+       "n": 3404,
+       "collided": 0,
+       "cropped": 2,
+       "bytes_lost": 10
+      },
+      "KANNADA": {
+       "n": 1813,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    }
+   },
+   "fit-wrap": {
+    "16": {
+     "collided": 0,
+     "bytes_lost": 0,
+     "per_script": {
+      "LATIN": {
+       "n": 2833,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "DEVANAGARI": {
+       "n": 1859,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TELUGU": {
+       "n": 3404,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KANNADA": {
+       "n": 1813,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    },
+    "32": {
+     "collided": 0,
+     "bytes_lost": 0,
+     "per_script": {
+      "LATIN": {
+       "n": 2833,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "DEVANAGARI": {
+       "n": 1859,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TELUGU": {
+       "n": 3404,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KANNADA": {
+       "n": 1813,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    },
+    "48": {
+     "collided": 0,
+     "bytes_lost": 0,
+     "per_script": {
+      "LATIN": {
+       "n": 2833,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "DEVANAGARI": {
+       "n": 1859,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TELUGU": {
+       "n": 3404,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KANNADA": {
+       "n": 1813,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    },
+    "64": {
+     "collided": 0,
+     "bytes_lost": 0,
+     "per_script": {
+      "LATIN": {
+       "n": 2833,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "DEVANAGARI": {
+       "n": 1859,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TELUGU": {
+       "n": 3404,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KANNADA": {
+       "n": 1813,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    }
+   },
+   "fit-rel": {
+    "16": {
+     "collided": 0,
+     "bytes_lost": 0,
+     "per_script": {
+      "LATIN": {
+       "n": 2833,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "DEVANAGARI": {
+       "n": 1859,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TELUGU": {
+       "n": 3404,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KANNADA": {
+       "n": 1813,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    },
+    "32": {
+     "collided": 0,
+     "bytes_lost": 0,
+     "per_script": {
+      "LATIN": {
+       "n": 2833,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "DEVANAGARI": {
+       "n": 1859,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TELUGU": {
+       "n": 3404,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KANNADA": {
+       "n": 1813,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    },
+    "48": {
+     "collided": 0,
+     "bytes_lost": 0,
+     "per_script": {
+      "LATIN": {
+       "n": 2833,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "DEVANAGARI": {
+       "n": 1859,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TELUGU": {
+       "n": 3404,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KANNADA": {
+       "n": 1813,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    },
+    "64": {
+     "collided": 0,
+     "bytes_lost": 0,
+     "per_script": {
+      "LATIN": {
+       "n": 2833,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "DEVANAGARI": {
+       "n": 1859,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TELUGU": {
+       "n": 3404,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KANNADA": {
+       "n": 1813,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    }
+   }
+  }
+ },
+ "xlm-roberta-base": {
+  "n": 249997,
+  "table": {
+   "trunc": {
+    "16": {
+     "collided": 9720,
+     "bytes_lost": 128134,
+     "per_script": {
+      "TELUGU": {
+       "n": 3236,
+       "collided": 519,
+       "cropped": 1026,
+       "bytes_lost": 6703
+      },
+      "GEORGIAN": {
+       "n": 3770,
+       "collided": 737,
+       "cropped": 1420,
+       "bytes_lost": 12385
+      },
+      "DEVANAGARI": {
+       "n": 7716,
+       "collided": 901,
+       "cropped": 1978,
+       "bytes_lost": 12264
+      },
+      "GREEK": {
+       "n": 5174,
+       "collided": 326,
+       "cropped": 875,
+       "bytes_lost": 3195
+      },
+      "CYRILLIC": {
+       "n": 31670,
+       "collided": 3293,
+       "cropped": 7089,
+       "bytes_lost": 27024
+      },
+      "MALAYALAM": {
+       "n": 3919,
+       "collided": 884,
+       "cropped": 1427,
+       "bytes_lost": 10709
+      },
+      "BENGALI": {
+       "n": 2496,
+       "collided": 258,
+       "cropped": 663,
+       "bytes_lost": 4882
+      },
+      "SINHALA": {
+       "n": 3322,
+       "collided": 426,
+       "cropped": 706,
+       "bytes_lost": 3805
+      },
+      "TAMIL": {
+       "n": 2628,
+       "collided": 538,
+       "cropped": 958,
+       "bytes_lost": 6613
+      },
+      "LAO": {
+       "n": 1615,
+       "collided": 48,
+       "cropped": 425,
+       "bytes_lost": 2741
+      },
+      "THAI": {
+       "n": 4331,
+       "collided": 421,
+       "cropped": 1720,
+       "bytes_lost": 12663
+      },
+      "ARMENIAN": {
+       "n": 3518,
+       "collided": 289,
+       "cropped": 765,
+       "bytes_lost": 3781
+      },
+      "CJK": {
+       "n": 20556,
+       "collided": 79,
+       "cropped": 281,
+       "bytes_lost": 1298
+      },
+      "GURMUKHI": {
+       "n": 1675,
+       "collided": 52,
+       "cropped": 189,
+       "bytes_lost": 886
+      },
+      "KHMER": {
+       "n": 1957,
+       "collided": 95,
+       "cropped": 579,
+       "bytes_lost": 3851
+      },
+      "MYANMAR": {
+       "n": 2444,
+       "collided": 123,
+       "cropped": 566,
+       "bytes_lost": 4086
+      },
+      "ORIYA": {
+       "n": 1842,
+       "collided": 160,
+       "cropped": 463,
+       "bytes_lost": 2848
+      },
+      "HEBREW": {
+       "n": 5180,
+       "collided": 4,
+       "cropped": 41,
+       "bytes_lost": 80
+      },
+      "KANNADA": {
+       "n": 2773,
+       "collided": 354,
+       "cropped": 784,
+       "bytes_lost": 5134
+      },
+      "GUJARATI": {
+       "n": 2264,
+       "collided": 102,
+       "cropped": 309,
+       "bytes_lost": 1620
+      },
+      "ARABIC": {
+       "n": 14463,
+       "collided": 71,
+       "cropped": 486,
+       "bytes_lost": 989
+      },
+      "ETHIOPIC": {
+       "n": 2972,
+       "collided": 25,
+       "cropped": 97,
+       "bytes_lost": 345
+      },
+      "LATIN": {
+       "n": 112813,
+       "collided": 15,
+       "cropped": 99,
+       "bytes_lost": 165
+      },
+      "HANGUL": {
+       "n": 5413,
+       "collided": 0,
+       "cropped": 18,
+       "bytes_lost": 67
+      },
+      "SYMBOL": {
+       "n": 1955,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    },
+    "32": {
+     "collided": 103,
+     "bytes_lost": 4041,
+     "per_script": {
+      "MALAYALAM": {
+       "n": 3919,
+       "collided": 20,
+       "cropped": 119,
+       "bytes_lost": 538
+      },
+      "SINHALA": {
+       "n": 3322,
+       "collided": 5,
+       "cropped": 13,
+       "bytes_lost": 65
+      },
+      "THAI": {
+       "n": 4331,
+       "collided": 6,
+       "cropped": 183,
+       "bytes_lost": 967
+      },
+      "GEORGIAN": {
+       "n": 3770,
+       "collided": 54,
+       "cropped": 157,
+       "bytes_lost": 714
+      },
+      "KANNADA": {
+       "n": 2773,
+       "collided": 4,
+       "cropped": 33,
+       "bytes_lost": 138
+      },
+      "DEVANAGARI": {
+       "n": 7716,
+       "collided": 6,
+       "cropped": 62,
+       "bytes_lost": 282
+      },
+      "KHMER": {
+       "n": 1957,
+       "collided": 2,
+       "cropped": 48,
+       "bytes_lost": 230
+      },
+      "BENGALI": {
+       "n": 2496,
+       "collided": 4,
+       "cropped": 42,
+       "bytes_lost": 202
+      },
+      "ORIYA": {
+       "n": 1842,
+       "collided": 2,
+       "cropped": 12,
+       "bytes_lost": 84
+      },
+      "LATIN": {
+       "n": 112813,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CYRILLIC": {
+       "n": 31670,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARABIC": {
+       "n": 14463,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CJK": {
+       "n": 20556,
+       "collided": 0,
+       "cropped": 7,
+       "bytes_lost": 43
+      },
+      "HEBREW": {
+       "n": 5180,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARMENIAN": {
+       "n": 3518,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TELUGU": {
+       "n": 3236,
+       "collided": 0,
+       "cropped": 36,
+       "bytes_lost": 127
+      },
+      "GREEK": {
+       "n": 5174,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "LAO": {
+       "n": 1615,
+       "collided": 0,
+       "cropped": 26,
+       "bytes_lost": 158
+      },
+      "TAMIL": {
+       "n": 2628,
+       "collided": 0,
+       "cropped": 48,
+       "bytes_lost": 196
+      },
+      "HANGUL": {
+       "n": 5413,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GURMUKHI": {
+       "n": 1675,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MYANMAR": {
+       "n": 2444,
+       "collided": 0,
+       "cropped": 48,
+       "bytes_lost": 278
+      },
+      "ETHIOPIC": {
+       "n": 2972,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GUJARATI": {
+       "n": 2264,
+       "collided": 0,
+       "cropped": 5,
+       "bytes_lost": 19
+      },
+      "SYMBOL": {
+       "n": 1955,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    },
+    "48": {
+     "collided": 0,
+     "bytes_lost": 0,
+     "per_script": {
+      "LATIN": {
+       "n": 112813,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CYRILLIC": {
+       "n": 31670,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARABIC": {
+       "n": 14463,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GEORGIAN": {
+       "n": 3770,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CJK": {
+       "n": 20556,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SINHALA": {
+       "n": 3322,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HEBREW": {
+       "n": 5180,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARMENIAN": {
+       "n": 3518,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "THAI": {
+       "n": 4331,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TELUGU": {
+       "n": 3236,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GREEK": {
+       "n": 5174,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "DEVANAGARI": {
+       "n": 7716,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "LAO": {
+       "n": 1615,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KANNADA": {
+       "n": 2773,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TAMIL": {
+       "n": 2628,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HANGUL": {
+       "n": 5413,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GURMUKHI": {
+       "n": 1675,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "BENGALI": {
+       "n": 2496,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MALAYALAM": {
+       "n": 3919,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ORIYA": {
+       "n": 1842,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MYANMAR": {
+       "n": 2444,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KHMER": {
+       "n": 1957,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ETHIOPIC": {
+       "n": 2972,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GUJARATI": {
+       "n": 2264,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SYMBOL": {
+       "n": 1955,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    },
+    "64": {
+     "collided": 0,
+     "bytes_lost": 0,
+     "per_script": {
+      "LATIN": {
+       "n": 112813,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CYRILLIC": {
+       "n": 31670,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARABIC": {
+       "n": 14463,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GEORGIAN": {
+       "n": 3770,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CJK": {
+       "n": 20556,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SINHALA": {
+       "n": 3322,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HEBREW": {
+       "n": 5180,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARMENIAN": {
+       "n": 3518,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "THAI": {
+       "n": 4331,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TELUGU": {
+       "n": 3236,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GREEK": {
+       "n": 5174,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "DEVANAGARI": {
+       "n": 7716,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "LAO": {
+       "n": 1615,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KANNADA": {
+       "n": 2773,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TAMIL": {
+       "n": 2628,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HANGUL": {
+       "n": 5413,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GURMUKHI": {
+       "n": 1675,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "BENGALI": {
+       "n": 2496,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MALAYALAM": {
+       "n": 3919,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ORIYA": {
+       "n": 1842,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MYANMAR": {
+       "n": 2444,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KHMER": {
+       "n": 1957,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ETHIOPIC": {
+       "n": 2972,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GUJARATI": {
+       "n": 2264,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SYMBOL": {
+       "n": 1955,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    }
+   },
+   "fit-ends": {
+    "16": {
+     "collided": 1541,
+     "bytes_lost": 128134,
+     "per_script": {
+      "GEORGIAN": {
+       "n": 3770,
+       "collided": 241,
+       "cropped": 1420,
+       "bytes_lost": 12385
+      },
+      "CYRILLIC": {
+       "n": 31670,
+       "collided": 329,
+       "cropped": 7089,
+       "bytes_lost": 27024
+      },
+      "TAMIL": {
+       "n": 2628,
+       "collided": 100,
+       "cropped": 958,
+       "bytes_lost": 6613
+      },
+      "MALAYALAM": {
+       "n": 3919,
+       "collided": 160,
+       "cropped": 1427,
+       "bytes_lost": 10709
+      },
+      "TELUGU": {
+       "n": 3236,
+       "collided": 100,
+       "cropped": 1026,
+       "bytes_lost": 6703
+      },
+      "MYANMAR": {
+       "n": 2444,
+       "collided": 29,
+       "cropped": 566,
+       "bytes_lost": 4086
+      },
+      "THAI": {
+       "n": 4331,
+       "collided": 108,
+       "cropped": 1720,
+       "bytes_lost": 12663
+      },
+      "DEVANAGARI": {
+       "n": 7716,
+       "collided": 188,
+       "cropped": 1978,
+       "bytes_lost": 12264
+      },
+      "CJK": {
+       "n": 20556,
+       "collided": 36,
+       "cropped": 281,
+       "bytes_lost": 1298
+      },
+      "GUJARATI": {
+       "n": 2264,
+       "collided": 6,
+       "cropped": 309,
+       "bytes_lost": 1620
+      },
+      "SINHALA": {
+       "n": 3322,
+       "collided": 45,
+       "cropped": 706,
+       "bytes_lost": 3805
+      },
+      "KANNADA": {
+       "n": 2773,
+       "collided": 38,
+       "cropped": 784,
+       "bytes_lost": 5134
+      },
+      "BENGALI": {
+       "n": 2496,
+       "collided": 32,
+       "cropped": 663,
+       "bytes_lost": 4882
+      },
+      "GURMUKHI": {
+       "n": 1675,
+       "collided": 6,
+       "cropped": 189,
+       "bytes_lost": 886
+      },
+      "ORIYA": {
+       "n": 1842,
+       "collided": 33,
+       "cropped": 463,
+       "bytes_lost": 2848
+      },
+      "GREEK": {
+       "n": 5174,
+       "collided": 12,
+       "cropped": 875,
+       "bytes_lost": 3195
+      },
+      "ARMENIAN": {
+       "n": 3518,
+       "collided": 27,
+       "cropped": 765,
+       "bytes_lost": 3781
+      },
+      "LAO": {
+       "n": 1615,
+       "collided": 10,
+       "cropped": 425,
+       "bytes_lost": 2741
+      },
+      "KHMER": {
+       "n": 1957,
+       "collided": 24,
+       "cropped": 579,
+       "bytes_lost": 3851
+      },
+      "ETHIOPIC": {
+       "n": 2972,
+       "collided": 4,
+       "cropped": 97,
+       "bytes_lost": 345
+      },
+      "ARABIC": {
+       "n": 14463,
+       "collided": 13,
+       "cropped": 486,
+       "bytes_lost": 989
+      },
+      "LATIN": {
+       "n": 112813,
+       "collided": 0,
+       "cropped": 99,
+       "bytes_lost": 165
+      },
+      "HEBREW": {
+       "n": 5180,
+       "collided": 0,
+       "cropped": 41,
+       "bytes_lost": 80
+      },
+      "HANGUL": {
+       "n": 5413,
+       "collided": 0,
+       "cropped": 18,
+       "bytes_lost": 67
+      },
+      "SYMBOL": {
+       "n": 1955,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    },
+    "32": {
+     "collided": 2,
+     "bytes_lost": 4041,
+     "per_script": {
+      "DEVANAGARI": {
+       "n": 7716,
+       "collided": 2,
+       "cropped": 62,
+       "bytes_lost": 282
+      },
+      "LATIN": {
+       "n": 112813,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CYRILLIC": {
+       "n": 31670,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARABIC": {
+       "n": 14463,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GEORGIAN": {
+       "n": 3770,
+       "collided": 0,
+       "cropped": 157,
+       "bytes_lost": 714
+      },
+      "CJK": {
+       "n": 20556,
+       "collided": 0,
+       "cropped": 7,
+       "bytes_lost": 43
+      },
+      "SINHALA": {
+       "n": 3322,
+       "collided": 0,
+       "cropped": 13,
+       "bytes_lost": 65
+      },
+      "HEBREW": {
+       "n": 5180,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARMENIAN": {
+       "n": 3518,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "THAI": {
+       "n": 4331,
+       "collided": 0,
+       "cropped": 183,
+       "bytes_lost": 967
+      },
+      "TELUGU": {
+       "n": 3236,
+       "collided": 0,
+       "cropped": 36,
+       "bytes_lost": 127
+      },
+      "GREEK": {
+       "n": 5174,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "LAO": {
+       "n": 1615,
+       "collided": 0,
+       "cropped": 26,
+       "bytes_lost": 158
+      },
+      "KANNADA": {
+       "n": 2773,
+       "collided": 0,
+       "cropped": 33,
+       "bytes_lost": 138
+      },
+      "TAMIL": {
+       "n": 2628,
+       "collided": 0,
+       "cropped": 48,
+       "bytes_lost": 196
+      },
+      "HANGUL": {
+       "n": 5413,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GURMUKHI": {
+       "n": 1675,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "BENGALI": {
+       "n": 2496,
+       "collided": 0,
+       "cropped": 42,
+       "bytes_lost": 202
+      },
+      "MALAYALAM": {
+       "n": 3919,
+       "collided": 0,
+       "cropped": 119,
+       "bytes_lost": 538
+      },
+      "ORIYA": {
+       "n": 1842,
+       "collided": 0,
+       "cropped": 12,
+       "bytes_lost": 84
+      },
+      "MYANMAR": {
+       "n": 2444,
+       "collided": 0,
+       "cropped": 48,
+       "bytes_lost": 278
+      },
+      "KHMER": {
+       "n": 1957,
+       "collided": 0,
+       "cropped": 48,
+       "bytes_lost": 230
+      },
+      "ETHIOPIC": {
+       "n": 2972,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GUJARATI": {
+       "n": 2264,
+       "collided": 0,
+       "cropped": 5,
+       "bytes_lost": 19
+      },
+      "SYMBOL": {
+       "n": 1955,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    },
+    "48": {
+     "collided": 0,
+     "bytes_lost": 0,
+     "per_script": {
+      "LATIN": {
+       "n": 112813,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CYRILLIC": {
+       "n": 31670,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARABIC": {
+       "n": 14463,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GEORGIAN": {
+       "n": 3770,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CJK": {
+       "n": 20556,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SINHALA": {
+       "n": 3322,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HEBREW": {
+       "n": 5180,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARMENIAN": {
+       "n": 3518,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "THAI": {
+       "n": 4331,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TELUGU": {
+       "n": 3236,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GREEK": {
+       "n": 5174,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "DEVANAGARI": {
+       "n": 7716,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "LAO": {
+       "n": 1615,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KANNADA": {
+       "n": 2773,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TAMIL": {
+       "n": 2628,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HANGUL": {
+       "n": 5413,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GURMUKHI": {
+       "n": 1675,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "BENGALI": {
+       "n": 2496,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MALAYALAM": {
+       "n": 3919,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ORIYA": {
+       "n": 1842,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MYANMAR": {
+       "n": 2444,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KHMER": {
+       "n": 1957,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ETHIOPIC": {
+       "n": 2972,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GUJARATI": {
+       "n": 2264,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SYMBOL": {
+       "n": 1955,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    },
+    "64": {
+     "collided": 0,
+     "bytes_lost": 0,
+     "per_script": {
+      "LATIN": {
+       "n": 112813,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CYRILLIC": {
+       "n": 31670,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARABIC": {
+       "n": 14463,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GEORGIAN": {
+       "n": 3770,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CJK": {
+       "n": 20556,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SINHALA": {
+       "n": 3322,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HEBREW": {
+       "n": 5180,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARMENIAN": {
+       "n": 3518,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "THAI": {
+       "n": 4331,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TELUGU": {
+       "n": 3236,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GREEK": {
+       "n": 5174,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "DEVANAGARI": {
+       "n": 7716,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "LAO": {
+       "n": 1615,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KANNADA": {
+       "n": 2773,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TAMIL": {
+       "n": 2628,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HANGUL": {
+       "n": 5413,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GURMUKHI": {
+       "n": 1675,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "BENGALI": {
+       "n": 2496,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MALAYALAM": {
+       "n": 3919,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ORIYA": {
+       "n": 1842,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MYANMAR": {
+       "n": 2444,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KHMER": {
+       "n": 1957,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ETHIOPIC": {
+       "n": 2972,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GUJARATI": {
+       "n": 2264,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SYMBOL": {
+       "n": 1955,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    }
+   },
+   "fit-wrap": {
+    "16": {
+     "collided": 0,
+     "bytes_lost": 0,
+     "per_script": {
+      "LATIN": {
+       "n": 112813,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CYRILLIC": {
+       "n": 31670,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARABIC": {
+       "n": 14463,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GEORGIAN": {
+       "n": 3770,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CJK": {
+       "n": 20556,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SINHALA": {
+       "n": 3322,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HEBREW": {
+       "n": 5180,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARMENIAN": {
+       "n": 3518,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "THAI": {
+       "n": 4331,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TELUGU": {
+       "n": 3236,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GREEK": {
+       "n": 5174,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "DEVANAGARI": {
+       "n": 7716,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "LAO": {
+       "n": 1615,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KANNADA": {
+       "n": 2773,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TAMIL": {
+       "n": 2628,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HANGUL": {
+       "n": 5413,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GURMUKHI": {
+       "n": 1675,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "BENGALI": {
+       "n": 2496,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MALAYALAM": {
+       "n": 3919,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ORIYA": {
+       "n": 1842,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MYANMAR": {
+       "n": 2444,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KHMER": {
+       "n": 1957,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ETHIOPIC": {
+       "n": 2972,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GUJARATI": {
+       "n": 2264,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SYMBOL": {
+       "n": 1955,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    },
+    "32": {
+     "collided": 0,
+     "bytes_lost": 0,
+     "per_script": {
+      "LATIN": {
+       "n": 112813,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CYRILLIC": {
+       "n": 31670,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARABIC": {
+       "n": 14463,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GEORGIAN": {
+       "n": 3770,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CJK": {
+       "n": 20556,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SINHALA": {
+       "n": 3322,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HEBREW": {
+       "n": 5180,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARMENIAN": {
+       "n": 3518,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "THAI": {
+       "n": 4331,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TELUGU": {
+       "n": 3236,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GREEK": {
+       "n": 5174,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "DEVANAGARI": {
+       "n": 7716,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "LAO": {
+       "n": 1615,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KANNADA": {
+       "n": 2773,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TAMIL": {
+       "n": 2628,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HANGUL": {
+       "n": 5413,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GURMUKHI": {
+       "n": 1675,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "BENGALI": {
+       "n": 2496,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MALAYALAM": {
+       "n": 3919,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ORIYA": {
+       "n": 1842,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MYANMAR": {
+       "n": 2444,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KHMER": {
+       "n": 1957,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ETHIOPIC": {
+       "n": 2972,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GUJARATI": {
+       "n": 2264,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SYMBOL": {
+       "n": 1955,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    },
+    "48": {
+     "collided": 0,
+     "bytes_lost": 0,
+     "per_script": {
+      "LATIN": {
+       "n": 112813,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CYRILLIC": {
+       "n": 31670,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARABIC": {
+       "n": 14463,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GEORGIAN": {
+       "n": 3770,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CJK": {
+       "n": 20556,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SINHALA": {
+       "n": 3322,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HEBREW": {
+       "n": 5180,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARMENIAN": {
+       "n": 3518,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "THAI": {
+       "n": 4331,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TELUGU": {
+       "n": 3236,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GREEK": {
+       "n": 5174,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "DEVANAGARI": {
+       "n": 7716,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "LAO": {
+       "n": 1615,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KANNADA": {
+       "n": 2773,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TAMIL": {
+       "n": 2628,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HANGUL": {
+       "n": 5413,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GURMUKHI": {
+       "n": 1675,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "BENGALI": {
+       "n": 2496,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MALAYALAM": {
+       "n": 3919,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ORIYA": {
+       "n": 1842,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MYANMAR": {
+       "n": 2444,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KHMER": {
+       "n": 1957,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ETHIOPIC": {
+       "n": 2972,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GUJARATI": {
+       "n": 2264,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SYMBOL": {
+       "n": 1955,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    },
+    "64": {
+     "collided": 0,
+     "bytes_lost": 0,
+     "per_script": {
+      "LATIN": {
+       "n": 112813,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CYRILLIC": {
+       "n": 31670,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARABIC": {
+       "n": 14463,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GEORGIAN": {
+       "n": 3770,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CJK": {
+       "n": 20556,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SINHALA": {
+       "n": 3322,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HEBREW": {
+       "n": 5180,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARMENIAN": {
+       "n": 3518,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "THAI": {
+       "n": 4331,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TELUGU": {
+       "n": 3236,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GREEK": {
+       "n": 5174,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "DEVANAGARI": {
+       "n": 7716,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "LAO": {
+       "n": 1615,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KANNADA": {
+       "n": 2773,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TAMIL": {
+       "n": 2628,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HANGUL": {
+       "n": 5413,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GURMUKHI": {
+       "n": 1675,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "BENGALI": {
+       "n": 2496,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MALAYALAM": {
+       "n": 3919,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ORIYA": {
+       "n": 1842,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MYANMAR": {
+       "n": 2444,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KHMER": {
+       "n": 1957,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ETHIOPIC": {
+       "n": 2972,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GUJARATI": {
+       "n": 2264,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SYMBOL": {
+       "n": 1955,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    }
+   },
+   "fit-rel": {
+    "16": {
+     "collided": 0,
+     "bytes_lost": 0,
+     "per_script": {
+      "LATIN": {
+       "n": 112813,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CYRILLIC": {
+       "n": 31670,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARABIC": {
+       "n": 14463,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GEORGIAN": {
+       "n": 3770,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CJK": {
+       "n": 20556,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SINHALA": {
+       "n": 3322,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HEBREW": {
+       "n": 5180,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARMENIAN": {
+       "n": 3518,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "THAI": {
+       "n": 4331,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TELUGU": {
+       "n": 3236,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GREEK": {
+       "n": 5174,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "DEVANAGARI": {
+       "n": 7716,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "LAO": {
+       "n": 1615,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KANNADA": {
+       "n": 2773,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TAMIL": {
+       "n": 2628,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HANGUL": {
+       "n": 5413,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GURMUKHI": {
+       "n": 1675,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "BENGALI": {
+       "n": 2496,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MALAYALAM": {
+       "n": 3919,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ORIYA": {
+       "n": 1842,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MYANMAR": {
+       "n": 2444,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KHMER": {
+       "n": 1957,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ETHIOPIC": {
+       "n": 2972,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GUJARATI": {
+       "n": 2264,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SYMBOL": {
+       "n": 1955,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    },
+    "32": {
+     "collided": 0,
+     "bytes_lost": 0,
+     "per_script": {
+      "LATIN": {
+       "n": 112813,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CYRILLIC": {
+       "n": 31670,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARABIC": {
+       "n": 14463,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GEORGIAN": {
+       "n": 3770,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CJK": {
+       "n": 20556,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SINHALA": {
+       "n": 3322,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HEBREW": {
+       "n": 5180,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARMENIAN": {
+       "n": 3518,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "THAI": {
+       "n": 4331,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TELUGU": {
+       "n": 3236,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GREEK": {
+       "n": 5174,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "DEVANAGARI": {
+       "n": 7716,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "LAO": {
+       "n": 1615,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KANNADA": {
+       "n": 2773,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TAMIL": {
+       "n": 2628,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HANGUL": {
+       "n": 5413,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GURMUKHI": {
+       "n": 1675,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "BENGALI": {
+       "n": 2496,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MALAYALAM": {
+       "n": 3919,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ORIYA": {
+       "n": 1842,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MYANMAR": {
+       "n": 2444,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KHMER": {
+       "n": 1957,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ETHIOPIC": {
+       "n": 2972,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GUJARATI": {
+       "n": 2264,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SYMBOL": {
+       "n": 1955,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    },
+    "48": {
+     "collided": 0,
+     "bytes_lost": 0,
+     "per_script": {
+      "LATIN": {
+       "n": 112813,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CYRILLIC": {
+       "n": 31670,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARABIC": {
+       "n": 14463,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GEORGIAN": {
+       "n": 3770,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CJK": {
+       "n": 20556,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SINHALA": {
+       "n": 3322,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HEBREW": {
+       "n": 5180,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARMENIAN": {
+       "n": 3518,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "THAI": {
+       "n": 4331,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TELUGU": {
+       "n": 3236,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GREEK": {
+       "n": 5174,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "DEVANAGARI": {
+       "n": 7716,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "LAO": {
+       "n": 1615,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KANNADA": {
+       "n": 2773,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TAMIL": {
+       "n": 2628,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HANGUL": {
+       "n": 5413,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GURMUKHI": {
+       "n": 1675,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "BENGALI": {
+       "n": 2496,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MALAYALAM": {
+       "n": 3919,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ORIYA": {
+       "n": 1842,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MYANMAR": {
+       "n": 2444,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KHMER": {
+       "n": 1957,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ETHIOPIC": {
+       "n": 2972,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GUJARATI": {
+       "n": 2264,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SYMBOL": {
+       "n": 1955,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    },
+    "64": {
+     "collided": 0,
+     "bytes_lost": 0,
+     "per_script": {
+      "LATIN": {
+       "n": 112813,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CYRILLIC": {
+       "n": 31670,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARABIC": {
+       "n": 14463,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GEORGIAN": {
+       "n": 3770,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CJK": {
+       "n": 20556,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SINHALA": {
+       "n": 3322,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HEBREW": {
+       "n": 5180,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARMENIAN": {
+       "n": 3518,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "THAI": {
+       "n": 4331,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TELUGU": {
+       "n": 3236,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GREEK": {
+       "n": 5174,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "DEVANAGARI": {
+       "n": 7716,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "LAO": {
+       "n": 1615,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KANNADA": {
+       "n": 2773,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TAMIL": {
+       "n": 2628,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HANGUL": {
+       "n": 5413,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GURMUKHI": {
+       "n": 1675,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "BENGALI": {
+       "n": 2496,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MALAYALAM": {
+       "n": 3919,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ORIYA": {
+       "n": 1842,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MYANMAR": {
+       "n": 2444,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KHMER": {
+       "n": 1957,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ETHIOPIC": {
+       "n": 2972,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GUJARATI": {
+       "n": 2264,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SYMBOL": {
+       "n": 1955,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    }
+   }
+  }
+ },
+ "Qwen/Qwen2.5-0.5B-Instruct": {
+  "n": 151651,
+  "table": {
+   "trunc": {
+    "16": {
+     "collided": 749,
+     "bytes_lost": 18020,
+     "per_script": {
+      "LATIN": {
+       "n": 148946,
+       "collided": 651,
+       "cropped": 1827,
+       "bytes_lost": 14400
+      },
+      "SYMBOL": {
+       "n": 2579,
+       "collided": 98,
+       "cropped": 91,
+       "bytes_lost": 3620
+      }
+     }
+    },
+    "32": {
+     "collided": 205,
+     "bytes_lost": 6987,
+     "per_script": {
+      "LATIN": {
+       "n": 148946,
+       "collided": 133,
+       "cropped": 173,
+       "bytes_lost": 4697
+      },
+      "SYMBOL": {
+       "n": 2579,
+       "collided": 72,
+       "cropped": 67,
+       "bytes_lost": 2290
+      }
+     }
+    },
+    "48": {
+     "collided": 160,
+     "bytes_lost": 3905,
+     "per_script": {
+      "LATIN": {
+       "n": 148946,
+       "collided": 104,
+       "cropped": 109,
+       "bytes_lost": 2621
+      },
+      "SYMBOL": {
+       "n": 2579,
+       "collided": 56,
+       "cropped": 56,
+       "bytes_lost": 1284
+      }
+     }
+    },
+    "64": {
+     "collided": 118,
+     "bytes_lost": 1591,
+     "per_script": {
+      "LATIN": {
+       "n": 148946,
+       "collided": 78,
+       "cropped": 84,
+       "bytes_lost": 1095
+      },
+      "SYMBOL": {
+       "n": 2579,
+       "collided": 40,
+       "cropped": 37,
+       "bytes_lost": 496
+      }
+     }
+    }
+   },
+   "fit-ends": {
+    "16": {
+     "collided": 350,
+     "bytes_lost": 18020,
+     "per_script": {
+      "LATIN": {
+       "n": 148946,
+       "collided": 252,
+       "cropped": 1827,
+       "bytes_lost": 14400
+      },
+      "SYMBOL": {
+       "n": 2579,
+       "collided": 98,
+       "cropped": 91,
+       "bytes_lost": 3620
+      }
+     }
+    },
+    "32": {
+     "collided": 202,
+     "bytes_lost": 6987,
+     "per_script": {
+      "LATIN": {
+       "n": 148946,
+       "collided": 130,
+       "cropped": 173,
+       "bytes_lost": 4697
+      },
+      "SYMBOL": {
+       "n": 2579,
+       "collided": 72,
+       "cropped": 67,
+       "bytes_lost": 2290
+      }
+     }
+    },
+    "48": {
+     "collided": 153,
+     "bytes_lost": 3905,
+     "per_script": {
+      "LATIN": {
+       "n": 148946,
+       "collided": 97,
+       "cropped": 109,
+       "bytes_lost": 2621
+      },
+      "SYMBOL": {
+       "n": 2579,
+       "collided": 56,
+       "cropped": 56,
+       "bytes_lost": 1284
+      }
+     }
+    },
+    "64": {
+     "collided": 112,
+     "bytes_lost": 1591,
+     "per_script": {
+      "LATIN": {
+       "n": 148946,
+       "collided": 72,
+       "cropped": 84,
+       "bytes_lost": 1095
+      },
+      "SYMBOL": {
+       "n": 2579,
+       "collided": 40,
+       "cropped": 37,
+       "bytes_lost": 496
+      }
+     }
+    }
+   },
+   "fit-wrap": {
+    "16": {
+     "collided": 52,
+     "bytes_lost": 0,
+     "per_script": {
+      "LATIN": {
+       "n": 148946,
+       "collided": 12,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SYMBOL": {
+       "n": 2579,
+       "collided": 40,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    },
+    "32": {
+     "collided": 21,
+     "bytes_lost": 0,
+     "per_script": {
+      "SYMBOL": {
+       "n": 2579,
+       "collided": 18,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "LATIN": {
+       "n": 148946,
+       "collided": 3,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    },
+    "48": {
+     "collided": 4,
+     "bytes_lost": 0,
+     "per_script": {
+      "SYMBOL": {
+       "n": 2579,
+       "collided": 4,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "LATIN": {
+       "n": 148946,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    },
+    "64": {
+     "collided": 2,
+     "bytes_lost": 0,
+     "per_script": {
+      "LATIN": {
+       "n": 148946,
+       "collided": 2,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SYMBOL": {
+       "n": 2579,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    }
+   },
+   "fit-rel": {
+    "16": {
+     "collided": 48,
+     "bytes_lost": 0,
+     "per_script": {
+      "LATIN": {
+       "n": 148946,
+       "collided": 8,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SYMBOL": {
+       "n": 2579,
+       "collided": 40,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    },
+    "32": {
+     "collided": 21,
+     "bytes_lost": 0,
+     "per_script": {
+      "SYMBOL": {
+       "n": 2579,
+       "collided": 18,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "LATIN": {
+       "n": 148946,
+       "collided": 3,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    },
+    "48": {
+     "collided": 4,
+     "bytes_lost": 0,
+     "per_script": {
+      "SYMBOL": {
+       "n": 2579,
+       "collided": 4,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "LATIN": {
+       "n": 148946,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    },
+    "64": {
+     "collided": 2,
+     "bytes_lost": 0,
+     "per_script": {
+      "LATIN": {
+       "n": 148946,
+       "collided": 2,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SYMBOL": {
+       "n": 2579,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    }
+   }
+  }
+ },
+ "bert-base-multilingual-cased": {
+  "n": 119542,
+  "table": {
+   "trunc": {
+    "16": {
+     "collided": 1541,
+     "bytes_lost": 20979,
+     "per_script": {
+      "CYRILLIC": {
+       "n": 13782,
+       "collided": 948,
+       "cropped": 1745,
+       "bytes_lost": 8218
+      },
+      "BENGALI": {
+       "n": 946,
+       "collided": 33,
+       "cropped": 184,
+       "bytes_lost": 981
+      },
+      "ARMENIAN": {
+       "n": 1222,
+       "collided": 48,
+       "cropped": 173,
+       "bytes_lost": 952
+      },
+      "MALAYALAM": {
+       "n": 553,
+       "collided": 49,
+       "cropped": 138,
+       "bytes_lost": 760
+      },
+      "TELUGU": {
+       "n": 887,
+       "collided": 82,
+       "cropped": 278,
+       "bytes_lost": 1907
+      },
+      "TAMIL": {
+       "n": 830,
+       "collided": 107,
+       "cropped": 341,
+       "bytes_lost": 2538
+      },
+      "GEORGIAN": {
+       "n": 705,
+       "collided": 56,
+       "cropped": 211,
+       "bytes_lost": 1330
+      },
+      "ARABIC": {
+       "n": 4704,
+       "collided": 26,
+       "cropped": 75,
+       "bytes_lost": 252
+      },
+      "DEVANAGARI": {
+       "n": 1846,
+       "collided": 126,
+       "cropped": 417,
+       "bytes_lost": 2253
+      },
+      "HEBREW": {
+       "n": 2474,
+       "collided": 4,
+       "cropped": 11,
+       "bytes_lost": 38
+      },
+      "MYANMAR": {
+       "n": 259,
+       "collided": 4,
+       "cropped": 32,
+       "bytes_lost": 180
+      },
+      "LATIN": {
+       "n": 68942,
+       "collided": 26,
+       "cropped": 74,
+       "bytes_lost": 154
+      },
+      "CJK": {
+       "n": 14848,
+       "collided": 6,
+       "cropped": 44,
+       "bytes_lost": 102
+      },
+      "GUJARATI": {
+       "n": 404,
+       "collided": 2,
+       "cropped": 38,
+       "bytes_lost": 182
+      },
+      "KANNADA": {
+       "n": 653,
+       "collided": 11,
+       "cropped": 108,
+       "bytes_lost": 453
+      },
+      "GREEK": {
+       "n": 1564,
+       "collided": 13,
+       "cropped": 75,
+       "bytes_lost": 308
+      },
+      "HANGUL": {
+       "n": 3179,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SYMBOL": {
+       "n": 520,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GURMUKHI": {
+       "n": 406,
+       "collided": 0,
+       "cropped": 11,
+       "bytes_lost": 38
+      },
+      "THAI": {
+       "n": 370,
+       "collided": 0,
+       "cropped": 49,
+       "bytes_lost": 319
+      }
+     }
+    },
+    "32": {
+     "collided": 10,
+     "bytes_lost": 625,
+     "per_script": {
+      "CYRILLIC": {
+       "n": 13782,
+       "collided": 2,
+       "cropped": 6,
+       "bytes_lost": 12
+      },
+      "TAMIL": {
+       "n": 830,
+       "collided": 4,
+       "cropped": 45,
+       "bytes_lost": 297
+      },
+      "GEORGIAN": {
+       "n": 705,
+       "collided": 4,
+       "cropped": 23,
+       "bytes_lost": 92
+      },
+      "ARABIC": {
+       "n": 4704,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARMENIAN": {
+       "n": 1222,
+       "collided": 0,
+       "cropped": 2,
+       "bytes_lost": 14
+      },
+      "LATIN": {
+       "n": 68942,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CJK": {
+       "n": 14848,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MALAYALAM": {
+       "n": 553,
+       "collided": 0,
+       "cropped": 5,
+       "bytes_lost": 22
+      },
+      "DEVANAGARI": {
+       "n": 1846,
+       "collided": 0,
+       "cropped": 14,
+       "bytes_lost": 41
+      },
+      "GREEK": {
+       "n": 1564,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TELUGU": {
+       "n": 887,
+       "collided": 0,
+       "cropped": 23,
+       "bytes_lost": 98
+      },
+      "HEBREW": {
+       "n": 2474,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HANGUL": {
+       "n": 3179,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KANNADA": {
+       "n": 653,
+       "collided": 0,
+       "cropped": 1,
+       "bytes_lost": 1
+      },
+      "SYMBOL": {
+       "n": 520,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GURMUKHI": {
+       "n": 406,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "BENGALI": {
+       "n": 946,
+       "collided": 0,
+       "cropped": 5,
+       "bytes_lost": 17
+      },
+      "GUJARATI": {
+       "n": 404,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MYANMAR": {
+       "n": 259,
+       "collided": 0,
+       "cropped": 2,
+       "bytes_lost": 8
+      },
+      "THAI": {
+       "n": 370,
+       "collided": 0,
+       "cropped": 5,
+       "bytes_lost": 23
+      }
+     }
+    },
+    "48": {
+     "collided": 0,
+     "bytes_lost": 42,
+     "per_script": {
+      "ARABIC": {
+       "n": 4704,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARMENIAN": {
+       "n": 1222,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CYRILLIC": {
+       "n": 13782,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "LATIN": {
+       "n": 68942,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CJK": {
+       "n": 14848,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TAMIL": {
+       "n": 830,
+       "collided": 0,
+       "cropped": 5,
+       "bytes_lost": 39
+      },
+      "MALAYALAM": {
+       "n": 553,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "DEVANAGARI": {
+       "n": 1846,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GREEK": {
+       "n": 1564,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TELUGU": {
+       "n": 887,
+       "collided": 0,
+       "cropped": 1,
+       "bytes_lost": 3
+      },
+      "HEBREW": {
+       "n": 2474,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HANGUL": {
+       "n": 3179,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GEORGIAN": {
+       "n": 705,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KANNADA": {
+       "n": 653,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SYMBOL": {
+       "n": 520,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GURMUKHI": {
+       "n": 406,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "BENGALI": {
+       "n": 946,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GUJARATI": {
+       "n": 404,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MYANMAR": {
+       "n": 259,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "THAI": {
+       "n": 370,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    },
+    "64": {
+     "collided": 0,
+     "bytes_lost": 0,
+     "per_script": {
+      "ARABIC": {
+       "n": 4704,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARMENIAN": {
+       "n": 1222,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CYRILLIC": {
+       "n": 13782,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "LATIN": {
+       "n": 68942,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CJK": {
+       "n": 14848,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TAMIL": {
+       "n": 830,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MALAYALAM": {
+       "n": 553,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "DEVANAGARI": {
+       "n": 1846,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GREEK": {
+       "n": 1564,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TELUGU": {
+       "n": 887,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HEBREW": {
+       "n": 2474,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HANGUL": {
+       "n": 3179,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GEORGIAN": {
+       "n": 705,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KANNADA": {
+       "n": 653,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SYMBOL": {
+       "n": 520,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GURMUKHI": {
+       "n": 406,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "BENGALI": {
+       "n": 946,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GUJARATI": {
+       "n": 404,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MYANMAR": {
+       "n": 259,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "THAI": {
+       "n": 370,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    }
+   },
+   "fit-ends": {
+    "16": {
+     "collided": 104,
+     "bytes_lost": 20979,
+     "per_script": {
+      "TELUGU": {
+       "n": 887,
+       "collided": 12,
+       "cropped": 278,
+       "bytes_lost": 1907
+      },
+      "ARMENIAN": {
+       "n": 1222,
+       "collided": 2,
+       "cropped": 173,
+       "bytes_lost": 952
+      },
+      "CYRILLIC": {
+       "n": 13782,
+       "collided": 30,
+       "cropped": 1745,
+       "bytes_lost": 8218
+      },
+      "GEORGIAN": {
+       "n": 705,
+       "collided": 6,
+       "cropped": 211,
+       "bytes_lost": 1330
+      },
+      "TAMIL": {
+       "n": 830,
+       "collided": 30,
+       "cropped": 341,
+       "bytes_lost": 2538
+      },
+      "BENGALI": {
+       "n": 946,
+       "collided": 4,
+       "cropped": 184,
+       "bytes_lost": 981
+      },
+      "DEVANAGARI": {
+       "n": 1846,
+       "collided": 14,
+       "cropped": 417,
+       "bytes_lost": 2253
+      },
+      "MALAYALAM": {
+       "n": 553,
+       "collided": 4,
+       "cropped": 138,
+       "bytes_lost": 760
+      },
+      "CJK": {
+       "n": 14848,
+       "collided": 2,
+       "cropped": 44,
+       "bytes_lost": 102
+      },
+      "ARABIC": {
+       "n": 4704,
+       "collided": 0,
+       "cropped": 75,
+       "bytes_lost": 252
+      },
+      "LATIN": {
+       "n": 68942,
+       "collided": 0,
+       "cropped": 74,
+       "bytes_lost": 154
+      },
+      "GREEK": {
+       "n": 1564,
+       "collided": 0,
+       "cropped": 75,
+       "bytes_lost": 308
+      },
+      "HEBREW": {
+       "n": 2474,
+       "collided": 0,
+       "cropped": 11,
+       "bytes_lost": 38
+      },
+      "HANGUL": {
+       "n": 3179,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KANNADA": {
+       "n": 653,
+       "collided": 0,
+       "cropped": 108,
+       "bytes_lost": 453
+      },
+      "SYMBOL": {
+       "n": 520,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GURMUKHI": {
+       "n": 406,
+       "collided": 0,
+       "cropped": 11,
+       "bytes_lost": 38
+      },
+      "GUJARATI": {
+       "n": 404,
+       "collided": 0,
+       "cropped": 38,
+       "bytes_lost": 182
+      },
+      "MYANMAR": {
+       "n": 259,
+       "collided": 0,
+       "cropped": 32,
+       "bytes_lost": 180
+      },
+      "THAI": {
+       "n": 370,
+       "collided": 0,
+       "cropped": 49,
+       "bytes_lost": 319
+      }
+     }
+    },
+    "32": {
+     "collided": 0,
+     "bytes_lost": 625,
+     "per_script": {
+      "ARABIC": {
+       "n": 4704,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARMENIAN": {
+       "n": 1222,
+       "collided": 0,
+       "cropped": 2,
+       "bytes_lost": 14
+      },
+      "CYRILLIC": {
+       "n": 13782,
+       "collided": 0,
+       "cropped": 6,
+       "bytes_lost": 12
+      },
+      "LATIN": {
+       "n": 68942,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CJK": {
+       "n": 14848,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TAMIL": {
+       "n": 830,
+       "collided": 0,
+       "cropped": 45,
+       "bytes_lost": 297
+      },
+      "MALAYALAM": {
+       "n": 553,
+       "collided": 0,
+       "cropped": 5,
+       "bytes_lost": 22
+      },
+      "DEVANAGARI": {
+       "n": 1846,
+       "collided": 0,
+       "cropped": 14,
+       "bytes_lost": 41
+      },
+      "GREEK": {
+       "n": 1564,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TELUGU": {
+       "n": 887,
+       "collided": 0,
+       "cropped": 23,
+       "bytes_lost": 98
+      },
+      "HEBREW": {
+       "n": 2474,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HANGUL": {
+       "n": 3179,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GEORGIAN": {
+       "n": 705,
+       "collided": 0,
+       "cropped": 23,
+       "bytes_lost": 92
+      },
+      "KANNADA": {
+       "n": 653,
+       "collided": 0,
+       "cropped": 1,
+       "bytes_lost": 1
+      },
+      "SYMBOL": {
+       "n": 520,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GURMUKHI": {
+       "n": 406,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "BENGALI": {
+       "n": 946,
+       "collided": 0,
+       "cropped": 5,
+       "bytes_lost": 17
+      },
+      "GUJARATI": {
+       "n": 404,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MYANMAR": {
+       "n": 259,
+       "collided": 0,
+       "cropped": 2,
+       "bytes_lost": 8
+      },
+      "THAI": {
+       "n": 370,
+       "collided": 0,
+       "cropped": 5,
+       "bytes_lost": 23
+      }
+     }
+    },
+    "48": {
+     "collided": 0,
+     "bytes_lost": 42,
+     "per_script": {
+      "ARABIC": {
+       "n": 4704,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARMENIAN": {
+       "n": 1222,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CYRILLIC": {
+       "n": 13782,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "LATIN": {
+       "n": 68942,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CJK": {
+       "n": 14848,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TAMIL": {
+       "n": 830,
+       "collided": 0,
+       "cropped": 5,
+       "bytes_lost": 39
+      },
+      "MALAYALAM": {
+       "n": 553,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "DEVANAGARI": {
+       "n": 1846,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GREEK": {
+       "n": 1564,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TELUGU": {
+       "n": 887,
+       "collided": 0,
+       "cropped": 1,
+       "bytes_lost": 3
+      },
+      "HEBREW": {
+       "n": 2474,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HANGUL": {
+       "n": 3179,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GEORGIAN": {
+       "n": 705,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KANNADA": {
+       "n": 653,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SYMBOL": {
+       "n": 520,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GURMUKHI": {
+       "n": 406,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "BENGALI": {
+       "n": 946,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GUJARATI": {
+       "n": 404,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MYANMAR": {
+       "n": 259,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "THAI": {
+       "n": 370,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    },
+    "64": {
+     "collided": 0,
+     "bytes_lost": 0,
+     "per_script": {
+      "ARABIC": {
+       "n": 4704,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARMENIAN": {
+       "n": 1222,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CYRILLIC": {
+       "n": 13782,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "LATIN": {
+       "n": 68942,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CJK": {
+       "n": 14848,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TAMIL": {
+       "n": 830,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MALAYALAM": {
+       "n": 553,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "DEVANAGARI": {
+       "n": 1846,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GREEK": {
+       "n": 1564,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TELUGU": {
+       "n": 887,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HEBREW": {
+       "n": 2474,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HANGUL": {
+       "n": 3179,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GEORGIAN": {
+       "n": 705,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KANNADA": {
+       "n": 653,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SYMBOL": {
+       "n": 520,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GURMUKHI": {
+       "n": 406,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "BENGALI": {
+       "n": 946,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GUJARATI": {
+       "n": 404,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MYANMAR": {
+       "n": 259,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "THAI": {
+       "n": 370,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    }
+   },
+   "fit-wrap": {
+    "16": {
+     "collided": 0,
+     "bytes_lost": 0,
+     "per_script": {
+      "ARABIC": {
+       "n": 4704,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARMENIAN": {
+       "n": 1222,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CYRILLIC": {
+       "n": 13782,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "LATIN": {
+       "n": 68942,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CJK": {
+       "n": 14848,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TAMIL": {
+       "n": 830,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MALAYALAM": {
+       "n": 553,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "DEVANAGARI": {
+       "n": 1846,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GREEK": {
+       "n": 1564,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TELUGU": {
+       "n": 887,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HEBREW": {
+       "n": 2474,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HANGUL": {
+       "n": 3179,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GEORGIAN": {
+       "n": 705,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KANNADA": {
+       "n": 653,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SYMBOL": {
+       "n": 520,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GURMUKHI": {
+       "n": 406,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "BENGALI": {
+       "n": 946,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GUJARATI": {
+       "n": 404,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MYANMAR": {
+       "n": 259,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "THAI": {
+       "n": 370,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    },
+    "32": {
+     "collided": 0,
+     "bytes_lost": 0,
+     "per_script": {
+      "ARABIC": {
+       "n": 4704,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARMENIAN": {
+       "n": 1222,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CYRILLIC": {
+       "n": 13782,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "LATIN": {
+       "n": 68942,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CJK": {
+       "n": 14848,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TAMIL": {
+       "n": 830,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MALAYALAM": {
+       "n": 553,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "DEVANAGARI": {
+       "n": 1846,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GREEK": {
+       "n": 1564,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TELUGU": {
+       "n": 887,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HEBREW": {
+       "n": 2474,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HANGUL": {
+       "n": 3179,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GEORGIAN": {
+       "n": 705,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KANNADA": {
+       "n": 653,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SYMBOL": {
+       "n": 520,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GURMUKHI": {
+       "n": 406,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "BENGALI": {
+       "n": 946,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GUJARATI": {
+       "n": 404,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MYANMAR": {
+       "n": 259,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "THAI": {
+       "n": 370,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    },
+    "48": {
+     "collided": 0,
+     "bytes_lost": 0,
+     "per_script": {
+      "ARABIC": {
+       "n": 4704,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARMENIAN": {
+       "n": 1222,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CYRILLIC": {
+       "n": 13782,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "LATIN": {
+       "n": 68942,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CJK": {
+       "n": 14848,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TAMIL": {
+       "n": 830,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MALAYALAM": {
+       "n": 553,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "DEVANAGARI": {
+       "n": 1846,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GREEK": {
+       "n": 1564,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TELUGU": {
+       "n": 887,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HEBREW": {
+       "n": 2474,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HANGUL": {
+       "n": 3179,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GEORGIAN": {
+       "n": 705,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KANNADA": {
+       "n": 653,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SYMBOL": {
+       "n": 520,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GURMUKHI": {
+       "n": 406,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "BENGALI": {
+       "n": 946,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GUJARATI": {
+       "n": 404,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MYANMAR": {
+       "n": 259,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "THAI": {
+       "n": 370,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    },
+    "64": {
+     "collided": 0,
+     "bytes_lost": 0,
+     "per_script": {
+      "ARABIC": {
+       "n": 4704,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARMENIAN": {
+       "n": 1222,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CYRILLIC": {
+       "n": 13782,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "LATIN": {
+       "n": 68942,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CJK": {
+       "n": 14848,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TAMIL": {
+       "n": 830,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MALAYALAM": {
+       "n": 553,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "DEVANAGARI": {
+       "n": 1846,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GREEK": {
+       "n": 1564,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TELUGU": {
+       "n": 887,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HEBREW": {
+       "n": 2474,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HANGUL": {
+       "n": 3179,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GEORGIAN": {
+       "n": 705,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KANNADA": {
+       "n": 653,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SYMBOL": {
+       "n": 520,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GURMUKHI": {
+       "n": 406,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "BENGALI": {
+       "n": 946,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GUJARATI": {
+       "n": 404,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MYANMAR": {
+       "n": 259,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "THAI": {
+       "n": 370,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    }
+   },
+   "fit-rel": {
+    "16": {
+     "collided": 0,
+     "bytes_lost": 0,
+     "per_script": {
+      "ARABIC": {
+       "n": 4704,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARMENIAN": {
+       "n": 1222,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CYRILLIC": {
+       "n": 13782,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "LATIN": {
+       "n": 68942,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CJK": {
+       "n": 14848,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TAMIL": {
+       "n": 830,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MALAYALAM": {
+       "n": 553,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "DEVANAGARI": {
+       "n": 1846,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GREEK": {
+       "n": 1564,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TELUGU": {
+       "n": 887,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HEBREW": {
+       "n": 2474,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HANGUL": {
+       "n": 3179,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GEORGIAN": {
+       "n": 705,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KANNADA": {
+       "n": 653,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SYMBOL": {
+       "n": 520,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GURMUKHI": {
+       "n": 406,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "BENGALI": {
+       "n": 946,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GUJARATI": {
+       "n": 404,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MYANMAR": {
+       "n": 259,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "THAI": {
+       "n": 370,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    },
+    "32": {
+     "collided": 0,
+     "bytes_lost": 0,
+     "per_script": {
+      "ARABIC": {
+       "n": 4704,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARMENIAN": {
+       "n": 1222,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CYRILLIC": {
+       "n": 13782,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "LATIN": {
+       "n": 68942,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CJK": {
+       "n": 14848,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TAMIL": {
+       "n": 830,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MALAYALAM": {
+       "n": 553,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "DEVANAGARI": {
+       "n": 1846,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GREEK": {
+       "n": 1564,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TELUGU": {
+       "n": 887,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HEBREW": {
+       "n": 2474,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HANGUL": {
+       "n": 3179,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GEORGIAN": {
+       "n": 705,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KANNADA": {
+       "n": 653,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SYMBOL": {
+       "n": 520,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GURMUKHI": {
+       "n": 406,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "BENGALI": {
+       "n": 946,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GUJARATI": {
+       "n": 404,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MYANMAR": {
+       "n": 259,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "THAI": {
+       "n": 370,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    },
+    "48": {
+     "collided": 0,
+     "bytes_lost": 0,
+     "per_script": {
+      "ARABIC": {
+       "n": 4704,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARMENIAN": {
+       "n": 1222,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CYRILLIC": {
+       "n": 13782,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "LATIN": {
+       "n": 68942,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CJK": {
+       "n": 14848,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TAMIL": {
+       "n": 830,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MALAYALAM": {
+       "n": 553,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "DEVANAGARI": {
+       "n": 1846,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GREEK": {
+       "n": 1564,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TELUGU": {
+       "n": 887,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HEBREW": {
+       "n": 2474,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HANGUL": {
+       "n": 3179,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GEORGIAN": {
+       "n": 705,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KANNADA": {
+       "n": 653,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SYMBOL": {
+       "n": 520,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GURMUKHI": {
+       "n": 406,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "BENGALI": {
+       "n": 946,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GUJARATI": {
+       "n": 404,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MYANMAR": {
+       "n": 259,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "THAI": {
+       "n": 370,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    },
+    "64": {
+     "collided": 0,
+     "bytes_lost": 0,
+     "per_script": {
+      "ARABIC": {
+       "n": 4704,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "ARMENIAN": {
+       "n": 1222,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CYRILLIC": {
+       "n": 13782,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "LATIN": {
+       "n": 68942,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "CJK": {
+       "n": 14848,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TAMIL": {
+       "n": 830,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MALAYALAM": {
+       "n": 553,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "DEVANAGARI": {
+       "n": 1846,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GREEK": {
+       "n": 1564,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "TELUGU": {
+       "n": 887,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HEBREW": {
+       "n": 2474,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "HANGUL": {
+       "n": 3179,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GEORGIAN": {
+       "n": 705,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "KANNADA": {
+       "n": 653,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "SYMBOL": {
+       "n": 520,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GURMUKHI": {
+       "n": 406,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "BENGALI": {
+       "n": 946,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "GUJARATI": {
+       "n": 404,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "MYANMAR": {
+       "n": 259,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      },
+      "THAI": {
+       "n": 370,
+       "collided": 0,
+       "cropped": 0,
+       "bytes_lost": 0
+      }
+     }
+    }
+   }
+  }
+ }
+}
