@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 8 Widget 8 — Defined is not proven</title>
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626;--blue:#2563eb}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:15px}
+.wrap{max-width:1120px;margin:0 auto;padding:22px}
+.kicker{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--violet)}
+h1{font-size:26px;line-height:1.15;margin:5px 0 8px}
+.sub{max-width:850px;margin:0 0 18px;color:var(--muted);line-height:1.55}
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+button{border:1.5px solid var(--line);background:#fff;color:var(--muted);border-radius:9px;padding:9px 14px;font:inherit;font-size:13px;font-weight:800;cursor:pointer}
+button:hover{border-color:#a78bfa;color:#5b21b6}
+button.on{border-color:var(--violet);background:#f5f3ff;color:#5b21b6;box-shadow:0 0 0 3px rgba(124,58,237,.1)}
+button:focus-visible{outline:3px solid rgba(37,99,235,.25);outline-offset:2px}
+.card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 30px rgba(20,42,75,.08);padding:18px}
+.journey{display:grid;grid-template-columns:minmax(0,1fr) 62px minmax(0,1fr);align-items:center;gap:12px}
+.scene{border:1px solid var(--line);border-radius:10px;padding:16px;min-height:215px;background:#fbfdff}
+.scene h2{font-size:14px;margin:0 0 12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.number{font:800 38px/1.1 ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--violet);margin-bottom:4px}
+.caption{font-size:12px;color:var(--muted);margin-bottom:17px}
+.rows{display:grid;gap:9px}
+.row{display:grid;grid-template-columns:112px 1fr;gap:10px;align-items:center}
+.label{font-size:12px;font-weight:800;color:var(--muted)}
+.status{border-radius:8px;padding:8px 10px;font-size:13px;font-weight:750;line-height:1.35}
+.yes{background:#f0fdf4;border:1px solid #bbf7d0;color:#166534}
+.unknown{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412}
+.reported{background:#f5f3ff;border:1px solid #ddd6fe;color:#5b21b6}
+.arrow{text-align:center;color:var(--violet)}
+.arrow b{display:block;font:800 20px/1 ui-monospace,SFMono-Regular,Consolas,monospace}
+.arrow span{display:block;font-size:11px;font-weight:800;margin-top:6px}
+.message{margin-top:14px;border-radius:10px;padding:13px 15px;line-height:1.5;font-size:14px}
+.message strong{display:block;margin-bottom:2px}
+.plain{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412}
+.drope{background:#f5f3ff;border:1px solid #ddd6fe;color:#4c1d95}
+.boundary{margin-top:14px;border:1px solid var(--line);border-left:4px solid var(--amber);background:#fff;padding:12px 14px;border-radius:8px;font-size:12.5px;line-height:1.5;color:var(--muted)}
+.boundary b{color:var(--ink)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;color:var(--muted);font-size:11.5px}
+.legend span:before{content:"";display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px;background:var(--green)}
+.legend span:nth-child(2):before{background:var(--amber)}
+.legend span:nth-child(3):before{background:var(--violet)}
+@media(max-width:760px){.journey{grid-template-columns:1fr}.arrow{transform:rotate(90deg);padding:2px}.row{grid-template-columns:92px 1fr}.number{font-size:32px}.scene{min-height:0}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="kicker">ERA V5 Session 8 · Section 9</div>
+  <h1>A position can be computable without being reliable</h1>
+  <p class="sub">RoPE can calculate rotations beyond the length seen in training. That proves the position rule still exists—not that the whole model knows how to use it.</p>
+
+  <div class="controls" role="group" aria-label="Choose which long-context claim to inspect">
+    <button id="plain" class="on" type="button" aria-pressed="true">Plain RoPE at 256K</button>
+    <button id="withDrope" type="button" aria-pressed="false">Reported V4 + DroPE result</button>
+  </div>
+
+  <section class="card" aria-live="polite">
+    <div class="journey">
+      <article class="scene">
+        <h2>What training established</h2>
+        <div class="number">8K</div>
+        <div class="caption">training context</div>
+        <div class="rows">
+          <div class="row"><div class="label">RoPE rule</div><div class="status yes">✓ Defined here</div></div>
+          <div class="row"><div class="label">Model exposure</div><div class="status yes">✓ Trained here</div></div>
+        </div>
+      </article>
+
+      <div class="arrow" aria-hidden="true"><b>→</b><span>32×</span></div>
+
+      <article class="scene">
+        <h2>What happens at the target</h2>
+        <div class="number">256K</div>
+        <div class="caption">target context</div>
+        <div class="rows">
+          <div class="row"><div class="label">RoPE rule</div><div class="status yes">✓ Still computable</div></div>
+          <div class="row"><div class="label">Model quality</div><div id="quality" class="status unknown">? Not established by RoPE alone</div></div>
+        </div>
+      </article>
+    </div>
+
+    <div id="message" class="message plain">
+      <strong>Plain RoPE proves only that the math can run.</strong>
+      The model was trained at 8K, so useful behaviour at 256K needs separate evidence.
+    </div>
+
+    <div class="boundary">
+      <b>Evidence boundary:</b> the available V4 record reports “8K → 256K” and “positional recalibration: DroPE, applied before annealing.” It does not establish the exact DroPE algorithm. This visual therefore shows the reported outcome, not a guessed mechanism.
+    </div>
+
+    <div class="legend" aria-label="status legend">
+      <span>established by the current condition</span>
+      <span>not established</span>
+      <span>reported V4 result</span>
+    </div>
+  </section>
+</main>
+
+<script>
+(function(){
+  "use strict";
+  var plain=document.getElementById("plain");
+  var drope=document.getElementById("withDrope");
+  var quality=document.getElementById("quality");
+  var message=document.getElementById("message");
+
+  function show(mode){
+    var isDrope=mode==="drope";
+    plain.classList.toggle("on",!isDrope);
+    drope.classList.toggle("on",isDrope);
+    plain.setAttribute("aria-pressed",String(!isDrope));
+    drope.setAttribute("aria-pressed",String(isDrope));
+    quality.className="status "+(isDrope?"reported":"unknown");
+    quality.textContent=isDrope?"✓ Reported as reached":"? Not established by RoPE alone";
+    message.className="message "+(isDrope?"drope":"plain");
+    if(isDrope){
+      message.innerHTML="<strong>DroPE is reported as part of the 32× extension.</strong>The record also says it was applied before annealing, so treat it as a training-stage recalibration—not a magic inference-time switch.";
+    }else{
+      message.innerHTML="<strong>Plain RoPE proves only that the math can run.</strong>The model was trained at 8K, so useful behaviour at 256K needs separate evidence.";
+    }
+  }
+
+  plain.addEventListener("click",function(){show("plain");});
+  drope.addEventListener("click",function(){show("drope");});
+})();
+</script>
+</body>
+</html>

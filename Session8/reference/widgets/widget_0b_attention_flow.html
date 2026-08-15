@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 8 Widget 0b - Attention</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626;
+      --q:#5b7fdb;--k:#e06c75;--v:#4ea87a}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:13px}
+.s8w0b-wrap{max-width:1280px;margin:0 auto;padding:12px 14px 12px}
+.s8w0b-kicker{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.s8w0b-wrap h1{font-size:19px;line-height:1.1;margin:2px 0 3px}
+.s8w0b-sub{color:var(--muted);max-width:1240px;margin:0 0 8px;font-size:11.5px;line-height:1.4}
+
+.s8w0b-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.s8w0b-fld{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--muted)}
+.s8w0b-wrap select,.s8w0b-wrap input[type=text]{font:inherit;font-size:11.5px;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:7px;padding:4px 7px;height:26px}
+.s8w0b-wrap input[type=text]{width:290px;font-weight:600}
+.s8w0b-wrap select{max-width:180px}
+.s8w0b-wrap input[type=range]{width:96px;height:14px;margin:0;accent-color:var(--cyan)}
+.s8w0b-val{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:11.5px;color:var(--cyan);font-weight:700;min-width:26px;text-align:right}
+.s8w0b-wrap .s8w0b-bar button{border:1px solid var(--cyan);background:var(--cyan);color:#fff;border-radius:7px;padding:5px 12px;font:inherit;font-size:11.5px;font-weight:800;cursor:pointer;height:26px}
+.s8w0b-wrap .s8w0b-bar button.s8w0b-ghost{background:#fff;color:var(--cyan)}
+.s8w0b-wrap .s8w0b-bar button:disabled{opacity:.45;cursor:default}
+
+.s8w0b-card{background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 30px rgba(20,42,75,.07);padding:9px 10px}
+.s8w0b-stage{position:relative}
+.s8w0b-svg{display:block;width:100%;height:auto;font-family:Inter,ui-sans-serif,system-ui,sans-serif}
+.s8w0b-step{position:absolute;transform:translate(-50%,-50%);border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:5px;width:17px;height:17px;line-height:1;padding:0;font:inherit;font-size:11px;font-weight:800;cursor:pointer}
+.s8w0b-step:hover{border-color:var(--cyan);color:var(--cyan)}
+
+.s8w0b-legend{display:flex;gap:13px;flex-wrap:wrap;font-size:10px;color:var(--muted);margin:5px 0 0;align-items:center}
+.s8w0b-sw{display:inline-block;width:13px;height:8px;border-radius:2px;vertical-align:-1px;margin-right:4px}
+.s8w0b-say{border:1px solid #a5f3fc;background:#ecfeff;color:#155e75;border-radius:8px;padding:6px 9px;font-size:11.5px;line-height:1.42;margin-top:6px}
+.s8w0b-say b{color:#0e7490;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-weight:700}
+@media(max-width:1080px){.s8w0b-wrap input[type=text]{width:180px}}
+@media (prefers-reduced-motion: reduce){.s8w0b-wrap *{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s8w0b-wrap">
+  <div class="s8w0b-kicker">ERA V5 Session 8</div>
+  <h1>Attention</h1>
+  <p class="s8w0b-sub">Every number here is computed live by a small transformer running inside this page: 32 dimensions, 4 heads, 2 blocks, fixed seeded weights, with a readout fitted on 28 short course sentences.</p>
+
+  <div class="s8w0b-bar">
+    <label class="s8w0b-fld">Examples
+      <select id="s8w0b-ex" aria-label="Pick one of four preset sentences"></select>
+    </label>
+    <input id="s8w0b-txt" type="text" aria-label="Input sentence, edit it to change every number on the page" spellcheck="false">
+    <span class="s8w0b-fld">Temperature
+      <input id="s8w0b-temp" type="range" min="0.1" max="2" step="0.1" value="0.8" aria-label="Temperature, from 0.1 to 2.0, sharpens or flattens the probability bars">
+      <span class="s8w0b-val" id="s8w0b-tempv">0.8</span>
+    </span>
+    <span class="s8w0b-fld">Top-k
+      <input id="s8w0b-topk" type="range" min="1" max="12" step="1" value="5" aria-label="Top-k, how many words keep any probability at all">
+      <span class="s8w0b-val" id="s8w0b-topkv">5</span>
+    </span>
+    <button id="s8w0b-play" type="button" aria-label="Play, walk through every head and every block">Play</button>
+    <button id="s8w0b-pause" class="s8w0b-ghost" type="button" aria-label="Pause the walkthrough">Pause</button>
+    <button id="s8w0b-reset" class="s8w0b-ghost" type="button" aria-label="Reset the sentence, temperature, top-k, block and head to their defaults">Reset</button>
+  </div>
+
+  <section class="s8w0b-card">
+    <div class="s8w0b-stage" id="s8w0b-stage">
+      <svg class="s8w0b-svg" id="s8w0b-svg" viewBox="0 0 1240 560" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Left to right flow: tokens, embeddings, ribbons into query key and value strips, a causal attention matrix, the MLP, the remaining block, and the next token probabilities"></svg>
+      <button class="s8w0b-step" id="s8w0b-bprev" type="button" aria-label="Previous transformer block">&#8249;</button>
+      <button class="s8w0b-step" id="s8w0b-bnext" type="button" aria-label="Next transformer block">&#8250;</button>
+      <button class="s8w0b-step" id="s8w0b-hprev" type="button" aria-label="Previous attention head">&#8249;</button>
+      <button class="s8w0b-step" id="s8w0b-hnext" type="button" aria-label="Next attention head">&#8250;</button>
+    </div>
+    <div class="s8w0b-legend">
+      <span><i class="s8w0b-sw" style="background:#5b7fdb"></i>Query</span>
+      <span><i class="s8w0b-sw" style="background:#e06c75"></i>Key</span>
+      <span><i class="s8w0b-sw" style="background:#4ea87a"></i>Value</span>
+      <span><i class="s8w0b-sw" style="background:#6d5bd0;border-radius:50%;width:9px;height:9px"></i>Circle area is the attention weight</span>
+      <span><i class="s8w0b-sw" style="background:#94a3b8"></i>Grey cells hold negative numbers</span>
+      <span>Bars beside Query, Key and Value are vector lengths</span>
+    </div>
+    <div class="s8w0b-say" id="s8w0b-say"></div>
+  </section>
+</main>
+
+<script>
+(function(){
+/* ---------------------------------------------------------------------------
+   A small transformer, built here and computed here. 32 dims, 4 heads of 8,
+   2 blocks. Weights come from one fixed integer seed, so the page is byte for
+   byte identical on every load. The readout is fitted at load time by plain
+   gradient descent on a fixed 28 sentence corpus, also deterministic.
+   --------------------------------------------------------------------------- */
+  var VOCAB=['<unk>','the','a','model','attention','tokenizer','token','tokens','word','words',
+             'context','memory','cache','head','heads','block','query','key','value','telugu',
+             'english','reads','writes','predicts','compares','splits','costs','grows','every','each',
+             'many','long','next','one','into','with','for','and','then','is'];
+  var IX={}; VOCAB.forEach(function(w,i){IX[w]=i;});
+  var NV=VOCAB.length, D=32, NH=4, DH=8, NB=2, DFF=128, MAXT=7;
+
+  var CORPUS=[
+    'the model reads every token and then predicts one word',
+    'the model reads every word and then writes the next token',
+    'attention compares each word with every word',
+    'attention compares each token with every token',
+    'a tokenizer splits telugu into many tokens',
+    'a tokenizer splits english into many words',
+    'long context costs memory for every token',
+    'long context costs memory for every head',
+    'the cache grows with every token',
+    'each head reads the query and the key',
+    'a query compares with each key',
+    'the value is the token the model reads',
+    'many heads is one attention block',
+    'a block is attention and memory',
+    'telugu splits into many tokens',
+    'english splits into many words',
+    'the tokenizer reads words and writes tokens',
+    'long memory costs the cache',
+    'every head writes one value',
+    'the model writes the next word',
+    'attention costs memory for long context',
+    'the query and the key and the value',
+    'each token reads every token',
+    'one head compares many tokens',
+    'the model predicts the next token',
+    'context grows and memory grows',
+    'the block reads a token and writes a token',
+    'many tokens is a long context'
+  ];
+
+  var PRESETS=[
+    'The model reads every token and then',
+    'Attention compares each word with every',
+    'A tokenizer splits Telugu into many',
+    'Long context costs memory for every'
+  ];
+
+  /* deterministic weight source ------------------------------------------- */
+  var _s=20250814>>>0;
+  function rnd(){ _s|=0; _s=_s+0x6D2B79F5|0; var t=Math.imul(_s^_s>>>15,1|_s); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }
+  function gau(){ var u=1-rnd(), v=rnd(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+  function MAT(r,c,s){ var m=[]; for(var i=0;i<r;i++){ var row=new Float64Array(c); for(var j=0;j<c;j++) row[j]=gau()*s; m.push(row); } return m; }
+
+  var Ein=MAT(NV,D,1.0);
+  var BLK=[];
+  for(var b=0;b<NB;b++){
+    BLK.push({Wq:MAT(D,D,0.1768),Wk:MAT(D,D,0.1768),Wv:MAT(D,D,0.1768),Wo:MAT(D,D,0.1768),
+              W1:MAT(D,DFF,0.1768),b1:new Float64Array(DFF),
+              W2:MAT(DFF,D,0.0884),b2:new Float64Array(D)});
+  }
+  var PE=[]; for(var p=0;p<24;p++){ var pv=new Float64Array(D);
+    for(var i2=0;i2<D;i2+=2){ var w2=Math.pow(10000,-i2/D); pv[i2]=Math.sin(p*w2); pv[i2+1]=Math.cos(p*w2); } PE.push(pv); }
+
+  /* forward pass ----------------------------------------------------------- */
+  function ln(v){ var m=0,i; for(i=0;i<v.length;i++) m+=v[i]; m/=v.length;
+    var s=0; for(i=0;i<v.length;i++) s+=(v[i]-m)*(v[i]-m); s=Math.sqrt(s/v.length+1e-5);
+    var o=new Float64Array(v.length); for(i=0;i<v.length;i++) o[i]=(v[i]-m)/s; return o; }
+  function mv(v,W){ var c=W[0].length, o=new Float64Array(c), i, j;
+    for(i=0;i<v.length;i++){ var vi=v[i]; if(vi===0) continue; var Wi=W[i]; for(j=0;j<c;j++) o[j]+=vi*Wi[j]; } return o; }
+  function dotn(a,b,off,n){ var s=0; for(var i=0;i<n;i++) s+=a[off+i]*b[off+i]; return s; }
+  function gelu(x){ return 0.5*x*(1+Math.tanh(0.7978845608*(x+0.044715*x*x*x))); }
+  function smax(a){ var m=-Infinity,i; for(i=0;i<a.length;i++) if(a[i]>m) m=a[i];
+    var e=new Float64Array(a.length), s=0;
+    for(i=0;i<a.length;i++){ e[i]= a[i]===-Infinity?0:Math.exp(a[i]-m); s+=e[i]; }
+    for(i=0;i<a.length;i++) e[i]/=s; return e; }
+
+  function forward(ids){
+    var n=ids.length, i, j, d, h, bi;
+    var x=[]; for(i=0;i<n;i++){ var v=new Float64Array(D); for(d=0;d<D;d++) v[d]=Ein[ids[i]][d]+0.6*PE[i][d]; x.push(v); }
+    var trace=[];
+    for(bi=0;bi<NB;bi++){
+      var B=BLK[bi], xin=x.map(function(r){return r.slice();});
+      var hn=x.map(ln);
+      var Q=hn.map(function(r){return mv(r,B.Wq);}),
+          K=hn.map(function(r){return mv(r,B.Wk);}),
+          V=hn.map(function(r){return mv(r,B.Wv);});
+      var heads=[], cat=[]; for(i=0;i<n;i++) cat.push(new Float64Array(D));
+      for(h=0;h<NH;h++){
+        var off=h*DH, sc=[], wt=[], out=[];
+        for(i=0;i<n;i++){
+          var row=new Float64Array(n);
+          for(j=0;j<n;j++) row[j]= j>i ? -Infinity : dotn(Q[i],K[j],off,DH)/Math.sqrt(DH);
+          sc.push(row); wt.push(smax(row));
+        }
+        for(i=0;i<n;i++){ var acc=new Float64Array(DH);
+          for(j=0;j<=i;j++) for(d=0;d<DH;d++) acc[d]+=wt[i][j]*V[j][off+d];
+          out.push(acc); for(d=0;d<DH;d++) cat[i][off+d]=acc[d]; }
+        heads.push({q:Q.map(function(r){return r.slice(off,off+DH);}),
+                    k:K.map(function(r){return r.slice(off,off+DH);}),
+                    v:V.map(function(r){return r.slice(off,off+DH);}),
+                    scores:sc, w:wt, out:out});
+      }
+      var proj=cat.map(function(r){return mv(r,B.Wo);});
+      var x1=[]; for(i=0;i<n;i++){ var r1=new Float64Array(D); for(d=0;d<D;d++) r1[d]=x[i][d]+proj[i][d]; x1.push(r1); }
+      var h2=x1.map(ln);
+      var mlp=h2.map(function(r){
+        var a=mv(r,B.W1); for(var t=0;t<DFF;t++) a[t]=gelu(a[t]+B.b1[t]);
+        var o=mv(a,B.W2); for(var t2=0;t2<D;t2++) o[t2]+=B.b2[t2]; return o; });
+      var x2=[]; for(i=0;i<n;i++){ var r2=new Float64Array(D); for(d=0;d<D;d++) r2[d]=x1[i][d]+mlp[i][d]; x2.push(r2); }
+      trace.push({xin:xin,heads:heads,attn:proj,mlp:mlp,xout:x2});
+      x=x2;
+    }
+    return {trace:trace, fin:x.map(ln)};
+  }
+
+  /* fit the readout, once, at load ---------------------------------------- */
+  var Wout=new Float64Array(D*NV), bout=new Float64Array(NV);
+  (function fit(){
+    var Hs=[], Ys=[];
+    CORPUS.forEach(function(s){
+      var ids=s.split(' ').map(function(w){return IX[w];});
+      var st=forward(ids);
+      for(var t=0;t<ids.length-1;t++){ Hs.push(st.fin[t]); Ys.push(ids[t+1]); }
+    });
+    var N=Hs.length, H=new Float64Array(N*D), i, d, v, s2;
+    for(i=0;i<N;i++) for(d=0;d<D;d++) H[i*D+d]=Hs[i][d];
+    for(i=0;i<D*NV;i++) Wout[i]=gau()*0.05;
+    var gW=new Float64Array(D*NV), gb=new Float64Array(NV), lg=new Float64Array(NV);
+    var STEPS=300, LR=1.1, DECAY=0.012;
+    for(var step=0;step<STEPS;step++){
+      gW.fill(0); gb.fill(0);
+      for(i=0;i<N;i++){
+        var base=i*D, m=-Infinity;
+        for(v=0;v<NV;v++){ var z=bout[v]; for(d=0;d<D;d++) z+=H[base+d]*Wout[d*NV+v]; lg[v]=z; if(z>m) m=z; }
+        s2=0; for(v=0;v<NV;v++){ lg[v]=Math.exp(lg[v]-m); s2+=lg[v]; }
+        for(v=0;v<NV;v++) lg[v]/=s2;
+        lg[Ys[i]]-=1;
+        for(d=0;d<D;d++){ var hv=H[base+d]; if(hv===0) continue; var o2=d*NV;
+          for(v=0;v<NV;v++) gW[o2+v]+=hv*lg[v]; }
+        for(v=0;v<NV;v++) gb[v]+=lg[v];
+      }
+      var inv=1/N;
+      for(i=0;i<D*NV;i++) Wout[i]-=LR*(gW[i]*inv+DECAY*Wout[i]);
+      for(v=0;v<NV;v++) bout[v]-=LR*gb[v]*inv;
+    }
+  })();
+
+  function logitsOf(fin){ var lg=new Float64Array(NV);
+    for(var v=0;v<NV;v++){ var z=bout[v]; for(var d=0;d<D;d++) z+=fin[d]*Wout[d*NV+v]; lg[v]=z; } return lg; }
+
+  function distribution(lg,T,K){
+    var order=[]; for(var i=0;i<NV;i++) order.push(i);
+    order.sort(function(a,b){ return lg[b]-lg[a]; });
+    var keep=order.slice(0,K), m=-Infinity, i2;
+    for(i2=0;i2<keep.length;i2++){ var z=lg[keep[i2]]/T; if(z>m) m=z; }
+    var ex=[], s=0;
+    for(i2=0;i2<keep.length;i2++){ var e=Math.exp(lg[keep[i2]]/T-m); ex.push(e); s+=e; }
+    var p=new Float64Array(NV);
+    for(i2=0;i2<keep.length;i2++) p[keep[i2]]=ex[i2]/s;
+    return {p:p, order:order};
+  }
+
+  /* geometry --------------------------------------------------------------- */
+  var G={W:1240,H:560,
+    tokLabX:84, embX:90, embW:80,
+    qkvX:264, qkvW:52, qkvLetX:258,
+    cardX:366, cardY:70, cardW:344, cardH:450,
+    listLabX:392, barX:396, barW:34,
+    matCX:531, matCY:289,
+    outX:620, outW:52,
+    mlpX:740, mlpW:78,
+    finX:838, finW:62,
+    probLabX:1078, probBarX:1086, probBarW:110, probPctX:1240};
+
+  var S={txt:PRESETS[0], temp:0.8, topk:5, blk:0, head:0, timer:null, pick:null};
+
+  function tokenize(t){
+    var raw=String(t).split(/\s+/).filter(Boolean).slice(-MAXT);
+    return raw.map(function(w){
+      var key=w.toLowerCase().replace(/[^a-z]/g,'');
+      return {show:w, id:(key in IX)?IX[key]:0, known:(key in IX)};
+    });
+  }
+
+  function tokY(i,n){ return n<2?171:96+i*(150/(n-1)); }
+  function qkvY(i,n){ return n<2?76:76+i*(350/(n-1)); }
+  function mstep(n){ return n>=7?22:26; }
+  function matCx(j,n){ return G.matCX+(j-(n-1)/2)*mstep(n); }
+  function matCy(i,n){ return G.matCY+(i-(n-1)/2)*mstep(n); }
+  function listY(i,n,c){ return c+(i-(n-1)/2)*13; }
+  function probY(i){ return 76+i*33; }
+
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function ribbon(x0,a0,a1,x1,b0,b1){ var xm=(x0+x1)/2;
+    return 'M'+x0+' '+a0+'C'+xm+' '+a0+','+xm+' '+b0+','+x1+' '+b0+'L'+x1+' '+b1+'C'+xm+' '+b1+','+xm+' '+a1+','+x0+' '+a1+'Z'; }
+  function maxAbs(v){ var m=0; for(var i=0;i<v.length;i++) if(Math.abs(v[i])>m) m=Math.abs(v[i]); return m||1; }
+  function strip(x,y,w,h,vec,posCol){
+    var mx=maxAbs(vec), cw=w/vec.length, s='';
+    for(var i=0;i<vec.length;i++){
+      var a=(0.10+0.90*Math.min(1,Math.abs(vec[i])/mx)).toFixed(3);
+      s+='<rect x="'+(x+i*cw).toFixed(2)+'" y="'+y+'" width="'+(cw+0.2).toFixed(2)+'" height="'+h+'" fill="'+(vec[i]>=0?posCol:'#94a3b8')+'" fill-opacity="'+a+'"/>';
+    }
+    return '<g>'+s+'</g>';
+  }
+
+  /* render ----------------------------------------------------------------- */
+  function render(){
+    var toks=tokenize(S.txt);
+    if(!toks.length) toks=[{show:'the',id:IX['the'],known:true}];
+    var n=toks.length, ids=toks.map(function(t){return t.id;});
+    var st=forward(ids), tr=st.trace[S.blk], hd=tr.heads[S.head];
+    var dist=distribution(logitsOf(st.fin[n-1]),S.temp,S.topk);
+    var s='', i, j;
+
+    /* stacked head cards then the attention card */
+    for(i=3;i>=1;i--) s+='<rect x="'+(G.cardX+10*i)+'" y="'+(G.cardY+6)+'" width="'+(G.cardW-20*i)+'" height="'+(G.cardH+9*i)+'" rx="10" fill="#fff" stroke="#e6edf6"/>';
+    s+='<rect x="'+G.cardX+'" y="'+G.cardY+'" width="'+G.cardW+'" height="'+G.cardH+'" rx="10" fill="#fdfeff" stroke="#e2eaf4"/>';
+
+    /* residual bands */
+    s+='<path d="M180 171C206 171 208 60 238 60L700 60C726 60 728 171 738 171" fill="none" stroke="#b9c8dc" stroke-width="1.5" stroke-linecap="round"/>';
+    s+='<path d="M746 171C758 171 758 64 770 64L814 64C828 64 828 171 838 171" fill="none" stroke="#b9c8dc" stroke-width="1.5" stroke-linecap="round"/>';
+    s+='<text x="252" y="52" font-size="10.5" fill="#9fb0c6" font-weight="700">Residual</text>';
+    s+='<text x="772" y="56" font-size="10" fill="#9fb0c6" font-weight="700">Residual</text>';
+
+    /* embedding to Q, K, V ribbons */
+    var cols=[ '#5b7fdb','#e06c75','#4ea87a' ];
+    for(i=0;i<n;i++){
+      var ty=tokY(i,n), qy=qkvY(i,n);
+      for(var kk=0;kk<3;kk++){
+        var cy=ty+(kk-1)*7;
+        s+='<path d="'+ribbon(170,cy-5.5,cy+5.5,G.qkvX,qy+kk*16,qy+kk*16+11)+'" fill="'+cols[kk]+'" fill-opacity="0.23"/>';
+      }
+    }
+
+    /* embedding strips and token labels */
+    for(i=0;i<n;i++){
+      var ty2=tokY(i,n);
+      s+='<text x="'+G.tokLabX+'" y="'+(ty2+3.5)+'" text-anchor="end" font-size="11.5" font-weight="600" fill="#334155"'+(toks[i].known?'':' opacity="0.55"')+'>'+esc(toks[i].show)+'</text>';
+      s+=strip(G.embX,ty2-9,G.embW,18,tr.xin[i],'#0891b2');
+      s+='<rect x="'+G.embX+'" y="'+(ty2-9)+'" width="'+G.embW+'" height="18" fill="none" stroke="#e2eaf4"/>';
+    }
+
+    /* Q K V strips */
+    var letters=['Q','K','V'], vecs=[hd.q,hd.k,hd.v];
+    for(i=0;i<n;i++){
+      var qy2=qkvY(i,n);
+      for(var m2=0;m2<3;m2++){
+        var yy=qy2+m2*16;
+        s+=strip(G.qkvX,yy,G.qkvW,11,vecs[m2][i],cols[m2]);
+        s+='<rect x="'+G.qkvX+'" y="'+yy+'" width="'+G.qkvW+'" height="11" fill="none" stroke="#e6edf6"/>';
+        s+='<text x="'+G.qkvLetX+'" y="'+(yy+8.5)+'" text-anchor="end" font-size="10.5" font-weight="800" fill="'+cols[m2]+'">'+letters[m2]+'</text>';
+      }
+    }
+
+    /* thin lines from the strips into the three lists */
+    var centres=[289,124,428]; /* Q -> Query, K -> Key, V -> Value */
+    for(i=0;i<n;i++){
+      var qy3=qkvY(i,n);
+      for(var m3=0;m3<3;m3++){
+        var y0=qy3+m3*16+5.5, y1=listY(i,n,centres[m3]);
+        s+='<path d="M'+(G.qkvX+G.qkvW)+' '+y0.toFixed(1)+'C352 '+y0.toFixed(1)+',356 '+y1.toFixed(1)+',392 '+y1.toFixed(1)+'" fill="none" stroke="'+cols[m3]+'" stroke-width="1" stroke-opacity="0.5"/>';
+      }
+    }
+
+    /* the value pool sliding up into Out */
+    s+='<path d="'+ribbon(430,listY(0,n,428)-6,listY(n-1,n,428)+6,616,matCy(0,n)-8,matCy(n-1,n)+8)+'" fill="#94a3b8" fill-opacity="0.10"/>';
+
+    /* Key, Query and Value lists */
+    var lists=[{c:124,vec:hd.k,col:'#e06c75',lab:'Key'},{c:289,vec:hd.q,col:'#5b7fdb',lab:'Query'},{c:428,vec:hd.v,col:'#4ea87a',lab:'Value'}];
+    lists.forEach(function(L){
+      var norms=L.vec.map(function(r){ var t=0; for(var d=0;d<DH;d++) t+=r[d]*r[d]; return Math.sqrt(t); });
+      var mx=Math.max.apply(null,norms)||1;
+      s+='<text x="'+G.barX+'" y="'+(listY(0,n,L.c)-13)+'" font-size="11" font-weight="800" fill="'+L.col+'">'+L.lab+'</text>';
+      for(var t2=0;t2<n;t2++){
+        var y=listY(t2,n,L.c);
+        s+='<text x="'+G.listLabX+'" y="'+(y+3)+'" text-anchor="end" font-size="9" fill="#64748b">'+esc(toks[t2].show)+'</text>';
+        s+='<rect x="'+G.barX+'" y="'+(y-2.5)+'" width="'+(G.barW*norms[t2]/mx).toFixed(1)+'" height="5" rx="1.5" fill="'+L.col+'"/>';
+      }
+    });
+
+    /* key columns and query rows entering the matrix */
+    var top=matCy(0,n)-mstep(n)*0.62, left=matCx(0,n)-mstep(n)*0.62;
+    for(j=0;j<n;j++){
+      var ky=listY(j,n,124), cx=matCx(j,n);
+      s+='<path d="M430 '+ky.toFixed(1)+'C452 '+ky.toFixed(1)+','+cx+' '+ky.toFixed(1)+','+cx+' '+top.toFixed(1)+'" fill="none" stroke="#e06c75" stroke-width="1" stroke-opacity="0.55"/>';
+    }
+    for(i=0;i<n;i++){
+      var qy4=listY(i,n,289), cy2=matCy(i,n);
+      s+='<path d="M430 '+qy4.toFixed(1)+'C442 '+qy4.toFixed(1)+',444 '+cy2.toFixed(1)+','+left.toFixed(1)+' '+cy2.toFixed(1)+'" fill="none" stroke="#5b7fdb" stroke-width="1" stroke-opacity="0.55"/>';
+    }
+
+    /* the causal attention matrix */
+    var stp=mstep(n);
+    for(i=0;i<n;i++) for(j=0;j<n;j++){
+      var cx2=matCx(j,n), cy3=matCy(i,n);
+      if(j>i){ s+='<circle cx="'+cx2+'" cy="'+cy3+'" r="2" fill="#cbd5e1" fill-opacity="0.5"/>'; continue; }
+      var w=hd.w[i][j], r=(2+ (stp*0.46-2)*Math.sqrt(w)).toFixed(2);
+      var on=(S.pick&&S.pick[0]===i&&S.pick[1]===j);
+      s+='<circle class="s8w0b-dot" data-i="'+i+'" data-j="'+j+'" cx="'+cx2+'" cy="'+cy3+'" r="'+r+'" fill="#6d5bd0" fill-opacity="'+(0.20+0.80*w).toFixed(3)+'" style="cursor:pointer"'+(on?' stroke="#0f172a" stroke-width="1.4"':'')+'></circle>';
+    }
+    s+='<text x="'+(matCx(0,n)-10)+'" y="'+(matCy(n-1,n)+stp*0.62+16)+'" font-size="10.5" font-weight="700" fill="#6d5bd0">Attention</text>';
+
+    /* Out strips, then out into the MLP */
+    s+='<text x="'+G.outX+'" y="'+(matCy(0,n)-16)+'" font-size="10.5" font-weight="800" fill="#6d5bd0">Out</text>';
+    for(i=0;i<n;i++){
+      var oy=matCy(i,n);
+      s+=strip(G.outX,oy-4.5,G.outW,9,hd.out[i],'#6d5bd0');
+      s+='<rect x="'+G.outX+'" y="'+(oy-4.5)+'" width="'+G.outW+'" height="9" fill="none" stroke="#e6edf6"/>';
+      s+='<path d="'+ribbon(672,oy-5,oy+5,740,tokY(i,n)-9,tokY(i,n)+9)+'" fill="#7c3aed" fill-opacity="0.12"/>';
+    }
+
+    /* MLP */
+    for(i=0;i<n;i++){
+      var my=tokY(i,n);
+      s+=strip(G.mlpX,my-9,G.mlpW,18,tr.mlp[i],'#7c3aed');
+      s+='<rect x="'+G.mlpX+'" y="'+(my-9)+'" width="'+G.mlpW+'" height="18" fill="none" stroke="#e2eaf4"/>';
+      s+='<rect x="818" y="'+(my-4)+'" width="20" height="8" fill="#7c3aed" fill-opacity="0.10"/>';
+    }
+
+    /* the remaining block, drawn as stacked cards, holding the final state */
+    var rest=NB-1-S.blk;
+    for(i=2;i>=1;i--) s+='<rect x="'+(G.finX+4*i)+'" y="'+(tokY(0,n)-16+4*i)+'" width="'+G.finW+'" height="'+(tokY(n-1,n)-tokY(0,n)+32)+'" rx="7" fill="#fff" stroke="#e6edf6"/>';
+    s+='<rect x="'+G.finX+'" y="'+(tokY(0,n)-16)+'" width="'+G.finW+'" height="'+(tokY(n-1,n)-tokY(0,n)+32)+'" rx="7" fill="#fdfeff" stroke="#dfe8f4"/>';
+    for(i=0;i<n;i++){
+      var fy=tokY(i,n);
+      s+=strip(G.finX+5,fy-7,G.finW-10,14,st.fin[i],'#4338ca');
+    }
+
+    /* the fan from the last token into the probability bars */
+    var lastY=tokY(n-1,n), acc=lastY-11, rows=12;
+    for(i=0;i<rows;i++){
+      var vid=dist.order[i], pr=dist.p[vid];
+      if(pr<0.004) continue;
+      var hgt=22*pr, py=probY(i);
+      s+='<path d="'+ribbon(G.finX+G.finW,acc,acc+hgt,G.probBarX-6,py-5,py+5)+'" fill="#7c3aed" fill-opacity="0.20"/>';
+      acc+=hgt;
+    }
+
+    /* probabilities */
+    for(i=0;i<rows;i++){
+      var vid2=dist.order[i], pr2=dist.p[vid2], py2=probY(i), dim=pr2<0.0005;
+      s+='<text x="'+G.probLabX+'" y="'+(py2+4)+'" text-anchor="end" font-size="12.5" font-weight="'+(dim?'500':'700')+'" fill="'+(dim?'#9fb0c6':'#334155')+'">'+esc(VOCAB[vid2])+'</text>';
+      s+='<rect x="'+G.probBarX+'" y="'+(py2-4)+'" width="'+Math.max(pr2*G.probBarW,dim?0:1.5).toFixed(1)+'" height="8" rx="2" fill="#7c3aed"/>';
+      s+='<text x="'+G.probPctX+'" y="'+(py2+4)+'" text-anchor="end" font-size="12" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" fill="'+(dim?'#9fb0c6':'#4c1d95')+'">'+(pr2*100).toFixed(pr2>=0.0005?2:0)+'%</text>';
+    }
+
+    /* titles */
+    s+='<text x="'+G.embX+'" y="34" font-size="11.5" font-weight="700" fill="#475569">'+(S.blk===0?'Embedding':'Block 1 output')+'</text>';
+    s+='<text x="'+G.cardX+'" y="16" font-size="11.5" font-weight="800" fill="#152033">Transformer Block '+(S.blk+1)+'</text>';
+    s+='<text x="'+G.cardX+'" y="34" font-size="11.5" font-weight="700" fill="#475569">Multi-head Self Attention</text>';
+    s+='<text x="'+G.mlpX+'" y="34" font-size="11.5" font-weight="700" fill="#475569">MLP</text>';
+    s+='<text x="'+G.finX+'" y="16" font-size="10.5" font-weight="800" fill="#475569">'+(rest>0?'Same again, '+rest+'x':'Final layer norm')+'</text>';
+    s+='<text x="'+G.finX+'" y="28" font-size="10.5" font-weight="800" fill="#475569">'+(rest>0?'then the output head':'on the last state')+'</text>';
+    s+='<path d="M'+(G.finX+26)+' 36L'+(G.finX+26)+' 50M'+(G.finX+22)+' 45L'+(G.finX+26)+' 50L'+(G.finX+30)+' 45" fill="none" stroke="#94a3b8" stroke-width="1.4"/>';
+    s+='<text x="'+G.probLabX+'" y="34" text-anchor="end" font-size="11.5" font-weight="700" fill="#475569">Probabilities</text>';
+    s+='<text x="500" y="504" font-size="11" font-weight="700" fill="#64748b">Head '+(S.head+1)+' of '+NH+'</text>';
+
+    document.getElementById('s8w0b-svg').innerHTML=s;
+    placeSteppers();
+    say(toks,hd,dist,n);
+  }
+
+  function placeSteppers(){
+    function put(id,x,y){ var e=document.getElementById(id); e.style.left=(x/G.W*100)+'%'; e.style.top=(y/G.H*100)+'%'; }
+    put('s8w0b-bprev',502,12); put('s8w0b-bnext',524,12);
+    put('s8w0b-hprev',572,500); put('s8w0b-hnext',594,500);
+  }
+
+  function say(toks,hd,dist,n){
+    var last=n-1, row=hd.w[last], txt='', sum=0, parts=[];
+    for(var j=0;j<n;j++){ sum+=row[j]; parts.push(row[j].toFixed(3)); }
+    var topv=dist.order[0];
+    if(S.pick && S.pick[0]<n && S.pick[1]<=S.pick[0]){
+      var i=S.pick[0], j2=S.pick[1];
+      txt='Query <b>'+esc(toks[i].show)+'</b> against key <b>'+esc(toks[j2].show)+'</b> in block '+(S.blk+1)+', head '+(S.head+1)+
+          ': score <b>'+hd.scores[i][j2].toFixed(3)+'</b>, weight <b>'+hd.w[i][j2].toFixed(4)+'</b>. '+
+          'That row holds <b>'+(i+1)+'</b> live keys and adds to <b>'+hd.w[i].reduce(function(p,c){return p+c;},0).toFixed(4)+'</b>.';
+    } else {
+      txt='Block '+(S.blk+1)+', head '+(S.head+1)+'. Attention row for the last token <b>'+esc(toks[last].show)+'</b>: <b>'+parts.join(' ')+'</b>, adding to <b>'+sum.toFixed(4)+'</b>. '+
+          'Next word <b>'+esc(VOCAB[topv])+'</b> at <b>'+(dist.p[topv]*100).toFixed(2)+'%</b> with temperature '+S.temp.toFixed(1)+' and top-k '+S.topk+'.';
+    }
+    document.getElementById('s8w0b-say').innerHTML=txt;
+  }
+
+  /* wiring ----------------------------------------------------------------- */
+  var exSel=document.getElementById('s8w0b-ex'), txtEl=document.getElementById('s8w0b-txt'),
+      tempEl=document.getElementById('s8w0b-temp'), tempV=document.getElementById('s8w0b-tempv'),
+      topkEl=document.getElementById('s8w0b-topk'), topkV=document.getElementById('s8w0b-topkv');
+
+  exSel.innerHTML=PRESETS.map(function(p,i){return '<option value="'+i+'">'+esc(p)+'</option>';}).join('');
+  txtEl.value=S.txt;
+
+  exSel.addEventListener('change',function(){ S.txt=PRESETS[+exSel.value]; txtEl.value=S.txt; S.pick=null; render(); });
+  txtEl.addEventListener('input',function(){ S.txt=txtEl.value; S.pick=null; render(); });
+  tempEl.addEventListener('input',function(){ S.temp=+tempEl.value; tempV.textContent=S.temp.toFixed(1); render(); });
+  topkEl.addEventListener('input',function(){ S.topk=+topkEl.value; topkV.textContent=S.topk; render(); });
+
+  function setBlk(d){ S.blk=(S.blk+d+NB)%NB; S.pick=null; render(); }
+  function setHead(d){ S.head=(S.head+d+NH)%NH; S.pick=null; render(); }
+  document.getElementById('s8w0b-bprev').onclick=function(){ setBlk(-1); };
+  document.getElementById('s8w0b-bnext').onclick=function(){ setBlk(1); };
+  document.getElementById('s8w0b-hprev').onclick=function(){ setHead(-1); };
+  document.getElementById('s8w0b-hnext').onclick=function(){ setHead(1); };
+
+  document.getElementById('s8w0b-svg').addEventListener('click',function(e){
+    var t=e.target; if(!t.classList||!t.classList.contains('s8w0b-dot')) return;
+    S.pick=[+t.getAttribute('data-i'),+t.getAttribute('data-j')]; render();
+  });
+
+  function stop(){ if(S.timer){ clearInterval(S.timer); S.timer=null; } }
+  document.getElementById('s8w0b-play').onclick=function(){
+    stop(); S.timer=setInterval(function(){
+      S.head=S.head+1; if(S.head>=NH){ S.head=0; S.blk=(S.blk+1)%NB; }
+      S.pick=null; render();
+    },1300);
+  };
+  document.getElementById('s8w0b-pause').onclick=stop;
+  document.getElementById('s8w0b-reset').onclick=function(){
+    stop(); S.txt=PRESETS[0]; S.temp=0.8; S.topk=5; S.blk=0; S.head=0; S.pick=null;
+    exSel.value='0'; txtEl.value=S.txt; tempEl.value='0.8'; tempV.textContent='0.8';
+    topkEl.value='5'; topkV.textContent='5'; render();
+  };
+
+  if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    document.getElementById('s8w0b-play').disabled=true;
+  }
+
+  /* exposed for verification only */
+  window.s8w0b=function(){
+    var toks=tokenize(S.txt), n=toks.length, st=forward(toks.map(function(t){return t.id;}));
+    var hd=st.trace[S.blk].heads[S.head], dist=distribution(logitsOf(st.fin[n-1]),S.temp,S.topk);
+    return {n:n, blk:S.blk+1, head:S.head+1,
+            rows:hd.w.map(function(r){ return Array.prototype.slice.call(r); }),
+            probs:dist.order.slice(0,12).map(function(v){ return [VOCAB[v], dist.p[v]]; }),
+            probSum:dist.order.reduce(function(p,v){ return p+dist.p[v]; },0)};
+  };
+
+  render();
+})();
+</script>
+<script>
+/* Self-sizing: the lesson embeds this at a fixed height, but the content height
+   changes when a control moves. Same-origin, so the frame can be resized from inside. */
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){
+    var h=Math.ceil(document.body.scrollHeight)+8;
+    if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; }
+  }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('change',function(){ setTimeout(fit,60); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

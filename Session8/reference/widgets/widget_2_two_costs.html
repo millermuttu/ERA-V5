@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Session 8 Widget 2 - The Two Bills</title>
+<style>
+:root{--ink:#162033;--muted:#66758a;--line:#d8e2ee;--cyan:#087f9d;--violet:#7540d4;--red:#d94747;--green:#198754}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+[hidden]{display:none!important}
+.w{max-width:1180px;margin:auto;padding:18px 22px}
+.k{color:var(--cyan);font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+h1{font-size:24px;line-height:1.15;margin:4px 0 6px}
+.sub{max-width:900px;color:var(--muted);margin:0 0 14px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 28px #14305212;padding:14px}
+.intro{display:grid;grid-template-columns:1.2fr .8fr;gap:12px;margin-bottom:12px}
+.intro h2,.panel h2{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.intro p{margin:0;font-size:13px}
+.steps{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.step{border:1px solid var(--line);border-radius:8px;padding:7px 9px;background:#fbfdff;font-size:12px}
+.step b{display:block;font-family:ui-monospace,monospace;font-size:13px}
+.step small{color:var(--muted)}
+.control{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.control label{font-weight:700;font-size:12px}
+input[type=range]{accent-color:var(--cyan);width:190px}
+.value{font:700 12px ui-monospace,monospace;color:var(--cyan);min-width:64px}
+button{border:1px solid var(--cyan);border-radius:8px;padding:7px 12px;background:var(--cyan);color:#fff;font:700 12px inherit;cursor:pointer}
+button.ghost{background:#fff;color:var(--cyan)}
+.layout{display:grid;grid-template-columns:360px minmax(0,1fr);gap:12px}
+.cache-box{min-height:286px}
+.cache-note{color:var(--muted);font-size:12px;margin:0 0 10px}
+.tokens{display:flex;gap:5px;flex-wrap:wrap;margin:10px 0 14px}
+.token{border:1px solid #b6c7d9;border-radius:8px;padding:6px 7px;background:#f8fbff;font:700 12px ui-monospace,monospace}
+.token.current{border-color:var(--cyan);background:#ecfeff;color:#075985}
+.pairs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.pair{border-radius:9px;padding:9px;background:#f8fafc;border:1px dashed var(--line);font:12px ui-monospace,monospace}
+.pair b{display:block;font-size:13px;color:var(--red)}
+.pair span{color:var(--muted)}
+.formula{margin-top:12px;background:#0f172a;color:#dbeafe;border-radius:8px;padding:9px;font:12px/1.55 ui-monospace,monospace}
+.graph-box{min-width:0}
+.graph-title{font-size:13px;font-weight:800;margin-bottom:2px}
+.graph-note{font-size:11.5px;color:var(--muted);margin:0 0 7px}
+svg{display:block;width:100%;height:260px;border:1px solid var(--line);border-radius:9px;background:#fff}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin:8px 0}
+.sw{display:inline-block;width:22px;height:3px;border-radius:3px;vertical-align:middle;margin-right:5px}
+.readout{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:9px}
+.metric{border:1px solid var(--line);border-radius:8px;background:#fbfdff;padding:8px}
+.metric b{display:block;font:700 16px ui-monospace,monospace}
+.metric span{display:block;color:var(--muted);font-size:10.5px;margin-top:2px}
+.takeaway{margin-top:12px;border:1px solid #b7e0e9;background:#f1fbfd;border-radius:9px;padding:10px 12px;font-size:12.5px}
+.takeaway b{color:#075985}
+@media(max-width:860px){.intro,.layout{grid-template-columns:1fr}.readout{grid-template-columns:1fr 1fr}.control{align-items:flex-start;flex-direction:column;gap:5px}}
+</style>
+</head>
+<body>
+<main class="w">
+  <div class="k">ERA V5 Session 8</div>
+  <h1>The two bills</h1>
+  <p class="sub">Attention creates two different long-context costs. First follow the saved attention history. Then compare how computation and memory grow.</p>
+
+  <section class="intro card">
+    <div>
+      <h2>First, the cache in plain language</h2>
+      <p>When a model writes one token at a time, it keeps the earlier keys and values instead of calculating them again. That saved list is the <b>KV cache</b>. It belongs to one conversation and grows as that conversation grows.</p>
+      <div class="steps" aria-label="cache grows as tokens are generated">
+        <div class="step"><b>token 1</b><small>save K₁, V₁</small></div>
+        <div class="step"><b>token 2</b><small>save K₂, V₂</small></div>
+        <div class="step"><b>token 3</b><small>save K₃, V₃</small></div>
+        <div class="step"><b>…</b><small>one pair per token</small></div>
+      </div>
+    </div>
+    <div>
+      <h2>Two questions</h2>
+      <p><b>Compute:</b> how much work is needed to compare the tokens?</p>
+      <p><b>Memory:</b> how much saved history must stay available for the conversation?</p>
+      <div class="formula">attention compute ≈ T²<br>KV-cache memory ≈ T</div>
+    </div>
+  </section>
+
+  <section class="layout">
+    <section class="panel card">
+      <h2>Watch one conversation grow</h2>
+      <p class="cache-note">Use the buttons or slider. The current token is highlighted; every earlier token has a saved K/V pair.</p>
+      <div class="control">
+        <label for="tokens">Tokens generated</label>
+        <input id="tokens" type="range" min="1" max="8" value="3" aria-label="Tokens generated">
+        <span class="value" id="tokensValue">3</span>
+      </div>
+      <div class="control" style="margin-top:9px">
+        <button id="add">Add one token</button>
+        <button id="reset" class="ghost">Reset</button>
+      </div>
+      <div class="tokens" id="tokenStrip" aria-label="generated tokens"></div>
+      <div class="pairs" id="pairStrip" aria-label="saved key value pairs"></div>
+      <div class="formula">cache entries = one K/V pair × each earlier token</div>
+    </section>
+
+    <section class="graph-box card">
+      <div class="graph-title">Now stretch the context</div>
+      <p class="graph-note">The vertical scale is relative, so we can see the shapes. The x-axis is context length on a log scale.</p>
+      <div class="control">
+        <label for="context">Current context</label>
+        <input id="context" type="range" min="10" max="20" step=".01" value="13" aria-label="Current context length">
+        <span class="value" id="contextValue"></span>
+      </div>
+      <svg id="chart" viewBox="0 0 760 260" role="img" aria-label="relative quadratic attention compute and linear KV cache growth"></svg>
+      <div class="legend">
+        <span><i class="sw" style="background:var(--violet)"></i>attention compute: T²</span>
+        <span><i class="sw" style="background:var(--red)"></i>KV-cache memory: T</span>
+        <span><i class="sw" style="background:#64748b;border-top:2px dashed #64748b"></i>current context</span>
+      </div>
+      <div class="readout">
+        <div class="metric"><b id="computeRatio" style="color:var(--violet)"></b><span>relative attention compute</span></div>
+        <div class="metric"><b id="cacheRatio" style="color:var(--red)"></b><span>relative cache memory</span></div>
+        <div class="metric"><b id="growthRatio"></b><span>compute grows this much faster</span></div>
+      </div>
+    </section>
+  </section>
+
+  <div class="takeaway"><b>Takeaway:</b> attention compute gets steeper because every token is compared with many others. The KV cache grows more gently, but it never stops growing—and it is paid separately for every active conversation. The detailed cache formula and its optimisations come later.</div>
+</main>
+<script>
+(function(){
+  var tokenNames=['The','cat','sat','on','the','mat','today','.'];
+  var tokens=document.getElementById('tokens'), context=document.getElementById('context');
+  var tokenValue=document.getElementById('tokensValue'), contextValue=document.getElementById('contextValue');
+  var tokenStrip=document.getElementById('tokenStrip'), pairStrip=document.getElementById('pairStrip'), chart=document.getElementById('chart');
+  function fmt(n){return n>=1000000?(n/1000000).toFixed(1)+'M':n>=1000?(n/1000).toFixed(n>=100000?'0':'1')+'K':Math.round(n)+'';}
+  function tValue(){return Math.pow(2,+context.value);}
+  function renderTokens(){
+    var n=+tokens.value; tokenValue.textContent=n;
+    tokenStrip.innerHTML=tokenNames.map(function(name,i){return '<span class="token '+(i===n-1?'current':'')+'">'+name+'</span>';}).join('');
+    pairStrip.innerHTML=tokenNames.slice(0,n).map(function(name,i){return '<div class="pair"><b>K'+(i+1)+' , V'+(i+1)+'</b><span>saved for “'+name+'”</span></div>';}).join('');
+  }
+  function renderChart(){
+    var W=760,H=260,L=55,R=18,T=18,B=38,iw=W-L-R,ih=H-T-B;
+    var min=10,max=20,cur=+context.value;
+    function x(v){return L+(v-min)/(max-min)*iw;}
+    function y(v){return T+ih-(Math.log10(v)/6)*ih;}
+    function path(kind){var d='';for(var i=0;i<=100;i++){var v=min+(max-min)*i/100;var norm=kind==='quad'?Math.pow(2,v-10):Math.pow(2,v-10);var display=kind==='quad'?norm*norm:norm;d+=(i?'L':'M')+x(v).toFixed(1)+','+y(display).toFixed(1);}return d;}
+    var h='';
+    [1,4,16,64,256,1024].forEach(function(k){var v=Math.log2(k*1024);var xx=x(v);h+='<line x1="'+xx+'" y1="'+T+'" x2="'+xx+'" y2="'+(T+ih)+'" stroke="#edf2f7"/><text x="'+xx+'" y="'+(H-12)+'" text-anchor="middle" font-size="10" fill="#64748b">'+(k>=1024?'1M':k+'K')+'</text>';});
+    [1,100,10000,1000000].forEach(function(v){var yy=y(v);if(yy>=T&&yy<=T+ih){h+='<line x1="'+L+'" y1="'+yy+'" x2="'+(W-R)+'" y2="'+yy+'" stroke="#edf2f7"/><text x="'+(L-7)+'" y="'+(yy+3)+'" text-anchor="end" font-size="10" fill="#64748b">'+(v>=1000000?(v/1000000)+'M':v>=1000?(v/1000)+'K':v)+'</text>';}});
+    h+='<path d="'+path('linear')+'" fill="none" stroke="#d94747" stroke-width="3"/><path d="'+path('quad')+'" fill="none" stroke="#7540d4" stroke-width="3"/>';
+    var xx=x(cur);h+='<line x1="'+xx+'" y1="'+T+'" x2="'+xx+'" y2="'+(T+ih)+'" stroke="#64748b" stroke-width="2" stroke-dasharray="5 4"/><text x="'+Math.min(xx+7,W-100)+'" y="'+(T+14)+'" font-size="10" font-weight="700" fill="#475569">you are here</text>';
+    h+='<text x="'+(W/2)+'" y="'+(H-1)+'" text-anchor="middle" font-size="10" font-weight="700" fill="#64748b">context length T, log scale</text><text x="8" y="13" font-size="10" font-weight="700" fill="#64748b">relative cost / memory</text>';
+    chart.innerHTML=h;
+    var n=tValue(),base=Math.pow(2,10),linear=n/base,quad=linear*linear;
+    contextValue.textContent=fmt(n)+' tokens';document.getElementById('computeRatio').textContent=quad.toFixed(0)+'×';document.getElementById('cacheRatio').textContent=linear.toFixed(0)+'×';document.getElementById('growthRatio').textContent=linear.toFixed(0)+'×';
+  }
+  tokens.addEventListener('input',renderTokens);context.addEventListener('input',renderChart);
+  document.getElementById('add').onclick=function(){tokens.value=Math.min(8,+tokens.value+1);renderTokens();};
+  document.getElementById('reset').onclick=function(){tokens.value=3;context.value=13;renderTokens();renderChart();};
+  renderTokens();renderChart();
+})();
+</script>
+</body>
+</html>

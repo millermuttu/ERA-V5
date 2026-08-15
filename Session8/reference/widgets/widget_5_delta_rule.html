@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 8 Widget 5 - Write the Correction</title>
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--green:#159447;--red:#dc2626;--pink:#db2777}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px}
+button{font:inherit}
+.wrap{max-width:1120px;margin:0 auto;padding:18px 22px 22px}
+.kicker{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--pink)}
+h1{font-size:24px;line-height:1.15;margin:4px 0 6px}
+.sub{max-width:900px;margin:0 0 13px;color:var(--muted);line-height:1.5}
+.card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 30px rgba(20,42,75,.08);padding:16px}
+.setup{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:13px;padding:10px 12px;border:1px solid #fbcfe8;background:#fdf2f8;border-radius:9px}
+.setup strong{color:#9d174d;margin-right:3px}
+.number{padding:6px 10px;border-radius:7px;background:#fff;border:1px solid var(--line);font-weight:850}
+.arrow{color:var(--muted);font-weight:850}
+.controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:13px}
+button{border:1px solid var(--pink);background:var(--pink);color:#fff;border-radius:8px;padding:8px 15px;font-size:12.5px;font-weight:800;cursor:pointer}
+button.ghost{background:#fff;color:var(--pink)}
+button:disabled{opacity:.42;cursor:default}
+.status{font-size:12px;color:var(--muted);font-weight:750;margin-left:3px}
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.step{min-height:142px;border:1px solid var(--line);border-radius:10px;background:#fbfdff;padding:13px;opacity:.4;transition:opacity .2s,transform .2s,border-color .2s,box-shadow .2s}
+.step.on{opacity:1;border-color:#f9a8d4;box-shadow:0 0 0 3px rgba(219,39,119,.10);transform:translateY(-2px)}
+.step.done{opacity:1;border-color:#bbf7d0;background:#f8fff9}
+.num{display:inline-grid;place-items:center;width:25px;height:25px;border-radius:50%;background:#fdf2f8;color:#9d174d;font-weight:850;margin-right:6px}
+.step.done .num{background:#dcfce7;color:#166534}
+.step h2{display:inline;font-size:15px}
+.step p{color:var(--muted);font-size:12.5px;line-height:1.45;margin:9px 0 10px}
+.math{font:850 19px ui-monospace,SFMono-Regular,Consolas,monospace;background:#fff;border:1px solid var(--line);border-radius:8px;padding:9px;text-align:center}
+.final{color:var(--green)}
+.explain{min-height:48px;margin:11px 0 0;padding:10px 12px;border-left:3px solid var(--pink);background:#fdf2f8;color:#831843;border-radius:0 8px 8px 0;font-size:13px;line-height:1.45}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.result{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#fff}
+.result h3{font-size:12px;letter-spacing:.05em;text-transform:uppercase;margin:0 0 7px}
+.bad{border-color:#fecaca;background:#fff8f8}.bad h3{color:#991b1b}
+.good{border-color:#bbf7d0;background:#f7fff9}.good h3{color:#166534}
+.answer{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:16px;font-weight:850}
+.bad .answer{color:var(--red)}.good .answer{color:var(--green)}
+@media(max-width:760px){.steps,.compare{grid-template-columns:1fr}.step{min-height:auto}.wrap{padding:14px}.status{width:100%}}
+@media(prefers-reduced-motion:reduce){.step{transition:none}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="kicker">ERA V5 Session 8 · one small but important fix</div>
+  <h1>Write only what needs to change</h1>
+  <p class="sub">Key A currently returns 40, but it should return 55. The delta rule updates the memory without adding 55 on top of 40.</p>
+
+  <section class="card" aria-labelledby="setup-title">
+    <div class="setup" id="setup-title">
+      <strong>Update key A</strong>
+      <span class="number">currently 40</span><span class="arrow">→</span><span class="number">should be 55</span>
+    </div>
+
+    <div class="controls">
+      <button id="next" type="button">1. Read current answer</button>
+      <button id="replay" class="ghost" type="button">Replay</button>
+      <span class="status" id="status" aria-live="polite">Ready</span>
+    </div>
+
+    <div class="steps" aria-label="The three moves of a delta-rule write">
+      <article class="step" id="step1">
+        <span class="num">1</span><h2>Read</h2>
+        <p>Ask the memory what key A returns now.</p>
+        <div class="math">current = 40</div>
+      </article>
+
+      <article class="step" id="step2">
+        <span class="num">2</span><h2>Find the gap</h2>
+        <p>Subtract the current answer from the wanted answer.</p>
+        <div class="math">55 − 40 = +15</div>
+      </article>
+
+      <article class="step" id="step3">
+        <span class="num">3</span><h2>Write only the gap</h2>
+        <p>Add +15—not the complete new answer.</p>
+        <div class="math">40 + 15 = <span class="final">55</span></div>
+      </article>
+    </div>
+
+    <div class="explain" id="explain">Press step 1. We must read the old answer before we can know the required correction.</div>
+
+    <div class="compare">
+      <article class="result bad">
+        <h3>Add the complete new answer</h3>
+        <div class="answer">40 + 55 = 95 ✕</div>
+      </article>
+      <article class="result good">
+        <h3>Write only the correction</h3>
+        <div class="answer">40 + 15 = 55 ✓</div>
+      </article>
+    </div>
+  </section>
+</main>
+
+<script>
+(function(){
+  'use strict';
+  var stage=0;
+  var next=document.getElementById('next');
+  var replay=document.getElementById('replay');
+  var status=document.getElementById('status');
+  var explain=document.getElementById('explain');
+  var steps=[document.getElementById('step1'),document.getElementById('step2'),document.getElementById('step3')];
+  var messages=[
+    'Press step 1. We must read the old answer before we can know the required correction.',
+    '<b>Read:</b> key A currently returns 40.',
+    '<b>Find the gap:</b> we want 55, so the memory is short by 15.',
+    '<b>Correct:</b> add only 15. Key A now returns exactly 55.'
+  ];
+  var labels=['1. Read current answer','2. Find the gap','3. Write +15','Complete'];
+
+  function render(){
+    for(var i=0;i<steps.length;i++){
+      steps[i].className='step'+(i+1<stage?' done':i+1===stage?' on':'');
+    }
+    explain.innerHTML=messages[stage];
+    next.textContent=labels[stage];
+    next.disabled=stage===3;
+    status.textContent=stage===0?'Ready':stage===3?'Complete — key A now returns 55':'Step '+stage+' of 3';
+  }
+
+  next.addEventListener('click',function(){
+    if(stage<3){stage+=1;render();}
+  });
+  replay.addEventListener('click',function(){stage=0;render();});
+  render();
+}());
+</script>
+</body>
+</html>

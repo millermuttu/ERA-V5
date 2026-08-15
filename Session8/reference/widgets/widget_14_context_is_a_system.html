@@ -1,0 +1,630 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 8 Widget 14 - Long Context Is a System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;600;700&family=Noto+Sans+Telugu:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:13px}
+.s8w14-wrap{max-width:1280px;margin:0 auto;padding:13px 16px}
+.s8w14-kicker{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.s8w14-wrap h1{font-size:20px;line-height:1.1;margin:2px 0 4px}
+.s8w14-sub{color:var(--muted);max-width:1240px;margin:0 0 8px;font-size:12px;line-height:1.4}
+.s8w14-tabs{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:9px}
+.s8w14-tbtn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 9px;font:inherit;font-size:11.5px;font-weight:800;color:var(--muted);cursor:pointer;text-align:left;line-height:1.2}
+.s8w14-tbtn small{display:block;font-weight:500;font-size:9.5px;margin-top:1px;opacity:.85}
+.s8w14-tbtn.on{border-color:var(--cyan);background:#ecfeff;color:#155e75}
+.s8w14-grid{display:grid;grid-template-columns:428px minmax(0,1fr);gap:12px;align-items:start}
+.s8w14-side{display:grid;grid-template-columns:1fr 1fr;gap:9px;align-items:start}
+.s8w14-card{background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 30px rgba(20,42,75,.08);padding:9px 10px;margin-bottom:9px}
+.s8w14-scol>.s8w14-card:last-child{margin-bottom:0}
+.s8w14-card h2{font-size:10.5px;margin:0 0 5px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.s8w14-ctrl{margin-bottom:6px}
+.s8w14-lab{display:flex;justify-content:space-between;font-size:10.5px;font-weight:700;margin-bottom:1px;gap:6px}
+.s8w14-lab span{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--cyan);white-space:nowrap}
+.s8w14-wrap input[type=range]{width:100%;height:13px;margin:0;accent-color:var(--cyan)}
+.s8w14-wrap select{width:100%;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);padding:3px 4px;font:inherit;font-size:10.5px}
+.s8w14-checks{display:grid;gap:4px}
+.s8w14-chk{display:flex;gap:6px;align-items:flex-start;font-size:10px;line-height:1.3;border:1px solid var(--line);border-radius:6px;padding:4px 6px;background:#fbfdff;cursor:pointer}
+.s8w14-chk input{margin:1px 0 0;accent-color:var(--cyan)}
+.s8w14-run{display:flex;gap:7px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+.s8w14-wrap .s8w14-run button{border:1px solid var(--cyan);background:var(--cyan);color:#fff;border-radius:7px;padding:5px 13px;font:inherit;font-size:11.5px;font-weight:800;cursor:pointer}
+.s8w14-wrap .s8w14-run button.s8w14-ghost{background:#fff;color:var(--cyan)}
+.s8w14-sweep{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:10.5px;color:var(--muted)}
+.s8w14-bind{border-radius:9px;padding:8px 10px;font-size:11.5px;line-height:1.45;margin-bottom:8px}
+.s8w14-bindbad{border:1px solid #fecaca;background:#fef2f2;color:#991b1b}
+.s8w14-bindok{border:1px solid #bbf7d0;background:#f0fdf4;color:#166534}
+.s8w14-bind b{font-size:12px}
+.s8w14-conds{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.s8w14-cond{border-radius:9px;padding:7px 9px;font-size:11px;line-height:1.42}
+.s8w14-pass{border:1px solid #bbf7d0;background:#f0fdf4;color:#166534}
+.s8w14-flag{border:1px solid #fed7aa;background:#fff7ed;color:#9a3412}
+.s8w14-fail{border:1px solid #fecaca;background:#fef2f2;color:#991b1b}
+.s8w14-cond .s8w14-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:3px}
+.s8w14-cond .s8w14-h b{font-size:11.5px}
+.s8w14-tag{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:9px;font-weight:800;border-radius:999px;padding:1px 6px;background:rgba(255,255,255,.7);white-space:nowrap}
+.s8w14-cond code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-weight:700}
+.s8w14-ctitle{font-size:11.5px;font-weight:800;margin:0 0 1px;line-height:1.3}
+.s8w14-cnote{font-size:10.5px;color:var(--muted);margin:0 0 5px;line-height:1.35}
+.s8w14-assume{border:1px solid #fde68a;background:#fffbeb;color:#92400e;border-radius:8px;padding:6px 8px;font-size:10px;line-height:1.38}
+.s8w14-lang{border:1px solid var(--line);border-radius:9px;padding:8px;background:#fbfdff}
+.s8w14-langs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px}
+.s8w14-lhead{display:flex;justify-content:space-between;align-items:baseline;gap:6px;flex-wrap:wrap;margin-bottom:5px}
+.s8w14-lhead b{font-size:12px}
+.s8w14-lhead .s8w14-st{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:9px;color:var(--muted);line-height:1.3}
+.s8w14-text{font-size:11px;line-height:1.65;border:1px solid var(--line);background:#fff;border-radius:7px;padding:6px 7px;margin-bottom:6px}
+.s8w14-dev{font-family:"Noto Sans Devanagari",Inter,sans-serif}
+.s8w14-tel{font-family:"Noto Sans Telugu",Inter,sans-serif}
+.s8w14-kept{color:var(--ink)}
+.s8w14-lost{color:#cbd5e1;text-decoration:line-through;text-decoration-color:#fca5a5}
+.s8w14-bar{height:14px;border-radius:5px;background:#fee2e2;overflow:hidden;position:relative;border:1px solid #fecaca}
+.s8w14-fill{height:100%;background:linear-gradient(90deg,#0891b2,#22d3ee)}
+.s8w14-barlab{display:flex;justify-content:space-between;gap:6px;font-size:9px;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--muted);margin-top:3px;line-height:1.3}
+.s8w14-frow{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:8px}
+.s8w14-frow .s8w14-ctrl{margin:0}
+.s8w14-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:8px}
+.s8w14-metric{border:1px solid var(--line);background:#fbfdff;border-radius:8px;padding:6px 8px}
+.s8w14-metric b{display:block;font-size:15px;line-height:1.15;font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+.s8w14-metric span{display:block;color:var(--muted);font-size:9.5px;margin-top:2px;line-height:1.25}
+.s8w14-note{margin-top:8px;border:1px solid #a5f3fc;background:#ecfeff;color:#155e75;border-radius:8px;padding:8px 9px;font-size:11px;line-height:1.45}
+.s8w14-note code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-weight:700}
+.s8w14-tab{width:100%;border-collapse:collapse;font-size:10.5px;margin-top:2px}
+.s8w14-tab th{text-align:right;font-size:9px;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);padding:3px 5px;border-bottom:1px solid var(--line);font-weight:800;line-height:1.25}
+.s8w14-tab th:first-child{text-align:left}
+.s8w14-tab td{padding:3px 5px;border-bottom:1px solid #eef2f7;text-align:right;font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+.s8w14-tab td:first-child{text-align:left;font-family:Inter,sans-serif;font-weight:700}
+.s8w14-gly{display:inline-block;min-width:18px;text-align:center;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-weight:800;font-size:10px;border-radius:5px;padding:0 4px;margin-right:5px;border:1px solid currentColor}
+.s8w14-pane{display:none}
+.s8w14-pane.on{display:block}
+.s8w14-pr{border:1px solid #a5f3fc;background:linear-gradient(180deg,#ecfeff,#ffffff);border-radius:10px;padding:9px 11px;margin-bottom:9px}
+.s8w14-pr [hidden]{display:none!important}
+.s8w14-pr-q{font-size:12.5px;font-weight:800;line-height:1.4;margin:0 0 3px}
+.s8w14-pr-hint{font-size:10.5px;color:var(--muted);margin:0 0 7px;line-height:1.4}
+.s8w14-pr-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.s8w14-pr-in{border:1px solid var(--line);border-radius:8px;padding:6px 9px;font:inherit;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px;font-weight:700;width:160px;background:#fff;color:var(--ink)}
+.s8w14-wrap .s8w14-pr-go{border:1px solid var(--cyan);background:var(--cyan);color:#fff;border-radius:8px;padding:6px 14px;font:inherit;font-size:11.5px;font-weight:800;cursor:pointer}
+.s8w14-wrap .s8w14-pr-skip{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:8px;padding:6px 12px;font:inherit;font-size:11.5px;font-weight:700;cursor:pointer}
+.s8w14-pr-out{margin-top:8px;border-top:1px dashed #a5f3fc;padding-top:7px;font-size:11.5px;line-height:1.45}
+.s8w14-pr-out b{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+.s8w14-pr-strip{font-size:11px;line-height:1.4;border:1px dashed #a5f3fc;background:#ecfeff;border-radius:8px;padding:6px 9px;margin-bottom:8px;color:#155e75}
+.s8w14-pr-strip b{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+@media(max-width:1080px){.s8w14-grid{grid-template-columns:1fr}.s8w14-side{grid-template-columns:1fr}.s8w14-conds{grid-template-columns:1fr}.s8w14-langs{grid-template-columns:1fr}.s8w14-metrics{grid-template-columns:1fr 1fr}.s8w14-frow{grid-template-columns:1fr 1fr}}
+@media (prefers-reduced-motion: reduce){
+  .s8w14-fill,.s8w14-bar,.s8w14-pr,.s8w14-bind,.s8w14-cond{transition:none!important;animation:none!important}
+}
+</style>
+</head>
+<body>
+<main class="s8w14-wrap">
+  <div class="s8w14-kicker">ERA V5 Session 8</div>
+  <h1>Long Context Is a System, Not a Number</h1>
+  <p class="s8w14-sub">A target context length checked against six conditions. The board names which one binds, and by how much.</p>
+
+  <div class="s8w14-tabs" id="s8w14-tabs" role="group" aria-label="panels of this widget">
+    <button class="s8w14-tbtn on" type="button" data-st="1" aria-label="Tab 1, the six conditions">1. The six conditions<small>which one binds, and by how much</small></button>
+    <button class="s8w14-tbtn" type="button" data-st="2" aria-label="Tab 2, English against Telugu">2. English against Telugu<small>the same window, three languages</small></button>
+  </div>
+
+  <section class="s8w14-grid">
+    <aside class="s8w14-side">
+      <div class="s8w14-scol">
+        <div class="s8w14-card">
+          <h2>The claim being made</h2>
+          <div class="s8w14-ctrl"><div class="s8w14-lab">Target context <span id="s8w14-Tv"></span></div><input aria-label="Target context length, log two scale" id="s8w14-T" type="range" min="13" max="20" step="0.02" value="18"></div>
+          <div class="s8w14-ctrl"><div class="s8w14-lab">Position scheme</div>
+            <select aria-label="Position scheme" id="s8w14-pos">
+              <option value="rope">Rotary only, no recalibration</option>
+              <option value="drope" selected>Rotary plus DroPE, applied before annealing</option>
+              <option value="ntk">Rotary plus NTK-aware base scaling</option>
+              <option value="yarn">Rotary plus YaRN</option>
+              <option value="alibi">ALiBi distance penalty, no rotation</option>
+              <option value="learned">Learned absolute table</option>
+            </select></div>
+          <div class="s8w14-ctrl"><div class="s8w14-lab">Rotary base <span id="s8w14-Bv"></span></div><input aria-label="Rotary base, log ten scale" id="s8w14-B" type="range" min="4" max="7" step="0.05" value="4"></div>
+          <div class="s8w14-ctrl"><div class="s8w14-lab">Longest training seq <span id="s8w14-Sv"></span></div><input aria-label="Longest training sequence, log two scale" id="s8w14-S" type="range" min="11" max="20" step="1" value="13"></div>
+          <div class="s8w14-ctrl"><div class="s8w14-lab">Long-sequence share <span id="s8w14-Qv"></span></div><input aria-label="Long-sequence share of training tokens, percent" id="s8w14-Q" type="range" min="0" max="60" step="1" value="5"></div>
+        </div>
+
+        <div class="s8w14-card">
+          <h2>The machine it runs on</h2>
+          <div class="s8w14-ctrl"><div class="s8w14-lab">Attention</div>
+            <select aria-label="Attention kind" id="s8w14-kind">
+              <option value="full">Grouped-query, every layer, uncompressed</option>
+              <option value="comp" selected>Compressed blocks plus top-k selection</option>
+              <option value="hybrid">Linear stack with a quarter sparse attention</option>
+            </select></div>
+          <div class="s8w14-ctrl"><div class="s8w14-lab">Block size <span id="s8w14-Mv"></span></div><input aria-label="Block size in tokens" id="s8w14-M" type="range" min="1" max="64" step="1" value="16"></div>
+          <div class="s8w14-ctrl"><div class="s8w14-lab">Top-k blocks <span id="s8w14-Kv"></span></div><input aria-label="Top-k blocks per query" id="s8w14-K" type="range" min="8" max="512" step="8" value="64"></div>
+          <div class="s8w14-ctrl"><div class="s8w14-lab">Layers <span id="s8w14-Lv"></span></div><input aria-label="Layers" id="s8w14-L" type="range" min="8" max="80" step="2" value="32"></div>
+          <div class="s8w14-ctrl"><div class="s8w14-lab">Model width <span id="s8w14-Dv"></span></div><input aria-label="Model width" id="s8w14-D" type="range" min="1024" max="8192" step="256" value="4096"></div>
+          <div class="s8w14-ctrl"><div class="s8w14-lab">Key-value groups <span id="s8w14-Gv"></span></div><input aria-label="Key-value groups" id="s8w14-G" type="range" min="1" max="32" step="1" value="8"></div>
+          <div class="s8w14-ctrl"><div class="s8w14-lab">Cache precision</div>
+            <select aria-label="Cache precision" id="s8w14-prec"><option value="2" selected>bf16, 2 bytes</option><option value="1">fp8, 1 byte</option><option value="0.5">int4, half a byte</option></select></div>
+          <div class="s8w14-ctrl"><div class="s8w14-lab">Accelerators <span id="s8w14-Nv"></span></div><input aria-label="Accelerators serving one request" id="s8w14-N" type="range" min="1" max="64" step="1" value="8"></div>
+          <div class="s8w14-ctrl"><div class="s8w14-lab">Prefill budget <span id="s8w14-Yv"></span></div><input aria-label="Prefill latency budget in seconds" id="s8w14-Y" type="range" min="1" max="120" step="1" value="20"></div>
+        </div>
+      </div>
+
+      <div class="s8w14-scol">
+        <div class="s8w14-card">
+          <h2>State and evaluation</h2>
+          <div class="s8w14-ctrl"><div class="s8w14-lab">Chunk length <span id="s8w14-Cv"></span></div><input aria-label="Chunk length, log two scale" id="s8w14-C" type="range" min="12" max="20" step="1" value="15"></div>
+          <div class="s8w14-ctrl"><div class="s8w14-lab">Cross-chunk state</div>
+            <select aria-label="Cross-chunk state" id="s8w14-mem"><option value="none">Nothing crosses the boundary</option><option value="stream" selected>Memory Stream, one gated vector</option><option value="linear">Linear recurrent state carried across</option></select></div>
+          <div class="s8w14-ctrl"><div class="s8w14-lab">Planted fact <span id="s8w14-Pv"></span></div><input aria-label="Planted fact size for the needle test, tokens" id="s8w14-P" type="range" min="8" max="256" step="8" value="24"></div>
+          <div class="s8w14-checks" id="s8w14-evals"></div>
+        </div>
+
+        <div class="s8w14-card">
+          <h2>Assumptions, not measurements</h2>
+          <div class="s8w14-assume" id="s8w14-assume"></div>
+        </div>
+      </div>
+    </aside>
+
+    <section>
+      <div class="s8w14-card" style="margin-bottom:0">
+        <div class="s8w14-run">
+          <button id="s8w14-play" type="button" aria-label="Play the target context sweep">Play</button>
+          <button id="s8w14-pause" class="s8w14-ghost" type="button" aria-label="Pause the sweep">Pause</button>
+          <button id="s8w14-reset" class="s8w14-ghost" type="button" aria-label="Reset every control to its default and clear the prediction">Reset</button>
+          <span class="s8w14-sweep" id="s8w14-sweeplab"></span>
+        </div>
+
+        <div class="s8w14-pane on" id="s8w14-p1">
+          <div class="s8w14-bind" id="s8w14-bind"></div>
+          <p class="s8w14-ctitle">The six conditions</p>
+          <p class="s8w14-cnote">Each one is arithmetic on the controls at the left, and each reports the number it checked. A condition can be failed deliberately.</p>
+          <div class="s8w14-conds" id="s8w14-conds"></div>
+          <div class="s8w14-metrics">
+            <div class="s8w14-metric"><b id="s8w14-m1"></b><span>cache at target, one request</span></div>
+            <div class="s8w14-metric"><b id="s8w14-m2"></b><span>prefill time for a full window</span></div>
+            <div class="s8w14-metric"><b id="s8w14-m3"></b><span>positions never seen in training</span></div>
+            <div class="s8w14-metric"><b id="s8w14-m4"></b><span>window verified by the needle test</span></div>
+          </div>
+        </div>
+
+        <div class="s8w14-pane" id="s8w14-p2">
+          <p class="s8w14-ctitle">The same document, the same window, three languages</p>
+          <p class="s8w14-cnote">The passages are real text carrying the same meaning. Character and UTF-8 byte counts are measured on those strings in your browser. Tokens per word come from the Session 3 fertility measurement and are controls here.</p>
+
+          <section class="s8w14-pr" id="s8w14-pr">
+            <p class="s8w14-pr-q">One 120,000-word document, one window. The English reader holds all of it. What percentage does the Telugu reader hold?</p>
+            <p class="s8w14-pr-hint">A percentage between 0 and 100, at the Session 3 fertility figures. Answer before the panel is filled in.</p>
+            <div class="s8w14-pr-row">
+              <input class="s8w14-pr-in" id="s8w14-pr-in" type="text" inputmode="decimal" placeholder="your guess, %" aria-label="your prediction, percentage of the document a Telugu reader holds">
+              <button class="s8w14-pr-go" id="s8w14-pr-go" type="button" aria-label="Reveal the computed percentage">Reveal</button>
+              <button class="s8w14-pr-skip" id="s8w14-pr-skip" type="button" aria-label="Skip the prediction and open this panel">Skip</button>
+            </div>
+            <div class="s8w14-pr-out" id="s8w14-pr-out" hidden></div>
+          </section>
+
+          <div id="s8w14-langstage" hidden>
+            <div class="s8w14-pr-strip" id="s8w14-pr-strip" hidden></div>
+            <div class="s8w14-frow">
+              <div class="s8w14-ctrl"><div class="s8w14-lab">Document length <span id="s8w14-Wv"></span></div><input aria-label="Document length in thousands of words" id="s8w14-W" type="range" min="5" max="400" step="5" value="120"></div>
+              <div class="s8w14-ctrl"><div class="s8w14-lab">English tokens per word <span id="s8w14-F0v"></span></div><input aria-label="English tokens per word, times one hundred" id="s8w14-F0" type="range" min="100" max="600" step="5" value="130"></div>
+              <div class="s8w14-ctrl"><div class="s8w14-lab">Hindi tokens per word <span id="s8w14-F1v"></span></div><input aria-label="Hindi tokens per word, times one hundred" id="s8w14-F1" type="range" min="100" max="600" step="5" value="260"></div>
+              <div class="s8w14-ctrl"><div class="s8w14-lab">Telugu tokens per word <span id="s8w14-F2v"></span></div><input aria-label="Telugu tokens per word, times one hundred" id="s8w14-F2" type="range" min="100" max="600" step="5" value="390"></div>
+            </div>
+
+            <div class="s8w14-langs" id="s8w14-langs"></div>
+
+            <table class="s8w14-tab" id="s8w14-tab"></table>
+            <div class="s8w14-note" id="s8w14-note2"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+</main>
+
+<script>
+(function(){
+  var DEF={T:18,B:4,S:13,Q:5,M:16,K:64,L:32,D:4096,G:8,N:8,Y:20,C:15,P:24,W:120,F0:130,F1:260,F2:390};
+  var SEL={pos:'drope',kind:'comp',prec:'2',mem:'stream'};
+  var ids=['T','B','S','Q','M','K','L','D','G','N','Y','C','P','W','F0','F1','F2'],el={};
+  ids.forEach(function(k){el[k]=document.getElementById('s8w14-'+k);});
+  var sels=['pos','kind','prec','mem'],se={};
+  sels.forEach(function(k){se[k]=document.getElementById('s8w14-'+k);});
+
+  var PEAK=494.7e12, MFU=0.40, HBM=80e9, ROT=64, WIN=512;
+  var EVALS=[
+    {id:'needle',n:'Needle in a haystack',d:'A planted fact is retrieved.'},
+    {id:'multihop',n:'Multi-hop across the window',d:'Two distant facts must combine.'},
+    {id:'aggregate',n:'Whole-document aggregation',d:'Counting or ordering across the window.'},
+    {id:'order',n:'Order and recency',d:'Which contradictory statement came later.'},
+    {id:'generate',n:'Long-form grounded generation',d:'Text consistent with the whole window.'}
+  ];
+  var evalOn={needle:true,multihop:false,aggregate:false,order:false,generate:false};
+
+  var TEXTS=[
+    {k:'en',name:'English',cls:'',
+     t:'The village school stood at the edge of the field. Every morning the children walked along the canal to reach it. The teacher rang a small bell, and the day began. Nobody was ever late, because the bell could be heard from every house.'},
+    {k:'hi',name:'Hindi',cls:'s8w14-dev',
+     t:'गाँव का स्कूल खेत के किनारे पर था। हर सुबह बच्चे नहर के किनारे चलकर वहाँ पहुँचते थे। शिक्षक एक छोटी घंटी बजाते थे, और दिन शुरू हो जाता था। कोई भी कभी देर से नहीं आता था, क्योंकि घंटी हर घर से सुनाई देती थी।'},
+    {k:'te',name:'Telugu',cls:'s8w14-tel',
+     t:'గ్రామంలోని పాఠశాల పొలం అంచున ఉండేది. ప్రతి ఉదయం పిల్లలు కాలువ వెంట నడిచి అక్కడికి చేరుకునేవారు. ఉపాధ్యాయుడు ఒక చిన్న గంట మోగించేవాడు, ఆ రోజు మొదలయ్యేది. ఎవరూ ఎప్పుడూ ఆలస్యంగా రాలేదు, ఎందుకంటే ఆ గంట మోత ప్రతి ఇంటినుండీ వినపడేది.'}
+  ];
+  var ENC=new TextEncoder();
+  TEXTS.forEach(function(x){
+    x.chars=Array.from(x.t).length;
+    x.bytes=ENC.encode(x.t).length;
+    x.words=x.t.trim().split(/\s+/).length;
+  });
+
+  var playing=false,raf=null;
+  var PR={revealed:false, guess:null};
+  var REDUCED = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+  function pow2(v){return Math.pow(2,v);}
+  function ctx(){return Math.round(pow2(+el.T.value)/1024)*1024;}
+  function fmtT(n){return n>=1048576?(n/1048576).toFixed(2).replace(/\.00$/,'')+'M':n>=1024?(n/1024).toFixed(0)+'K':String(n);}
+  function gb(b){return b>=1e12?(b/1e12).toFixed(2)+' TB':b>=1e9?(b/1e9).toFixed(2)+' GB':b>=1e6?(b/1e6).toFixed(1)+' MB':(b/1e3).toFixed(0)+' KB';}
+  function num(n){return Math.round(n).toLocaleString('en-US');}
+
+  function cfg(){
+    var L=+el.L.value,D=+el.D.value;
+    return {L:L,D:D,G:+el.G.value,Hd:128,N:12*L*D*D,prec:parseFloat(se.prec.value),
+            m:+el.M.value,k:+el.K.value,kind:se.kind.value,dev:+el.N.value};
+  }
+  function attnLayers(c){return c.kind==='hybrid'?Math.max(1,Math.round(c.L*0.25)):c.L;}
+  function entries(c,T){
+    if(c.kind==='full') return {score:T/2,hold:T,blocks:0};
+    var b=Math.ceil(T/c.m);
+    return {score:Math.min(c.k,b)+WIN,hold:b+WIN,blocks:b};
+  }
+  function cache(c,T){
+    var e=entries(c,T),La=attnLayers(c),Ll=c.L-La;
+    return 2*La*c.G*c.Hd*e.hold*c.prec + Ll*c.D*c.Hd*c.prec;
+  }
+  function fwdPerToken(c,T){
+    var e=entries(c,T),La=attnLayers(c),Ll=c.L-La;
+    return 2*c.N + 4*La*c.D*e.score + (c.kind==='full'?0:4*La*128*e.blocks) + 4*Ll*c.D*c.Hd;
+  }
+  function prefill(c,T){return T*fwdPerToken(c,T);}
+
+  function bandsAlive(base,T){var a=0;for(var j=0;j<ROT/2;j++){if(2*Math.PI*Math.pow(base,2*j/ROT)>=T)a++;}return a;}
+  function longestBand(base){return 2*Math.PI*Math.pow(base,(ROT-2)/ROT);}
+  function minBase(T){return Math.pow(T/(2*Math.PI),ROT/(ROT-2));}
+
+  var EXT={rope:1,drope:32,ntk:16,yarn:32,alibi:1e9,learned:1};
+
+  function conditions(){
+    var c=cfg(),T=ctx(),base=Math.pow(10,+el.B.value),S=pow2(+el.S.value),
+        chunk=pow2(+el.C.value),pos=se.pos.value,mem=se.mem.value,
+        longShare=(+el.Q.value)/100,needle=+el.P.value,
+        budget=+el.Y.value,out=[];
+
+    // 1. position meaningful at the target length
+    var reach=S*EXT[pos], alive=bandsAlive(base,T), mb=minBase(T), over=T/reach;
+    var c1;
+    if(pos==='learned'){
+      c1={s:'fail',short:1e6,name:'Position is meaningful at the target',
+        b:'A learned absolute table has no row beyond <code>'+num(S)+'</code>, so the scheme is undefined at <code>'+num(T)+'</code>. Session 7 measured this wall directly.'};
+    } else if(pos==='alibi'){
+      c1={s:'flag',short:1,name:'Position is meaningful at the target',
+        b:'ALiBi is defined at every distance by construction, so <code>'+num(T)+'</code> is reachable. It hard-codes that further always means less relevant, an assumption about your documents. The shortfall here is evidential.'};
+    } else {
+      var st=(over<=1)?(alive>0?'pass':'flag'):'fail';
+      c1={s:st,short:Math.max(over,1),name:'Position is meaningful at the target',
+        b:'Trained at <code>'+num(S)+'</code>, policy <code>'+pos+'</code> gives <code>'+EXT[pos]+'x</code>, so reach is <code>'+num(reach)+'</code> and the target is <code>'+over.toFixed(2)+'x</code> of it. '+
+          'At base <code>'+num(base)+'</code> the slowest of <code>'+(ROT/2)+'</code> bands turns once in <code>'+num(longestBand(base))+'</code> tokens, so <code>'+alive+' of '+(ROT/2)+'</code> span <code>'+num(T)+'</code>; one band needs base <code>'+num(mb)+'</code>. '+
+          ((pos!=='rope'&&alive===0)?'Naming <code>'+pos+'</code> with the base left at <code>'+num(base)+'</code> claims the policy without applying it.':'')};
+    }
+    out.push(c1);
+
+    // 2. the cache fits
+    var cb=cache(c,T), weights=c.N*2, pool=HBM*c.dev, free=pool-weights, ratio=cb/Math.max(free,1);
+    out.push({s:ratio<0.25?'pass':ratio<1?'flag':'fail',short:Math.max(ratio,1),
+      name:'The cache fits',
+      b:'One request at <code>'+num(T)+'</code> tokens holds <code>'+num(entries(c,T).hold)+'</code> entries per attention layer across <code>'+attnLayers(c)+'</code> layers: <code>'+gb(cb)+'</code> at <code>'+c.prec+'</code> bytes per number. '+
+        'Weights take <code>'+gb(weights)+'</code> of the <code>'+gb(pool)+'</code> pool, leaving <code>'+gb(Math.max(free,0))+'</code>, so this request uses <code>'+(ratio*100).toFixed(1)+'%</code> of it and <code>'+num(Math.max(0,Math.floor(free/cb)))+'</code> fit at once.'});
+
+    // 3. the compute is affordable
+    var pf=prefill(c,T), secs=pf/(c.dev*PEAK*MFU), fr=secs/budget;
+    out.push({s:fr<=0.5?'pass':fr<=1?'flag':'fail',short:Math.max(fr,1),
+      name:'The compute is affordable',
+      b:'Filling the window once costs <code>'+(pf/1e15).toFixed(2)+' PFLOP</code>. On <code>'+c.dev+'</code> accelerators at <code>40%</code> utilisation that is <code>'+secs.toFixed(2)+' s</code> against a budget of <code>'+budget+' s</code>, <code>'+(fr*100).toFixed(0)+'%</code> of it'+(fr>1?(', over by <code>'+(secs-budget).toFixed(2)+' s</code>'):'')+'. '+
+        'One generated token afterwards costs <code>'+(fwdPerToken(c,T)/1e9).toFixed(1)+' GFLOP</code>.'});
+
+    // 4. state carries what the window cannot
+    var chunks=Math.ceil(T/chunk), outside=Math.max(0,T-chunk), outFrac=outside/T;
+    var c4;
+    if(chunks<=1){
+      c4={s:'pass',short:1,name:'State carries what the window cannot',
+        b:'At a chunk length of <code>'+num(chunk)+'</code> the whole target fits in one chunk, so no boundary is crossed. Cross-chunk state does no work in this configuration.'};
+    } else if(mem==='none'){
+      c4={s:'fail',short:chunks,name:'State carries what the window cannot',
+        b:'The target is cut into <code>'+chunks+'</code> chunks of <code>'+num(chunk)+'</code> with nothing crossing a boundary, so <code>'+num(outside)+'</code> tokens, <code>'+(outFrac*100).toFixed(1)+'%</code> of the advertised window, are unreachable from the final chunk. The claim covers <code>'+num(T)+'</code> tokens; the model sees <code>'+num(chunk)+'</code>.'};
+    } else {
+      var nLin=c.L-attnLayers(c);
+      var stateB=(mem==='stream')?(c.D*c.prec):Math.max(nLin,1)*c.D*c.Hd*c.prec;
+      var noLin=(mem==='linear'&&nLin===0);
+      c4={s:noLin?'fail':'flag',short:noLin?chunks:1,name:'State carries what the window cannot',
+        b:noLin
+          ?('A linear recurrent state has to cross <code>'+chunks+'</code> boundaries in a stack holding <code>0</code> linear layers, so <code>'+num(outside)+'</code> tokens, <code>'+(outFrac*100).toFixed(1)+'%</code> of the window, are unreachable. Add linear layers, or carry a Memory Stream.')
+          :('<code>'+chunks+'</code> chunks of <code>'+num(chunk)+'</code>, with '+(mem==='stream'?'a single gated vector of width <code>'+c.D+'</code>':'the recurrent state of <code>'+nLin+'</code> linear layers')+' crossing each boundary: <code>'+gb(stateB)+'</code> of carried state against <code>'+gb(cache(c,chunk))+'</code> of cache per chunk, a ratio of <code>1 : '+num(cache(c,chunk)/stateB)+'</code>. '+
+          'O(1) in the number of chunks, and a summary. In V4 the injection settles near <code>6%</code> of the embedding magnitude: treat it as a nudge from the past.')};
+    }
+    out.push(c4);
+
+    // 5. training actually visited long sequences
+    var unseen=Math.max(0,T-S)/T, tr=T/S;
+    out.push({s:(S>=T)?'pass':(longShare>=0.15?'flag':'fail'),short:Math.max(tr,1),
+      name:'Training visited long sequences',
+      b:'The longest training sequence was <code>'+num(S)+'</code>, so <code>'+(unseen*100).toFixed(1)+'%</code> of the positions in the advertised window were never optimised against a loss, and the target is <code>'+tr.toFixed(1)+'x</code> the longest thing the model read. '+
+        'Long sequences are <code>'+(longShare*100).toFixed(0)+'%</code> of the token budget. Defined at a length and competent at it are separate claims, and users get the second.'});
+
+    // 6. the evaluation is honest
+    var on=EVALS.filter(function(e){return evalOn[e.id];}), cov=on.length;
+    var probed=needle*(evalOn.needle?1:0), frac=probed/T;
+    out.push({s:cov>=4?'pass':(cov>=2?'flag':'fail'),short:5/Math.max(cov,0.5),
+      name:'The evaluation is honest',
+      b:'<code>'+cov+' of 5</code> capabilities are probed'+(cov?': '+on.map(function(e){return e.n.toLowerCase();}).join(', '):'')+'. '+
+        (evalOn.needle?('A needle test plants <code>'+needle+'</code> tokens in a window of <code>'+num(T)+'</code> and checks they come back, verifying <code>'+(frac*100).toFixed(4)+'%</code> of it; the other <code>'+num(T-needle)+'</code> tokens stay untested.'):'Retrieval is left out of this plan, which is worth stating aloud.')+
+        ' Retrieval alone certifies retrieval.'});
+
+    return {c:c,T:T,list:out,cache:cb,secs:secs,unseen:unseen,frac:frac};
+  }
+
+  function renderBoard(){
+    var r=conditions(),c=r.c,T=r.T;
+    document.getElementById('s8w14-Tv').textContent=fmtT(T)+' ('+num(T)+')';
+    document.getElementById('s8w14-Bv').textContent=num(Math.pow(10,+el.B.value));
+    document.getElementById('s8w14-Sv').textContent=fmtT(pow2(+el.S.value));
+    document.getElementById('s8w14-Qv').textContent=el.Q.value+'%';
+    document.getElementById('s8w14-Mv').textContent=el.M.value+' tokens';
+    document.getElementById('s8w14-Kv').textContent=el.K.value;
+    document.getElementById('s8w14-Lv').textContent=el.L.value;
+    document.getElementById('s8w14-Dv').textContent=num(+el.D.value);
+    document.getElementById('s8w14-Gv').textContent=el.G.value;
+    document.getElementById('s8w14-Nv').textContent=el.N.value;
+    document.getElementById('s8w14-Yv').textContent=el.Y.value+' s';
+    document.getElementById('s8w14-Cv').textContent=fmtT(pow2(+el.C.value));
+    document.getElementById('s8w14-Pv').textContent=el.P.value+' tokens';
+
+    document.getElementById('s8w14-assume').innerHTML=
+      'Peak <b>494.7 TFLOP/s</b> bf16, utilisation <b>40%</b>, <b>80 GB</b> per device, weights bf16, window <b>512</b> tokens, parameters <b>12 x layers x width squared</b>, '+
+      'extension <b>32x</b> for DroPE and YaRN, <b>16x</b> for NTK, from reported results. Tokens per word on tab 2 are the Session 3 measurement.';
+
+    // Each verdict carries a glyph as well as a hue: OK, !, X.
+    document.getElementById('s8w14-conds').innerHTML=r.list.map(function(x,i){
+      var cls=x.s==='pass'?'s8w14-pass':x.s==='flag'?'s8w14-flag':'s8w14-fail';
+      var tag=x.s==='pass'?'holds':x.s==='flag'?'holds with a caveat':'does not hold';
+      var gly=x.s==='pass'?'OK':x.s==='flag'?'!':'X';
+      return '<div class="s8w14-cond '+cls+'"><div class="s8w14-h"><b><span class="s8w14-gly" aria-hidden="true">'+gly+'</span> '+(i+1)+'. '+x.name+'</b><span class="s8w14-tag">'+gly+' '+tag+'</span></div>'+x.b+'</div>';
+    }).join('');
+
+    var fails=r.list.filter(function(x){return x.s==='fail';});
+    var flags=r.list.filter(function(x){return x.s==='flag';});
+    var bind=fails.slice().sort(function(a,b){return b.short-a.short;})[0];
+    var bd=document.getElementById('s8w14-bind');
+    if(bind){
+      var by=(bind.short>=1e5)?'it is not defined at this length at all':('it is short by a factor of '+bind.short.toFixed(2));
+      bd.className='s8w14-bind s8w14-bindbad';
+      bd.innerHTML='<span class="s8w14-gly" aria-hidden="true">X</span> <b>The binding constraint is condition '+(r.list.indexOf(bind)+1)+': '+bind.name.toLowerCase()+'.</b> Of the '+fails.length+' condition'+(fails.length>1?'s':'')+' that do not hold, this is the one furthest from holding, and '+by+'. '+
+        'A context length is the minimum over all six. '+(flags.length?(flags.length+' further condition'+(flags.length>1?'s hold':' holds')+' with a caveat.'):'');
+    } else {
+      bd.className='s8w14-bind s8w14-bindok';
+      bd.innerHTML='<span class="s8w14-gly" aria-hidden="true">OK</span> <b>All six conditions hold at '+num(T)+' tokens'+(flags.length?', '+flags.length+' of them with a caveat':'')+'.</b> Nothing in the configuration contradicts the claim, which is the most a board like this can tell you. Sweep the target upward and watch which condition gives out first.';
+    }
+
+    document.getElementById('s8w14-m1').textContent=gb(r.cache);
+    document.getElementById('s8w14-m2').textContent=r.secs.toFixed(2)+' s';
+    document.getElementById('s8w14-m3').textContent=(r.unseen*100).toFixed(1)+'%';
+    document.getElementById('s8w14-m4').textContent=(r.frac*100).toFixed(4)+'%';
+    return r;
+  }
+
+  function renderLangs(r){
+    var T=r.T, docWords=(+el.W.value)*1000;
+    document.getElementById('s8w14-Wv').textContent=num(docWords)+' words';
+    var fert=[(+el.F0.value)/100,(+el.F1.value)/100,(+el.F2.value)/100];
+    ['F0','F1','F2'].forEach(function(k,i){document.getElementById('s8w14-'+k+'v').textContent=fert[i].toFixed(2);});
+
+    var html='',rows='';
+    TEXTS.forEach(function(x,i){
+      var f=fert[i];
+      var docTokens=docWords*f;
+      var keptFrac=Math.min(1,T/docTokens);
+      var keptWords=Math.min(docWords,T/f);
+      var lostWords=docWords-keptWords;
+      var words=x.t.trim().split(/\s+/);
+      var cut=Math.max(1,Math.round(keptFrac*words.length));
+      var body=words.map(function(w,j){return '<span class="'+(j<cut?'s8w14-kept':'s8w14-lost')+'">'+w+'</span>';}).join(' ');
+      var effWindow=T*(fert[0]/f);
+      html+='<div class="s8w14-lang">'+
+        '<div class="s8w14-lhead"><b>'+x.name+'</b>'+
+        '<span class="s8w14-st">'+num(x.chars)+' characters, '+num(x.bytes)+' UTF-8 bytes, '+(x.bytes/x.chars).toFixed(2)+' bytes per character, '+x.words+' words</span></div>'+
+        '<div class="s8w14-text '+x.cls+'">'+body+'</div>'+
+        '<div class="s8w14-bar"><div class="s8w14-fill" style="width:'+(keptFrac*100).toFixed(2)+'%"></div></div>'+
+        '<div class="s8w14-barlab"><span>'+num(keptWords)+' words held, '+(keptFrac*100).toFixed(1)+'% of the document</span>'+
+        '<span>'+(lostWords>0?(num(lostWords)+' words lost'):'nothing lost')+'</span></div>'+
+        '</div>';
+      rows+='<tr><td>'+x.name+'</td><td>'+num(x.bytes)+'</td><td>'+(x.bytes/x.chars).toFixed(2)+'</td><td>'+f.toFixed(2)+'</td><td>'+num(docTokens)+'</td><td>'+num(keptWords)+'</td><td>'+(keptFrac*100).toFixed(1)+'%</td><td>'+num(effWindow)+'</td></tr>';
+    });
+    document.getElementById('s8w14-langs').innerHTML=html;
+    document.getElementById('s8w14-tab').innerHTML=
+      '<tbody><tr><th>Language</th><th>bytes in the sample</th><th>bytes per char</th><th>tokens per word</th><th>tokens for the document</th><th>words held</th><th>document held</th><th>window in English-equivalent tokens</th></tr>'+rows+'</tbody>';
+
+    var f0=fert[0],f2=fert[2];
+    var tel=T*(f0/f2);
+    var need=docWords*f2;
+    var c=r.c;
+    var cacheEn=cache(c,Math.min(1<<24,Math.ceil(docWords*f0)));
+    var cacheTe=cache(c,Math.min(1<<24,Math.ceil(need)));
+    document.getElementById('s8w14-note2').innerHTML=
+      'The window is <code>'+num(T)+'</code> tokens for everybody. The English reader gets <code>'+num(T/f0)+'</code> words of it, the Telugu reader <code>'+num(T/f2)+'</code>, because the tokenizer spends <code>'+(f2/f0).toFixed(2)+'x</code> as many tokens on the same meaning. '+
+      'The model advertised at <code>'+fmtT(T)+'</code> is worth <code>'+fmtT(Math.round(tel/1024)*1024)+'</code> of English to the Telugu user, and the model card is silent on it. '+
+      'Holding this <code>'+num(docWords)+'</code>-word document in Telugu needs <code>'+num(need)+'</code> tokens: <code>'+gb(cacheTe)+'</code> of cache against <code>'+gb(cacheEn)+'</code>, a difference of <code>'+gb(cacheTe-cacheEn)+'</code> per conversation at the same price. '+
+      'Long context is partly how the tokenizer bill gets paid back.';
+  }
+
+  // The language panel is this widget's punchline. It is not rendered, and so
+  // not reachable in the document, until the student has committed to a guess.
+  function render(){ var r=renderBoard(); if(PR.revealed) renderLangs(r); }
+
+  document.getElementById('s8w14-evals').innerHTML=EVALS.map(function(e){
+    return '<label class="s8w14-chk"><input type="checkbox" aria-label="Probe: '+e.n+'" data-e="'+e.id+'"'+(evalOn[e.id]?' checked':'')+'><span><b>'+e.n+'</b><br>'+e.d+'</span></label>';
+  }).join('');
+  Array.prototype.forEach.call(document.querySelectorAll('.s8w14-chk input'),function(n){
+    n.onchange=function(){evalOn[n.dataset.e]=n.checked;render();};
+  });
+
+  function stop(){playing=false;if(raf){cancelAnimationFrame(raf);raf=null;}document.getElementById('s8w14-sweeplab').textContent='paused at a target of '+fmtT(ctx());}
+  function tick(){
+    if(!playing)return;
+    var v=+el.T.value+0.025; if(v>20)v=13;
+    el.T.value=v.toFixed(2); render();
+    document.getElementById('s8w14-sweeplab').textContent='sweeping the target, now at '+fmtT(ctx());
+    raf=requestAnimationFrame(tick);
+  }
+  document.getElementById('s8w14-play').onclick=function(){if(playing)return;playing=true;raf=requestAnimationFrame(tick);};
+  document.getElementById('s8w14-pause').onclick=stop;
+  document.getElementById('s8w14-reset').onclick=function(){
+    stop();
+    ids.forEach(function(k){el[k].value=DEF[k];});
+    sels.forEach(function(k){se[k].value=SEL[k];});
+    evalOn={needle:true,multihop:false,aggregate:false,order:false,generate:false};
+    Array.prototype.forEach.call(document.querySelectorAll('.s8w14-chk input'),function(n){n.checked=evalOn[n.dataset.e];});
+    prReset();
+    document.getElementById('s8w14-sweeplab').textContent='reset to defaults';
+  };
+  ids.forEach(function(k){el[k].addEventListener('input',render);});
+  sels.forEach(function(k){se[k].addEventListener('change',render);});
+
+  // ---- predict then reveal, on the panel that carries the punchline ----
+  var prIn=document.getElementById('s8w14-pr-in'),
+      prOut=document.getElementById('s8w14-pr-out'),
+      prStrip=document.getElementById('s8w14-pr-strip'),
+      prStage=document.getElementById('s8w14-langstage');
+  var BAND=15;   // percentage points either side of the truth
+
+  function parseGuess(s){
+    if(!s) return null;
+    var x=String(s).trim().replace(/[,%\s]/g,'');
+    var v=parseFloat(x);
+    return isFinite(v)?v:null;
+  }
+  // The truth is the same arithmetic renderLangs runs on the same strings.
+  function truthTe(){
+    var T=ctx(), docWords=(+el.W.value)*1000,
+        f0=(+el.F0.value)/100, f2=(+el.F2.value)/100;
+    return {T:T, docWords:docWords, f0:f0, f2:f2,
+            pctTe:Math.min(1,T/(docWords*f2))*100,
+            pctEn:Math.min(1,T/(docWords*f0))*100,
+            wordsTe:Math.min(docWords,T/f2), wordsEn:Math.min(docWords,T/f0)};
+  }
+  function prOpen(guess){
+    var t=truthTe();
+    PR.revealed=true; PR.guess=guess;
+    prStage.hidden=false;
+    prOut.hidden=false;
+    prIn.disabled=true;
+    document.getElementById('s8w14-pr-go').disabled=true;
+    var truthTxt='The Telugu reader holds <b>'+t.pctTe.toFixed(1)+'%</b> of the document, which is <b>'+num(t.wordsTe)+'</b> of its '+num(t.docWords)+' words. The English reader holds <b>'+t.pctEn.toFixed(1)+'%</b> of the same document from the same <b>'+num(t.T)+'</b>-token window.';
+    var gapTxt='';
+    if(guess!==null){
+      var d=guess-t.pctTe;
+      gapTxt=' You said <b>'+guess+'%</b>, it is <b>'+t.pctTe.toFixed(1)+'%</b>, so you were '+(Math.abs(d)<0.05?'exactly on it':((d>0?'high':'low')+' by <b>'+Math.abs(d).toFixed(1)+'</b> percentage points'))+'.'+
+        (Math.abs(d)<=BAND?' That is inside the 15 percentage point band this widget accepts.':' That is outside the 15 percentage point band this widget accepts.');
+    }
+    prOut.innerHTML=(guess===null?'<b>Prediction skipped.</b> ':'')+truthTxt+gapTxt;
+    prStrip.hidden=false;
+    prStrip.innerHTML=(guess===null?'prediction skipped':'your prediction: <b>'+guess+'%</b>')+
+      ' &nbsp;|&nbsp; computed: Telugu holds <b>'+t.pctTe.toFixed(1)+'%</b>, English holds <b>'+t.pctEn.toFixed(1)+'%</b>. Both move with the window, the document length and the fertility figures below.';
+    render();
+  }
+  function prReset(){
+    PR.revealed=false; PR.guess=null;
+    var prb=document.getElementById('s8w14-pr'); prb.hidden=false;
+    Array.prototype.forEach.call(prb.children,function(ch){ if(ch!==prOut) ch.hidden=false; });
+    prb.style.padding=''; prOut.style.marginTop=''; prOut.style.borderTop=''; prOut.style.paddingTop='';
+    prStage.hidden=true; prOut.hidden=true; prOut.innerHTML='';
+    prStrip.hidden=true; prStrip.innerHTML='';
+    prIn.value=''; prIn.disabled=false;
+    document.getElementById('s8w14-pr-go').disabled=false;
+    document.getElementById('s8w14-pr-skip').disabled=false;
+    document.getElementById('s8w14-langs').innerHTML='';
+    document.getElementById('s8w14-tab').innerHTML='';
+    document.getElementById('s8w14-note2').innerHTML='';
+    render();
+  }
+  document.getElementById('s8w14-pr-go').onclick=function(){
+    var g=parseGuess(prIn.value);
+    if(g===null){ prIn.placeholder='type a percentage first'; try{prIn.focus({preventScroll:true});}catch(e){} return; }
+    prOpen(g);
+  };
+  document.getElementById('s8w14-pr-skip').onclick=function(){ prOpen(null); };
+  prIn.addEventListener('keydown',function(e){
+    if(e.key==='Enter'){ e.preventDefault(); document.getElementById('s8w14-pr-go').click(); }
+  });
+
+  // ---- tabs: one panel at a time, the configuration column stays ----
+  var stage=1;
+  function setTab(n){
+    stage=n;
+    var t=document.querySelectorAll('.s8w14-tbtn'),i;
+    for(i=0;i<t.length;i++) t[i].className='s8w14-tbtn'+(+t[i].dataset.st===n?' on':'');
+    for(i=1;i<=2;i++) document.getElementById('s8w14-p'+i).className='s8w14-pane'+(i===n?' on':'');
+    render();
+    if(window.s8w14Fit) window.s8w14Fit();   // the frame follows the tab
+    if(n===2&&!PR.revealed){ try{prIn.focus({preventScroll:true});}catch(e){try{prIn.focus({preventScroll:true});}catch(e){}} }
+  }
+  document.getElementById('s8w14-tabs').addEventListener('click',function(e){
+    var b=e.target.closest('.s8w14-tbtn'); if(!b) return;
+    setTab(+b.dataset.st);
+  });
+
+  prReset();
+  setTab(1);
+  document.getElementById('s8w14-sweeplab').textContent='press Play to sweep the target context and watch which condition gives out first'+(REDUCED?'. Reduced motion is on, so the sweep starts paused.':'');
+})();
+</script>
+<script>
+/* Self-sizing: the lesson embeds this at a fixed height, but the content height
+   changes when the predict gate opens, when a tab switches, or when a panel
+   expands. Same-origin, so the frame can be resized from inside. */
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){
+    var h=Math.ceil(document.body.scrollHeight)+8;
+    if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; }
+  }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+  window.s8w14Fit=fit;
+})();
+</script>
+<script>
+/* After Reveal or Skip, fold the question away. The widget is what the student
+   came for, and it should be at the top of the frame, not below a quiz. */
+(function(){
+  var pr=document.getElementById('s8w14-pr');
+  var strip=document.getElementById('s8w14-pr-strip');
+  var out=document.getElementById('s8w14-pr-out');
+  if(!pr) return;
+  function fold(){
+    if(!out || out.hidden) return;
+    if(strip && !strip.hidden){ pr.hidden=true; return; }
+    Array.prototype.forEach.call(pr.children,function(c){ if(c!==out) c.hidden=true; });
+    out.style.marginTop='0'; out.style.borderTop='none'; out.style.paddingTop='0';
+    pr.style.padding='10px 13px';
+  }
+  ['s8w14-pr-go','s8w14-pr-skip'].forEach(function(id){
+    var b=document.getElementById(id);
+    if(b) b.addEventListener('click',function(){ setTimeout(fold,0); });
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 8 Widget 11 — Compress the sequence</title>
+<style>
+:root{
+  --ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;
+  --violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626;
+  --paper:#ffffff;--soft:#f8fbff
+}
+*{box-sizing:border-box}
+body{
+  margin:0;color:var(--ink);background:linear-gradient(180deg,#f8fbff,#eef5fb);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:14px
+}
+.wrap{max-width:1280px;margin:0 auto;padding:22px}
+.kicker{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+h1{font-size:27px;line-height:1.15;margin:5px 0 7px}
+.sub{max-width:930px;margin:0;color:var(--muted);line-height:1.55}
+.controls{
+  display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0 14px
+}
+.control,.panel,.note{
+  background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;
+  box-shadow:0 10px 28px rgba(20,42,75,.07)
+}
+.control{padding:12px 14px}
+.control label{display:flex;justify-content:space-between;gap:12px;font-weight:750;margin-bottom:7px}
+.control output{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--cyan)}
+input[type=range]{width:100%;accent-color:var(--cyan)}
+.hint{margin:4px 0 0;color:var(--muted);font-size:11.5px;line-height:1.4}
+.pipeline{display:grid;grid-template-columns:1fr 32px 1fr 32px 1fr;align-items:stretch}
+.arrow{display:grid;place-items:center;color:var(--cyan);font-size:24px;font-weight:800}
+.panel{padding:13px;min-width:0}
+.step{font-size:11px;font-weight:850;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.panel h2{font-size:16px;margin:3px 0 4px}
+.panel p{font-size:12px;line-height:1.45;color:var(--muted);margin:0 0 11px}
+.tokens{display:grid;grid-template-columns:repeat(8,1fr);gap:5px}
+.token{
+  min-width:0;height:29px;border:1px solid #bae6fd;border-radius:6px;background:#ecfeff;
+  display:grid;place-items:center;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+  font-size:10.5px;font-weight:800;color:#0e7490
+}
+.blocks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.block{
+  min-height:55px;border:1px solid #c4b5fd;border-radius:8px;background:#f5f3ff;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:5px
+}
+.block b{font-size:11px;color:#5b21b6}
+.block span{font-size:9.5px;color:#7c3aed;margin-top:3px;line-height:1.2}
+.reads{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.read{
+  display:grid;grid-template-columns:34px 1fr 38px;gap:7px;align-items:center;
+  padding:5px 7px;border:1px solid var(--line);border-radius:7px;background:#f8fafc
+}
+.read.chosen{border-color:#86efac;background:#f0fdf4}
+.read b{font-size:10.5px}
+.bar{height:8px;border-radius:999px;background:#e2e8f0;overflow:hidden}
+.bar i{display:block;height:100%;background:#94a3b8;border-radius:inherit}
+.read.chosen .bar i{background:var(--green)}
+.read small{font-size:9.5px;text-align:right;color:var(--muted);font-weight:750}
+.read.chosen small{color:#166534}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.metric{border:1px solid var(--line);border-radius:9px;background:#fff;padding:10px 12px;text-align:center}
+.metric b{display:block;font:800 19px/1.15 ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--violet)}
+.metric span{display:block;margin-top:3px;font-size:11px;color:var(--muted);line-height:1.35}
+.claim{
+  margin-top:12px;border:1px solid #a5f3fc;border-radius:9px;background:#ecfeff;
+  color:#155e75;padding:11px 13px;line-height:1.5
+}
+.claim code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-weight:800}
+.foot{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.note{padding:10px 12px;box-shadow:none;font-size:11.5px;line-height:1.5;color:var(--muted)}
+.note b{color:var(--ink)}
+.note.index{border-color:#ddd6fe;background:#faf5ff}
+.note.caveat{border-color:#fde68a;background:#fffbeb}
+@media(max-width:900px){
+  .pipeline{grid-template-columns:1fr}.arrow{height:28px;transform:rotate(90deg)}
+  .blocks{grid-template-columns:repeat(6,minmax(0,1fr))}
+}
+@media(max-width:650px){
+  .wrap{padding:16px}.controls,.metrics,.foot{grid-template-columns:1fr}
+  .tokens{grid-template-columns:repeat(6,1fr)}.blocks{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="kicker">ERA V5 Session 8 · Sequence compression</div>
+  <h1>Store fewer positions. Read fewer summaries.</h1>
+  <p class="sub">Long context has many token positions. This design first combines nearby tokens into block summaries, then sends expensive attention only to the summaries most relevant to the current query.</p>
+
+  <section class="controls" aria-label="Sequence-compression controls">
+    <div class="control">
+      <label for="blockSize">Tokens per block <output id="blockOut">4</output></label>
+      <input id="blockSize" type="range" min="2" max="8" value="4">
+      <p class="hint">Larger blocks mean fewer stored positions, but each summary must represent more token detail.</p>
+    </div>
+    <div class="control">
+      <label for="topK">Summaries read with expensive attention <output id="topOut">2</output></label>
+      <input id="topK" type="range" min="1" max="6" value="2">
+      <p class="hint">Top-k keeps the strongest candidates. The other summaries remain stored but are not read by expensive attention.</p>
+    </div>
+  </section>
+
+  <section class="pipeline" aria-label="Two-stage sequence-compression pipeline">
+    <article class="panel">
+      <div class="step">Before</div>
+      <h2>24 token positions</h2>
+      <p>Ordinary caching keeps a separate K/V entry for every position.</p>
+      <div class="tokens" id="tokens"></div>
+    </article>
+
+    <div class="arrow" aria-hidden="true">→</div>
+
+    <article class="panel">
+      <div class="step">Stage 1 · compress</div>
+      <h2 id="blockTitle">6 stored summaries</h2>
+      <p id="blockCopy">Every 4 nearby tokens become one block summary.</p>
+      <div class="blocks" id="blocks"></div>
+    </article>
+
+    <div class="arrow" aria-hidden="true">→</div>
+
+    <article class="panel">
+      <div class="step">Stage 2 · select</div>
+      <h2 id="readTitle">Read the best 2 summaries</h2>
+      <p>A cheap index ranks every block; expensive attention reads only the selected blocks.</p>
+      <div class="reads" id="reads"></div>
+    </article>
+  </section>
+
+  <section class="metrics" aria-live="polite">
+    <div class="metric"><b id="storedMetric">24 → 6</b><span>stored positions after block compression</span></div>
+    <div class="metric"><b id="storeSaving">4× fewer</b><span>long-range K/V entries in this illustration</span></div>
+    <div class="metric"><b id="readMetric">6 → 2</b><span>summaries receiving expensive attention</span></div>
+  </section>
+
+  <div class="claim"><b>The two savings do different jobs:</b> compression changes how much history is <code>stored</code>; top-k changes how much of that compressed history is <code>read</code> for one query.</div>
+
+  <section class="foot">
+    <div class="note index"><b>Where does top-k come from?</b> A small low-rank indexer scores all block summaries cheaply. Its only job is ranking candidates; it does not produce the final attention output.</div>
+    <div class="note caveat"><b>The trade-off:</b> a block summary can lose token-level detail, and an approximate indexer can miss a useful block. This visual demonstrates the scaling idea, not model quality or DeepSeek-V4’s reported production ratios.</div>
+  </section>
+</main>
+
+<script>
+(function(){
+  'use strict';
+  var N=24;
+  var tokenScores=[.08,.14,.22,.12,.31,.46,.38,.18,.16,.29,.76,.91,.67,.25,.19,.11,.35,.58,.84,.72,.27,.17,.42,.33];
+  var blockSize=document.getElementById('blockSize');
+  var topK=document.getElementById('topK');
+
+  function make(tag,className,text){
+    var node=document.createElement(tag);
+    if(className) node.className=className;
+    if(text!==undefined) node.textContent=text;
+    return node;
+  }
+
+  function drawTokens(){
+    var host=document.getElementById('tokens');
+    host.innerHTML='';
+    for(var i=0;i<N;i++) host.appendChild(make('span','token','t'+(i+1)));
+  }
+
+  function render(){
+    var m=Number(blockSize.value);
+    var count=Math.ceil(N/m);
+    topK.max=String(count);
+    if(Number(topK.value)>count) topK.value=String(count);
+    var k=Number(topK.value);
+    var data=[];
+
+    for(var b=0;b<count;b++){
+      var start=b*m;
+      var end=Math.min(N,start+m);
+      var total=0;
+      for(var t=start;t<end;t++) total+=tokenScores[t];
+      data.push({index:b,start:start,end:end,score:total/(end-start)});
+    }
+
+    var ranked=data.slice().sort(function(a,b){return b.score-a.score;});
+    var chosen={};
+    for(var r=0;r<k;r++) chosen[ranked[r].index]=true;
+
+    document.getElementById('blockOut').textContent=String(m);
+    document.getElementById('topOut').textContent=String(k)+' of '+count;
+    document.getElementById('blockTitle').textContent=count+' stored '+(count===1?'summary':'summaries');
+    document.getElementById('blockCopy').textContent='Every '+m+' nearby '+(m===1?'token stays as its own entry.':'tokens become one block summary.');
+    document.getElementById('readTitle').textContent='Read the best '+k+' '+(k===1?'summary':'summaries');
+
+    var blocks=document.getElementById('blocks');
+    blocks.innerHTML='';
+    data.forEach(function(item){
+      var node=make('div','block');
+      node.appendChild(make('b','', 'block '+(item.index+1)));
+      node.appendChild(make('span','', 't'+(item.start+1)+'–t'+item.end));
+      blocks.appendChild(node);
+    });
+
+    var reads=document.getElementById('reads');
+    reads.innerHTML='';
+    data.forEach(function(item){
+      var row=make('div','read'+(chosen[item.index]?' chosen':''));
+      row.appendChild(make('b','', 'B'+(item.index+1)));
+      var bar=make('div','bar');
+      var fill=make('i');
+      fill.style.width=Math.round(item.score*100)+'%';
+      bar.appendChild(fill);
+      row.appendChild(bar);
+      row.appendChild(make('small','',chosen[item.index]?'READ':'skip'));
+      reads.appendChild(row);
+    });
+
+    document.getElementById('storedMetric').textContent=N+' → '+count;
+    document.getElementById('storeSaving').textContent=(N/count).toFixed(count===N?0:1).replace('.0','')+'× fewer';
+    document.getElementById('readMetric').textContent=count+' → '+k;
+  }
+
+  drawTokens();
+  blockSize.addEventListener('input',render);
+  topK.addEventListener('input',render);
+  render();
+})();
+</script>
+</body>
+</html>

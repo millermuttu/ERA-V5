@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 8 Widget 12 - Mixing Memory Across Depth</title>
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px}
+button{font:inherit}
+.wrap{max-width:1280px;margin:0 auto;padding:18px 22px}
+.kicker{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--violet)}
+h1{font-size:26px;line-height:1.12;margin:4px 0 6px}
+.sub{max-width:920px;margin:0 0 14px;color:var(--muted);line-height:1.5}
+.card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 30px rgba(20,42,75,.08);padding:15px}
+.controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.controls strong{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-right:2px}
+.choice{border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 11px;color:var(--muted);font-weight:750;cursor:pointer}
+.choice:hover{border-color:#a78bfa}
+.choice.on{border-color:var(--violet);background:#f5f3ff;color:#5b21b6;box-shadow:0 0 0 1px #ddd6fe inset}
+.choice small{display:block;font-size:9px;font-weight:600;margin-top:1px;opacity:.8}
+.stage{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(270px,.75fr);gap:14px;align-items:stretch}
+.panel{border:1px solid var(--line);border-radius:10px;padding:13px;background:#fbfdff}
+.panel h2{font-size:13px;margin:0 0 5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.hint{font-size:12px;color:var(--muted);line-height:1.45;margin:0 0 12px}
+.flow{display:flex;align-items:center;gap:7px;min-height:90px}
+.endpoint{font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+.arrow{color:#94a3b8;font-size:18px}
+.layers{display:grid;grid-template-columns:repeat(8,minmax(42px,1fr));gap:6px;flex:1}
+.layer{border-radius:9px;padding:10px 3px;text-align:center;border:1px solid;transition:transform .16s ease,opacity .16s ease}
+.layer b{display:block;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:20px;line-height:1}
+.layer small{display:block;font-size:8.5px;margin-top:4px;line-height:1.15}
+.layer.d{background:#f5f3ff;border-color:#ddd6fe;color:#6d28d9}
+.layer.g{background:#ecfeff;border-color:#a5f3fc;color:#0e7490}
+.meaning{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}
+.meaning div{border-radius:8px;padding:9px 10px;font-size:11.5px;line-height:1.42}
+.meaning b{display:block;margin-bottom:2px}
+.dmeaning{background:#f5f3ff;color:#5b21b6}
+.gmeaning{background:#ecfeff;color:#155e75}
+.trade{display:grid;grid-template-columns:1fr;gap:9px}
+.meter{border:1px solid var(--line);border-radius:8px;padding:9px;background:#fff}
+.meterhead{display:flex;justify-content:space-between;gap:8px;font-size:11.5px;margin-bottom:6px}
+.meterhead b:last-child{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+.track{height:9px;border-radius:999px;background:#eef2f7;overflow:hidden}
+.fill{height:100%;border-radius:inherit;transition:width .2s ease}
+.statefill{background:var(--violet)}
+.exactfill{background:var(--cyan)}
+.cachefill{background:var(--amber)}
+.result{border-left:3px solid var(--violet);padding:8px 10px;background:#fff;border-radius:0 8px 8px 0;font-size:12px;line-height:1.48}
+.evidence{margin-top:12px;border:1px solid #bbf7d0;background:#f0fdf4;color:#166534;border-radius:9px;padding:10px 12px;font-size:12px;line-height:1.48}
+.evidence b{color:#14532d}
+.factrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:7px}
+.fact{background:#fff;border:1px solid #bbf7d0;border-radius:7px;padding:5px 8px;font-size:10.5px}
+.footer{margin:10px 0 0;font-size:11px;color:var(--muted);line-height:1.45}
+@media(max-width:820px){.stage{grid-template-columns:1fr}.flow{overflow-x:auto}.layers{min-width:500px}.meaning{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="kicker">ERA V5 Session 8</div>
+  <h1>Why mix memory systems across depth?</h1>
+  <p class="sub">A model does not have to make every layer remember in the same way. Change the eight-layer schedule and watch the central tradeoff.</p>
+
+  <section class="card">
+    <div class="controls" role="group" aria-label="Choose a layer schedule">
+      <strong>Compare a schedule</strong>
+      <button class="choice" data-pattern="DDDDDDDG" type="button">Mostly fixed state<small>7D : 1G</small></button>
+      <button class="choice on" data-pattern="DDDGDDDG" type="button">V4 schedule<small>6D : 2G</small></button>
+      <button class="choice" data-pattern="DGDGDGDG" type="button">More exact access<small>4D : 4G</small></button>
+    </div>
+
+    <div class="stage">
+      <section class="panel">
+        <h2>One eight-layer motif</h2>
+        <p class="hint">The sequence moves upward through every layer. A <b>G</b> layer is an occasional chance to read selected earlier tokens directly.</p>
+        <div class="flow">
+          <span class="endpoint">input</span><span class="arrow">→</span>
+          <div class="layers" id="layers" aria-label="Layer schedule"></div>
+          <span class="arrow">→</span><span class="endpoint">deeper</span>
+        </div>
+        <div class="meaning">
+          <div class="dmeaning"><b>D · fixed-state layer</b>Compresses the past into a fixed-size running state. Cheap to serve, but old token detail is not kept exactly.</div>
+          <div class="gmeaning"><b>G · sparse-attention layer</b>Reads a selected set of earlier K/V entries directly. It restores exact token access, but those entries require a growing KV cache.</div>
+        </div>
+      </section>
+
+      <aside class="panel trade">
+        <h2>What the schedule trades</h2>
+        <div class="meter">
+          <div class="meterhead"><b>Fixed-state layers</b><b id="stateCount">6 / 8</b></div>
+          <div class="track"><div class="fill statefill" id="stateBar"></div></div>
+        </div>
+        <div class="meter">
+          <div class="meterhead"><b>Exact-access moments</b><b id="exactCount">2 / 8</b></div>
+          <div class="track"><div class="fill exactfill" id="exactBar"></div></div>
+        </div>
+        <div class="meter">
+          <div class="meterhead"><b>KV cache from G layers</b><b id="cacheCount">V4 · 1×</b></div>
+          <div class="track"><div class="fill cachefill" id="cacheBar"></div></div>
+        </div>
+        <div class="result" id="result"></div>
+      </aside>
+    </div>
+
+    <div class="evidence">
+      <b>What the evidence supports:</b> LightningLM V4 used <code>DDDGDDDG</code>—six DeltaNet layers and two sparse-attention layers—and kept that motif from the 1.78B seed to the 120B run. It shows that this mixture worked. Because the neighboring ratios were not cleanly ablated, it does <b>not</b> show that 6D : 2G is optimal.
+      <div class="factrow">
+        <span class="fact">V4-style arithmetic, 1G → 8G</span>
+        <span class="fact">KV state: 8.0×</span>
+        <span class="fact">mixing compute: about 1.41×</span>
+      </div>
+    </div>
+    <p class="footer">The comparison schedules are illustrations, not reported V4 ablations. The key idea is the direction of the trade: more G layers provide more frequent direct access; more D layers reduce the per-sequence memory bill.</p>
+  </section>
+</main>
+
+<script>
+(function(){
+  var buttons=Array.prototype.slice.call(document.querySelectorAll('.choice'));
+  var layers=document.getElementById('layers');
+  var stateCount=document.getElementById('stateCount');
+  var exactCount=document.getElementById('exactCount');
+  var cacheCount=document.getElementById('cacheCount');
+  var stateBar=document.getElementById('stateBar');
+  var exactBar=document.getElementById('exactBar');
+  var cacheBar=document.getElementById('cacheBar');
+  var result=document.getElementById('result');
+
+  function render(pattern){
+    var g=(pattern.match(/G/g)||[]).length;
+    var d=8-g;
+    layers.innerHTML=pattern.split('').map(function(kind,index){
+      var name=kind==='D'?'fixed state':'sparse attention';
+      return '<div class="layer '+kind.toLowerCase()+'" title="Layer '+(index+1)+': '+name+'"><b>'+kind+'</b><small>layer '+(index+1)+'</small></div>';
+    }).join('');
+
+    stateCount.textContent=d+' / 8';
+    exactCount.textContent=g+' / 8';
+    stateBar.style.width=(d/8*100)+'%';
+    exactBar.style.width=(g/8*100)+'%';
+    cacheBar.style.width=(g/8*100)+'%';
+    cacheCount.textContent=g===2?'V4 · 1×':(g/2).toFixed(1).replace('.0','')+'× V4';
+
+    if(g<2){
+      result.innerHTML='<b>Lower serving-memory cost.</b> Most layers use fixed state, but direct access to selected old tokens arrives less often through depth.';
+    }else if(g===2){
+      result.innerHTML='<b>V4\'s compromise.</b> Six layers compress history cheaply; two layers restore selected exact token access. This worked, but the ratio was not proven best.';
+    }else{
+      result.innerHTML='<b>More frequent exact access.</b> The model gets more chances to revisit selected old tokens, while more layers now carry a KV cache that grows with context.';
+    }
+  }
+
+  buttons.forEach(function(button){
+    button.addEventListener('click',function(){
+      buttons.forEach(function(item){item.classList.toggle('on',item===button);});
+      render(button.dataset.pattern);
+    });
+  });
+
+  render('DDDGDDDG');
+})();
+</script>
+</body>
+</html>
