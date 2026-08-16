@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>How attention got here — a chronology</title>
-<meta name="description" content="Every attention mechanism, in the order it was launched: what problem existed, what somebody proposed, what it fixed, and what it cost.">
+<title>How attention got here</title>
+<meta name="description" content="Every attention mechanism in the order it was launched, each one running inside a real transformer you can type into.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -17,28 +17,38 @@
     <p class="eyebrow">ERA V5 · Session 8 · Modern attention variants</p>
     <h1>How attention got here</h1>
     <p class="standfirst">
-      Every mechanism below is a reply to something that hurt. They are in the order they were
-      launched, not the order they were taught, because the order they were launched is the only
-      one that shows why anybody bothered.
+      A real transformer runs on this page — 32 dimensions, 4 heads, 2 blocks. Every mechanism below
+      is that same model with one thing changed, in the order the changes were published. Type your
+      own sentence and watch what each one does to it.
     </p>
-    <p class="standfirst muted">
-      Start at the top: scaled dot-product attention, 2017. Everything after it changes one part of
-      that picture and pays for the change somewhere else.
-    </p>
+    <div class="sentence">
+      <label class="label" for="sentence">the sentence everything runs on</label>
+      <input id="sentence" type="text" spellcheck="false" autocomplete="off"
+             aria-label="Input sentence. Every number on the page recomputes as you type.">
+      <div class="presets" id="presets"></div>
+    </div>
   </div>
 </header>
 
-<div class="wrap layout">
-  <nav class="rail" id="rail" aria-label="Timeline"></nav>
-  <main id="cards"></main>
+<nav class="timeline wrap" aria-label="Timeline">
+  <div id="timeline"></div>
+</nav>
+
+<div class="deckbar wrap">
+  <button class="nav" id="prev" aria-label="Previous concept">←</button>
+  <span class="pos" id="pos"></span>
+  <button class="nav" id="next" aria-label="Next concept">→</button>
 </div>
+
+<main id="stage" class="wrap" aria-live="polite"></main>
 
 <footer class="foot wrap">
   <p>
-    Built for the Session 8 assignment. Dates are the first public version of each primary source;
-    entries with no paper behind them say so on the card.
+    Built for the Session 8 assignment. The model is untrained — its weights are seeded noise, so its
+    predictions are structurally real and mean nothing. Dates are the first public version of each
+    primary source; entries with no paper behind them say so on the card.
     <a href="https://github.com/millermuttu/ERA-V5/tree/master/Session8/webapp">Source</a> ·
-    <a href="?selfcheck=1">Run the self-check</a>
+    <a href="?selfcheck=1">Self-check</a>
   </p>
 </footer>
 

@@ -1,59 +1,72 @@
-## 1. Skeleton and shared library
+## How this change is worked
 
-- [x] 1.1 Create `Session8/webapp/` with `index.html` (module shell: header, sticky year rail of anchor links, one container the cards render into) and `app/styles.css` carrying the `Session4/index.html` `:root` palette and the Archivo / Hanken Grotesk / IBM Plex Mono stack
-- [x] 1.2 Write `app/lib/mathx.js`: `dot` and `softmax` only — every demo imports from here, none defines its own softmax. Masking is `j > i ? -Infinity : 0` inline in the score loop; demo weights are literal arrays, so reloads are reproducible without a PRNG. Add `matmul` if and when a demo needs one
+One concept at a time. For each mechanism, in order: **research → build → verify → stop for review**,
+then the next. Research means reading the primary source, not recalling it, and writing what was
+learned to `Session8/webapp/docs/research/<id>.md` before any code for that concept is written. Each
+note records: what was read, the mechanism in precise terms, the parameters and numbers that matter,
+what the live view must let the reader do, and what the source does **not** establish. The note is
+the spec for that card and the citation for the README.
 
-## 2. The chronology data
+## 1. Reset and foundation
 
-- [x] 2.1 Define the record shape in `app/data/mechanisms.js` (`id`, `name`, `date`, `source`, `verified`, `thread`, `problem`, `mechanism`, `buys[]`, `givesUp[]`, `chooseWhen`, `demo`) with the baseline Transformer entry written out in full as the shape example
-- [x] 2.2 Write the pre-2020 entries, the timeline opening on the Transformer: scaled dot-product + MHA + sinusoidal (Transformer, the baseline and the first entry), relative positions (Shaw), learned absolute position tables (BERT-era default, the hard length wall Session 7 named), Transformer-XL segment recurrence, Sparse Transformer, MQA. RNN-era attention (Bahdanau 2014, Luong 2015) is one line of context inside the baseline card — the Transformer is what removed the recurrence — not a timeline entry
-- [x] 2.3 Write the 2020–2022 entries: Longformer sliding window, linear attention, Performer/FAVOR+, delta rule / fast-weight programmers, RoPE, ALiBi, FlashAttention
-- [x] 2.4 Write the 2023 entries: GQA, NTK-aware base scaling, YaRN, attention sinks / StreamingLLM, Mamba selective state
-- [x] 2.5 Write the 2024–2025 entries: MLA, parallelizable DeltaNet, Gated DeltaNet, NSA, DeepSeek sparse attention
-- [x] 2.6 Write the course-record-only entry: DroPE — state what the record establishes (8K → 256K, 32×, applied before annealing) and what it does not (the algorithm), `verified: false` — then read the finished set against the assignment's named minimum list and add whatever is missing
-- [x] 2.7 Confirm every entry's `problem` names a limitation of an entry that appears earlier in the sorted timeline
+- [x] 1.1 First implementation built and rejected: static tables where a live model was needed. Kept in git at `0668e67`
+- [x] 1.2 Delete `Session8/webapp/`, carrying forward only the prose and the already-verified dates from that commit
+- [x] 1.3 New shell: `index.html`, `app/styles.css` on the Session 3/4 palette and type stack, sized for a card with a live visual panel
+- [x] 1.4 `app/model/ops.js`: seeded generator, layer norm, GELU, matvec, softmax — the primitives the forward pass needs, nothing more
+- [x] 1.5 `app/model/vocab.js`: a fixed small vocabulary and tokenizer, so an edited sentence maps to ids and the prediction bars name real words
+- [x] 1.6 `app/model/transformer.js`: 32 dims, 4 heads, 2 blocks, seeded weights, tied output; a forward pass returns per-block per-head scores and weights, hidden states, and the output distribution
+- [x] 1.7 `app/model/mixers.js`: the seam every mechanism plugs into — softmax attention parameterised by a readability rule, a position scheme and key/value sharing; and fixed-size state parameterised by a write rule and decay
+- [x] 1.8 `app/model/cost.js`: cache bytes, keys read per query, mixing work per token, plus the serving-scale formula that must reproduce 6.44 GB / 51.54 GB
+- [x] 1.9 `app/runner.js`: one shared sentence, playback position and head/layer selection; the mounted concept subscribes. Only the current concept computes, which the deck gives for free
+- [x] 1.10 `app/deck.js`: one concept in view at a time; next / previous controls, left and right arrow keys, and a position readout ("7 of 26"); mount and unmount so only the current concept computes
+- [x] 1.11 `app/timeline.js`: the slider that is also the chronology — year ticks, entries spaced by real date, drag to move, current entry marked, and the drift in the field's priorities readable from it
+- [x] 1.12 URL fragment names the current concept, kept in step with `history.pushState`, honoured on load, and the browser's back control returns to the previous concept
+- [x] 1.13 Card chrome: date, source link, unverified badge, problem → mechanism → buys / gives up / when, the live panel, and the plain-language verdict at the foot
 
-## 3. Timeline and card rendering
+## 2. Concepts, in timeline order
 
-- [x] 3.1 Write `app/main.js`: sort by date, render every card into the document flow with `id="<mechanism id>"` — no router. The rail is `<a href="#id">` links, the browser handles navigation and `:target`, and the baseline is first in the DOM so it is what loads
-- [x] 3.2 Render the mechanism card: date + source link, problem → mechanism → buys → gives up → choose when, and the demo mount when the record has one
-- [x] 3.3 Render the unverified badge from the `verified` field, naming the actual provenance (community post, release note, course cookbook)
-- [x] 3.4 Show `thread` as a one-word label on the card — no colour lanes, no legend: the assignment asks for a chronology, not a taxonomy drawn over it
+Each line is: research note written, card built on the live model, plain-language verdict written, verified in the browser, reviewed.
 
-## 4. Live demos
+- [x] 2.1 Scaled dot-product attention, multi-head — the baseline (arXiv 1706.03762)
+- [ ] 2.1b Sinusoidal position encoding — its own card, same paper and date (arXiv 1706.03762)
+- [ ] 2.2 Relative position representations (arXiv 1803.02155)
+- [ ] 2.3 Learned absolute position tables (arXiv 1810.04805)
+- [ ] 2.4 Segment recurrence across contexts, Transformer-XL (arXiv 1901.02860)
+- [ ] 2.5 Sparse Transformer, strided and fixed patterns (arXiv 1904.10509)
+- [ ] 2.6 Multi-query attention (arXiv 1911.02150)
+- [ ] 2.7 Sliding window with global tokens, Longformer (arXiv 2004.05150)
+- [ ] 2.8 Linear attention, the kernel regrouping (arXiv 2006.16236)
+- [ ] 2.9 Performer, FAVOR+ (arXiv 2009.14794)
+- [ ] 2.10 The delta rule, fast-weight programmers (arXiv 2102.11174)
+- [ ] 2.11 RoPE (arXiv 2104.09864)
+- [ ] 2.12 ALiBi (arXiv 2108.12409)
+- [ ] 2.13 FlashAttention (arXiv 2205.14135)
+- [ ] 2.14 Grouped-query attention (arXiv 2305.13245)
+- [ ] 2.15 Position interpolation (arXiv 2306.15595)
+- [ ] 2.16 NTK-aware base scaling (community post, no paper)
+- [ ] 2.17 YaRN (arXiv 2309.00071)
+- [ ] 2.18 Attention sinks, StreamingLLM (arXiv 2309.17453)
+- [ ] 2.19 Selective state space, Mamba (arXiv 2312.00752)
+- [ ] 2.20 Multi-head latent attention (arXiv 2405.04434)
+- [ ] 2.21 Parallelizable DeltaNet (arXiv 2406.06484)
+- [ ] 2.22 Gated DeltaNet (arXiv 2412.06464)
+- [ ] 2.23 Natively trainable sparse attention (arXiv 2502.11089)
+- [ ] 2.24 DeepSeek sparse attention (release note, no paper)
+- [ ] 2.25 DroPE — the reported 8K → 256K, the 32×, the boundary, and no invented algorithm (course cookbook only)
 
-- [x] 4.1 `app/demos/attention.js` — 6 tokens × 4 dims, real Wq/Wk/Wv, all 36 scores, scale, softmax, weighted sum, with a causal-mask toggle that visibly leaks weight onto future tokens when off
-- [x] 4.2 `app/demos/linear.js` — the lesson's `q=2`, `k=[0.5,1,1.5]`, `v=[10,20,30]` example computed both ways (direct and pre-built state) with a softmax toggle, plus the delta rule panel showing 40 → 55 against add-only 40 → 95
-- [x] 4.3 `app/demos/rope.js` — two 2D arrows rotated by `iθ` and `jθ` with a live dot product; moving both tokens together holds the gap, the relative angle and the score fixed
-- [x] 4.4 `app/demos/cache.js` — `2 × layers × kv_heads × head_dim × T × batch × bytes`, with MHA/GQA/MQA head sharing, cache precision and concurrency
-- [x] 4.5 `app/demos/topk.js` — 12 keys with a `k` slider: value work falls with `k` while naive selection cost stays at all 12
-- [x] 4.6 `app/demos/compress.js` — block size `m` giving `T/m` stored positions, and top-k blocks read, shown as two separate savings
-- [x] 4.7 Draw a static inline-SVG diagram only where the card text cannot carry the mechanism (sliding window, attention sinks, MLA, NSA blocks are the likely four) — written as literal SVG in the module, not through a builder library. Prose plus the trade-off card is a complete explanation everywhere else
+## 3. Self-check
 
-## 5. Self-check
+- [ ] 3.1 Model assertions: softmax rows sum to 1, masked future weight exactly 0, forward pass deterministic across two runs
+- [ ] 3.2 Mechanism assertions: every degenerate setting matches the baseline — GQA at one query head per group, top-k at k = T, window = T, block size 1; the softmax-free regrouping reproduces the direct sum; the delta rule corrects where add-only accumulates
+- [ ] 3.3 Cost assertions: the serving formula returns 6.44 GB at the lesson's configuration and 51.54 GB at eight conversations
+- [ ] 3.4 Data assertions: every entry has a plain-language verdict whose pros and cons match the technical record in count and direction; unique ids, parseable dates, complete trade-off records, every entry resolving to a mechanism the model can run, every entry having a research note, and every entry naming both the earlier limitation it answers and what it left for later work
+- [ ] 3.5 `?selfcheck=1` paints pass or fail and names every failure; run it and confirm
 
-- [x] 5.1 Write `app/lib/selfcheck.js` with the math assertions: softmax rows sum to 1, masked future weight exactly 0, regrouped equals direct with softmax off and differs with it on, delta rule reaches 55 where add-only reaches 95
-- [x] 5.2 Add the lesson-figure assertion: the cache formula returns ≈6.44 GB at 48 layers / 8 KV heads / head dim 128 / bf16 / 32,768 tokens, and ≈51.54 GB at eight users
-- [x] 5.3 Add the data-integrity assertions: unique ids, parseable ISO dates, every entry has a source and non-empty `buys`, `givesUp`, `chooseWhen`, every `demo` key resolves to a registered demo
-- [x] 5.4 Wire `?selfcheck=1` to run the assertions and paint a visible pass/fail banner naming any failure
-- [x] 5.5 Run it and confirm every assertion passes
+## 4. Verify and ship
 
-## 6. Date verification
-
-- [x] 6.1 For every paper-backed entry, fetch its arXiv abstract page and read the v1 submission date
-- [x] 6.2 Correct `date` in `app/data/mechanisms.js` wherever it disagrees with the source, then set `verified: true`
-- [x] 6.3 Leave NTK-aware scaling, the DeepSeek sparse-attention release and DroPE at `verified: false`, each with its real provenance recorded in the `source` field
-- [x] 6.4 Re-sort and re-read the timeline after corrections; fix any `problem` text whose "what came before" claim the corrected dates broke
-
-## 7. Docs and hosting
-
-- [x] 7.1 Write `Session8/webapp/README.md`: the assignment statement, the live link, the serve command, the app structure, and the full chronology source table generated to match the data exactly
-- [x] 7.2 Add `.github/workflows/pages.yml` publishing `Session8/webapp/` on push to `master`
-- [x] 7.3 Add the Session 8 row to the root `README.md` index table, with the live link in the deploy column
-- [x] 7.4 Serve locally and walk the whole app: timeline order reads chronologically, every card opens, all six demos respond, no console errors, no 404s
-
-## 8. Ship
-
-- [ ] 8.1 Commit with the `[ERA-V5][muttu]:` prefix
-- [ ] 8.2 Push, then confirm the Pages deployment serves and no asset 404s under the `/ERA-V5/` sub-path
-- [ ] 8.3 Record the live URL in both READMEs once the deployment is confirmed
+- [ ] 4.1 Walk every card in a browser: no console errors, every control moves something, the sentence propagates
+- [ ] 4.2 Type into the input and confirm the visuals keep up
+- [ ] 4.3 Phone width: no sideways scroll on the body, wide visuals scroll inside their own container
+- [ ] 4.4 `Session8/webapp/README.md`: what it is, how to run it, the architecture, the chronology source table, links to the research notes, and the untrained-model caveat
+- [ ] 4.5 Commit with the `[ERA-V5][muttu]:` prefix
+- [ ] 4.6 Push and confirm the Pages deployment, once the repo's Pages source is set to GitHub Actions

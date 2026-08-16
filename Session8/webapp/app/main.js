@@ -1,93 +1,43 @@
-import { byDate, THREADS } from "./data/mechanisms.js";
-import { DEMOS } from "./demos/index.js";
-import { DIAGRAMS } from "./demos/diagrams.js";
+import { el, clear } from "./lib/dom.js";
+import { PRESETS } from "./model/vocab.js";
+import { state, setText } from "./runner.js";
+import { mountTimeline } from "./timeline.js";
+import { createDeck } from "./deck.js";
+import { CARDS } from "./cards/index.js";
 
-const esc = (s) =>
-  String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const input = document.getElementById("sentence");
+input.value = state.text;
+input.addEventListener("input", () => setText(input.value));
 
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-const showDate = (iso) => {
-  const [y, m] = iso.split("-");
-  return `${MONTHS[Number(m) - 1]} ${y}`;
-};
-
-// What an entry's provenance is called when it is not a verified paper date.
-const PROVENANCE = {
-  post: "community post, no paper",
-  release: "release note, no paper",
-  course: "course record only",
-  paper: "date not yet verified",
-};
-
-function badges(m) {
-  const out = [];
-  if (m.baseline) out.push(`<span class="badge baseline-flag">the baseline</span>`);
-  if (!m.verified) out.push(`<span class="badge">${esc(PROVENANCE[m.source.kind])}</span>`);
-  return out.join("");
-}
-
-function sourceLine(m) {
-  const label = esc(m.source.label);
-  return m.source.url
-    ? `<p class="src">Source: <a href="${esc(m.source.url)}" rel="noopener">${label}</a></p>`
-    : `<p class="src">Source: ${label}</p>`;
-}
-
-function card(m, index) {
-  const list = (items) => items.map((t) => `<li>${esc(t)}</li>`).join("");
-  return `
-<article class="card" id="${esc(m.id)}">
-  <div class="card-head">
-    <span class="date">${showDate(m.date)}</span>
-    ${m.baseline ? "" : `<span class="thread" title="${esc(THREADS[m.thread] || "")}">${esc(m.thread)}</span>`}
-    ${badges(m)}
-  </div>
-  <h2>${index}. ${esc(m.name)}</h2>
-  ${sourceLine(m)}
-  <div class="body">
-    <span class="label">The problem it answered</span>
-    <p>${esc(m.problem)}</p>
-    <span class="label">What it does</span>
-    <p>${esc(m.mechanism)}</p>
-  </div>
-  <div class="trades">
-    <div class="trade buys"><span class="label">What it buys</span><ul>${list(m.buys)}</ul></div>
-    <div class="trade gives"><span class="label">What it gives up</span><ul>${list(m.givesUp)}</ul></div>
-    <div class="trade when"><span class="label">When to choose it</span><p>${esc(m.chooseWhen)}</p></div>
-  </div>
-  <div class="mount" data-demo="${esc(m.demo || "")}" data-diagram="${esc(m.diagram || "")}"></div>
-</article>`;
-}
-
-function rail(list) {
-  let year = "";
-  return list
-    .map((m) => {
-      const y = m.date.slice(0, 4);
-      const head = y === year ? "" : `<div class="year">${(year = y)}</div>`;
-      const cls = m.baseline ? ' class="is-baseline"' : "";
-      const short = m.name.length > 30 ? m.name.slice(0, 28) + "…" : m.name;
-      return `${head}<a href="#${esc(m.id)}"${cls}>${esc(short)}</a>`;
+const presets = document.getElementById("presets");
+clear(presets);
+for (const p of PRESETS) {
+  presets.appendChild(
+    el("button", {
+      class: "preset",
+      type: "button",
+      text: p.split(" ").slice(0, 4).join(" ") + "…",
+      title: p,
+      onclick: () => {
+        input.value = p;
+        setText(p);
+      },
     })
-    .join("");
+  );
 }
 
-const list = byDate();
-document.getElementById("rail").innerHTML = rail(list);
-document.getElementById("cards").innerHTML = list.map((m, i) => card(m, i + 1)).join("");
+const updateTimeline = mountTimeline(document.getElementById("timeline"), {
+  onPick: (i) => deck.show(i),
+});
 
-// Demos and diagrams mount themselves into the card they belong to.
-for (const mount of document.querySelectorAll(".mount")) {
-  const { demo, diagram } = mount.dataset;
-  if (diagram && DIAGRAMS[diagram]) mount.insertAdjacentHTML("beforeend", DIAGRAMS[diagram]());
-  if (demo && DEMOS[demo]) DEMOS[demo](mount);
-}
-
-// Cards are built after the document is parsed, so the browser has already tried and failed to
-// honour a #fragment by the time they exist. Re-apply it once.
-// "instant" because the stylesheet asks for smooth scrolling, and an animated jump here loses
-// the race with the browser restoring its own scroll position.
-if (location.hash) document.querySelector(location.hash)?.scrollIntoView({ behavior: "instant" });
+const deck = createDeck({
+  stage: document.getElementById("stage"),
+  pos: document.getElementById("pos"),
+  prev: document.getElementById("prev"),
+  next: document.getElementById("next"),
+  cards: CARDS,
+  onChange: (i) => updateTimeline(i),
+});
 
 if (new URLSearchParams(location.search).has("selfcheck")) {
   const { runSelfCheck } = await import("./lib/selfcheck.js");
