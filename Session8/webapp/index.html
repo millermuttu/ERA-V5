@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How attention got here — a chronology</title>
+<meta name="description" content="Every attention mechanism, in the order it was launched: what problem existed, what somebody proposed, what it fixed, and what it cost.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app/styles.css">
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <p class="eyebrow">ERA V5 · Session 8 · Modern attention variants</p>
+    <h1>How attention got here</h1>
+    <p class="standfirst">
+      Every mechanism below is a reply to something that hurt. They are in the order they were
+      launched, not the order they were taught, because the order they were launched is the only
+      one that shows why anybody bothered.
+    </p>
+    <p class="standfirst muted">
+      Start at the top: scaled dot-product attention, 2017. Everything after it changes one part of
+      that picture and pays for the change somewhere else.
+    </p>
+  </div>
+</header>
+
+<div class="wrap layout">
+  <nav class="rail" id="rail" aria-label="Timeline"></nav>
+  <main id="cards"></main>
+</div>
+
+<footer class="foot wrap">
+  <p>
+    Built for the Session 8 assignment. Dates are the first public version of each primary source;
+    entries with no paper behind them say so on the card.
+    <a href="https://github.com/millermuttu/ERA-V5/tree/master/Session8/webapp">Source</a> ·
+    <a href="?selfcheck=1">Run the self-check</a>
+  </p>
+</footer>
+
+<script type="module" src="app/main.js"></script>
+</body>
+</html>

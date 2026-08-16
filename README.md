@@ -12,6 +12,17 @@ pipeline behind an LLM, session by session.
 | [Session 5](Session5/) | Data mixture & curriculum plan for the V5 pretraining run | [`submission.md`](Session5/submission.md) | - |
 | [Session 6](Session6/) | Training data execution system — shards/manifests through checkpoint, crash, resume, replay, fork, audit | [`README.md`](Session6/README.md) | - |
 | [Session 7](Session7/) | Embeddings and model internals — the Kronecker byte codec, its collisions, and five open "V2" problems | [`README.md`](Session7/README.md) | - |
+| [Session 8](Session8/) | Modern attention variants — 25 mechanisms in launch order, each a reply to what the last one could not do | [`webapp/`](Session8/webapp/) | GitHub Pages, link below |
+
+## Session 8 — how attention got here
+
+A static web app: every attention mechanism from the session on one timeline, ordered by the date it
+was launched rather than the order it was taught, so the page reads as the field changing its mind.
+It opens on scaled dot-product attention and works forward; six mechanisms compute their arithmetic
+live in the browser, and every date is the arXiv v1 submission date, checked against the source
+rather than recalled — the three entries with no paper behind them say so on the card.
+
+`?selfcheck=1` runs 25 assertions over both the arithmetic and the chronology data.
 
 ## Session 7 — the Kronecker V2 problems
 
