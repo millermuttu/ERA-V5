@@ -6,6 +6,10 @@ import { relativePositionsCard } from "./relative-positions.js";
 import { learnedAbsoluteCard } from "./learned-absolute.js";
 import { transformerXLCard } from "./transformer-xl.js";
 import { sparseTransformerCard } from "./sparse-transformer.js";
+import { mqaCard } from "./mqa.js";
+import { slidingWindowCard } from "./sliding-window.js";
+import { linearAttentionCard } from "./linear-attention.js";
+import { performerCard } from "./performer.js";
 
 export const CARDS = {
   transformer: transformerCard,
@@ -14,4 +18,8 @@ export const CARDS = {
   "learned-absolute": learnedAbsoluteCard,
   "transformer-xl": transformerXLCard,
   "sparse-transformer": sparseTransformerCard,
+  mqa: mqaCard,
+  "sliding-window": slidingWindowCard,
+  "linear-attention": linearAttentionCard,
+  performer: performerCard,
 };

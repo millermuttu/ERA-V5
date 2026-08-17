@@ -157,6 +157,22 @@ const LINKS = [
     text: "a read-only cache chosen by recency rather than learned, bounded at roughly layers times memory",
     to: "mamba",
   }),
+  built("mqa", "transformer", {
+    text: "a measured quality cost from making every head share one view of the past, and a cache that still grows with the conversation",
+    to: "gqa",
+  }),
+  built("sliding-window", "sparse-transformer", {
+    text: "a window, a dilation and a set of global tokens all chosen by hand before the data arrives",
+    to: "nsa",
+  }),
+  built("linear-attention", "sliding-window", {
+    text: "an add-only state that cannot correct an association it has already written, and no exact retrieval of any earlier token",
+    to: "delta-rule",
+  }),
+  built("performer", "linear-attention", {
+    text: "an estimate whose error falls only as the square root of the features, so accuracy and speed trade against each other directly",
+    to: "flashattention",
+  }),
   built("sparse-transformer", "transformer", {
     text: "a sparsity pattern fixed before the data arrives, which the authors' own inspection showed cannot reproduce global or data-dependent layers",
     to: "sliding-window",

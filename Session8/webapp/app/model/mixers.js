@@ -16,7 +16,7 @@ import { dot, softmax } from "./ops.js";
  * Defaults are plain causal attention — the baseline the whole app is measured against.
  */
 export function softmaxMixer({ readable = null, bias = null, rotate = null } = {}) {
-  return function mix(Q, K, V, dh) {
+  return function mix(Q, K, V, dh, at = {}) {
     const T = Q.length;
     const scale = Math.sqrt(dh);
     const scores = [];
@@ -28,7 +28,7 @@ export function softmaxMixer({ readable = null, bias = null, rotate = null } = {
       const q = rotate ? rotate(Q[i], i) : Q[i];
       const row = new Array(T).fill(-Infinity);
       for (let j = 0; j <= i; j++) {
-        if (readable && !readable(i, j)) continue;
+        if (readable && !readable(i, j, at)) continue;
         const k = rotate ? rotate(K[j], j) : K[j];
         row[j] = dot(q, k) / scale + (bias ? bias(i, j, q) : 0);
         reads++;
@@ -57,39 +57,54 @@ export function softmaxMixer({ readable = null, bias = null, rotate = null } = {
  * `phi` is the feature map standing in for the exponential softmax removed. The state is dh x dh
  * whatever the sequence length, which is the entire point.
  */
-export function stateMixer({ write = "add", decay = 1, phi = (x) => Math.max(x, 0) + 0.01 } = {}) {
-  return function mix(Q, K, V, dh) {
+/** The paper's feature map: elu(x) + 1. Non-negative everywhere, and unlike relu it has no
+ *  zero-gradient region — which is the stated reason they rejected relu. */
+export const elu1 = (x) => (x > 0 ? x + 1 : Math.exp(x));
+
+export function stateMixer({ write = "add", decay = 1, phi = elu1, features = null } = {}) {
+  // `features` is a vector-valued map R^dh -> R^m, which is what a random-feature method needs:
+  // Performer's φ projects into m random directions, so the state is m x dh, not dh x dh. When it
+  // is absent the elementwise `phi` applies and m === dh, which is the linear-attention case.
+  return function mix(Q, K, V, dh, at = {}) {
     const T = Q.length;
-    let S = Array.from({ length: dh }, () => new Float64Array(dh));
+    const map = features || ((v) => Float64Array.from(v, phi));
+    const m = map(Q[0]).length;
+    let S = Array.from({ length: dh }, () => new Float64Array(m));
     const out = [];
     const snapshots = [];
-    let norm = new Float64Array(dh);
+    const denominators = [];
+    let norm = new Float64Array(m);
 
     for (let i = 0; i < T; i++) {
-      const k = Array.from(K[i], phi);
-      const q = Array.from(Q[i], phi);
+      const k = map(K[i]);
+      const q = map(Q[i]);
       const g = write === "gated" ? decay : 1;
 
       // read what the state currently returns for this key
       const cur = new Float64Array(dh);
-      for (let a = 0; a < dh; a++) cur[a] = dot(S[a], k, 0, dh) * g;
+      for (let a = 0; a < dh; a++) cur[a] = dot(S[a], k, 0, m) * g;
 
       for (let a = 0; a < dh; a++) {
         const target = write === "add" ? V[i][a] : V[i][a] - cur[a];
-        for (let b = 0; b < dh; b++) S[a][b] = S[a][b] * g + target * k[b];
+        for (let b = 0; b < m; b++) S[a][b] = S[a][b] * g + target * k[b];
       }
-      for (let b = 0; b < dh; b++) norm[b] = norm[b] * g + k[b];
+      for (let b = 0; b < m; b++) norm[b] = norm[b] * g + k[b];
 
+      // The denominator, kept as computed. Taking its absolute value would quietly rescue a
+      // negative normaliser — and a negative normaliser is exactly what a feature map that is not
+      // non-negative produces. The requirement is visible only if the failure is left visible.
       const o = new Float64Array(dh);
       let z = 0;
-      for (let b = 0; b < dh; b++) z += norm[b] * q[b];
-      for (let a = 0; a < dh; a++) o[a] = dot(S[a], q, 0, dh) / (Math.abs(z) + 1e-6);
+      for (let b = 0; b < m; b++) z += norm[b] * q[b];
+      const safe = Math.abs(z) < 1e-9 ? (z < 0 ? -1e-9 : 1e-9) : z;
+      for (let a = 0; a < dh; a++) o[a] = dot(S[a], q, 0, m) / safe;
+      denominators.push(z);
       out.push(o);
 
       snapshots.push(S.map((r) => Float64Array.from(r)));
     }
     // A state model reads one object per token, not a growing list of keys.
-    return { out, scores: null, weights: null, reads: T, state: S, snapshots, kind: "state" };
+    return { out, scores: null, weights: null, reads: T, state: S, snapshots, denominators, m, kind: "state" };
   };
 }
 

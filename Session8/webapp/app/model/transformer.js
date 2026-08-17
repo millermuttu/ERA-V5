@@ -57,7 +57,9 @@ export function forward(tokens, mech = {}) {
       const Q = Qf.map((x) => slice(x, head));
       const K = Kf.map((x) => slice(x, kvh));
       const Vh = Vf.map((x) => slice(x, kvh));
-      const r = mixer(Q, K, Vh, DH);
+      // The block and head index reach the seam so a mechanism can vary by depth or by
+      // head — Longformer's staged windows and its dilation-on-some-heads both need it.
+      const r = mixer(Q, K, Vh, DH, { block: b, head, kvHead: kvh });
       for (let i = 0; i < T; i++) mixed[i].set(r.out[i], head * DH);
       heads.push({ ...r, head, kvHead: kvh, Q, K, V: Vh });
     }
