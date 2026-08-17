@@ -221,3 +221,7 @@ __marimo__/
 .agent/
 .benchmarks/
 /graphify-out/*
+
+# The Session 8 webapp ships app/lib as source. The Python "lib/" rule above would swallow it,
+# and the whole app 404s without it.
+!Session8/webapp/app/lib/
