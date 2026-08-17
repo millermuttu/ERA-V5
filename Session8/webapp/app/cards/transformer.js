@@ -3,6 +3,7 @@
 // app/model/, on whatever sentence is in the box at the top.
 import { el, svg, slider, toggle } from "../lib/dom.js";
 import { attentionGrid, heat } from "../views/grid.js";
+import { flowView } from "../views/flow.js";
 import { barList, readout } from "../views/bars.js";
 import { dot, softmax, fmt } from "../model/ops.js";
 import { DH, CONFIG } from "../model/transformer.js";
@@ -33,6 +34,17 @@ export function transformerCard(root, m) {
       mechanism:
         "Delete the recurrence, keep the attention. Each token is projected into a query, a key and a value; every query meets every key by dot product; the scores are scaled, masked, and softmaxed into weights; the weights combine the values. Several heads do this at once on different slices of the width. Because none of that knows what order the tokens came in, position has to be added separately — which is concept 2.",
     })
+  );
+
+  // ------------------------------------------------------------- the picture
+  const flow = flowView();
+  const flowNote = el("p", { class: "note" });
+  root.appendChild(
+    el("section", { class: "panel" }, [
+      el("div", { class: "panel-title", text: "one token's journey, on your sentence" }),
+      flow.node,
+      flowNote,
+    ])
   );
 
   // ---------------------------------------------------------------- stage walk
@@ -191,6 +203,17 @@ export function transformerCard(root, m) {
       return softmax(row);
     });
     grid.update({ tokens, weights: gridWeights, query });
+
+    flow.update({
+      tokens,
+      head: { ...h, emb: (res.trace[state.block] ?? res.trace[0]).input },
+      weights: gridWeights,
+      out: h.out,
+      top: res.top,
+      query,
+      opts: { readable: masked ? null : null },
+    });
+    flowNote.innerHTML = `Every word on the left becomes three things — a <strong style="color:#5b7fdb">query</strong> asking, a <strong style="color:#E0693D">key</strong> advertising, and a <strong style="color:#4FC58C">value</strong> waiting to be handed over. The dot grid is who reads whom: the row for “${tokens[queryIndex()].word}” is picked out, and each mark's size is how much weight that pair got. The bars on the right are what the model expects next — noise, because nothing here is trained, but computed noise. The dashed line over the top is the residual: whatever attention decides, the token keeps a copy of itself.`;
 
     stageNote.textContent = STAGES[stage][1];
     renderRow({ tokens, rawRow, scaledRow, maskedRow, weightsRow, h });

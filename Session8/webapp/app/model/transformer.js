@@ -72,7 +72,7 @@ export function forward(tokens, mech = {}) {
       return add(x, matvec(f, wb.f2));
     });
 
-    trace.push({ block: b, heads, hidden: h.map((x) => Float64Array.from(x)) });
+    trace.push({ block: b, heads, hidden: h.map((x) => Float64Array.from(x)), input: normed });
   }
 
   const last = layerNorm(h[T - 1]);
