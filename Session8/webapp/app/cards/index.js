@@ -13,6 +13,7 @@ import { performerCard } from "./performer.js";
 import { deltaRuleCard } from "./delta-rule.js";
 import { ropeCard } from "./rope.js";
 import { alibiCard } from "./alibi.js";
+import { flashattentionCard } from "./flashattention.js";
 
 export const CARDS = {
   transformer: transformerCard,
@@ -28,4 +29,5 @@ export const CARDS = {
   "delta-rule": deltaRuleCard,
   rope: ropeCard,
   alibi: alibiCard,
+  flashattention: flashattentionCard,
 };

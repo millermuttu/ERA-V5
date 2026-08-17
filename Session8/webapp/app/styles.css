@@ -106,7 +106,7 @@ svg{display:block;max-width:100%;height:auto}
 .bars{display:flex;flex-direction:column;gap:7px;font-family:"IBM Plex Mono",monospace;font-size:11px}
 .bar{display:grid;grid-template-columns:minmax(150px,220px) 1fr 96px;gap:12px;align-items:center}
 .bar .track{height:9px;background:var(--surface);border-radius:5px;overflow:hidden}
-.bar .fill{height:100%;background:var(--jade);border-radius:5px}
+.bar .fill{display:block;height:100%;background:var(--jade);border-radius:5px}
 .bar .fill.alt{background:var(--ochre)}
 .bar .val{text-align:right;color:var(--muted)}
 

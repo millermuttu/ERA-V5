@@ -185,6 +185,10 @@ const LINKS = [
     text: "a penalty that only grows with distance, and an extrapolation result its own appendix says may not mean the context is being used",
     to: "yarn",
   }),
+  built("flashattention", "performer", {
+    text: "a mechanism that now lives in hand-written kernels, so a sparsity pattern is affordable only if it can be expressed in whole tiles — and a quadratic in arithmetic that this paper never claimed to remove",
+    to: "nsa",
+  }),
   built("sparse-transformer", "transformer", {
     text: "a sparsity pattern fixed before the data arrives, which the authors' own inspection showed cannot reproduce global or data-dependent layers",
     to: "sliding-window",
