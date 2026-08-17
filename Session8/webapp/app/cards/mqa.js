@@ -8,7 +8,7 @@ import { dot, fmt } from "../model/ops.js";
 import { forward, CONFIG, DH } from "../model/transformer.js";
 import { cacheBytes, SERVING, GB } from "../model/cost.js";
 import { state } from "../runner.js";
-import { tradeBlock, plainBlock, prose } from "./chrome.js";
+import { tradeBlock, plainBlock, prose, flowPanel } from "./chrome.js";
 
 // The paper's incremental-decoding ratios of memory access to arithmetic.
 const ratioMHA = (n, d, b) => n / d + 1 / b;
@@ -27,6 +27,8 @@ export function mqaCard(root, m) {
         "Keep all the query heads, and give the whole layer one shared key head and one shared value head. Every query head still asks its own question; they all ask it of the same stored keys and values. The paper's own summary of the effect on that ratio is that it reduces the offensive n/d term by a factor of h.",
     })
   );
+
+  const { flow, note: flowNote } = flowPanel(root);
 
   // ------------------------------------------------------------ head sharing
   const groupSlider = slider({
@@ -162,6 +164,20 @@ export function mqaCard(root, m) {
 
     const res = forward(tokens, { kvGroups: groups });
     const blk = res.trace[0];
+
+    const h0 = blk.heads[0];
+    flow.update({
+      tokens,
+      head: { ...h0, emb: blk.input },
+      weights: h0.weights,
+      out: h0.out,
+      top: res.top,
+      opts: { kvShared: groups < CONFIG.HEADS },
+    });
+    flowNote.innerHTML =
+      groups === CONFIG.HEADS
+        ? `Four heads, each with its own key and value bands. The stacked cards behind the matrix are the other three heads, each running this same picture on its own slice of the width — and each storing its own keys and values while the model writes.`
+        : `The key and value bands are now marked shared: ${CONFIG.HEADS} query heads reading ${groups} stored set${groups > 1 ? "s" : ""}. The queries down the left are still four separate projections asking four different questions — nothing about the left of the picture changed. What changed is how many copies of the middle have to be kept in memory while generating.`;
 
     // how alike are two different query heads' keys now?
     const kA = blk.heads[0].K;

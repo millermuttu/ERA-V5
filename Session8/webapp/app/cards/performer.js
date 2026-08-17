@@ -10,7 +10,7 @@ import { dot, fmt, mulberry32, gauss } from "../model/ops.js";
 import { forward, DH } from "../model/transformer.js";
 import { softmax } from "../model/ops.js";
 import { state } from "../runner.js";
-import { tradeBlock, plainBlock, prose } from "./chrome.js";
+import { tradeBlock, plainBlock, prose, flowPanel } from "./chrome.js";
 
 // FAVOR+ defines SM(x,y) = exp(xᵀy), with the 1/√d folded into the inputs — so scale by d^(-1/4)
 // on each side. Getting this wrong converges to the wrong matrix and looks like an estimator bug.
@@ -65,6 +65,8 @@ export function performerCard(root, m) {
         "Estimate the softmax kernel itself instead of replacing it. Project queries and keys onto m random directions and pass them through a positive nonlinearity, and the dot product of those features is an unbiased estimate of exp(qᵀk) — so the same regrouping applies, and the thing being estimated is the real attention. Two details carry the contribution. The features must be positive, not the original sines and cosines: both are unbiased, but the trigonometric estimator's variance grows without bound exactly where the kernel value approaches zero, which is where the softmax denominator lives. And the random directions are made orthogonal, which reduces the variance further.",
     })
   );
+
+  const { flow, note: flowNote } = flowPanel(root, "the same picture, estimated");
 
   // ------------------------------------------------------ error against exact
   const mSlider = slider({
@@ -251,7 +253,18 @@ export function performerCard(root, m) {
       return { max, mean: sum / n };
     };
 
-    const cur = errorOf(approxMatrix(features, positive, 1234));
+    const approxNow = approxMatrix(features, positive, 1234);
+    flow.update({
+      tokens,
+      head: { ...h, emb: exact.trace[0].input },
+      weights: approxNow.map((row, i) => tokens.map((_, j) => (j <= i ? row[j] ?? 0 : 0))),
+      out: h.out,
+      top: exact.top,
+      opts: {},
+    });
+    flowNote.innerHTML = `The marks are the <em>estimated</em> attention, not the real one — the same picture concept 1 draws, reconstructed from ${features} random projections instead of from every pair. Drag the feature count and watch the pattern sharpen towards the true one; drag the query/key size and watch it fall apart. Structurally nothing else changes, which is the claim: this is meant to be the same computation, done cheaply, rather than a different one.`;
+
+    const cur = errorOf(approxNow);
     const maxNorm = Math.max(...h.Q.map((q) => Math.sqrt(dot(q, q)))) * PRESCALE * sharp;
     errRead.update({
       max: fmt(cur.max, 4),

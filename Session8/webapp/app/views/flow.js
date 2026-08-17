@@ -53,8 +53,11 @@ export function flowView() {
    * opts: { readable, kvShared, stateMode, positionAdded, title }
    */
   function update({ tokens, head, weights, out, top, query = null, opts = {} }) {
-    const n = tokens.length;
-    if (!n) return;
+    const n = tokens?.length || 0;
+    if (!n) {
+      node.innerHTML = "";
+      return;
+    }
     const q = query === null ? n - 1 : Math.min(query, n - 1);
     const H = TOP + n * PITCH + 96;
     const midY = TOP + ((n - 1) * PITCH) / 2;
@@ -183,7 +186,7 @@ export function flowView() {
       for (let i = 0; i < n; i++) {
         for (let j = 0; j <= i; j++) {
           const readable = !opts.readable || opts.readable(i, j);
-          const w = weights[i][j];
+          const w = weights?.[i]?.[j] ?? 0;
           const r = readable ? 1.6 + Math.sqrt(w) * 5.4 : 2;
           s += `<circle cx="${matCx(j).toFixed(1)}" cy="${matCy(i).toFixed(1)}" r="${r.toFixed(2)}"
             fill="${readable ? "#79E6B0" : "rgba(224,105,61,0.35)"}"

@@ -10,7 +10,7 @@ import { dot, fmt } from "../model/ops.js";
 import { forward, CONFIG } from "../model/transformer.js";
 import { softmaxMixer } from "../model/mixers.js";
 import { state } from "../runner.js";
-import { tradeBlock, plainBlock, prose } from "./chrome.js";
+import { tradeBlock, plainBlock, prose, flowPanel } from "./chrome.js";
 
 export function slidingWindowCard(root, m) {
   let w = 4;
@@ -27,6 +27,8 @@ export function slidingWindowCard(root, m) {
         "Give every token a band of w neighbours, so the cost grows with the window rather than the context. Stack layers and the reach compounds like a convolution. Widen the band by skipping — a dilated window covers d times the distance for the same number of reads — and Longformer applies that to only two heads of eight, keeping the rest dense so local detail survives. For classification it also marks a few tokens as global, readable by everything and reading everything; that part never appears in its autoregressive model, and this card is causal, so the global control here is a demonstration of why.",
     })
   );
+
+  const { flow, note: flowNote } = flowPanel(root);
 
   // ------------------------------------------------------------ 1. the window
   const wSlider = slider({
@@ -182,6 +184,19 @@ export function slidingWindowCard(root, m) {
     const res = forward(tokens, { mixer: softmaxMixer({ readable }) });
     const h = res.trace[0].heads[0];
     grid.update({ tokens, weights: h.weights, query, readable: (i, j) => readable(i, j, { head: 0 }) });
+
+    flow.update({
+      tokens,
+      head: { ...h, emb: res.trace[0].input },
+      weights: h.weights,
+      out: h.out,
+      top: res.top,
+      query,
+      opts: { readable: (i, j) => readable(i, j, { head: 0 }) },
+    });
+    flowNote.innerHTML = `A band down the diagonal instead of a filled triangle${
+      global !== null ? `, plus the row and column for “${tokens[global].word}”, which everything may read` : ""
+    }. Widen the window below and the band thickens; dilate it and the band spreads out into stripes, covering more ground for the same number of live marks.`;
 
     // --- 1. the bill
     let reads = 0;

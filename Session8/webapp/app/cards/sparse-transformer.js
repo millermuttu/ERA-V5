@@ -10,7 +10,7 @@ import { fmt } from "../model/ops.js";
 import { forward } from "../model/transformer.js";
 import { softmaxMixer } from "../model/mixers.js";
 import { state } from "../runner.js";
-import { tradeBlock, plainBlock, prose } from "./chrome.js";
+import { tradeBlock, plainBlock, prose, flowPanel } from "./chrome.js";
 
 // The paper's two factorized patterns, as one predicate each.
 // Note the fixed-pattern residue set: j mod l can never equal l, so the band is l−c … l−1.
@@ -51,6 +51,8 @@ export function sparseTransformerCard(root, m) {
         "Do not let every query see every key. The authors trained a dense 128-layer model on images and looked at what it had learned: most layers were already sparse, and layers 19 and 20 had split themselves into a row attention and a column attention on their own. So they hard-coded that split. One head reads a local block, the other reads every l-th position, and two hops through the pair connect any pair of tokens. The pattern is chosen in advance, which is what makes it fast — and, later, what makes it the thing to beat.",
     })
   );
+
+  const { flow, note: flowNote } = flowPanel(root);
 
   // ------------------------------------------------------------- the pattern
   const patternBtns = el(
@@ -205,6 +207,20 @@ export function sparseTransformerCard(root, m) {
     const res = forward(tokens, { mixer: softmaxMixer({ readable }) });
     const h = res.trace[0].heads[0];
     grid.update({ tokens, weights: h.weights, query, readable });
+
+    flow.update({
+      tokens,
+      head: { ...h, emb: res.trace[0].input },
+      weights: h.weights,
+      out: h.out,
+      top: res.top,
+      query,
+      opts: { readable: pattern === "full" ? null : (i, j) => readable(i, j) },
+    });
+    flowNote.innerHTML =
+      pattern === "full"
+        ? `Full attention: every mark in the lower triangle is live. This is concept 1's picture, unchanged — switch the pattern below and watch most of it go out.`
+        : `The same apparatus, with most of the matrix switched off. Everything to the left of it is identical — the projections, the keys, the values are all still computed. The saving is entirely in which pairs are scored, and the small marks are the pairs this pattern decided in advance not to look at.`;
 
     formula.textContent = pattern === "full" ? "j ≤ i — every earlier key" : P.formula;
 

@@ -11,7 +11,7 @@ import { forward, CONFIG, DH } from "../model/transformer.js";
 import { softmaxMixer, stateMixer, elu1 } from "../model/mixers.js";
 import { softmax } from "../model/ops.js";
 import { state } from "../runner.js";
-import { tradeBlock, plainBlock, prose } from "./chrome.js";
+import { tradeBlock, plainBlock, prose, flowPanel } from "./chrome.js";
 
 export function linearAttentionCard(root, m) {
   let q = 2;
@@ -27,6 +27,8 @@ export function linearAttentionCard(root, m) {
         "Replace the exponential with a feature map φ, so the similarity becomes φ(q)·φ(k). Then the sum can be reassociated: instead of (φ(Q)φ(K)ᵀ)V, which builds an N×N matrix, compute φ(Q)(φ(K)ᵀV), which never does. The bracketed part does not involve the query, so it can be accumulated as the tokens arrive into a fixed d×d state — and a second running sum for the denominator. At generation time this is literally an RNN: one state in, one state out, constant memory per step. The feature map is elu(x)+1, chosen because it is non-negative and, unlike relu, has no zero-gradient region — not because it resembles the exponential.",
     })
   );
+
+  const { flow, note: flowNote } = flowPanel(root, "the same journey, with the matrix gone");
 
   // -------------------------------------------------------------- two routes
   const qSlider = slider({
@@ -221,6 +223,17 @@ export function linearAttentionCard(root, m) {
     const lin = forward(tokens, { mixer: stateMixer({ write: "add" }) });
     const h = lin.trace[0].heads[0];
     const snap = h.snapshots[Math.min(step, T) - 1];
+
+    flow.update({
+      tokens,
+      head: { ...h, emb: lin.trace[0].input },
+      weights: null,
+      out: h.out,
+      top: lin.top,
+      query: Math.min(step, T) - 1,
+      opts: { stateMode: { matrix: snap } },
+    });
+    flowNote.innerHTML = `Compare this with concept 1's picture. The left half is unchanged — the same words, the same three projections. Where the score matrix used to be there is now a single grid that every token writes into and every query reads from. <strong>There is no dot per pair any more, because no pair is ever scored.</strong> That is the whole mechanism, and it is why the memory stops growing: the thing in the middle is the same size after one word and after a million.`;
     const maxAbs = Math.max(...snap.flatMap((r) => Array.from(r, Math.abs)), 1e-9);
     const CELL = 20;
     stateWrap.replaceChildren(

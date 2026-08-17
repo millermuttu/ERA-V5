@@ -9,7 +9,7 @@ import { forward, CONFIG } from "../model/transformer.js";
 import { softmaxMixer } from "../model/mixers.js";
 import { sinusoidalVector } from "../model/position.js";
 import { state } from "../runner.js";
-import { tradeBlock, plainBlock, prose } from "./chrome.js";
+import { tradeBlock, plainBlock, prose, flowPanel } from "./chrome.js";
 
 // A weight can be genuinely small; rounding it to 0.000 would read as "not connected", which is
 // the exact distinction this card is about.
@@ -30,6 +30,8 @@ export function transformerXLCard(root, m) {
         "Cache the previous segment's hidden states and let the current segment attend over them, with no gradient crossing the boundary. Because the cached states came from different absolute positions, absolute encoding breaks under the reuse — two tokens from different segments would carry the same position vector — so the same paper had to replace it with a relative scheme, keeping the sinusoid rather than learning a table.",
     })
   );
+
+  const { flow, note: flowNote } = flowPanel(root);
 
   // ---------------------------------------------------------- 1. the cut
   const lSlider = slider({
@@ -171,6 +173,20 @@ export function transformerXLCard(root, m) {
 
     const res = forward(tokens, { mixer: softmaxMixer({ readable }) });
     const h = res.trace[0].heads[0];
+
+    flow.update({
+      tokens,
+      head: { ...h, emb: res.trace[0].input },
+      weights: h.weights,
+      out: h.out,
+      top: res.top,
+      query,
+      opts: { readable },
+    });
+    flowNote.innerHTML =
+      M === 0
+        ? `The small marks are pairs behind a segment wall — the query is not allowed to read them at all. Notice how many of them there are, and that the first word of each segment has almost nothing to its left. Raise the memory below and watch marks come back to life.`
+        : `Carrying ${M} segment${M > 1 ? "s" : ""} of memory, pairs that were unreadable a moment ago now carry real weight. Nothing about the projections changed — the same queries, keys and values — only which of them the query is permitted to reach.`;
 
     // --- the segmented grid, drawn with the walls visible
     const CELL = 17;

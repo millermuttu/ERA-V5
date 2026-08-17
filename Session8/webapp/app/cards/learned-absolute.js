@@ -10,7 +10,7 @@ import { dot, fmt } from "../model/ops.js";
 import { forward, CONFIG } from "../model/transformer.js";
 import { learnedTable, sinusoidalVector } from "../model/position.js";
 import { state } from "../runner.js";
-import { tradeBlock, plainBlock, prose } from "./chrome.js";
+import { tradeBlock, plainBlock, prose, flowPanel } from "./chrome.js";
 
 const D = CONFIG.D;
 const REPAIRS = {
@@ -33,6 +33,8 @@ export function learnedAbsoluteCard(root, m) {
         "Allocate one trainable vector per position — a table of shape (max positions × width) — and add row i to token i's embedding. Nothing is derived; every position is a parameter. This became the default of the BERT and GPT era, though it is worth knowing that the BERT paper itself never says its position embeddings are learned: that fact lives in the released code, where the table is created with a fixed maximum of 512 rows.",
     })
   );
+
+  const { flow, note: flowNote } = flowPanel(root);
 
   // -------------------------------------------------------------- the table
   const tableWrap = el("div", { class: "tablewrap" });
@@ -209,6 +211,9 @@ export function learnedAbsoluteCard(root, m) {
       : `Every word has a row. Add words past ${rows} and watch what happens.`;
 
     if (over && repair === "none") {
+      flow.update({ tokens: [], head: {}, weights: [], out: [] });
+      flowNote.className = "note warn";
+      flowNote.textContent = `Nothing is drawn: the model cannot run. Positions ${rows}–${T - 1} have no row in the table, so there is no input to project into queries, keys and values in the first place. The picture is blank because the computation does not exist, not because it went badly.`;
       gridHolder.replaceChildren();
       wallNote.className = "note warn";
       wallNote.textContent =
@@ -238,6 +243,19 @@ export function learnedAbsoluteCard(root, m) {
 
     const res = forward(usable, { position });
     const h = res.trace[0].heads[0];
+    flow.update({
+      tokens: usable,
+      head: { ...h, emb: res.trace[0].input },
+      weights: h.weights,
+      out: h.out,
+      top: res.top,
+      query: Math.min(query ?? usable.length - 1, usable.length - 1),
+      opts: { positionAdded: true },
+    });
+    flowNote.className = "note";
+    flowNote.textContent = over
+      ? `Running under “${REPAIRS[repair]}”. The ochre dots are the position rows being added in — and for the words past the limit, that dot is either missing, borrowed from another position, or freshly invented, depending on which repair is selected.`
+      : `The ochre dots are a stored row being added to each word, one per position, looked up rather than computed. Inside the table's range this is indistinguishable from concept 2's picture. Shrink the table below the length of your sentence to see the difference.`;
     gridHolder.replaceChildren(grid.node);
     const q = Math.min(query ?? usable.length - 1, usable.length - 1);
     grid.update({ tokens: usable, weights: h.weights, query: q });

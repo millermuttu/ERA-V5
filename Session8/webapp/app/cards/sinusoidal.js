@@ -9,7 +9,7 @@ import { dot, fmt, mulberry32, gauss } from "../model/ops.js";
 import { forward, CONFIG } from "../model/transformer.js";
 import { sinusoidalVector } from "../model/position.js";
 import { state } from "../runner.js";
-import { tradeBlock, plainBlock, prose } from "./chrome.js";
+import { tradeBlock, plainBlock, prose, flowPanel } from "./chrome.js";
 
 const D = CONFIG.D;
 
@@ -42,6 +42,8 @@ export function sinusoidalCard(root, m) {
         "Add a fixed vector to each token's embedding before the first block, built from sines and cosines whose wavelengths form a geometric progression from 2π to 10000·2π. Dimension pair i turns at its own rate, so a position is a unique pattern of phases across the width. It is added once, at the bottom of the stack, to the same vector the token identity lives in.",
     })
   );
+
+  const { flow, note: flowNote } = flowPanel(root);
 
   // ------------------------------------------------- 1. permutation equivariance
   const peToggle = toggle({ label: "add position", value: true, onchange: (v) => ((on = v), render()) });
@@ -218,6 +220,18 @@ export function sinusoidalCard(root, m) {
 
     const res = forward(tokens, { position: posScheme });
     const h = res.trace[0].heads[0];
+
+    flow.update({
+      tokens,
+      head: { ...h, emb: res.trace[0].input },
+      weights: h.weights,
+      out: h.out,
+      top: res.top,
+      opts: { positionAdded: on },
+    });
+    flowNote.innerHTML = on
+      ? `The ochre dots after each embedding are the position vector being added in — into the same numbers the word's identity lives in, before anything is projected. Switch it off below and the dots vanish; so does the model's ability to tell one ordering from another.`
+      : `No position is being added: each embedding is the word and nothing else. The picture looks fine, and that is the trap — shuffle the words below and every score follows them unchanged.`;
 
     // --- 1. shuffle test, on the pre-mask scores
     const rawScores = (r) => {

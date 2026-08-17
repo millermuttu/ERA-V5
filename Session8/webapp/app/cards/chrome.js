@@ -1,6 +1,7 @@
 // The parts every concept card carries: the narrative, the technical trade-off record the
 // assignment demands, and the plain-language verdict at the foot.
 import { el } from "../lib/dom.js";
+import { flowView } from "../views/flow.js";
 
 export function prose({ problem, mechanism }) {
   return el("div", { class: "body" }, [
@@ -37,4 +38,18 @@ export function plainBlock({ pros, cons, verdict }) {
     ]),
     el("p", { class: "verdict", text: verdict }),
   ]);
+}
+
+/**
+ * The dataflow panel every concept carries. The picture is the same apparatus each time, which is
+ * the point: what changes between concepts is visible as a change to one diagram rather than as a
+ * different diagram.
+ */
+export function flowPanel(root, title = "one token's journey, on your sentence") {
+  const flow = flowView();
+  const note = el("p", { class: "note" });
+  root.appendChild(
+    el("section", { class: "panel" }, [el("div", { class: "panel-title", text: title }), flow.node, note])
+  );
+  return { flow, note };
 }

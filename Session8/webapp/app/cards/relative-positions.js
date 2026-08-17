@@ -10,7 +10,7 @@ import { forward, CONFIG, DH } from "../model/transformer.js";
 import { relativeBuckets, sinusoidal } from "../model/position.js";
 import { softmaxMixer } from "../model/mixers.js";
 import { state, baseline } from "../runner.js";
-import { tradeBlock, plainBlock, prose } from "./chrome.js";
+import { tradeBlock, plainBlock, prose, flowPanel } from "./chrome.js";
 
 const sinusoidalScheme = sinusoidal();
 
@@ -28,6 +28,8 @@ export function relativePositionsCard(root, m) {
         "Move position out of the input and into the comparison. Each query–key pair picks up a learned vector indexed by the clipped distance between them, and that vector enters the score as a dot product with the query itself — so how much positional pull a pair gets depends on what the querying token is looking for. Distances past a chosen k all share one bucket, so the number of learned vectors stays fixed however long the sequence is.",
     })
   );
+
+  const { flow, note: flowNote } = flowPanel(root);
 
   // ------------------------------------------------------------ 1. clipping
   const kSlider = slider({
@@ -172,6 +174,17 @@ export function relativePositionsCard(root, m) {
     const res = forward(tokens, { mixer: softmaxMixer({ bias: biasFn }) });
     const h = res.trace[0].heads[0];
     grid.update({ tokens, weights: h.weights, query });
+
+    flow.update({
+      tokens,
+      head: { ...h, emb: res.trace[0].input },
+      weights: h.weights,
+      out: h.out,
+      top: res.top,
+      query,
+      opts: {},
+    });
+    flowNote.innerHTML = `Nothing is added to the embeddings here — no ochre dots, unlike concept 2. Position enters further right, inside the score: every pair picks up a learned vector for the distance between them, and it is multiplied against the query itself. The picture is otherwise the baseline's, which is the point: this mechanism changes what a pair scores, not what a token is.`;
 
     // --- 1. clipping
     const usable = Math.min(k, T - 1) + 1;
