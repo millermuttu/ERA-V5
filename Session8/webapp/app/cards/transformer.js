@@ -166,7 +166,8 @@ export function transformerCard(root, m) {
     const tokens = state.tokens;
     const T = tokens.length;
     if (T === 0) return;
-    if (query === null || query >= T) query = T - 1;
+    // Not the last token: it has no future to mask, so the mask toggle would look inert.
+    if (query === null || query >= T) query = Math.max(0, Math.floor(T / 2));
     headSlider.set(head);
 
     const res = baseline();

@@ -93,6 +93,7 @@ export function sinusoidalCard(root, m) {
     ariaLabel: "similarity between two position vectors against the offset between them",
   });
   const offsetRead = readout([
+    { key: "vec", label: "the position vector itself" },
     { key: "zero", label: "at k = 0" },
     { key: "same", label: "PE(pos)·PE(pos+4) at two different pos" },
     { key: "holds", label: "same value?" },
@@ -265,6 +266,7 @@ export function sinusoidalCard(root, m) {
     const a2 = dot(vec(posA + 6), vec(posA + 10));
     const holds = Math.abs(a1 - a2) < 1e-6;
     offsetRead.update({
+      vec: Array.from(vec(posA).slice(0, 4), (x) => fmt(x, 2)).join("  "),
       zero: fmt(dot(vec(posA), vec(posA)), 3),
       same: `${fmt(a1, 4)} vs ${fmt(a2, 4)}`,
       holds: holds ? "yes" : "no",
@@ -272,7 +274,7 @@ export function sinusoidalCard(root, m) {
     offsetNote.className = "note " + (holds ? "" : "warn");
     offsetNote.innerHTML = learned
       ? `With a learned table the two curves come apart: ${fmt(a1, 4)} against ${fmt(a2, 4)} for the same offset of 4. The relative-offset structure is simply absent — a learned table stores positions, it does not relate them. That is the property the paper hoped sinusoids would give, and the reason this card exists as its own entry.`
-      : `Drag the slider and the solid curve does not move: <strong>PE(pos)·PE(pos+k) depends only on k</strong>, never on where you measure from. At k = 0 it reads ${fmt(dot(vec(posA), vec(posA)), 3)} = d_model/2 for every position, so all these vectors have the same length. This is the consequence of the paper's hypothesis — but note the paper only says it <em>hypothesized</em> the model could use this, and never showed a head that does.`;
+      : `Watch the top readout as you drag: the position vector itself changes completely, and the curve below does not move at all: <strong>PE(pos)·PE(pos+k) depends only on k</strong>, never on where you measure from. At k = 0 it reads ${fmt(dot(vec(posA), vec(posA)), 3)} = d_model/2 for every position, so all these vectors have the same length. This is the consequence of the paper's hypothesis — but note the paper only says it <em>hypothesized</em> the model could use this, and never showed a head that does.`;
 
     // --- 3. the base
     const wave = {};

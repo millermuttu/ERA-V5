@@ -88,6 +88,7 @@ export function slidingWindowCard(root, m) {
     onchange: (v) => ((dilateSomeHeads = v), render()),
   });
   const dilRead = readout([
+    { key: "heads", label: "heads reading with gaps" },
     { key: "cost", label: "keys read per query" },
     { key: "distance", label: "distance covered" },
     { key: "gaps", label: "positions skipped inside that span" },
@@ -233,14 +234,18 @@ export function slidingWindowCard(root, m) {
     // --- 3. dilation
     let gaps = 0;
     for (let back = 1; back <= dilation * half; back++) if (back % dilation !== 0) gaps++;
+    const dilatedHeads = dilation === 1 ? 0 : dilateSomeHeads ? CONFIG.HEADS / 2 : CONFIG.HEADS;
     dilRead.update({
+      heads: `${dilatedHeads} of ${CONFIG.HEADS}`,
       cost: fmt(reads / T, 2),
-      distance: `${dilation * half} words`,
+      distance: `${dilation === 1 ? half : dilation * half} words${dilateSomeHeads && dilation > 1 ? ` (dense heads still ${half})` : ""}`,
       gaps: String(gaps),
     });
     dilNote.textContent =
       dilation === 1
-        ? "No dilation: the window is a solid run of neighbours. Raise it and watch the distance grow while the number of keys read stays where it is."
+        ? dilateSomeHeads
+          ? "The split is switched on, but dilation is still 1 — so \"every 1st position\" is just a solid window, and the two halves of the heads are reading identically. Raise the dilation above 1 to make the split mean something. Longformer's point is precisely that you do not have to choose one or the other for the whole model."
+          : "No dilation: the window is a solid run of neighbours. Raise it and watch the distance grow while the number of keys read stays where it is."
         : `Reading every ${dilation}${dilation === 2 ? "nd" : dilation === 3 ? "rd" : "th"} position covers ${dilation * half} words for the same ${fmt(reads / T, 2)} reads per query — but ${gaps} positions inside that span are skipped entirely. Longformer's answer is not to dilate everything: it dilates two heads of eight and leaves the rest solid, so some heads keep the fine detail while others reach further. The ablation credits dilation with 0.01 bits per character, which is worth knowing before treating it as a major win.`;
 
     // --- 4. the global hub

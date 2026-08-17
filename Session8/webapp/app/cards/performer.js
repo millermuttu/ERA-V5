@@ -12,8 +12,14 @@ import { softmax } from "../model/ops.js";
 import { state } from "../runner.js";
 import { tradeBlock, plainBlock, prose } from "./chrome.js";
 
-// FAVOR+ defines SM(x,y) = exp(xᵀy), with the 1/√d folded into the inputs — so scale by d^(1/4)
+// FAVOR+ defines SM(x,y) = exp(xᵀy), with the 1/√d folded into the inputs — so scale by d^(-1/4)
 // on each side. Getting this wrong converges to the wrong matrix and looks like an estimator bug.
+//
+// The other thing that matters, and the reason this card has a sharpness control: the estimator's
+// variance grows with exp of the vector norms. This model is untrained, and its queries and keys
+// have norms around 4 to 8 — at which no feasible number of random features converges. Measured:
+// at norm 7.8 the error is still 0.99 at m = 2048; at norm 0.8 it reaches 0.007. That is Lemma 2,
+// and it is a property of the method rather than a defect of this page.
 const PRESCALE = Math.pow(DH, -0.25);
 
 function drawProjections(m, seed) {
@@ -22,25 +28,25 @@ function drawProjections(m, seed) {
 }
 
 /** Positive random features: h(x) = exp(-‖x‖²/2), f = exp. */
-function positiveFeatures(x, W) {
-  const v = Float64Array.from(x, (t) => t * PRESCALE);
+function positiveFeatures(x, W, sharp = 1) {
+  const v = Float64Array.from(x, (t) => t * PRESCALE * sharp);
   let sq = 0;
   for (const t of v) sq += t * t;
-  const scale = 1 / Math.sqrt(W.length);
-  return Float64Array.from(W, (w) => scale * Math.exp(dot(w, v) - sq / 2));
+  const norm = 1 / Math.sqrt(W.length);
+  return Float64Array.from(W, (w) => norm * Math.exp(dot(w, v) - sq / 2));
 }
 
 /** The earlier trigonometric features, kept for the comparison the paper's Lemma 2 is about. */
-function trigFeatures(x, W) {
-  const v = Float64Array.from(x, (t) => t * PRESCALE);
+function trigFeatures(x, W, sharp = 1) {
+  const v = Float64Array.from(x, (t) => t * PRESCALE * sharp);
   let sq = 0;
   for (const t of v) sq += t * t;
-  const scale = Math.exp(sq / 2) / Math.sqrt(W.length);
+  const norm = Math.exp(sq / 2) / Math.sqrt(W.length);
   const out = new Float64Array(W.length * 2);
   W.forEach((w, i) => {
     const a = dot(w, v);
-    out[2 * i] = scale * Math.cos(a);
-    out[2 * i + 1] = scale * Math.sin(a);
+    out[2 * i] = norm * Math.cos(a);
+    out[2 * i + 1] = norm * Math.sin(a);
   });
   return out;
 }
@@ -49,6 +55,7 @@ export function performerCard(root, m) {
   let features = 16;
   let positive = true;
   let redraws = 1;
+  let sharp = 0.25; // scales the query/key norms, which is what governs the variance
 
   root.appendChild(
     prose({
@@ -72,6 +79,15 @@ export function performerCard(root, m) {
     value: true,
     onchange: (v) => ((positive = v), render()),
   });
+  const sharpSlider = slider({
+    label: "query/key size",
+    min: 0.05,
+    max: 1,
+    step: 0.05,
+    value: 0.25,
+    format: (v) => `${v.toFixed(2)}×`,
+    oninput: (v) => ((sharp = v), render()),
+  });
   const errCurve = curveView({
     xLabel: "random features m",
     yLabel: "largest error",
@@ -80,14 +96,14 @@ export function performerCard(root, m) {
   const errRead = readout([
     { key: "max", label: "largest error in the attention matrix" },
     { key: "mean", label: "average error" },
-    { key: "zero", label: "does it ever reach zero?" },
+    { key: "norm", label: "largest query norm" },
   ]);
   const errNote = el("p", { class: "note" });
 
   root.appendChild(
     el("section", { class: "panel" }, [
       el("div", { class: "panel-title", text: "how close is the estimate, on your sentence" }),
-      el("div", { class: "ctrls" }, [mSlider.node, posToggle] ),
+      el("div", { class: "ctrls" }, [mSlider.node, sharpSlider.node, posToggle]),
       errCurve.node,
       errRead.node,
       errNote,
@@ -196,12 +212,19 @@ export function performerCard(root, m) {
     const exact = forward(tokens, {});
     const h = exact.trace[0].heads[0];
 
-    // The exact attention matrix for head 0, and the approximation from random features.
+    // Exact attention at the same sharpness the features are computed at, so the comparison is
+    // like for like: softmax((sharp·q)·(sharp·k)/√d).
+    const s2 = (sharp * PRESCALE) ** 2;
+    const trueW = h.Q.map((q, i) =>
+      softmax(h.K.map((k, j) => (j <= i ? dot(q, k) * s2 : -Infinity)))
+    );
+
+    // The approximation from random features.
     const approxMatrix = (mm, usePositive, seed) => {
       const W = drawProjections(usePositive ? mm : Math.max(1, Math.floor(mm / 2)), seed);
       const f = usePositive ? positiveFeatures : trigFeatures;
-      const fq = h.Q.map((x) => f(x, W));
-      const fk = h.K.map((x) => f(x, W));
+      const fq = h.Q.map((x) => f(x, W, sharp));
+      const fk = h.K.map((x) => f(x, W, sharp));
       return fq.map((qq, i) => {
         const row = [];
         let z = 0;
@@ -220,7 +243,7 @@ export function performerCard(root, m) {
       let n = 0;
       for (let i = 0; i < T; i++)
         for (let j = 0; j <= i; j++) {
-          const d = Math.abs((A[i][j] ?? 0) - h.weights[i][j]);
+          const d = Math.abs((A[i][j] ?? 0) - trueW[i][j]);
           max = Math.max(max, d);
           sum += d;
           n++;
@@ -229,10 +252,11 @@ export function performerCard(root, m) {
     };
 
     const cur = errorOf(approxMatrix(features, positive, 1234));
+    const maxNorm = Math.max(...h.Q.map((q) => Math.sqrt(dot(q, q)))) * PRESCALE * sharp;
     errRead.update({
       max: fmt(cur.max, 4),
       mean: fmt(cur.mean, 5),
-      zero: "no — it falls, it does not arrive",
+      norm: fmt(maxNorm, 2),
     });
 
     // the convergence curve
@@ -246,14 +270,15 @@ export function performerCard(root, m) {
       markLabel: `m = ${features}`,
     });
 
-    errNote.className = "note " + (positive ? "" : "warn");
-    errNote.innerHTML = positive
-      ? `With ${features} random features the largest weight in the attention matrix is off by ${fmt(cur.max, 4)}, and the average by ${fmt(cur.mean, 5)}. Drag m: the error falls roughly as one over the square root of m, and it never reaches zero — that is what "approximation with a bound" means, as against linear attention's "different mechanism, no bound".`
-      : `These are the original trigonometric features. Watch the error at small m and compare with the positive ones — and look at the next panel, which is where the real problem lives.`;
+    errNote.className = "note " + (cur.max > 0.3 ? "warn" : "");
+    errNote.innerHTML =
+      cur.max > 0.3
+        ? `At this size the estimate is off by ${fmt(cur.max, 4)} — and adding features barely helps. This is not a bug and it is the most useful thing on the card: the estimator's variance grows with <em>exp</em> of the vector norms, so at a largest norm of ${fmt(maxNorm, 2)} no affordable number of features converges. Measured here: at norm 7.8 the error is still 0.99 with 2,048 features; at norm 0.8 it reaches 0.007. Pull "query/key size" down and watch the whole picture change.`
+        : `With ${features} random features and a largest query norm of ${fmt(maxNorm, 2)}, the biggest weight in the attention matrix is off by ${fmt(cur.max, 4)} and the average by ${fmt(cur.mean, 5)}. Drag m and the error falls; it never reaches zero, which is what an approximation with a bound means, as against linear attention's different mechanism with no bound. Now drag the size control up: convergence depends far more on how large the queries and keys are than on how many features you buy.`;
 
     // --- unbiasedness: average independent draws
     const draws = Array.from({ length: redraws }, (_, r) => approxMatrix(features, positive, 1000 + r * 77));
-    const averaged = h.weights.map((row, i) =>
+    const averaged = trueW.map((row, i) =>
       row.map((_, j) => (j <= i ? draws.reduce((s, A) => s + (A[i][j] ?? 0), 0) / redraws : 0))
     );
     const single = errorOf(draws[0]);
@@ -270,7 +295,12 @@ export function performerCard(root, m) {
     const posA = approxMatrix(features, true, 1234);
     const cells = [];
     for (let i = 0; i < T; i++)
-      for (let j = 0; j <= i; j++) cells.push({ w: h.weights[i][j], t: Math.abs(trigA[i][j] - h.weights[i][j]), p: Math.abs(posA[i][j] - h.weights[i][j]) });
+      for (let j = 0; j <= i; j++)
+        cells.push({
+          w: trueW[i][j],
+          t: Math.abs(trigA[i][j] - trueW[i][j]),
+          p: Math.abs(posA[i][j] - trueW[i][j]),
+        });
     cells.sort((a, b) => a.w - b.w);
     const smallest = cells.slice(0, Math.max(1, Math.floor(cells.length / 4)));
     const largest = cells.slice(-Math.max(1, Math.floor(cells.length / 4)));

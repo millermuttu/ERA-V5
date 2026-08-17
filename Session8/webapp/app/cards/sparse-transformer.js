@@ -209,11 +209,16 @@ export function sparseTransformerCard(root, m) {
     formula.textContent = pattern === "full" ? "j ≤ i — every earlier key" : P.formula;
 
     // --- counts and the U-shape
+    // Count what is actually on screen: the head selection changes the picture, so it has to
+    // change the number too, or the two disagree in front of the reader.
     const countFor = (stride) => {
       let n = 0;
       for (let i = 0; i < T; i++)
-        for (let j = 0; j <= i; j++)
-          if (PATTERNS[pattern].head1(i, j, stride, c) || PATTERNS[pattern].head2(i, j, stride, c)) n++;
+        for (let j = 0; j <= i; j++) {
+          const a = PATTERNS[pattern].head1(i, j, stride, c);
+          const b = PATTERNS[pattern].head2(i, j, stride, c);
+          if (headView === "head1" ? a : headView === "head2" ? b : a || b) n++;
+        }
       return n;
     };
     const causal = (T * (T + 1)) / 2;
