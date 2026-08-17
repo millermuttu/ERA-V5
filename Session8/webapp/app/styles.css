@@ -177,3 +177,30 @@ svg{display:block;max-width:100%;height:auto}
 .bar-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 @media (max-width:900px){.twoup{grid-template-columns:1fr}}
+
+/* ---- curve view ---- */
+.curvewrap{overflow-x:auto}
+.curve .curve-ax{font-family:"IBM Plex Mono",monospace;font-size:10.5px;fill:var(--muted-2)}
+.curve .curve-tip{font-family:"IBM Plex Mono",monospace;font-size:11px;fill:var(--jade-bright)}
+.curve .curve-warn{font-family:"IBM Plex Mono",monospace;font-size:11px;fill:var(--rust)}
+.curve .curve-dot{fill:var(--jade)}
+.curve .curve-dot.ref{fill:var(--muted-2)}
+
+/* ---- learned table view ---- */
+.tablewrap{display:flex;gap:34px;flex-wrap:wrap}
+.tblcol{display:flex;flex-direction:column;gap:8px}
+.tbl{display:flex;flex-direction:column;gap:1px}
+.tblrow{display:flex;gap:1px;height:7px;opacity:.5}
+.tblrow.live{opacity:1}
+.tblrow.absent{height:9px;border:1px dashed rgba(224,105,61,0.45);border-radius:2px;align-items:center;padding-left:4px}
+.tblcell{width:5px;height:100%;border-radius:1px}
+.tblmissing{font-family:"IBM Plex Mono",monospace;font-size:7px;color:var(--rust);line-height:1}
+.gate{
+  font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted);
+  border:1px solid var(--line);border-left:2px solid var(--line-strong);border-radius:8px;
+  padding:12px 14px;margin:14px 0;line-height:1.5;
+}
+.gate.is-blocked{color:var(--rust);border-left-color:var(--rust);background:rgba(224,105,61,0.06)}
+
+.formula{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--jade);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 12px;margin:12px 0 16px;display:inline-block}
+.segwrap{overflow-x:auto}

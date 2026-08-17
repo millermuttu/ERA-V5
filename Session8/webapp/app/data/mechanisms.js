@@ -37,6 +37,12 @@ const pending = (id, name, date, source, pressure) => ({
   status: "pending",
 });
 
+// A concept becomes "built" when its research note is written and its card is live. The record
+// carries the narrative the deck renders around the card's own panels; the card itself holds the
+// prose and the trade-off blocks, so what lives here is the timeline's forward and backward links.
+const built = (id, answers, leaves) => (m) =>
+  m.id === id ? { ...m, status: "built", answers, leaves } : m;
+
 const paper = (label, id) => ({ label, url: `https://arxiv.org/abs/${id}`, kind: "paper" });
 
 export const mechanisms = [
@@ -129,6 +135,35 @@ export const mechanisms = [
     kind: "course",
   }, "position"),
 ];
+
+const LINKS = [
+  built("transformer", null, {
+    text: "two bills — a score matrix that grows with the square of the context, and a key/value cache that grows with every token generated",
+    to: "sparse-transformer",
+  }),
+  built("sinusoidal", "transformer", {
+    text: "position added into the same vector as content, and a relative-offset property the paper only hypothesised",
+    to: "relative-positions",
+  }),
+  built("relative-positions", "sinusoidal", {
+    text: "a per-pair term that stops the scores being one matrix multiply, at about 7% of training throughput",
+    to: "rope",
+  }),
+  built("learned-absolute", "sinusoidal", {
+    text: "a table with a last row, so text longer than training simply cannot be positioned",
+    to: "rope",
+  }),
+  built("transformer-xl", "transformer", {
+    text: "a read-only cache chosen by recency rather than learned, bounded at roughly layers times memory",
+    to: "mamba",
+  }),
+  built("sparse-transformer", "transformer", {
+    text: "a sparsity pattern fixed before the data arrives, which the authors' own inspection showed cannot reproduce global or data-dependent layers",
+    to: "sliding-window",
+  }),
+];
+
+for (let i = 0; i < mechanisms.length; i++) for (const f of LINKS) mechanisms[i] = f(mechanisms[i]);
 
 export const byDate = () => [...mechanisms].sort((a, b) => a.date.localeCompare(b.date));
 export const indexOf = (id) => byDate().findIndex((m) => m.id === id);

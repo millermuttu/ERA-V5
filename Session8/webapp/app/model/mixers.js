@@ -7,9 +7,11 @@ import { dot, softmax } from "./ops.js";
 /**
  * Softmax attention.
  *
- *   readable(i, j)  false hides key j from query i entirely (sparse patterns, windows, top-k)
- *   bias(i, j)      added to the score before softmax (ALiBi, relative position)
- *   rotate(v, pos)  applied to q and k before the dot product (RoPE and its extensions)
+ *   readable(i, j)   false hides key j from query i entirely (sparse patterns, windows, top-k)
+ *   bias(i, j, q)    added to the score before softmax. The query vector is passed because
+ *                    Shaw et al.'s relative term is q_i · w_clip(j−i), not a scalar per offset;
+ *                    ALiBi simply ignores it.
+ *   rotate(v, pos)   applied to q and k before the dot product (RoPE and its extensions)
  *
  * Defaults are plain causal attention — the baseline the whole app is measured against.
  */
@@ -28,7 +30,7 @@ export function softmaxMixer({ readable = null, bias = null, rotate = null } = {
       for (let j = 0; j <= i; j++) {
         if (readable && !readable(i, j)) continue;
         const k = rotate ? rotate(K[j], j) : K[j];
-        row[j] = dot(q, k) / scale + (bias ? bias(i, j) : 0);
+        row[j] = dot(q, k) / scale + (bias ? bias(i, j, q) : 0);
         reads++;
       }
       const w = softmax(row);
