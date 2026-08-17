@@ -76,12 +76,23 @@ export function relativeBuckets({ k = 4, seed = 11, dims = DH } = {}) {
   };
 }
 
-/** ALiBi: a per-head slope times the distance, subtracted from the score. */
-export const alibi = ({ slope = 0.5 } = {}) => ({
-  kind: "alibi",
-  slope,
-  bias: (i, j) => -(i - j) * slope,
-});
+/**
+ * ALiBi: a per-head slope times the distance, subtracted from the score.
+ * The slopes are a geometric sequence starting at 2^(-8/n) and stepping by that same ratio, so
+ * whatever the head count the last head always lands on 1/256. Not learned — the paper tried that
+ * and reports it did not extrapolate well. Not divided by sqrt(d_k) either.
+ */
+export const alibiSlopes = (heads) =>
+  Array.from({ length: heads }, (_, h) => Math.pow(2, (-8 * (h + 1)) / heads));
+
+export const alibi = ({ heads = CONFIG.HEADS, only = null } = {}) => {
+  const slopes = alibiSlopes(heads);
+  return {
+    kind: "alibi",
+    slopes,
+    bias: (i, j, _q, at = {}) => -(i - j) * slopes[only ?? at.head ?? 0],
+  };
+};
 
 /** RoPE: rotate dimension pairs by position times a per-pair frequency. */
 export function rope({ base = 10000, stretch = 1, dims = DH } = {}) {

@@ -173,6 +173,14 @@ const LINKS = [
     text: "an estimate whose error falls only as the square root of the features, so accuracy and speed trade against each other directly",
     to: "flashattention",
   }),
+  built("rope", "relative-positions", {
+    text: "a rotation defined at every position but trained at none of them, and a decay property asserted rather than proven",
+    to: "position-interpolation",
+  }),
+  built("alibi", "rope", {
+    text: "a penalty that only grows with distance, and an extrapolation result its own appendix says may not mean the context is being used",
+    to: "yarn",
+  }),
   built("sparse-transformer", "transformer", {
     text: "a sparsity pattern fixed before the data arrives, which the authors' own inspection showed cannot reproduce global or data-dependent layers",
     to: "sliding-window",

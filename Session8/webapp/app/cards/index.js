@@ -10,6 +10,8 @@ import { mqaCard } from "./mqa.js";
 import { slidingWindowCard } from "./sliding-window.js";
 import { linearAttentionCard } from "./linear-attention.js";
 import { performerCard } from "./performer.js";
+import { ropeCard } from "./rope.js";
+import { alibiCard } from "./alibi.js";
 
 export const CARDS = {
   transformer: transformerCard,
@@ -22,4 +24,6 @@ export const CARDS = {
   "sliding-window": slidingWindowCard,
   "linear-attention": linearAttentionCard,
   performer: performerCard,
+  rope: ropeCard,
+  alibi: alibiCard,
 };
