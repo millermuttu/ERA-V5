@@ -1,7 +1,10 @@
 // Concept 7 — multi-query attention.
 // Built from docs/research/mqa.md. Two things the research settled: the paper's argument is a
 // ratio of memory access to arithmetic, not "the cache is smaller"; and the training-instability
-// folklore is not in this paper at all, so it is not claimed here.
+// folklore is not in this paper at all, so it is not claimed here. Concept 15's research located it:
+// it is GQA's Appendix A, 2023 — from-scratch multi-query models with frequent loss spikes that
+// diverged immediately on long inputs — reported as observed, with no counts, and the authors say
+// they stopped looking for the cause. So it belongs to that card, dated 2023, and still not here.
 import { el, slider } from "../lib/dom.js";
 import { readout, barList } from "../views/bars.js";
 import { dot, fmt } from "../model/ops.js";

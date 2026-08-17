@@ -8,6 +8,9 @@ export const CONFIG = { D: 32, HEADS: 4, BLOCKS: 2, FF: 64, SEED: 20260817 };
 export const DH = CONFIG.D / CONFIG.HEADS;
 
 const rnd = mulberry32(CONFIG.SEED);
+// A second stream, so that adding the fresh-head weights below cannot shift a single number in the
+// model itself. Every card's readouts are properties of this seed.
+const rndAlt = mulberry32(CONFIG.SEED + 1);
 const W = {
   emb: randMat(rnd, V, CONFIG.D, 0.5),
   blocks: Array.from({ length: CONFIG.BLOCKS }, () => ({
@@ -17,6 +20,11 @@ const W = {
     o: randMat(rnd, CONFIG.D, CONFIG.D, 0.35),
     f1: randMat(rnd, CONFIG.D, CONFIG.FF, 0.3),
     f2: randMat(rnd, CONFIG.FF, CONFIG.D, 0.3),
+    // A fresh key/value projection at the same scale as the real one. GQA's checkpoint-conversion
+    // ablation compares mean-pooling against selecting one head and against throwing the trained
+    // heads away, so the third option has to exist to be compared with.
+    kr: randMat(rndAlt, CONFIG.D, CONFIG.D, 0.35),
+    vr: randMat(rndAlt, CONFIG.D, CONFIG.D, 0.35),
   })),
 };
 
@@ -56,10 +64,12 @@ export function forward(tokens, mech = {}) {
     const perGroup = CONFIG.HEADS / groups;
     const pooled = new Map();
     const groupSlice = (F, g) => {
-      const key = F === Kf ? "k" + g : "v" + g;
+      const isKey = F === Kf;
+      const key = (isKey ? "k" : "v") + g;
       if (pooled.has(key)) return pooled.get(key);
-      const out = F.map((x) => {
-        if (mech.kvPool === "select") return slice(x, g * perGroup);
+      const src = mech.kvPool === "random" ? normed.map((x) => matvec(x, isKey ? wb.kr : wb.vr)) : F;
+      const out = src.map((x) => {
+        if (mech.kvPool === "select" || mech.kvPool === "random") return slice(x, g * perGroup);
         const acc = new Float64Array(DH);
         for (let h = g * perGroup; h < (g + 1) * perGroup; h++) {
           const sl = slice(x, h);

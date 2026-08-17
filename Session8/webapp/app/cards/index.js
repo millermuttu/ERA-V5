@@ -14,6 +14,7 @@ import { deltaRuleCard } from "./delta-rule.js";
 import { ropeCard } from "./rope.js";
 import { alibiCard } from "./alibi.js";
 import { flashattentionCard } from "./flashattention.js";
+import { gqaCard } from "./gqa.js";
 
 export const CARDS = {
   transformer: transformerCard,
@@ -30,4 +31,5 @@ export const CARDS = {
   rope: ropeCard,
   alibi: alibiCard,
   flashattention: flashattentionCard,
+  gqa: gqaCard,
 };

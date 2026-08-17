@@ -189,6 +189,10 @@ const LINKS = [
     text: "a mechanism that now lives in hand-written kernels, so a sparsity pattern is affordable only if it can be expressed in whole tiles — and a quadratic in arithmetic that this paper never claimed to remove",
     to: "nsa",
   }),
+  built("gqa", "mqa", {
+    text: "an interpolation, which cannot leave the segment — the cache is still linear in context and in batch, with a smaller constant — and a group count read off a speed curve rather than derived",
+    to: "mla",
+  }),
   built("sparse-transformer", "transformer", {
     text: "a sparsity pattern fixed before the data arrives, which the authors' own inspection showed cannot reproduce global or data-dependent layers",
     to: "sliding-window",
