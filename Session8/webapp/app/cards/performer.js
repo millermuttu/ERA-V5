@@ -260,7 +260,7 @@ export function performerCard(root, m) {
       weights: approxNow.map((row, i) => tokens.map((_, j) => (j <= i ? row[j] ?? 0 : 0))),
       out: h.out,
       top: exact.top,
-      opts: {},
+      opts: { qkvBadge: `φ: Q and K become ${positive ? features : 2 * features} random features` },
     });
     flowNote.innerHTML = `The marks are the <em>estimated</em> attention, not the real one — the same picture concept 1 draws, reconstructed from ${features} random projections instead of from every pair. Drag the feature count and watch the pattern sharpen towards the true one; drag the query/key size and watch it fall apart. Structurally nothing else changes, which is the claim: this is meant to be the same computation, done cheaply, rather than a different one.`;
 

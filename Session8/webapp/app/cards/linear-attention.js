@@ -231,7 +231,7 @@ export function linearAttentionCard(root, m) {
       out: h.out,
       top: lin.top,
       query: Math.min(step, T) - 1,
-      opts: { stateMode: { matrix: snap } },
+      opts: { stateMode: { matrix: snap }, qkvBadge: "φ applied to Q and K" },
     });
     flowNote.innerHTML = `Compare this with concept 1's picture. The left half is unchanged — the same words, the same three projections. Where the score matrix used to be there is now a single grid that every token writes into and every query reads from. <strong>There is no dot per pair any more, because no pair is ever scored.</strong> That is the whole mechanism, and it is why the memory stops growing: the thing in the middle is the same size after one word and after a million.`;
     const maxAbs = Math.max(...snap.flatMap((r) => Array.from(r, Math.abs)), 1e-9);

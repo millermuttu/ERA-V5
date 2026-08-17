@@ -239,7 +239,7 @@ export function gqaCard(root, m) {
       out: h.out,
       top: res.top,
       query: T - 1,
-      opts: { kvShared: groups < CONFIG.HEADS },
+      opts: { kvShared: groups < CONFIG.HEADS, headFan: { heads: CONFIG.HEADS, groups } },
     });
     flowNote.innerHTML =
       groups === CONFIG.HEADS

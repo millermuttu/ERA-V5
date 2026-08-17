@@ -63,7 +63,10 @@ export function flowView() {
     const midY = TOP + ((n - 1) * PITCH) / 2;
     const tokY = (i) => TOP + i * PITCH;
     // the three magnitude lists sit side by side rather than stacked, so they cannot collide
-    const listX = { Key: G.barX, Query: G.barX + 92, Value: G.barX + 184 };
+    // A per-token dial needs its own column between the Q/K/V strips and the magnitude lists, so
+    // everything downstream slides right by exactly that much when a mechanism asks for one.
+    const dialGap = opts.rotate ? 30 : 0;
+    const listX = { Key: G.barX + dialGap, Query: G.barX + 92 + dialGap, Value: G.barX + 184 + dialGap };
     // Lay the columns out from the widths they actually occupy, so the matrix can never be drawn
     // on top of the value bars however long the sentence is.
     const step = Math.min(19, Math.max(9, 300 / n));
@@ -116,6 +119,7 @@ export function flowView() {
     // Q, K, V strips
     const letters = ["Q", "K", "V"];
     const vecs = [head.Q, head.K, head.V];
+    const dialX = G.qkvX + G.qkvW + 16;
     for (let i = 0; i < n; i++) {
       for (let m = 0; m < 3; m++) {
         const yy = tokY(i) - 9 + m * 6;
@@ -127,9 +131,47 @@ export function flowView() {
           s += `<text x="${G.qkvX - 5}" y="${yy + 5}" text-anchor="end" class="fl-letter" fill="${
             [COL.q, COL.k, COL.v][m]
           }">${letters[m]}</text>`;
-        if (shared && i === 0)
-          s += `<text x="${G.qkvX + G.qkvW + 4}" y="${yy + 5}" class="fl-lab" fill="#E0A03A">shared</text>`;
+        if (shared && i === 0 && m === 2)
+          s += `<text x="${G.qkvX + G.qkvW / 2}" y="${TOP - 30}" text-anchor="middle" class="fl-lab" fill="#E0A03A">K and V shared</text>`;
       }
+      // A mechanism that turns the query and key by position rather than adding to them: one dial
+      // per token, at the stage where the turn actually happens.
+      if (opts.rotate) {
+        const a = opts.rotate.angle(i);
+        const cy = tokY(i);
+        s += `<circle cx="${dialX}" cy="${cy}" r="6" fill="none" stroke="rgba(233,231,220,0.18)"/>
+          <line x1="${dialX}" y1="${cy}" x2="${(dialX + 6 * Math.cos(a)).toFixed(2)}" y2="${(cy - 6 * Math.sin(a)).toFixed(
+          2
+        )}" stroke="#E0A03A" stroke-width="1.4"/>`;
+      }
+    }
+    if (opts.rotate || opts.qkvBadge)
+      s += `<text x="${G.qkvX}" y="${TOP - 30}" class="fl-lab" fill="#E0A03A">${esc(
+        opts.qkvBadge || opts.rotate.label || "turned by position"
+      )}</text>`;
+
+    // How many distinct keys and values the head count actually resolves to — the picture is the
+    // paper's own figure, and it belongs at this stage because this is where the sharing happens.
+    if (opts.headFan) {
+      const { heads: HN, groups: GN } = opts.headFan;
+      const bw = 30;
+      const gap = 9;
+      const fx = (h) => G.tokX + 6 + h * (bw + gap);
+      const fy = TOP + n * PITCH + 26;
+      const per = HN / GN;
+      const kvx = (g) => fx(g * per) + ((per - 1) * (bw + gap)) / 2;
+      for (let h = 0; h < HN; h++) {
+        s += `<rect x="${fx(h)}" y="${fy}" width="${bw}" height="13" rx="3" fill="${COL.q}" fill-opacity="0.45"/>`;
+        s += `<path d="M${fx(h) + bw / 2} ${fy + 13}L${kvx(Math.floor(h / per)) + bw / 2} ${fy + 34}"
+          stroke="rgba(233,231,220,0.3)" stroke-width="0.9" fill="none"/>`;
+      }
+      for (let g = 0; g < GN; g++) {
+        s += `<rect x="${kvx(g)}" y="${fy + 34}" width="${bw}" height="13" rx="3" fill="${COL.k}" fill-opacity="0.5"/>`;
+        s += `<rect x="${kvx(g)}" y="${fy + 50}" width="${bw}" height="13" rx="3" fill="${COL.v}" fill-opacity="0.5"/>`;
+      }
+      s += `<text x="${G.tokX}" y="${fy - 6}" text-anchor="end" class="fl-lab">${HN} query heads</text>`;
+      s += `<text x="${G.tokX}" y="${fy + 44}" text-anchor="end" class="fl-lab">${GN} key head${GN > 1 ? "s" : ""}</text>`;
+      s += `<text x="${G.tokX}" y="${fy + 60}" text-anchor="end" class="fl-lab">${GN} value head${GN > 1 ? "s" : ""}</text>`;
     }
 
     // Key / Query / Value magnitude lists

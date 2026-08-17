@@ -366,7 +366,7 @@ export function deltaRuleCard(root, m) {
       out: h.out,
       top: runDelta.top,
       query: Math.min(step, T) - 1,
-      opts: { stateMode: { matrix: snap } },
+      opts: { stateMode: { matrix: snap }, qkvBadge: "φ applied to Q and K, then sum-normalised" },
     });
     flowNote.innerHTML = `The picture is concept 9's, unchanged: no score matrix, one grid in the middle that every token writes into and every query reads from. What changed is inside the arrow going in. Each token now <strong>reads the grid first</strong>, at its own key, and writes only the difference between the value it wanted stored and the value it found. Nothing else in the pipeline moves — same projections, same output path, same prediction bars.`;
 

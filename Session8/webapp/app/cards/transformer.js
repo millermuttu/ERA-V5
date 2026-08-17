@@ -211,7 +211,7 @@ export function transformerCard(root, m) {
       out: h.out,
       top: res.top,
       query,
-      opts: { readable: masked ? null : null },
+      opts: { headFan: { heads: CONFIG.HEADS, groups: CONFIG.HEADS } },
     });
     flowNote.innerHTML = `Every word on the left becomes three things — a <strong style="color:#5b7fdb">query</strong> asking, a <strong style="color:#E0693D">key</strong> advertising, and a <strong style="color:#4FC58C">value</strong> waiting to be handed over. The dot grid is who reads whom: the row for “${tokens[queryIndex()].word}” is picked out, and each mark's size is how much weight that pair got. The bars on the right are what the model expects next — noise, because nothing here is trained, but computed noise. The dashed line over the top is the residual: whatever attention decides, the token keeps a copy of itself.`;
 

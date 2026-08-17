@@ -186,7 +186,12 @@ export function ropeCard(root, m) {
       out: h.out,
       top: res.top,
       query,
-      opts: {},
+      opts: {
+        rotate: {
+          angle: (pos) => pos * FREQS[0] * stretch,
+          label: "Q and K turned by position",
+        },
+      },
     });
     flowNote.innerHTML = `No ochre dots on the embeddings — unlike concept 2, nothing has been added to them. Position is applied later, to the queries and keys only, as a turn rather than a sum. The values are left alone, which is why the picture's right-hand side is untouched: position changes who is read, never what is handed over.`;
 

@@ -175,7 +175,7 @@ export function mqaCard(root, m) {
       weights: h0.weights,
       out: h0.out,
       top: res.top,
-      opts: { kvShared: groups < CONFIG.HEADS },
+      opts: { kvShared: groups < CONFIG.HEADS, headFan: { heads: CONFIG.HEADS, groups } },
     });
     flowNote.innerHTML =
       groups === CONFIG.HEADS
