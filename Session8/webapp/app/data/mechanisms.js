@@ -173,6 +173,10 @@ const LINKS = [
     text: "an estimate whose error falls only as the square root of the features, so accuracy and speed trade against each other directly",
     to: "flashattention",
   }),
+  built("delta-rule", "linear-attention", {
+    text: "a write that must read the state first, so the sequence can no longer be trained as one parallel product — and a capacity ceiling this rule leaves exactly where it found it",
+    to: "parallel-deltanet",
+  }),
   built("rope", "relative-positions", {
     text: "a rotation defined at every position but trained at none of them, and a decay property asserted rather than proven",
     to: "position-interpolation",
