@@ -50,13 +50,34 @@ export function forward(tokens, mech = {}) {
     const Kf = normed.map((x) => matvec(x, wb.k));
     const Vf = normed.map((x) => matvec(x, wb.v));
 
+    // How a shared key/value head is built from the heads that share it. GQA constructs it by
+    // mean-pooling the group — and compares that against simply selecting one of them, which is
+    // why both are available here rather than only the one that is easier to write.
+    const perGroup = CONFIG.HEADS / groups;
+    const pooled = new Map();
+    const groupSlice = (F, g) => {
+      const key = F === Kf ? "k" + g : "v" + g;
+      if (pooled.has(key)) return pooled.get(key);
+      const out = F.map((x) => {
+        if (mech.kvPool === "select") return slice(x, g * perGroup);
+        const acc = new Float64Array(DH);
+        for (let h = g * perGroup; h < (g + 1) * perGroup; h++) {
+          const sl = slice(x, h);
+          for (let d = 0; d < DH; d++) acc[d] += sl[d] / perGroup;
+        }
+        return acc;
+      });
+      pooled.set(key, out);
+      return out;
+    };
+
     const heads = [];
     const mixed = Array.from({ length: T }, () => new Float64Array(CONFIG.D));
     for (let head = 0; head < CONFIG.HEADS; head++) {
       const kvh = kvHeadFor(head, CONFIG.HEADS, groups);
       const Q = Qf.map((x) => slice(x, head));
-      const K = Kf.map((x) => slice(x, kvh));
-      const Vh = Vf.map((x) => slice(x, kvh));
+      const K = groups === CONFIG.HEADS ? Kf.map((x) => slice(x, head)) : groupSlice(Kf, kvh);
+      const Vh = groups === CONFIG.HEADS ? Vf.map((x) => slice(x, head)) : groupSlice(Vf, kvh);
       // The block and head index reach the seam so a mechanism can vary by depth or by
       // head — Longformer's staged windows and its dilation-on-some-heads both need it.
       const r = mixer(Q, K, Vh, DH, { block: b, head, kvHead: kvh });
