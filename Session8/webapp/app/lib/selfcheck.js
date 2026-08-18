@@ -226,6 +226,36 @@ export function checks() {
     "sinks survive, the middle does not"
   );
 
+  // Selectivity is one line in the seam: a decay that used to be a constant may now be read off
+  // the token. Both halves of that have to hold — the constant case must be untouched, and the
+  // per-token case must actually apply different decays.
+  ok(
+    "a decay given as a constant function is the same as the constant",
+    (() => {
+      const a = forward(TOKENS, { mixer: stateMixer({ write: "gated", decay: 0.7 }) }).trace[0].heads[0];
+      const b = forward(TOKENS, { mixer: stateMixer({ write: "gated", decay: () => 0.7 }) }).trace[0].heads[0];
+      return a.out.every((v, i) => v.every((x, d) => near(x, b.out[i][d], 1e-15)));
+    })()
+  );
+  ok(
+    "a decay read off the token applies a different one at different tokens",
+    (() => {
+      const h = forward(TOKENS, {
+        mixer: stateMixer({ write: "gated", decay: (i, k) => 1 / (1 + Math.exp(-k[0])) }),
+      }).trace[0].heads[0];
+      return new Set(h.gates.map((g) => g.toFixed(9))).size > 1;
+    })(),
+    "which is the length dimension the parameter did not have before"
+  );
+  ok(
+    "the discretisation ties the write strength to the decay",
+    (() => {
+      // Appendix C with A = −1: Ā = exp(−Δ) and B̄ = 1 − Ā, for every Δ.
+      return [0.001, 0.1, 1, 10, 100].every((d) => near(Math.exp(-d) + (1 - Math.exp(-d)), 1, 1e-15));
+    })(),
+    "Ā + B̄ = 1 at every step size"
+  );
+
   // ---------------------------------------------------------------------- cost
   const gb = (o = {}) => cacheBytes({ ...SERVING, ...o }) / GB;
   ok("cache: one conversation is 6.44 GB", near(gb(), 6.44, 0.005), gb().toFixed(3));

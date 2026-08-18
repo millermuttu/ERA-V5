@@ -214,6 +214,10 @@ const LINKS = [
     text: "a cache written from indices alone — nothing scored, nothing read for content — so everything between the sinks and the window is gone for good, and a question about it is answered not badly but not at all",
     to: "mla",
   }),
+  built("mamba", "transformer-xl", {
+    text: "a state that can release but still cannot correct — nothing reads it before writing to it, so revising one association means fading every other one too",
+    to: "gated-deltanet",
+  }),
   built("sparse-transformer", "transformer", {
     text: "a sparsity pattern fixed before the data arrives, which the authors' own inspection showed cannot reproduce global or data-dependent layers",
     to: "sliding-window",

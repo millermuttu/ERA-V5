@@ -109,12 +109,18 @@ export function stateMixer({
     const out = [];
     const snapshots = [];
     const denominators = [];
+    const gates = [];
     let norm = new Float64Array(m);
 
     for (let i = 0; i < T; i++) {
       const k = map(K[i]);
       const q = map(Q[i]);
-      const g = write === "gated" ? decay : 1;
+      // The one line that separates a time-invariant state from a selective one. A constant decay
+      // is a schedule fixed before the data arrives; a decay read off the token is Mamba's change
+      // to its own predecessor — a parameter that had no length dimension acquires one. `gates`
+      // records what was applied, because a card that claims the gate moved has to show it.
+      const g = write === "gated" ? (typeof decay === "function" ? decay(i, K[i], V[i], at) : decay) : 1;
+      gates.push(g);
 
       // read what the state currently returns for this key
       const cur = new Float64Array(dh);
@@ -123,7 +129,10 @@ export function stateMixer({
       for (let a = 0; a < dh; a++) {
         // Eq. 24: the correction is scaled by the write strength, and nothing else is. β never
         // multiplies S — that would be Peng et al.'s gated rule, which App. B argues against.
-        const target = write === "add" ? V[i][a] : beta * (V[i][a] - cur[a]);
+        // Theorem 1 ties the write strength to the decay: B̄ = 1 − Ā exactly, so a selective mode
+        // needs β to follow g rather than stand beside it as an independent knob.
+        const b_t = typeof beta === "function" ? beta(i, g) : beta;
+        const target = write === "add" ? V[i][a] : b_t * (V[i][a] - cur[a]);
         for (let b = 0; b < m; b++) S[a][b] = S[a][b] * g + target * k[b];
       }
       for (let b = 0; b < m; b++) norm[b] = norm[b] * g + k[b];
@@ -142,7 +151,7 @@ export function stateMixer({
       snapshots.push(S.map((r) => Float64Array.from(r)));
     }
     // A state model reads one object per token, not a growing list of keys.
-    return { out, scores: null, weights: null, reads: T, state: S, snapshots, denominators, m, kind: "state" };
+    return { out, scores: null, weights: null, reads: T, state: S, snapshots, denominators, gates, m, kind: "state" };
   };
 }
 
