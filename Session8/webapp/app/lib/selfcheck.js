@@ -5,7 +5,7 @@ import { softmax, dot } from "../model/ops.js";
 import { forward, CONFIG, DH } from "../model/transformer.js";
 import { softmaxMixer, stateMixer, kvHeadFor } from "../model/mixers.js";
 import { cacheBytes, SERVING, GB } from "../model/cost.js";
-import { sinusoidalVector, learnedTable, relativeBuckets } from "../model/position.js";
+import { sinusoidalVector, learnedTable, relativeBuckets, rope } from "../model/position.js";
 import { tokenize, PRESETS } from "../model/vocab.js";
 import { mechanisms } from "../data/mechanisms.js";
 import { CARDS } from "../cards/index.js";
@@ -122,6 +122,36 @@ export function checks() {
   ok(
     "the relative term is query-dependent, as Shaw eq. 5 requires",
     rel.bias(5, 2, probe) !== rel.bias(5, 2, probe.map((x) => -x))
+  );
+
+  // The base change has to hit both endpoints exactly, or it is not the method: the slowest pair
+  // must land on what interpolation would have given it, and the fastest must not move at all.
+  const scale = 4;
+  const plainRope = rope({ dims: DH });
+  const ntkRope = rope({ base: 10000 * Math.pow(scale, DH / (DH - 2)), dims: DH });
+  const last = DH / 2 - 1;
+  ok("a base change leaves the fastest pair exactly alone", ntkRope.freqs[0] === plainRope.freqs[0]);
+  ok(
+    "and lands the slowest pair exactly where interpolation would have put it",
+    near(ntkRope.freqs[last], plainRope.freqs[last] / scale, 1e-15),
+    (plainRope.freqs[last] / ntkRope.freqs[last]).toFixed(6)
+  );
+  ok(
+    "the pairs between are compressed by less than asked, which is why the scale under-delivers",
+    plainRope.freqs.every((f, i) => f / ntkRope.freqs[i] <= scale + 1e-12) &&
+      plainRope.freqs.some((f, i) => i > 0 && i < last && f / ntkRope.freqs[i] < scale - 1e-9)
+  );
+  ok(
+    "a base change is still exactly relative",
+    (() => {
+      const at = (sh) =>
+        forward(TOKENS, { mixer: softmaxMixer({ rotate: (v, p) => ntkRope.rotate(v, p + sh) }) }).trace[0].heads[0]
+          .weights;
+      const a = at(0);
+      const b = at(4096);
+      return a.every((r, i) => r.every((x, j) => near(x, b[i][j], 1e-12)));
+    })(),
+    "shifting the sentence by 4096 leaves the attention matrix alone"
   );
 
   // ---------------------------------------------------------------------- cost

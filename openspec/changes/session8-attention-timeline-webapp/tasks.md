@@ -43,7 +43,7 @@ Each line is: research note written, card built on the live model, plain-languag
 - [x] 2.13 FlashAttention (arXiv 2205.14135)
 - [x] 2.14 Grouped-query attention (arXiv 2305.13245)
 - [x] 2.15 Position interpolation (arXiv 2306.15595)
-- [ ] 2.16 NTK-aware base scaling (community post, no paper)
+- [x] 2.16 NTK-aware base scaling (community post, no paper)
 - [ ] 2.17 YaRN (arXiv 2309.00071)
 - [ ] 2.18 Attention sinks, StreamingLLM (arXiv 2309.17453)
 - [ ] 2.19 Selective state space, Mamba (arXiv 2312.00752)

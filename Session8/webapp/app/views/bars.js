@@ -27,7 +27,9 @@ export function barList({ rows }) {
       b.fill.style.width = pct.toFixed(2) + "%";
       b.val.textContent = v.text ?? String(v.value);
       if (v.label) b.name.textContent = v.label;
-      if (v.tone) b.fill.className = "fill " + v.tone;
+      // An empty tone resets to the default fill — a caller that tones some rows and not others
+      // must be able to clear one, or the class sticks from the previous update.
+      if (v.tone !== undefined) b.fill.className = ("fill " + v.tone).trim();
     }
   }
 

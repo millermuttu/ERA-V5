@@ -16,6 +16,7 @@ import { alibiCard } from "./alibi.js";
 import { flashattentionCard } from "./flashattention.js";
 import { gqaCard } from "./gqa.js";
 import { positionInterpolationCard } from "./position-interpolation.js";
+import { ntkAwareCard } from "./ntk-aware.js";
 
 export const CARDS = {
   transformer: transformerCard,
@@ -34,4 +35,5 @@ export const CARDS = {
   flashattention: flashattentionCard,
   gqa: gqaCard,
   "position-interpolation": positionInterpolationCard,
+  "ntk-aware": ntkAwareCard,
 };

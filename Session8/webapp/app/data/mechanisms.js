@@ -3,6 +3,8 @@
 //
 // Dates are arXiv v1 submission dates, read from the arXiv API rather than recalled. That pass
 // corrected two of them: multi-query attention is 2019-11-06, parallelizable DeltaNet 2024-06-10.
+// The one entry with no paper was corrected the same way, from the archived post's own metadata:
+// NTK-aware base scaling is 2023-06-29, not the 30th, which is the follow-up post's date.
 //
 // A record is filled in by its own research → build pass, one concept at a time. `status: "pending"`
 // means the note has not been written yet and the card is a placeholder; the self-check reports how
@@ -94,8 +96,11 @@ export const mechanisms = [
   pending("position-interpolation", "Position interpolation", "2023-06-27",
     paper("Chen et al., Extending Context Window via Position Interpolation — arXiv:2306.15595", "2306.15595"), "position"),
 
-  pending("ntk-aware", "NTK-aware base scaling", "2023-06-30", {
-    label: "bloc97, community post on r/LocalLLaMA — no paper; refined later into YaRN",
+  // 2023-06-29, not the 30th: the archived post element carries created-timestamp
+  // 2023-06-29T08:21:29Z. The 30th is emozilla's *follow-up* post, which introduced the dynamic
+  // variant — a different author and a different idea, one day later.
+  pending("ntk-aware", "NTK-aware base scaling", "2023-06-29", {
+    label: "bloc97, NTK-Aware Scaled RoPE on r/LocalLLaMA — no paper; written up later in YaRN",
     url: "https://www.reddit.com/r/LocalLLaMA/comments/14lz7j5/ntkaware_scaled_rope_allows_llama_models_to_have/",
     kind: "post",
   }, "position"),
@@ -196,6 +201,10 @@ const LINKS = [
   built("position-interpolation", "rope", {
     text: "one factor divided into every frequency alike, so the fastest pairs — the ones carrying local word order — pay the same tax as the slowest, which never needed it",
     to: "ntk-aware",
+  }),
+  built("ntk-aware", "position-interpolation", {
+    text: "a geometric ramp with the right endpoints and no argument for its middle, which leaves almost every pair finishing a little past the largest angle it ever saw in training",
+    to: "yarn",
   }),
   built("sparse-transformer", "transformer", {
     text: "a sparsity pattern fixed before the data arrives, which the authors' own inspection showed cannot reproduce global or data-dependent layers",
