@@ -154,6 +154,47 @@ export function checks() {
     "shifting the sentence by 4096 leaves the attention matrix alone"
   );
 
+  // YaRN's ramp is a per-pair choice between interpolation and doing nothing, so the seam has to
+  // reproduce both endpoints exactly — otherwise the crossfade is measuring something else.
+  ok(
+    "a per-pair stretch of 1 everywhere is plain rotation",
+    (() => {
+      const a = rope({ dims: DH });
+      const b = rope({ dims: DH, stretch: () => 1 });
+      return a.freqs.every((f, i) => a.applied(i) === b.applied(i));
+    })()
+  );
+  ok(
+    "and a per-pair stretch of 1/s everywhere is interpolation",
+    (() => {
+      const flat = rope({ dims: DH, stretch: 1 / scale });
+      const fn = rope({ dims: DH, stretch: () => 1 / scale });
+      const probe = Float64Array.from({ length: DH }, (_, i) => (i % 2 ? 0.7 : -0.4));
+      return flat.rotate(probe, 9).every((x, i) => near(x, fn.rotate(probe, 9)[i], 1e-15));
+    })()
+  );
+  ok(
+    "the temperature is a modulus on the rotation, so it scales the logit by its square",
+    (() => {
+      const t = 1.2079; // 0.1·ln(8) + 1, the paper's own worked value
+      const plainR = rope({ dims: DH });
+      const hot = rope({ dims: DH, modulus: t });
+      const a = Float64Array.from({ length: DH }, (_, i) => (i % 3 ? 0.5 : -0.9));
+      const b = Float64Array.from({ length: DH }, (_, i) => (i % 2 ? -0.3 : 0.8));
+      const cold = dot(plainR.rotate(a, 3), plainR.rotate(b, 7));
+      return near(dot(hot.rotate(a, 3), hot.rotate(b, 7)), cold * t * t, 1e-12);
+    })(),
+    "which is why it needs no change to the attention code"
+  );
+  ok(
+    "a temperature of 1 leaves the rotation's length alone, as RoPE's does",
+    (() => {
+      const probe = Float64Array.from({ length: DH }, (_, i) => (i % 2 ? 0.6 : -0.2));
+      const r = rope({ dims: DH });
+      return near(dot(r.rotate(probe, 11), r.rotate(probe, 11)), dot(probe, probe), 1e-12);
+    })()
+  );
+
   // ---------------------------------------------------------------------- cost
   const gb = (o = {}) => cacheBytes({ ...SERVING, ...o }) / GB;
   ok("cache: one conversation is 6.44 GB", near(gb(), 6.44, 0.005), gb().toFixed(3));

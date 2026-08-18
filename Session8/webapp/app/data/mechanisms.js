@@ -206,6 +206,10 @@ const LINKS = [
     text: "a geometric ramp with the right endpoints and no argument for its middle, which leaves almost every pair finishing a little past the largest angle it ever saw in training",
     to: "yarn",
   }),
+  built("yarn", "ntk-aware", {
+    text: "two thresholds nobody has swept deciding how a third of a model's dimensions are treated, and a headline measured entirely in perplexity — which its own appendix suspects of not measuring whether the model can use the length it can now reach",
+    to: "attention-sinks",
+  }),
   built("sparse-transformer", "transformer", {
     text: "a sparsity pattern fixed before the data arrives, which the authors' own inspection showed cannot reproduce global or data-dependent layers",
     to: "sliding-window",

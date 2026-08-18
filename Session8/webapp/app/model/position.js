@@ -94,18 +94,31 @@ export const alibi = ({ heads = CONFIG.HEADS, only = null } = {}) => {
   };
 };
 
-/** RoPE: rotate dimension pairs by position times a per-pair frequency. */
-export function rope({ base = 10000, stretch = 1, dims = DH } = {}) {
+/**
+ * RoPE: rotate dimension pairs by position times a per-pair frequency.
+ *
+ * `stretch` is a multiplier on the angle — one number for every pair (position interpolation), or a
+ * function of the pair index when the scheme treats pairs differently (YaRN's ramp). `modulus` is
+ * the length the rotation is given: RoPE's own rotation has modulus 1 and so preserves the vector's
+ * length, and YaRN's attention temperature is exactly this constant set to something else, which
+ * scales the q·k logit by its square without touching the softmax at all.
+ */
+export function rope({ base = 10000, stretch = 1, dims = DH, modulus = 1 } = {}) {
   const freqs = Array.from({ length: dims / 2 }, (_, i) => 1 / Math.pow(base, (2 * i) / dims));
+  const rate = typeof stretch === "function" ? stretch : () => stretch;
   return {
     kind: "rope",
     freqs,
+    rate,
+    modulus,
+    /** The frequency the scheme actually applies to pair i, after whatever it does to the ladder. */
+    applied: (i) => freqs[i] * rate(i),
     rotate(v, pos) {
       const out = Float64Array.from(v);
       for (let i = 0; i < freqs.length && 2 * i + 1 < v.length; i++) {
-        const a = pos * freqs[i] * stretch;
-        const c = Math.cos(a);
-        const s = Math.sin(a);
+        const a = pos * freqs[i] * rate(i);
+        const c = Math.cos(a) * modulus;
+        const s = Math.sin(a) * modulus;
         const x = v[2 * i];
         const y = v[2 * i + 1];
         out[2 * i] = x * c - y * s;
