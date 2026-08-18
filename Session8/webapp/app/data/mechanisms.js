@@ -218,6 +218,10 @@ const LINKS = [
     text: "a state that can release but still cannot correct — nothing reads it before writing to it, so revising one association means fading every other one too",
     to: "gated-deltanet",
   }),
+  built("mla", "gqa", {
+    text: "a width fixed before any data arrives, and a cached object that is no longer a key — so every technique that edits a cache from outside has to be re-derived for it",
+    to: "nsa",
+  }),
   built("sparse-transformer", "transformer", {
     text: "a sparsity pattern fixed before the data arrives, which the authors' own inspection showed cannot reproduce global or data-dependent layers",
     to: "sliding-window",

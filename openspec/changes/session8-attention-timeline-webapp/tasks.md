@@ -47,7 +47,7 @@ Each line is: research note written, card built on the live model, plain-languag
 - [x] 2.17 YaRN (arXiv 2309.00071)
 - [x] 2.18 Attention sinks, StreamingLLM (arXiv 2309.17453)
 - [x] 2.19 Selective state space, Mamba (arXiv 2312.00752)
-- [ ] 2.20 Multi-head latent attention (arXiv 2405.04434)
+- [x] 2.20 Multi-head latent attention (arXiv 2405.04434)
 - [ ] 2.21 Parallelizable DeltaNet (arXiv 2406.06484)
 - [ ] 2.22 Gated DeltaNet (arXiv 2412.06464)
 - [ ] 2.23 Natively trainable sparse attention (arXiv 2502.11089)

@@ -1,7 +1,7 @@
 // The whole test suite. No framework: assertions over the model, over each mechanism's
 // implementation, and over the integrity of the chronology. Run with ?selfcheck=1.
 import { el } from "./dom.js";
-import { softmax, dot } from "../model/ops.js";
+import { softmax, dot, mulberry32, gauss } from "../model/ops.js";
 import { forward, CONFIG, DH } from "../model/transformer.js";
 import { softmaxMixer, stateMixer, kvHeadFor } from "../model/mixers.js";
 import { cacheBytes, SERVING, GB } from "../model/cost.js";
@@ -254,6 +254,51 @@ export function checks() {
       return [0.001, 0.1, 1, 10, 100].every((d) => near(Math.exp(-d) + (1 - Math.exp(-d)), 1, 1e-15));
     })(),
     "Ā + B̄ = 1 at every step size"
+  );
+
+  // The latent cache is an identity, not an approximation: moving the up-projection onto the query
+  // must not change a single score. If that stops holding, the mechanism's whole claim to be free
+  // is gone, so it is checked here rather than only on the card.
+  ok(
+    "moving the up-projection onto the query changes no score",
+    (() => {
+      const r = 5;
+      const rnd = mulberry32(99);
+      const WUK = Array.from({ length: r }, () => Float64Array.from({ length: DH }, () => gauss(rnd)));
+      const c = Float64Array.from({ length: r }, () => gauss(rnd));
+      const q = Float64Array.from({ length: DH }, () => gauss(rnd));
+      const k = new Float64Array(DH);
+      for (let j = 0; j < r; j++) for (let d = 0; d < DH; d++) k[d] += c[j] * WUK[j][d];
+      const qc = Float64Array.from({ length: r }, (_, j) => dot(WUK[j], q));
+      return near(dot(q, k), dot(qc, c), 1e-12);
+    })(),
+    "which is why the compression costs no arithmetic at generation time"
+  );
+  ok(
+    "a rotation between them breaks it",
+    (() => {
+      const r = 5;
+      const rnd = mulberry32(1234);
+      const WUK = Array.from({ length: r }, () => Float64Array.from({ length: DH }, () => gauss(rnd)));
+      const c = Float64Array.from({ length: r }, () => gauss(rnd));
+      const q = Float64Array.from({ length: DH }, () => gauss(rnd));
+      const rot = rope({ dims: DH });
+      const k = new Float64Array(DH);
+      for (let j = 0; j < r; j++) for (let d = 0; d < DH; d++) k[d] += c[j] * WUK[j][d];
+      const truth = dot(rot.rotate(q, 15), rot.rotate(k, 3));
+      const qc = Float64Array.from({ length: r }, (_, j) => dot(WUK[j], rot.rotate(q, 15)));
+      return Math.abs(truth - dot(qc, c)) > 1e-6;
+    })(),
+    "which is why position needs a channel of its own"
+  );
+  ok(
+    "the latent hook replaces the block's keys and values",
+    (() => {
+      const flat = forward(TOKENS, { latent: (normed) => ({ K: normed.map(() => new Float64Array(CONFIG.D)), V: normed.map(() => new Float64Array(CONFIG.D)) }) });
+      const w = flat.trace[0].heads[0].weights;
+      // Every key identical means every readable weight in a row is identical.
+      return w[TOKENS.length - 1].filter((x) => x > 0).every((x, _, a) => near(x, a[0], 1e-12));
+    })()
   );
 
   // ---------------------------------------------------------------------- cost

@@ -20,6 +20,7 @@ import { ntkAwareCard } from "./ntk-aware.js";
 import { yarnCard } from "./yarn.js";
 import { attentionSinksCard } from "./attention-sinks.js";
 import { mambaCard } from "./mamba.js";
+import { mlaCard } from "./mla.js";
 
 export const CARDS = {
   transformer: transformerCard,
@@ -42,4 +43,5 @@ export const CARDS = {
   yarn: yarnCard,
   "attention-sinks": attentionSinksCard,
   mamba: mambaCard,
+  mla: mlaCard,
 };

@@ -37,6 +37,7 @@ const slice = (v, h) => v.subarray(h * DH, (h + 1) * DH);
  *   mixer     a mixer from mixers.js, defaulting to plain causal softmax attention
  *   position  { add(vec, pos) } applied to the embedding, and/or { rotate } handed to the mixer
  *   kvGroups  key/value head sharing, defaults to one per query head
+ *   latent    (normed, wb, block) => {K, V}, replacing the block's keys and values wholesale
  *
  * Returns everything the views need — no view recomputes anything.
  */
@@ -55,8 +56,12 @@ export function forward(tokens, mech = {}) {
     const wb = W.blocks[b];
     const normed = h.map(layerNorm);
     const Qf = normed.map((x) => matvec(x, wb.q));
-    const Kf = normed.map((x) => matvec(x, wb.k));
-    const Vf = normed.map((x) => matvec(x, wb.v));
+    // `latent` replaces the block's keys and values with whatever it makes of the block input and
+    // the block's own projections — the seam a joint low-rank compression needs, because that
+    // compression is shared across all heads and so cannot live behind the per-head slice.
+    const kv = mech.latent ? mech.latent(normed, wb, b) : null;
+    const Kf = kv ? kv.K : normed.map((x) => matvec(x, wb.k));
+    const Vf = kv ? kv.V : normed.map((x) => matvec(x, wb.v));
 
     // How a shared key/value head is built from the heads that share it. GQA constructs it by
     // mean-pooling the group — and compares that against simply selecting one of them, which is
