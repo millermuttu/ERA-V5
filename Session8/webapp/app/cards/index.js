@@ -15,6 +15,7 @@ import { ropeCard } from "./rope.js";
 import { alibiCard } from "./alibi.js";
 import { flashattentionCard } from "./flashattention.js";
 import { gqaCard } from "./gqa.js";
+import { positionInterpolationCard } from "./position-interpolation.js";
 
 export const CARDS = {
   transformer: transformerCard,
@@ -32,4 +33,5 @@ export const CARDS = {
   alibi: alibiCard,
   flashattention: flashattentionCard,
   gqa: gqaCard,
+  "position-interpolation": positionInterpolationCard,
 };

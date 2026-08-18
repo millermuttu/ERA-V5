@@ -193,6 +193,10 @@ const LINKS = [
     text: "an interpolation, which cannot leave the segment — the cache is still linear in context and in batch, with a smaller constant — and a group count read off a speed curve rather than derived",
     to: "mla",
   }),
+  built("position-interpolation", "rope", {
+    text: "one factor divided into every frequency alike, so the fastest pairs — the ones carrying local word order — pay the same tax as the slowest, which never needed it",
+    to: "ntk-aware",
+  }),
   built("sparse-transformer", "transformer", {
     text: "a sparsity pattern fixed before the data arrives, which the authors' own inspection showed cannot reproduce global or data-dependent layers",
     to: "sliding-window",
