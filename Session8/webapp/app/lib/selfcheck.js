@@ -195,6 +195,37 @@ export function checks() {
     })()
   );
 
+  // The collapse the streaming card is about is one identity: drop keys from a softmax row and
+  // every survivor is multiplied by the same number. If that stops holding, the card's headline
+  // readout is wrong rather than merely surprising.
+  ok(
+    "hiding keys multiplies every survivor by one shared number",
+    (() => {
+      const policy = (i, j) => j < 2 || j >= i - 5 + 1;
+      const T = TOKENS.length;
+      const head = base.trace[0].heads[0];
+      const cut = forward(TOKENS, { mixer: softmaxMixer({ readable: policy }) }).trace[0].heads[0];
+      const ratios = [];
+      for (let j = 0; j < T; j++) {
+        if (!policy(T - 1, j)) continue;
+        if (head.weights[T - 1][j] < 1e-9) continue;
+        ratios.push(cut.weights[T - 1][j] / head.weights[T - 1][j]);
+      }
+      return ratios.length > 1 && ratios.every((r) => near(r, ratios[0], 1e-9));
+    })(),
+    "the shape of what remains is untouched, the scale is not"
+  );
+  ok(
+    "the front of the cache is kept whatever the window does",
+    (() => {
+      const policy = (i, j) => j < 4 || j >= i - 3 + 1;
+      const w = forward(TOKENS, { mixer: softmaxMixer({ readable: policy }) }).trace[0].heads[0].weights;
+      const last = w[TOKENS.length - 1];
+      return last[0] > 0 && last[4] === 0;
+    })(),
+    "sinks survive, the middle does not"
+  );
+
   // ---------------------------------------------------------------------- cost
   const gb = (o = {}) => cacheBytes({ ...SERVING, ...o }) / GB;
   ok("cache: one conversation is 6.44 GB", near(gb(), 6.44, 0.005), gb().toFixed(3));

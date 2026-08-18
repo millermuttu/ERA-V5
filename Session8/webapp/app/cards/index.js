@@ -18,6 +18,7 @@ import { gqaCard } from "./gqa.js";
 import { positionInterpolationCard } from "./position-interpolation.js";
 import { ntkAwareCard } from "./ntk-aware.js";
 import { yarnCard } from "./yarn.js";
+import { attentionSinksCard } from "./attention-sinks.js";
 
 export const CARDS = {
   transformer: transformerCard,
@@ -38,4 +39,5 @@ export const CARDS = {
   "position-interpolation": positionInterpolationCard,
   "ntk-aware": ntkAwareCard,
   yarn: yarnCard,
+  "attention-sinks": attentionSinksCard,
 };

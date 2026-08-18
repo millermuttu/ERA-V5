@@ -210,6 +210,10 @@ const LINKS = [
     text: "two thresholds nobody has swept deciding how a third of a model's dimensions are treated, and a headline measured entirely in perplexity — which its own appendix suspects of not measuring whether the model can use the length it can now reach",
     to: "attention-sinks",
   }),
+  built("attention-sinks", "sliding-window", {
+    text: "a cache written from indices alone — nothing scored, nothing read for content — so everything between the sinks and the window is gone for good, and a question about it is answered not badly but not at all",
+    to: "mla",
+  }),
   built("sparse-transformer", "transformer", {
     text: "a sparsity pattern fixed before the data arrives, which the authors' own inspection showed cannot reproduce global or data-dependent layers",
     to: "sliding-window",
