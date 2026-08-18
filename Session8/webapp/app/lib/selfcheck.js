@@ -9,6 +9,7 @@ import { sinusoidalVector, learnedTable, relativeBuckets, rope } from "../model/
 import { tokenize, PRESETS } from "../model/vocab.js";
 import { mechanisms } from "../data/mechanisms.js";
 import { CARDS } from "../cards/index.js";
+import { deltaMixer, chunkMixer, chunkCost, seqCost } from "../cards/parallel-deltanet.js";
 
 const near = (a, b, eps = 1e-9) => Math.abs(a - b) < eps;
 const TOKENS = tokenize(PRESETS[0]);
@@ -104,6 +105,87 @@ export function checks() {
     const h = r.trace[0].heads[0];
     return h.kind === "state" && h.state.length === DH && h.state[0].length === DH;
   })());
+
+  // ------------------------------------------- concept 22: the chunkwise form changes nothing
+  // The card's whole claim is an equivalence, so it is asserted rather than shown. Compare the
+  // two implementations across the whole model at every chunk size, including both endpoints —
+  // C = 1 must be the recurrence and C = L must be the fully parallel form.
+  const seqRun = forward(TOKENS, { mixer: deltaMixer({}) });
+  const chunkDiffs = [];
+  for (let C = 1; C <= TOKENS.length; C++) {
+    const r = forward(TOKENS, { mixer: chunkMixer({ C }) });
+    let d = 0;
+    for (let b = 0; b < CONFIG.BLOCKS; b++)
+      for (let h = 0; h < CONFIG.HEADS; h++)
+        for (let i = 0; i < TOKENS.length; i++)
+          for (let a = 0; a < DH; a++) d = Math.max(d, Math.abs(r.trace[b].heads[h].out[i][a] - seqRun.trace[b].heads[h].out[i][a]));
+    for (let i = 0; i < r.logits.length; i++) d = Math.max(d, Math.abs(r.logits[i] - seqRun.logits[i]));
+    chunkDiffs.push(d);
+  }
+  ok(
+    "the chunkwise delta rule equals the recurrence at every chunk size",
+    chunkDiffs.every((d) => d < 1e-12),
+    `worst disagreement ${Math.max(...chunkDiffs).toExponential(2)} over ${chunkDiffs.length} chunk sizes`
+  );
+  ok(
+    "and it is a real comparison — the same run against a different rule does disagree",
+    (() => {
+      const other = forward(TOKENS, { mixer: chunkMixer({ C: 4, beta: 0.5 }) });
+      return other.trace[0].heads[0].out.some((v, i) => v.some((x, a) => Math.abs(x - seqRun.trace[0].heads[0].out[i][a]) > 1e-6));
+    })(),
+    "so the check above is not comparing something with itself"
+  );
+  // The cost numbers on the card come from a counter inside the loops; the numbers quoted at
+  // 4,096 tokens come from a formula over shapes. If those two ever drift the card starts lying.
+  ok(
+    "the counted multiplications match the cost formula the card quotes at scale",
+    (() => {
+      for (const C of [1, 3, 4, 8, TOKENS.length]) {
+        const r = forward(TOKENS, { mixer: chunkMixer({ C }) });
+        const expect = chunkCost(TOKENS.length, DH, C);
+        const h = r.trace[0].heads[0];
+        if (h.mul !== expect.mul || h.steps !== expect.steps) return false;
+      }
+      return true;
+    })()
+  );
+  ok(
+    "the chunked form buys steps with arithmetic, in that direction",
+    (() => {
+      const one = chunkCost(4096, 64, 1);
+      const big = chunkCost(4096, 64, 64);
+      return big.steps < one.steps && big.mul > one.mul && big.mul / seqCost(4096, 64).mul > 1.5;
+    })(),
+    `C = 64 at 4,096 tokens: ${(chunkCost(4096, 64, 64).mul / seqCost(4096, 64).mul).toFixed(2)}x the arithmetic, ${chunkCost(4096, 64, 64).steps} steps`
+  );
+  // §3.3: L2 normalisation makes the transition matrix a projection at full write strength. The
+  // card says so on screen, so the eigenvalue is checked rather than trusted.
+  const eigs = (() => {
+    const silu = (x) => x / (1 + Math.exp(-x));
+    const norm2 = (f) => Math.sqrt(f.reduce((a, x) => a + x * x, 0));
+    const keys = base.trace[0].heads.flatMap((h) => h.K).map((k) => Float64Array.from(k, silu));
+    const under = (scale) => keys.map((f) => { const s = scale(f); return 1 - norm2(Float64Array.from(f, (x) => x / s)) ** 2; });
+    return {
+      raw: under(() => 1),
+      l2: under(norm2),
+      l1: under((f) => f.reduce((a, x) => a + Math.abs(x), 0)),
+    };
+  })();
+  ok(
+    "L2 normalisation makes the transition matrix a projection at full write strength",
+    eigs.l2.every((e) => near(e, 0, 1e-12)),
+    "1 − β‖k‖₂² is exactly 0, so one direction is erased and the other d−1 are untouched"
+  );
+  ok(
+    "under concept 11's L1 convention a full write cannot erase what it overwrites",
+    eigs.l1.every((e) => e > 0.3 && e < 1),
+    `${(100 * (eigs.l1.reduce((a, b) => a + b, 0) / eigs.l1.length)).toFixed(0)}% of the old association survives`
+  );
+  ok(
+    "and unnormalised keys put the transition matrix outside the unit disk",
+    eigs.raw.some((e) => Math.abs(e) > 1),
+    `worst eigenvalue ${Math.min(...eigs.raw).toFixed(1)}`
+  );
 
   // ------------------------------------------------------------------ position
   const offsetInvariant = [1, 4, 10].every((k) => {

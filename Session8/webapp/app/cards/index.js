@@ -21,6 +21,7 @@ import { yarnCard } from "./yarn.js";
 import { attentionSinksCard } from "./attention-sinks.js";
 import { mambaCard } from "./mamba.js";
 import { mlaCard } from "./mla.js";
+import { parallelDeltanetCard } from "./parallel-deltanet.js";
 
 export const CARDS = {
   transformer: transformerCard,
@@ -44,4 +45,5 @@ export const CARDS = {
   "attention-sinks": attentionSinksCard,
   mamba: mambaCard,
   mla: mlaCard,
+  "parallel-deltanet": parallelDeltanetCard,
 };

@@ -9,6 +9,21 @@ const TOP = 22;
 export const heat = (w) =>
   w <= 0 ? "rgba(233,231,220,0.045)" : `rgba(79,197,140,${(0.08 + Math.min(1, Math.sqrt(w * 3)) * 0.87).toFixed(3)})`;
 
+/**
+ * Signed weights: green above zero, orange below. Softmax weights cannot be negative, so every
+ * card until concept 22 could clamp at zero and lose nothing. The delta rule's implied attention
+ * matrix has no softmax in its derivation and two entries in five are negative — clamping those to
+ * the background would hide exactly the property the panel exists to show.
+ */
+export const signedHeat = (w) => {
+  const a = (0.08 + Math.min(1, Math.sqrt(Math.abs(w) * 3)) * 0.87).toFixed(3);
+  return Math.abs(w) < 1e-9
+    ? "rgba(233,231,220,0.045)"
+    : w > 0
+    ? `rgba(79,197,140,${a})`
+    : `rgba(224,105,61,${a})`;
+};
+
 export function attentionGrid({ onPickRow, label = "attention weights" }) {
   let cells = [];
   let rowLabels = [];
@@ -81,14 +96,16 @@ export function attentionGrid({ onPickRow, label = "attention weights" }) {
     };
   }
 
-  /** weights: T x T (rows may be shorter); readable(i,j) false = hidden by the mechanism. */
-  function update({ tokens, weights, query, readable = null }) {
+  /** weights: T x T (rows may be shorter); readable(i,j) false = hidden by the mechanism.
+   *  `signed` colours negative weights rather than clamping them away — see signedHeat. */
+  function update({ tokens, weights, query, readable = null, signed = false }) {
     if (tokens.length !== T) build(tokens);
+    const paint = signed ? signedHeat : heat;
     for (let i = 0; i < T; i++) {
       for (let j = 0; j < T; j++) {
         const hidden = j > i || (readable && !readable(i, j));
         const w = weights?.[i]?.[j] ?? 0;
-        cells[i][j].setAttribute("fill", hidden ? "rgba(233,231,220,0.03)" : heat(w));
+        cells[i][j].setAttribute("fill", hidden ? "rgba(233,231,220,0.03)" : paint(w));
         cells[i][j].setAttribute("stroke", hidden && j <= i ? "rgba(224,105,61,0.35)" : "none");
       }
       rowLabels[i].classList.toggle("is-current", i === query);

@@ -118,7 +118,7 @@ export const mechanisms = [
     paper("DeepSeek-AI, DeepSeek-V2 — arXiv:2405.04434", "2405.04434"), "cache"),
 
   pending("parallel-deltanet", "Parallelizable DeltaNet", "2024-06-10",
-    paper("Yang et al., Parallelizing Linear Transformers with the Delta Rule — arXiv:2406.06484", "2406.06484"), "state"),
+    paper("Yang et al., Parallelizing Linear Transformers with the Delta Rule over Sequence Length — arXiv:2406.06484", "2406.06484"), "state"),
 
   pending("gated-deltanet", "Gated DeltaNet", "2024-12-09",
     paper("Yang et al., Gated Delta Networks — arXiv:2412.06464", "2412.06464"), "state"),
@@ -221,6 +221,10 @@ const LINKS = [
   built("mla", "gqa", {
     text: "a width fixed before any data arrives, and a cached object that is no longer a key — so every technique that edits a cache from outside has to be re-derived for it",
     to: "nsa",
+  }),
+  built("parallel-deltanet", "delta-rule", {
+    text: "an algorithm whose whole gain is conditional on hardware that can multiply in bulk — 1.89 times the arithmetic at the paper's own chunk size — and a rule that still has no way to fade, which its own limitations section names as the reason it cannot generalise past its training length",
+    to: "gated-deltanet",
   }),
   built("sparse-transformer", "transformer", {
     text: "a sparsity pattern fixed before the data arrives, which the authors' own inspection showed cannot reproduce global or data-dependent layers",
