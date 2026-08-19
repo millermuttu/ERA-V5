@@ -51,15 +51,15 @@ Each line is: research note written, card built on the live model, plain-languag
 - [x] 2.21 Parallelizable DeltaNet (arXiv 2406.06484)
 - [x] 2.22 Gated DeltaNet (arXiv 2412.06464)
 - [x] 2.23 Natively trainable sparse attention (arXiv 2502.11089)
-- [ ] 2.24 DeepSeek sparse attention (release note, no paper)
-- [ ] 2.25 DroPE — the reported 8K → 256K, the 32×, the boundary, and no invented algorithm (course cookbook only)
+- [x] 2.24 DeepSeek sparse attention (release note, no paper)
+- [x] 2.25 DroPE — the reported 8K → 256K, the 32×, the boundary, and no invented algorithm; the research pass found a paper (arXiv:2512.12167), so the record gained a real date and lost its placeholder sort key
 
 ## 3. Self-check
 
-- [ ] 3.1 Model assertions: softmax rows sum to 1, masked future weight exactly 0, forward pass deterministic across two runs
-- [ ] 3.2 Mechanism assertions: every degenerate setting matches the baseline — GQA at one query head per group, top-k at k = T, window = T, block size 1; the softmax-free regrouping reproduces the direct sum; the delta rule corrects where add-only accumulates
-- [ ] 3.3 Cost assertions: the serving formula returns 6.44 GB at the lesson's configuration and 51.54 GB at eight conversations
-- [ ] 3.4 Data assertions: every entry has a plain-language verdict whose pros and cons match the technical record in count and direction; unique ids, parseable dates, complete trade-off records, every entry resolving to a mechanism the model can run, every entry having a research note, and every entry naming both the earlier limitation it answers and what it left for later work
+- [x] 3.1 Model assertions: softmax rows sum to 1, masked future weight exactly 0, forward pass deterministic across two runs
+- [x] 3.2 Mechanism assertions: every degenerate setting matches the baseline — GQA at one query head per group, top-k at k = T, window = T, block size 1; the softmax-free regrouping reproduces the direct sum; the delta rule corrects where add-only accumulates
+- [x] 3.3 Cost assertions: the serving formula returns 6.44 GB at the lesson's configuration and 51.54 GB at eight conversations
+- [x] 3.4 Data assertions: every entry has a plain-language verdict whose pros and cons match the technical record in count and direction; unique ids, parseable dates, complete trade-off records, every entry resolving to a mechanism the model can run, every entry having a research note, and every entry naming both the earlier limitation it answers and what it left for later work
 - [ ] 3.5 `?selfcheck=1` paints pass or fail and names every failure; run it and confirm
 
 ## 4. Verify and ship

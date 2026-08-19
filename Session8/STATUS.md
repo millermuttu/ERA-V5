@@ -1,6 +1,6 @@
 # Session 8 — where the work stands
 
-Last updated: 2026-08-19, after concept 24.
+Last updated: 2026-08-19, after concept 26 — all 26 built.
 
 ## What the assignment asks for
 
@@ -30,21 +30,25 @@ weights. Every concept is that same model with one thing changed. The weights be
 load-bearing for the deck's honesty — several cards measure that their own subject does not appear on
 an untrained model and say so rather than faking it.
 
-## Progress: 24 of 26 concepts built
+## Progress: 26 of 26 concepts built
 
 Built, in timeline order: `transformer`, `sinusoidal`, `relative-positions`, `learned-absolute`,
 `transformer-xl`, `sparse-transformer`, `mqa`, `sliding-window`, `linear-attention`, `performer`,
 `delta-rule`, `rope`, `alibi`, `flashattention`, `gqa`, `position-interpolation`, `ntk-aware`,
-`yarn`, `attention-sinks`, `mamba`, `mla`, `parallel-deltanet`, `gated-deltanet`, `nsa`.
+`yarn`, `attention-sinks`, `mamba`, `mla`, `parallel-deltanet`, `gated-deltanet`, `nsa`, `dsa`, `drope`.
 
-**Remaining, in order:**
+**Remaining: no concepts.** Section 2 is complete. What is left is
+section 4 (verify and ship), of which **4.4 — the README with the chronology source table — is the
+one the assignment explicitly grades**, plus 4.1–4.3 (the browser walk) and 4.6 (the Pages deploy,
+which needs a person).
 
-| # | id | source | research note? |
-|---|---|---|---|
-| 2.24 | `dsa` | DeepSeek-V3.2-Exp release note, no paper | **no — needs the research pass** |
-| 2.25 | `drope` | course cookbook only, no public source | **no** |
+Two records were corrected by the last two research passes, and both corrections are worth carrying
+forward: `dsa` now cites the tech report PDF shipped in the model repo (dated from DeepSeek's own
+2025-09-29 release note) and names the later arXiv:2512.02556 as further reading; `drope` had a
+**placeholder sort key of 2026-01-01 and no public source**, and now has a real date, `2025-12-13`,
+from arXiv:2512.12167 — so it is paper-backed and no longer carries the unverified badge.
 
-Then sections 3 (self-check) and 4 (verify and ship) of
+Sections 3 (self-check) and 4 (verify and ship) of
 `openspec/changes/session8-attention-timeline-webapp/tasks.md`, of which 4.4 (the README with the
 chronology source table) is the one the assignment explicitly grades.
 
@@ -107,7 +111,7 @@ are the current reference. What they have in common:
 
 ## Verification
 
-`app/lib/selfcheck.js` — **76 assertions, all passing.** No framework: model invariants, every
+`app/lib/selfcheck.js` — **85 assertions, all passing.** No framework: model invariants, every
 mechanism's degenerate setting reducing to the baseline, the cost formulas reproducing the lesson's
 6.44 GB / 51.54 GB, and the integrity of the chronology (unique ids, parseable dates, nothing
 answering a limitation that had not happened yet, every built card rendering without throwing and
@@ -122,6 +126,8 @@ propagates, and no sideways scroll at 390px.
   this machine. Fine if intended.
 - **Task 4.6 needs a person**: the repo's Pages source has to be set to GitHub Actions before the
   deployment can be confirmed, and nothing is pushed without being asked.
-- Both remaining concepts have **no paper at all** — `dsa` (a release note) and
-  `drope` (the course cookbook only, no public source, and its record carries a placeholder sort-key
-  date that the card must present as a sort key rather than as a date).
+- **The browser sweep for `dsa` and `drope` is outstanding.** The Chrome extension disconnected
+  mid-session, so those two cards were verified by running the whole assertion suite in node under a
+  DOM shim (`85 assertions, 0 failing`, every card mounted and rendered) rather than in a real
+  browser. The visual pass — console clean, every control moves something, no sideways scroll at
+  390px — still needs doing for those two.
