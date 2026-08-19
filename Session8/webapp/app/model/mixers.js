@@ -119,7 +119,10 @@ export function stateMixer({
       // is a schedule fixed before the data arrives; a decay read off the token is Mamba's change
       // to its own predecessor — a parameter that had no length dimension acquires one. `gates`
       // records what was applied, because a card that claims the gate moved has to show it.
-      const g = write === "gated" ? (typeof decay === "function" ? decay(i, K[i], V[i], at) : decay) : 1;
+      // Concept 23 needs this in the add rule too: Mamba2's row of its Table 1 is S = αS + vkᵀ,
+      // which the delta form cannot reach at any β. `decay` defaults to 1, so every earlier card
+      // is unmoved.
+      const g = typeof decay === "function" ? decay(i, K[i], V[i], at) : decay;
       gates.push(g);
 
       // read what the state currently returns for this key
@@ -131,7 +134,9 @@ export function stateMixer({
         // multiplies S — that would be Peng et al.'s gated rule, which App. B argues against.
         // Theorem 1 ties the write strength to the decay: B̄ = 1 − Ā exactly, so a selective mode
         // needs β to follow g rather than stand beside it as an independent knob.
-        const b_t = typeof beta === "function" ? beta(i, g) : beta;
+        // Concept 20's β follows the gate, β = 1 − g. Concept 23's is an independent projection of
+        // the token, so it gets the same arguments `decay` does; (i, g) callers are unaffected.
+        const b_t = typeof beta === "function" ? beta(i, g, K[i], V[i], at) : beta;
         const target = write === "add" ? V[i][a] : b_t * (V[i][a] - cur[a]);
         for (let b = 0; b < m; b++) S[a][b] = S[a][b] * g + target * k[b];
       }

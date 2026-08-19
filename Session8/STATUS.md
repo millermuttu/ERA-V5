@@ -1,6 +1,6 @@
 # Session 8 — where the work stands
 
-Last updated: 2026-08-18, after concept 21.
+Last updated: 2026-08-19, after concept 23.
 
 ## What the assignment asks for
 
@@ -30,20 +30,18 @@ weights. Every concept is that same model with one thing changed. The weights be
 load-bearing for the deck's honesty — several cards measure that their own subject does not appear on
 an untrained model and say so rather than faking it.
 
-## Progress: 21 of 26 concepts built
+## Progress: 23 of 26 concepts built
 
 Built, in timeline order: `transformer`, `sinusoidal`, `relative-positions`, `learned-absolute`,
 `transformer-xl`, `sparse-transformer`, `mqa`, `sliding-window`, `linear-attention`, `performer`,
 `delta-rule`, `rope`, `alibi`, `flashattention`, `gqa`, `position-interpolation`, `ntk-aware`,
-`yarn`, `attention-sinks`, `mamba`, `mla`.
+`yarn`, `attention-sinks`, `mamba`, `mla`, `parallel-deltanet`, `gated-deltanet`.
 
 **Remaining, in order:**
 
 | # | id | source | research note? |
 |---|---|---|---|
-| 2.21 | `parallel-deltanet` | arXiv 2406.06484 | **no — needs the research pass** |
-| 2.22 | `gated-deltanet` | arXiv 2412.06464 | **no** |
-| 2.23 | `nsa` | arXiv 2502.11089 | **no** |
+| 2.23 | `nsa` | arXiv 2502.11089 | **no — needs the research pass** |
 | 2.24 | `dsa` | DeepSeek-V3.2-Exp release note, no paper | **no** |
 | 2.25 | `drope` | course cookbook only, no public source | **no** |
 
@@ -79,8 +77,10 @@ One at a time: **research → build → verify → stop for review.** Never batc
   streaming cache policy; `bias` is relative position and ALiBi; `rotate` is RoPE and everything
   built on it.
 - `stateMixer({ write, decay, beta, phi, features, sumNorm, attnNorm })` — the fixed-size state
-  family. `decay` and `beta` may now be **functions of the token**, which is concept 20's whole
-  contribution in one line.
+  family. `decay` and `beta` may be **functions of the token**, which is concept 20's whole
+  contribution in one line; `beta` receives the same token arguments `decay` does, and `decay`
+  applies to the add rule too — concept 23's two one-line extensions, which between them make
+  Mamba2's row of that paper's Table 1 expressible.
 - `rope({ base, stretch, dims, modulus })` — `stretch` may be a number or a function of the pair
   index (concept 18's ramp); `modulus` is the attention temperature folded into the rotation.
 - `forward(tokens, { mixer, position, kvGroups, latent })` — `latent` replaces a block's keys and
@@ -108,7 +108,7 @@ are the current reference. What they have in common:
 
 ## Verification
 
-`app/lib/selfcheck.js` — **56 assertions, all passing.** No framework: model invariants, every
+`app/lib/selfcheck.js` — **69 assertions, all passing.** No framework: model invariants, every
 mechanism's degenerate setting reducing to the baseline, the cost formulas reproducing the lesson's
 6.44 GB / 51.54 GB, and the integrity of the chronology (unique ids, parseable dates, nothing
 answering a limitation that had not happened yet, every built card rendering without throwing and
@@ -123,6 +123,6 @@ propagates, and no sideways scroll at 390px.
   this machine. Fine if intended.
 - **Task 4.6 needs a person**: the repo's Pages source has to be set to GitHub Actions before the
   deployment can be confirmed, and nothing is pushed without being asked.
-- The five remaining concepts include two with **no paper at all** — `dsa` (a release note) and
+- The three remaining concepts include two with **no paper at all** — `dsa` (a release note) and
   `drope` (the course cookbook only, no public source, and its record carries a placeholder sort-key
   date that the card must present as a sort key rather than as a date).

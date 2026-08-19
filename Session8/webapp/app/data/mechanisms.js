@@ -226,6 +226,10 @@ const LINKS = [
     text: "an algorithm whose whole gain is conditional on hardware that can multiply in bulk — 1.89 times the arithmetic at the paper's own chunk size — and a rule that still has no way to fade, which its own limitations section names as the reason it cannot generalise past its training length",
     to: "gated-deltanet",
   }),
+  built("gated-deltanet", "parallel-deltanet", {
+    text: "a memory that is bounded rather than compressed — the decay multiplies the whole state, so it cannot spare the one pair that mattered, and the paper's own table prints the price at 98.8 against 91.8 on the task where nothing needs forgetting",
+    to: "nsa",
+  }),
   built("sparse-transformer", "transformer", {
     text: "a sparsity pattern fixed before the data arrives, which the authors' own inspection showed cannot reproduce global or data-dependent layers",
     to: "sliding-window",

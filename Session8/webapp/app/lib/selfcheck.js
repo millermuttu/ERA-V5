@@ -10,6 +10,7 @@ import { tokenize, PRESETS } from "../model/vocab.js";
 import { mechanisms } from "../data/mechanisms.js";
 import { CARDS } from "../cards/index.js";
 import { deltaMixer, chunkMixer, chunkCost, seqCost } from "../cards/parallel-deltanet.js";
+import { ruleMixer } from "../cards/gated-deltanet.js";
 
 const near = (a, b, eps = 1e-9) => Math.abs(a - b) < eps;
 const TOKENS = tokenize(PRESETS[0]);
@@ -336,6 +337,91 @@ export function checks() {
       return [0.001, 0.1, 1, 10, 100].every((d) => near(Math.exp(-d) + (1 - Math.exp(-d)), 1, 1e-15));
     })(),
     "Ā + B̄ = 1 at every step size"
+  );
+
+  // Concept 23: two switches on one state, and the whole card rests on them being independent.
+  // Both corners are exact, so they are asserted as exact rather than as approximations.
+  ok(
+    "the gated delta rule at decay 1 is the delta rule, everywhere in the model",
+    (() => {
+      const a = forward(TOKENS, { mixer: ruleMixer("gated", 1, 0.8) });
+      const b = forward(TOKENS, { mixer: ruleMixer("delta", 1, 0.8) });
+      return a.trace.every((blk, i) =>
+        blk.heads.every((h, j) => h.out.every((v, t) => v.every((x, d) => x === b.trace[i].heads[j].out[t][d])))
+      );
+    })(),
+    "bit-identical, not merely close"
+  );
+  ok(
+    "at write strength 0 the state is exactly empty, whatever the decay",
+    [1, 0.9, 0.5].every((a) =>
+      forward(TOKENS, { mixer: ruleMixer("gated", a, 0) }).trace[0].heads[0].state.every((row) =>
+        row.every((x) => x === 0)
+      )
+    ),
+    "the decay writes nothing; it only fades"
+  );
+  ok(
+    "at full write strength the state returns the newest value exactly, whatever the decay",
+    (() => {
+      const T = TOKENS.length;
+      const silu = (x) => x / (1 + Math.exp(-x));
+      const l2 = (v) => {
+        let n = 0;
+        for (const x of v) n += x * x;
+        n = Math.sqrt(n) || 1;
+        return Float64Array.from(v, (x) => x / n);
+      };
+      return [1, 0.9, 0.5].every((a) => {
+        const h = forward(TOKENS, { mixer: ruleMixer("gated", a, 1) }).trace[0].heads[0];
+        const k = l2(Float64Array.from(h.K[T - 1], silu));
+        return h.state.every((row, r) => near(dot(row, k), h.V[T - 1][r], 1e-12));
+      });
+    })(),
+    "S k = v, which needs the paper's L2 normalisation to hold"
+  );
+  ok(
+    "the add rule can decay, which is the only way Mamba2's row is reachable",
+    (() => {
+      // Hand-written S = αS + v kᵀ against the seam's, on the model's own head.
+      const h = forward(TOKENS, { mixer: ruleMixer("mamba2", 0.8, 1) }).trace[0].heads[0];
+      const silu = (x) => x / (1 + Math.exp(-x));
+      const l2 = (v) => {
+        let n = 0;
+        for (const x of v) n += x * x;
+        n = Math.sqrt(n) || 1;
+        return Float64Array.from(v, (x) => x / n);
+      };
+      let S = Array.from({ length: DH }, () => new Float64Array(DH));
+      for (let t = 0; t < TOKENS.length; t++) {
+        const k = l2(Float64Array.from(h.K[t], silu));
+        for (let r = 0; r < DH; r++) for (let c = 0; c < DH; c++) S[r][c] = S[r][c] * 0.8 + h.V[t][r] * k[c];
+      }
+      return h.state.every((row, r) => row.every((x, c) => near(x, S[r][c], 1e-12)));
+    })(),
+    "and it is not any setting of the delta form"
+  );
+  ok(
+    "the write strength can be read off the token, not only off the gate",
+    (() => {
+      const h = forward(TOKENS, {
+        mixer: stateMixer({ write: "gated", decay: 0.9, beta: (i, g, k) => 1 / (1 + Math.exp(-k[0])) }),
+      }).trace[0].heads[0];
+      const c = forward(TOKENS, { mixer: stateMixer({ write: "gated", decay: 0.9, beta: 0.5 }) }).trace[0].heads[0];
+      return h.out.some((v, i) => v.some((x, d) => !near(x, c.out[i][d], 1e-9)));
+    })(),
+    "concept 20 ties β to the gate; concept 23 does not"
+  );
+  ok(
+    "the four rules of the family are four different states",
+    (() => {
+      const norm = (r) =>
+        Math.sqrt(
+          forward(TOKENS, { mixer: ruleMixer(r, 0.9, 0.8) })
+            .trace[0].heads[0].state.reduce((s, row) => s + row.reduce((u, x) => u + x * x, 0), 0)
+        ).toFixed(6);
+      return new Set(["la", "mamba2", "delta", "gated"].map(norm)).size === 4;
+    })()
   );
 
   // The latent cache is an identity, not an approximation: moving the up-projection onto the query
