@@ -11,6 +11,7 @@ import { mechanisms } from "../data/mechanisms.js";
 import { CARDS } from "../cards/index.js";
 import { deltaMixer, chunkMixer, chunkCost, seqCost } from "../cards/parallel-deltanet.js";
 import { ruleMixer } from "../cards/gated-deltanet.js";
+import { nsaAt, nsaMixer, decodeReads, breakEven, PAPER, APP } from "../cards/nsa.js";
 
 const near = (a, b, eps = 1e-9) => Math.abs(a - b) < eps;
 const TOKENS = tokenize(PRESETS[0]);
@@ -422,6 +423,95 @@ export function checks() {
         ).toFixed(6);
       return new Set(["la", "mamba2", "delta", "gated"].map(norm)).size === 4;
     })()
+  );
+
+  // Concept 24: three branches, and two of them are ordinary attention over a subset — so at their
+  // degenerate settings they have to *be* ordinary attention, and the decode table has to fall out
+  // of the formula rather than be typed in.
+  ok(
+    "selecting every block reduces to plain attention",
+    (() => {
+      const all = { ...APP, n: 999 };
+      const h = base.trace[0].heads[0];
+      return h.out.every((v, t) => {
+        const r = nsaAt(h.Q, h.K, h.V, t, all, { cmp: 0, slc: 1, win: 0 });
+        return v.every((x, d) => x === r.out[d]);
+      });
+    })(),
+    "bit-identical, so the selection branch is attention over a subset and nothing else"
+  );
+  ok(
+    "a window as long as the sentence reduces to plain attention",
+    (() => {
+      const h = base.trace[0].heads[0];
+      const p = { ...APP, w: TOKENS.length };
+      return h.out.every((v, t) => {
+        const r = nsaAt(h.Q, h.K, h.V, t, p, { cmp: 0, slc: 0, win: 1 });
+        return v.every((x, d) => x === r.out[d]);
+      });
+    })()
+  );
+  ok(
+    "the branch weights inside each branch sum to 1 — three softmaxes, not one mask",
+    (() => {
+      const h = base.trace[0].heads[0];
+      for (let t = 0; t < TOKENS.length; t++) {
+        const r = nsaAt(h.Q, h.K, h.V, t, APP, { cmp: 1, slc: 1, win: 1 });
+        const sum = (a) => a.reduce((x, y) => x + y, 0);
+        if (r.pc.length && !near(sum(Array.from(r.pc)), 1)) return false;
+        if (!near(sum(Array.from(r.ps)), 1) || !near(sum(Array.from(r.pw)), 1)) return false;
+      }
+      return true;
+    })()
+  );
+  ok(
+    "block importance costs no comparison with a key",
+    (() => {
+      // Eq. 9 reads only p^cmp, which the compression branch computed for its own output. If the
+      // derived scores can be reproduced from p^cmp alone, nothing else was consulted.
+      const h = base.trace[0].heads[0];
+      const t = TOKENS.length - 1;
+      const r = nsaAt(h.Q, h.K, h.V, t, APP, { cmp: 1, slc: 1, win: 1 });
+      const { l, d, lp } = APP;
+      return r.pslc.every((v, j) => {
+        let acc = 0;
+        for (let m = 0; m < lp / d; m++)
+          for (let n = 0; n < l / d; n++) {
+            const i = (lp / d) * j - m - n;
+            if (i >= 0 && i < r.pc.length) acc += r.pc[i];
+          }
+        return near(acc, v, 1e-15);
+      });
+    })(),
+    "Eq. 9 is a sum over scores already in hand"
+  );
+  ok(
+    "the decoding formula reproduces the paper's Table 4",
+    [[8192, 2048], [16384, 2560], [32768, 3584], [65536, 5632]].every(
+      ([s, want]) => decodeReads(s, PAPER) === want
+    ),
+    "2,048 / 2,560 / 3,584 / 5,632 at l=32 d=16 l'=64 n=16 w=512"
+  );
+  ok(
+    "and its speedup column",
+    [[8192, 4.0], [16384, 6.4], [32768, 9.1], [65536, 11.6]].every(
+      ([s, want]) => near(s / decodeReads(s, PAPER), want, 0.05)
+    ),
+    "4.0× / 6.4× / 9.1× / 11.6×"
+  );
+  ok(
+    "below the break-even the mechanism reads more than full attention",
+    (() => {
+      const e = breakEven(PAPER);
+      return (
+        Math.abs(e - 1638) < 1 &&
+        decodeReads(1024, PAPER) > 1024 &&
+        decodeReads(2048, PAPER) < 2048 &&
+        // and this app's own sentence is on the losing side of its own curve
+        breakEven(APP) > TOKENS.length
+      );
+    })(),
+    "1,638 tokens at the paper's block sizes, and the app's sentence is under its own"
   );
 
   // The latent cache is an identity, not an approximation: moving the up-projection onto the query

@@ -230,6 +230,10 @@ const LINKS = [
     text: "a memory that is bounded rather than compressed — the decay multiplies the whole state, so it cannot spare the one pair that mattered, and the paper's own table prints the price at 98.8 against 91.8 on the task where nothing needs forgetting",
     to: "nsa",
   }),
+  built("nsa", "gated-deltanet", {
+    text: "a cache that is larger rather than smaller — every key stays so a block can be read exactly, the compressed keys are added on top, and below about 1,638 tokens the three branches read more than reading everything would",
+    to: "dsa",
+  }),
   built("sparse-transformer", "transformer", {
     text: "a sparsity pattern fixed before the data arrives, which the authors' own inspection showed cannot reproduce global or data-dependent layers",
     to: "sliding-window",

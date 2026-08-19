@@ -23,6 +23,7 @@ import { mambaCard } from "./mamba.js";
 import { mlaCard } from "./mla.js";
 import { parallelDeltanetCard } from "./parallel-deltanet.js";
 import { gatedDeltanetCard } from "./gated-deltanet.js";
+import { nsaCard } from "./nsa.js";
 
 export const CARDS = {
   transformer: transformerCard,
@@ -48,4 +49,5 @@ export const CARDS = {
   mla: mlaCard,
   "parallel-deltanet": parallelDeltanetCard,
   "gated-deltanet": gatedDeltanetCard,
+  nsa: nsaCard,
 };

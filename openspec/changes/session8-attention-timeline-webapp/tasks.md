@@ -50,7 +50,7 @@ Each line is: research note written, card built on the live model, plain-languag
 - [x] 2.20 Multi-head latent attention (arXiv 2405.04434)
 - [x] 2.21 Parallelizable DeltaNet (arXiv 2406.06484)
 - [x] 2.22 Gated DeltaNet (arXiv 2412.06464)
-- [ ] 2.23 Natively trainable sparse attention (arXiv 2502.11089)
+- [x] 2.23 Natively trainable sparse attention (arXiv 2502.11089)
 - [ ] 2.24 DeepSeek sparse attention (release note, no paper)
 - [ ] 2.25 DroPE — the reported 8K → 256K, the 32×, the boundary, and no invented algorithm (course cookbook only)
 
