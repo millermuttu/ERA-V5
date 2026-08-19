@@ -24,6 +24,8 @@ import { mlaCard } from "./mla.js";
 import { parallelDeltanetCard } from "./parallel-deltanet.js";
 import { gatedDeltanetCard } from "./gated-deltanet.js";
 import { nsaCard } from "./nsa.js";
+import { dsaCard } from "./dsa.js";
+import { dropeCard } from "./drope.js";
 
 export const CARDS = {
   transformer: transformerCard,
@@ -50,4 +52,6 @@ export const CARDS = {
   "parallel-deltanet": parallelDeltanetCard,
   "gated-deltanet": gatedDeltanetCard,
   nsa: nsaCard,
+  dsa: dsaCard,
+  drope: dropeCard,
 };

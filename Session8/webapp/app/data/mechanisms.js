@@ -126,19 +126,25 @@ export const mechanisms = [
   pending("nsa", "Natively trainable sparse attention", "2025-02-16",
     paper("Yuan et al., Native Sparse Attention — arXiv:2502.11089", "2502.11089"), "compute"),
 
+  // Dated from DeepSeek's own release note (api-docs.deepseek.com/news/news250929, 29 Sep 2025),
+  // which is also where the "API prices cut by 50%+" figure comes from. A full paper naming DSA as
+  // its first contribution appeared later — arXiv:2512.02556, v1 2025-12-02 — but it is two months
+  // after this release and about a different model, so the timeline dates the release and the card
+  // and README name the paper as further reading.
   pending("dsa", "DeepSeek sparse attention", "2025-09-29", {
-    label: "DeepSeek-V3.2-Exp release — model card and tech report, no arXiv v1 to cite",
-    url: "https://huggingface.co/deepseek-ai/DeepSeek-V3.2-Exp",
+    label: "DeepSeek-V3.2-Exp release — DeepSeek_V3_2.pdf shipped in the model repo, no arXiv v1; the later arXiv:2512.02556 covers V3.2",
+    url: "https://github.com/deepseek-ai/DeepSeek-V3.2-Exp/blob/main/DeepSeek_V3_2.pdf",
     kind: "release",
   }, "compute"),
 
-  // No public source, so no date to verify. The value below is a sort key that places this entry
-  // last; the card says so in as many words and never presents it as a date.
-  pending("drope", "DroPE", "2026-01-01", {
-    label: "LightningLM V4 cookbook, via the ERA V5 Session 8 lesson — no public source",
-    url: "",
-    kind: "course",
-  }, "position"),
+  // This record was created with no public source and a placeholder sort key of 2026-01-01. The
+  // research pass for the card found a paper — arXiv:2512.12167, v1 2025-12-13, verified on the
+  // abstract page — so the entry now carries a real date and is paper-backed. What is still NOT
+  // established is whether the course material's LightningLM V4 "DroPE" is this mechanism: same
+  // name, compatible one-line description, and neither document mentions the other. The card
+  // presents both records and simulates neither.
+  pending("drope", "DroPE", "2025-12-13",
+    paper("Gelberg et al., Extending the Context of Pretrained LLMs by Dropping Their Positional Embeddings — arXiv:2512.12167", "2512.12167"), "position"),
 ];
 
 const LINKS = [
@@ -233,6 +239,14 @@ const LINKS = [
   built("nsa", "gated-deltanet", {
     text: "a cache that is larger rather than smaller — every key stays so a block can be read exactly, the compressed keys are added on top, and below about 1,638 tokens the three branches read more than reading everything would",
     to: "dsa",
+  }),
+  built("dsa", "nsa", {
+    text: "a scorer that is worth nothing until it is trained — measured here as indistinguishable from choosing at random — bought with 943.7B tokens of continued pre-training, and an indexer that still compares every query against every earlier token, at O(L²), with no stated size",
+    to: null,
+  }),
+  built("drope", "yarn", {
+    text: "a demonstrated extension of 2× on models up to 7B, a stability fix (QKNorm) needed once the embedding was gone, and the whole positional load resting on the causal mask — which this deck has carried since its first card without calling it positional",
+    to: null,
   }),
   built("sparse-transformer", "transformer", {
     text: "a sparsity pattern fixed before the data arrives, which the authors' own inspection showed cannot reproduce global or data-dependent layers",

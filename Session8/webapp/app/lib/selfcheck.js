@@ -12,6 +12,8 @@ import { CARDS } from "../cards/index.js";
 import { deltaMixer, chunkMixer, chunkCost, seqCost } from "../cards/parallel-deltanet.js";
 import { ruleMixer } from "../cards/gated-deltanet.js";
 import { nsaAt, nsaMixer, decodeReads, breakEven, PAPER, APP } from "../cards/nsa.js";
+import { indexScores, klTarget, topkSet, klOf } from "../cards/dsa.js";
+import { bidirectionalMixer, uniformMixer } from "../cards/drope.js";
 
 const near = (a, b, eps = 1e-9) => Math.abs(a - b) < eps;
 const TOKENS = tokenize(PRESETS[0]);
@@ -512,6 +514,155 @@ export function checks() {
       );
     })(),
     "1,638 tokens at the paper's block sizes, and the app's sentence is under its own"
+  );
+
+  // Concept 25: a top-k readability rule, an indexer that cannot produce a negative score, and the
+  // report's own training arithmetic. The mechanism itself cannot be checked for quality — untrained,
+  // it is random — so what is asserted is the structure and the numbers, which is all there is.
+  ok(
+    "letting every key through reduces to plain attention",
+    (() => {
+      const scores = [];
+      forward(TOKENS, {
+        latent: (normed, wb, b) => ((scores[b] = indexScores(normed)), null),
+      });
+      const r = forward(TOKENS, {
+        mixer: softmaxMixer({ readable: (i, j, at) => topkSet(scores[at.block][i], i, TOKENS.length).has(j) }),
+      });
+      return r.trace.every((blk, b) =>
+        blk.heads.every((h, hi) => h.out.every((v, t) => v.every((x, d) => near(x, base.trace[b].heads[hi].out[t][d], 1e-12))))
+      );
+    })()
+  );
+  ok(
+    "the rectifier silences a head rather than bounding the score",
+    (() => {
+      // Eq. 1 puts ReLU inside the sum and leaves w^I unconstrained, so the score is NOT
+      // non-negative — and a key no head points at scores exactly zero, which puts ties in the
+      // ranking Eq. 2 depends on. Both halves are asserted because the first is the easy misreading.
+      const scores = [];
+      forward(TOKENS, { latent: (normed, wb, b) => ((scores[b] = indexScores(normed)), null) });
+      let neg = 0;
+      let zero = 0;
+      for (const rows of scores) rows.forEach((row, t) => {
+        for (let s = 0; s <= t; s++) {
+          if (row[s] < 0) neg++;
+          if (row[s] === 0) zero++;
+        }
+      });
+      return neg > 0 && zero > 0;
+    })(),
+    "scores can be negative, and a key no head points at scores exactly zero"
+  );
+  ok(
+    "the KL target is a distribution over the past, per query",
+    (() => {
+      const p = klTarget(base.trace[0], TOKENS.length);
+      return p.every((row, t) => near(row.reduce((a, b) => a + b, 0), 1) && row.every((x, s) => s <= t || x === 0));
+    })(),
+    "the main attention's scores summed over heads, then L1-normalised"
+  );
+  ok(
+    "an untrained indexer is worse than an indexer that says nothing",
+    (() => {
+      // The card's central negative result, asserted so it cannot quietly stop being true: on this
+      // model the stand-in's KL against the target is above the uniform indexer's.
+      const scores = [];
+      forward(TOKENS, { latent: (normed, wb, b) => ((scores[b] = indexScores(normed)), null) });
+      const p = klTarget(base.trace[0], TOKENS.length);
+      let mine = 0;
+      let uni = 0;
+      for (let t = 1; t < TOKENS.length; t++) {
+        mine += klOf(p[t], scores[0][t], t);
+        uni += klOf(p[t], new Float64Array(TOKENS.length), t);
+      }
+      return mine > uni;
+    })(),
+    "which is why the card brackets the mechanism instead of demonstrating it"
+  );
+  ok(
+    "the report's training arithmetic reproduces",
+    (() => {
+      const K = 131072;
+      return (
+        near((1000 * 16 * K) / 1e9, 2.097, 0.001) && // reported as 2.1B
+        near((15000 * 480 * K) / 1e9, 943.7, 0.05) && // reported as 943.7B, exactly
+        near((100 * 2048) / K, 1.5625, 1e-9)
+      );
+    })(),
+    "2.1B warm-up, 943.7B sparse, k = 2048 of 128K = 1.5625%"
+  );
+
+  // Concept 26: the deck's baseline has no positional embedding, so the last card's subject is the
+  // first card's model. What is checkable is the premise — that the causal mask is what carries
+  // position — and the arithmetic underneath it.
+  ok(
+    "the model this deck runs has no positional embedding at all",
+    (() => {
+      // Nothing is added to the embeddings and nothing rotates: the baseline IS a NoPE transformer,
+      // which is why concept 26 has no before-and-after to show.
+      const a = forward(TOKENS);
+      const b = forward(TOKENS, { position: null });
+      return a.trace[0].input.every((v, t) => v.every((x, d) => x === b.trace[0].input[t][d]));
+    })(),
+    "so the paper's endpoint is concept 1's starting point"
+  );
+  ok(
+    "with no positional embedding, removing the causal mask makes two orderings identical",
+    (() => {
+      // Swap two tokens neither of which is the last, and read the last position — whose own input
+      // did not change. Causal: it moves. Bidirectional: it cannot, because the output is then a
+      // function of the set. This is the exact form of the paper's premise.
+      const T = TOKENS.length;
+      const i1 = 2;
+      const i2 = 9;
+      if (TOKENS[i1].id === TOKENS[i2].id) return false;
+      const sw = TOKENS.map((t, i) => TOKENS[i === i1 ? i2 : i === i2 ? i1 : i]);
+      const md = (a, b) => {
+        let m = 0;
+        for (let e = 0; e < CONFIG.D; e++) m = Math.max(m, Math.abs(a[e] - b[e]));
+        return m;
+      };
+      const causal = md(forward(TOKENS).hidden[T - 1], forward(sw).hidden[T - 1]);
+      const bi = md(
+        forward(TOKENS, { mixer: bidirectionalMixer() }).hidden[T - 1],
+        forward(sw, { mixer: bidirectionalMixer() }).hidden[T - 1]
+      );
+      return causal > 1 && bi < 1e-12;
+    })(),
+    "the mask is the positional mechanism, and the control makes it exact"
+  );
+  ok(
+    "every distinct swap that leaves the last token alone changes the final state",
+    (() => {
+      const T = TOKENS.length;
+      const md = (a, b) => {
+        let m = 0;
+        for (let e = 0; e < CONFIG.D; e++) m = Math.max(m, Math.abs(a[e] - b[e]));
+        return m;
+      };
+      const b0 = forward(TOKENS).hidden[T - 1];
+      for (let a = 0; a < T - 1; a++)
+        for (let b = a + 1; b < T - 1; b++) {
+          if (TOKENS[a].id === TOKENS[b].id) continue;
+          const sw = TOKENS.map((t, i) => TOKENS[i === a ? b : i === b ? a : i]);
+          if (md(b0, forward(sw).hidden[T - 1]) <= 1e-12) return false;
+        }
+      return true;
+    })(),
+    "so the sensitivity is not a knife-edge"
+  );
+  ok(
+    "uninformative scores put exactly 1/(i+1) on each visible key",
+    (() => {
+      const w = forward(TOKENS, { mixer: uniformMixer() }).trace[0].heads[0].weights;
+      return w.every((row, i) => {
+        for (let j = 0; j <= i; j++) if (row[j] !== 1 / (i + 1)) return false;
+        for (let j = i + 1; j < row.length; j++) if (row[j] !== 0) return false;
+        return true;
+      });
+    })(),
+    "which is where a positionless model's sense of position comes from"
   );
 
   // The latent cache is an identity, not an approximation: moving the up-projection onto the query
