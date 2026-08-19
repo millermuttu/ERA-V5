@@ -34,6 +34,9 @@ the baseline, the cost formulas, and the integrity of the chronology. Each conce
 research note under [`Session8/webapp/docs/research/`](Session8/webapp/docs/research/) recording what
 was read, what was measured in the app, and what the source does **not** establish.
 
+Full write-up, architecture and the chronology source table with a note behind every row:
+[`Session8/webapp/README.md`](Session8/webapp/README.md).
+
 ## Session 7 — the Kronecker V2 problems
 
 The Session 7 assignment offered five open problems and asked for **one**. All five are

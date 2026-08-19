@@ -60,13 +60,13 @@ Each line is: research note written, card built on the live model, plain-languag
 - [x] 3.2 Mechanism assertions: every degenerate setting matches the baseline — GQA at one query head per group, top-k at k = T, window = T, block size 1; the softmax-free regrouping reproduces the direct sum; the delta rule corrects where add-only accumulates
 - [x] 3.3 Cost assertions: the serving formula returns 6.44 GB at the lesson's configuration and 51.54 GB at eight conversations
 - [x] 3.4 Data assertions: every entry has a plain-language verdict whose pros and cons match the technical record in count and direction; unique ids, parseable dates, complete trade-off records, every entry resolving to a mechanism the model can run, every entry having a research note, and every entry naming both the earlier limitation it answers and what it left for later work
-- [ ] 3.5 `?selfcheck=1` paints pass or fail and names every failure; run it and confirm
+- [x] 3.5 `?selfcheck=1` paints pass or fail and names every failure; run it and confirm
 
 ## 4. Verify and ship
 
-- [ ] 4.1 Walk every card in a browser: no console errors, every control moves something, the sentence propagates
-- [ ] 4.2 Type into the input and confirm the visuals keep up
-- [ ] 4.3 Phone width: no sideways scroll on the body, wide visuals scroll inside their own container
-- [ ] 4.4 `Session8/webapp/README.md`: what it is, how to run it, the architecture, the chronology source table, links to the research notes, and the untrained-model caveat
-- [ ] 4.5 Commit with the `[ERA-V5][muttu]:` prefix
+- [~] 4.1 Walk every card in a browser: no console errors, every control moves something, the sentence propagates — done for 24 of 26 in a real browser; `dsa` and `drope` covered only by the node harness (every control driven, rendered text checked) because the Chrome extension disconnected
+- [x] 4.2 Type into the input and confirm the visuals keep up
+- [~] 4.3 Phone width: no sideways scroll on the body, wide visuals scroll inside their own container — verified for the cards checked in-browser; `dsa` and `drope` use only components already covered
+- [x] 4.4 `Session8/webapp/README.md`: what it is, how to run it, the architecture, the chronology source table, links to the research notes, and the untrained-model caveat
+- [x] 4.5 Commit with the `[ERA-V5][muttu]:` prefix
 - [ ] 4.6 Push and confirm the Pages deployment, once the repo's Pages source is set to GitHub Actions

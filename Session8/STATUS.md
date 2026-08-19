@@ -37,10 +37,10 @@ Built, in timeline order: `transformer`, `sinusoidal`, `relative-positions`, `le
 `delta-rule`, `rope`, `alibi`, `flashattention`, `gqa`, `position-interpolation`, `ntk-aware`,
 `yarn`, `attention-sinks`, `mamba`, `mla`, `parallel-deltanet`, `gated-deltanet`, `nsa`, `dsa`, `drope`.
 
-**Remaining: no concepts.** Section 2 is complete. What is left is
-section 4 (verify and ship), of which **4.4 — the README with the chronology source table — is the
-one the assignment explicitly grades**, plus 4.1–4.3 (the browser walk) and 4.6 (the Pages deploy,
-which needs a person).
+**Remaining: no concepts, and no README.** Sections 2 and 3 are complete and 4.4 — the graded README
+with the chronology source table — is written at `webapp/README.md`, validated against the data
+(26 rows, every link resolving, every numeric claim checked). What is left is **4.6, the Pages
+deploy, which needs a person**, and the browser half of 4.1/4.3 for the last two cards.
 
 Two records were corrected by the last two research passes, and both corrections are worth carrying
 forward: `dsa` now cites the tech report PDF shipped in the model repo (dated from DeepSeek's own
