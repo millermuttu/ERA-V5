@@ -12,17 +12,27 @@ pipeline behind an LLM, session by session.
 | [Session 5](Session5/) | Data mixture & curriculum plan for the V5 pretraining run | [`submission.md`](Session5/submission.md) | - |
 | [Session 6](Session6/) | Training data execution system — shards/manifests through checkpoint, crash, resume, replay, fork, audit | [`README.md`](Session6/README.md) | - |
 | [Session 7](Session7/) | Embeddings and model internals — the Kronecker byte codec, its collisions, and five open "V2" problems | [`README.md`](Session7/README.md) | - |
-| [Session 8](Session8/) | Modern attention variants — 25 mechanisms in launch order, each a reply to what the last one could not do | [`webapp/`](Session8/webapp/) | GitHub Pages, link below |
+| [Session 8](Session8/) | Modern attention variants — 26 mechanisms in launch order, each a reply to what the last one could not do | [`webapp/`](Session8/webapp/) | not deployed yet |
 
 ## Session 8 — how attention got here
 
-A static web app: every attention mechanism from the session on one timeline, ordered by the date it
-was launched rather than the order it was taught, so the page reads as the field changing its mind.
-It opens on scaled dot-product attention and works forward; six mechanisms compute their arithmetic
-live in the browser, and every date is the arXiv v1 submission date, checked against the source
-rather than recalled — the three entries with no paper behind them say so on the card.
+A static web app: **26 mechanisms** on one timeline, ordered by the date each was launched rather
+than the order it was taught, so the page reads as the field changing its mind. It opens on scaled
+dot-product attention and works forward, and **every card computes its own arithmetic live** — a real
+32-dimension, 4-head, 2-block transformer with seeded *untrained* weights runs in the page, and each
+concept is that same model with one thing changed. Nothing on a card is asserted that the page can
+compute; what has to be quoted is labelled as quoted and carries its conditions.
 
-`?selfcheck=1` runs 25 assertions over both the arithmetic and the chronology data.
+Every date is the arXiv v1 submission date, checked against the arXiv API rather than recalled. Three
+were corrected that way (`mqa` → 2019-11-06, `parallel-deltanet` → 2024-06-10, `ntk-aware` →
+2023-06-29), and one entry that began with no public source and a placeholder sort key now has a real
+date from a paper found during its research pass (`drope` → 2025-12-13). **Two entries have no paper
+behind them** — `ntk-aware`, a community post, and `dsa`, a release note — and both say so on the card.
+
+`?selfcheck=1` runs **85 assertions** over the arithmetic, every mechanism's degenerate reduction to
+the baseline, the cost formulas, and the integrity of the chronology. Each concept also carries a
+research note under [`Session8/webapp/docs/research/`](Session8/webapp/docs/research/) recording what
+was read, what was measured in the app, and what the source does **not** establish.
 
 ## Session 7 — the Kronecker V2 problems
 

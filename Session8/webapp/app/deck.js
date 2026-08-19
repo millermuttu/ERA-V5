@@ -32,7 +32,10 @@ export function createDeck({ stage, pos, prev, next, onChange, cards }) {
   }
 
   function show(i, { push = true } = {}) {
-    index = (i + list.length) % list.length;
+    // Clamp rather than wrap: the arrows are the same navigation as the ‹ › buttons, and those are
+    // disabled at the ends. Wrapping here made ← on the first card jump to the last one while the
+    // button next to it was greyed out.
+    index = Math.max(0, Math.min(list.length - 1, i));
     const m = list[index];
 
     if (teardown) teardown();
