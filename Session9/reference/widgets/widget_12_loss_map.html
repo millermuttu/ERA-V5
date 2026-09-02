@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Session 9 Widget 12 - The Loss Map</title>
+<style>
+:root{--ink:#162033;--muted:#66758a;--line:#d8e2ee;--cyan:#087f9d;--violet:#7540d4;--red:#d94747;--green:#198754}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.w{max-width:1180px;margin:auto;padding:18px 22px}
+.k{color:var(--cyan);font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+h1{font-size:24px;line-height:1.15;margin:4px 0 6px}
+.sub{max-width:920px;color:var(--muted);margin:0 0 14px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 28px #14305212;padding:14px 16px}
+.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:13px}
+button{border:1px solid var(--line);border-radius:8px;padding:8px 13px;background:#fff;color:var(--muted);font:800 12px inherit;cursor:pointer}
+button.on{border-color:var(--violet);background:#f7f1ff;color:#5b2ab5;box-shadow:inset 0 0 0 1px var(--violet)}
+.hint{font-size:12px;color:var(--muted);margin-left:4px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 430px;gap:14px}
+.hd{display:grid;grid-template-columns:82px 1fr 56px 1fr 56px;gap:8px;font:11px Inter,sans-serif;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+.row{display:grid;grid-template-columns:82px 1fr 56px 1fr 56px;gap:8px;align-items:center;margin-bottom:6px}
+.row .tok{font:800 12px ui-monospace,SFMono-Regular,Consolas,monospace}
+.track{height:17px;border:1px solid var(--line);border-radius:5px;background:#fbfdff;overflow:hidden}
+.track i{display:block;height:100%;transition:width .18s}
+.pf{background:linear-gradient(90deg,#9e74ea,#5a29b4)}
+.qf{background:linear-gradient(90deg,#2cb6d8,#0a7f9d)}
+.num{font:700 11.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--muted);text-align:right}
+.namecard{border:1px solid #ddc9f7;background:#fdfaff;border-radius:10px;padding:12px 14px}
+.namecard .lbl{font:11px Inter,sans-serif;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.namecard h2{font-size:21px;margin:3px 0 5px;color:#5b2ab5;line-height:1.15}
+.namecard p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.45}
+.readout{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:11px}
+.metric{border:1px solid var(--line);border-radius:9px;background:#fbfdff;padding:9px 10px}
+.metric b{display:block;font:800 18px ui-monospace,SFMono-Regular,Consolas,monospace}
+.metric span{display:block;color:var(--muted);font-size:10.5px;margin-top:3px}
+.formula{margin-top:11px;background:#0f172a;color:#dbeafe;border-radius:9px;padding:10px 12px;font:12px/1.7 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre-wrap}
+.verdict{margin-top:11px;border-radius:9px;padding:10px 12px;font-size:12.5px;border:1px solid #a9dfba;background:#effbf3;color:#14532d}
+.verdict b{font-family:ui-monospace,monospace}
+.takeaway{margin-top:12px;border:1px solid #b7e0e9;background:#f1fbfd;border-radius:9px;padding:10px 12px;font-size:12.5px}
+.takeaway b{color:#075985}
+@media(max-width:960px){.layout{grid-template-columns:1fr}.readout{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.track i{transition:none}}
+</style>
+</head>
+<body>
+<main class="w">
+  <div class="k">ERA V5 Session 9 · Section 22</div>
+  <h1>One comparison shape, many names</h1>
+  <p class="sub">The model distribution q stays fixed. Swap what sits in the first slot and the loss changes name: one-hot target, smoothed target, teacher or reference policy.</p>
+
+  <section class="card">
+    <div class="controls" role="group" aria-label="Choose the first argument of the KL divergence">
+      <button id="m0" class="on" type="button" aria-pressed="true" aria-label="Compare against the one-hot true token">one-hot true token</button>
+      <button id="m1" type="button" aria-pressed="false" aria-label="Compare against a softened one-hot target">softened one-hot</button>
+      <button id="m2" type="button" aria-pressed="false" aria-label="Compare against a teacher distribution">a teacher's distribution</button>
+      <button id="m3" type="button" aria-pressed="false" aria-label="Compare against the reference policy">the reference policy</button>
+      <span class="hint">q stays the same in all four.</span>
+    </div>
+
+    <div class="layout">
+      <div>
+        <div class="hd"><span>token</span><span>p, the first argument</span><span></span><span>q, the model</span><span></span></div>
+        <div id="rows"></div>
+        <div class="formula" id="formula"></div>
+      </div>
+      <div>
+        <div class="namecard">
+          <div class="lbl">this loss is called</div>
+          <h2 id="name"></h2>
+          <p id="where"></p>
+        </div>
+        <div class="readout">
+          <div class="metric"><b id="mHp" style="color:var(--violet)"></b><span>H(p), entropy of the target</span></div>
+          <div class="metric"><b id="mHpq" style="color:var(--cyan)"></b><span>H(p, q), cross-entropy</span></div>
+          <div class="metric"><b id="mKl" style="color:var(--green)"></b><span>KL(p ‖ q), the loss</span></div>
+        </div>
+        <div class="verdict" id="verdict" aria-live="polite"></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="takeaway"><b>Takeaway:</b> ten of the fourteen rows in the loss map are this one equation. A one-hot target has zero entropy, which is why cross-entropy and KL coincide in pre-training and separate everywhere else.</div>
+</main>
+<script>
+(function(){
+  'use strict';
+  var toks=['Delhi','Mumbai','Chennai','banana','runs'],z=[2,1,.5,-1,-1.5];
+  var m=Math.max.apply(null,z),ex=z.map(function(v){return Math.exp(v-m);}),sz=ex.reduce(function(a,b){return a+b;},0);
+  var q=ex.map(function(v){return v/sz;});
+  var modes=[
+    {p:[1,0,0,0,0],n:'Next-token cross-entropy',w:'Pre-training, Section 4. The target is the single true token, so the loss collapses to the surprise of one entry.',f:'p = onehot(Delhi)\nL = -log q(Delhi)'},
+    {p:[.9,.025,.025,.025,.025],n:'Label smoothing',w:'Pre-training, Section 12. Some mass is moved off the truth so the model stops being rewarded for infinite confidence.',f:'p = (1-e)*onehot + e/(V-1) elsewhere,  e = 0.1\nL = sum p_i log(p_i / q_i)'},
+    {p:[.55,.25,.12,.05,.03],n:'Distillation',w:'Section 19. A large teacher supplies a full distribution and the student matches it row by row.',f:'p = p_teacher\nL = KL(teacher || student)'},
+    {p:[.5,.22,.16,.07,.05],n:'The RLHF KL penalty',w:'Section 15. The frozen model is the anchor and beta sets how tight the leash is. PPO writes it with the policy first, and Section 19 covers why the direction is a real choice.',f:'p = pi_ref\nL = KL(reference || policy),  scaled by beta'}
+  ];
+  function el(id){return document.getElementById(id);}
+  var cur=0;
+  function render(){
+    var p=modes[cur].p,Hp=0,Hpq=0,h='';
+    for(var i=0;i<5;i++){
+      if(p[i]>0){Hp-=p[i]*Math.log(p[i]);Hpq-=p[i]*Math.log(q[i]);}
+      h+='<div class="row"><span class="tok">'+toks[i]+'</span>'
+        +'<span class="track"><i class="pf" style="width:'+(100*p[i]).toFixed(2)+'%"></i></span><span class="num">'+p[i].toFixed(4)+'</span>'
+        +'<span class="track"><i class="qf" style="width:'+(100*q[i]).toFixed(2)+'%"></i></span><span class="num">'+q[i].toFixed(4)+'</span></div>';
+    }
+    for(i=0;i<4;i++){var b=el('m'+i);b.className=i===cur?'on':'';b.setAttribute('aria-pressed',String(i===cur));}
+    el('rows').innerHTML=h;
+    el('name').textContent=modes[cur].n;
+    el('where').textContent=modes[cur].w;
+    el('formula').textContent=modes[cur].f+'\n\nH(p)    = '+Hp.toFixed(6)+'\nH(p,q)  = '+Hpq.toFixed(6)+'\nKL      = '+(Hpq-Hp).toFixed(6);
+    el('mHp').textContent=Hp.toFixed(6);
+    el('mHpq').textContent=Hpq.toFixed(6);
+    el('mKl').textContent=(Hpq-Hp).toFixed(6);
+    el('verdict').innerHTML=Hp<1e-12
+      ? 'H(p) is <b>0</b>, so cross-entropy and KL are the same number: <b>'+(Hpq-Hp).toFixed(6)+'</b>. This is the case the whole session is built on.'
+      : 'H(p) is <b>'+Hp.toFixed(6)+'</b>, so cross-entropy sits that much above the KL. The gap is a constant with respect to the model and it leaves the gradient untouched.';
+  }
+  for(var i=0;i<4;i++){(function(j){el('m'+j).addEventListener('click',function(){cur=j;render();});}(i));}
+  render();
+}());
+(function(){var fe;try{fe=window.frameElement;}catch(e){return;}if(!fe)return;var last=0;
+function fit(){var h=Math.ceil(document.body.scrollHeight)+8;if(Math.abs(h-last)>2){last=h;fe.style.height=h+'px';}}
+if(window.ResizeObserver){new ResizeObserver(fit).observe(document.body);}
+window.addEventListener('load',fit);
+document.addEventListener('click',function(){setTimeout(fit,60);setTimeout(fit,260);},true);
+document.addEventListener('input',function(){setTimeout(fit,60);},true);
+[0,120,400,900].forEach(function(t){setTimeout(fit,t);});}());
+</script>
+</body>
+</html>

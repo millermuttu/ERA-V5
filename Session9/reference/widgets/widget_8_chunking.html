@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Session 9 Widget 8 - Chunking the Loss</title>
+<style>
+:root{--ink:#162033;--muted:#66758a;--line:#d8e2ee;--cyan:#087f9d;--violet:#7540d4;--red:#d94747;--green:#198754}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.w{max-width:1180px;margin:auto;padding:18px 22px}
+.k{color:var(--cyan);font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+h1{font-size:24px;line-height:1.15;margin:4px 0 6px}
+.sub{max-width:920px;color:var(--muted);margin:0 0 14px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 28px #14305212;padding:14px 16px}
+.control{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.control label{font-weight:750;font-size:12.5px}
+input[type=range]{accent-color:var(--cyan);width:250px}
+.value{font:800 12.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--cyan);min-width:150px}
+.fixed{font:12px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--muted)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.panel{border:1px solid var(--line);border-radius:10px;padding:12px;background:#fbfdff}
+.panel h2{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.peak{font:800 26px ui-monospace,SFMono-Regular,Consolas,monospace;line-height:1.1}
+.peak small{display:block;font:600 11px Inter,sans-serif;color:var(--muted);margin-top:3px}
+.bar{position:relative;height:26px;margin:11px 0 8px;border:1px dashed #b9c9da;border-radius:6px;background:#fff}
+.fill{height:100%;border-radius:5px;transition:width .18s}
+.a .fill{background:linear-gradient(90deg,#f0777a,#d94747)}
+.b .fill{background:linear-gradient(90deg,#3ec091,#198754)}
+.seg{display:flex;gap:2px;height:16px;margin-top:9px}
+.seg i{flex:1 1 auto;border-radius:2px;background:#dde7f1}
+.seg i.live{background:var(--violet)}
+.segnote{font-size:11px;color:var(--muted);margin-top:6px}
+.loss{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.lbox{border:1px solid var(--line);border-radius:9px;background:#0f172a;color:#dbeafe;padding:10px 12px}
+.lbox span{display:block;font:600 10.5px Inter,sans-serif;color:#93b4d8;letter-spacing:.05em;text-transform:uppercase;margin-bottom:5px}
+.lbox b{font:800 20px ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:-.5px}
+.diff{margin-top:11px;border:1px solid #a9dfba;background:#effbf3;border-radius:9px;padding:10px 12px;color:#14532d;font-size:12.5px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.diff b{font:800 17px ui-monospace,SFMono-Regular,Consolas,monospace}
+.takeaway{margin-top:12px;border:1px solid #b7e0e9;background:#f1fbfd;border-radius:9px;padding:10px 12px;font-size:12.5px}
+.takeaway b{color:#075985}
+@media(max-width:880px){.pair,.loss{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.fill{transition:none}}
+</style>
+</head>
+<body>
+<main class="w">
+  <div class="k">ERA V5 Session 9 · Section 10</div>
+  <h1>Chunking moves the memory and leaves the loss alone</h1>
+  <p class="sub">The same mean loss is computed in one pass and then in chunks. Watch peak memory fall while the objective stays unchanged.</p>
+
+  <section class="card">
+    <div class="control">
+      <label for="chunk">Chunk size</label>
+      <input id="chunk" type="range" min="0" max="6" step="1" value="0" aria-label="Chunk size in tokens, halving from 65536 down to 1024">
+      <span class="value" id="chunkv"></span>
+      <span class="fixed">peak logits memory = chunk × V × 2 bytes</span>
+    </div>
+
+    <div class="pair">
+      <div class="panel a">
+        <h2>All at once</h2>
+        <div class="peak" style="color:var(--red)" id="peakA"></div>
+        <div class="bar"><div class="fill" id="fillA" style="width:100%"></div></div>
+        <div class="segnote">One logits tensor of 65,536 × 131,072 is held for the backward pass.</div>
+      </div>
+      <div class="panel b">
+        <h2>In chunks</h2>
+        <div class="peak" style="color:var(--green)" id="peakB"></div>
+        <div class="bar"><div class="fill" id="fillB"></div></div>
+        <div class="seg" id="seg" aria-label="chunks processed one at a time"></div>
+        <div class="segnote" id="segnote"></div>
+      </div>
+    </div>
+
+    <div class="loss">
+      <div class="lbox"><span>mean loss, one pass</span><b id="lossA"></b></div>
+      <div class="lbox"><span>mean loss, chunked</span><b id="lossB"></b></div>
+    </div>
+
+    <div class="diff" aria-live="polite"><span>Difference between the two, printed to ten decimals:</span><b id="delta"></b><span id="reduce"></span></div>
+  </section>
+
+  <div class="takeaway"><b>Takeaway:</b> every per-token loss here is an exact multiple of 1/1024, so both routes add the same numbers and the two totals agree bit for bit. Chunking buys a 64× memory reduction by recomputing each chunk's logits in the backward pass. The objective is untouched.</div>
+</main>
+<script>
+(function(){
+  'use strict';
+  var N=65536,V=131072,GiB=1073741824;
+  function el(id){return document.getElementById(id);}
+  var loss=new Float64Array(N),s=2463534;
+  for(var i=0;i<N;i++){s=(s*16807)%2147483647;loss[i]=(512+(s%5632))/1024;}
+  function fmt(x){var u=['B','KiB','MiB','GiB','TiB'],j=0;while(x>=1024&&j<4){x/=1024;j++;}return (x%1===0?x:x.toFixed(1))+' '+u[j];}
+  function meanAll(){var t=0;for(var i=0;i<N;i++){t+=loss[i];}return t/N;}
+  function meanChunked(c){var t=0;for(var a=0;a<N;a+=c){var p=0;for(var i=a;i<a+c;i++){p+=loss[i];}t+=p;}return t/N;}
+  var chunk=el('chunk');
+  function render(){
+    var c=N>>(+chunk.value),k=N/c,peak=c*V*2,full=N*V*2;
+    el('chunkv').textContent=c.toLocaleString('en-US')+' tokens';
+    el('peakA').innerHTML=fmt(full)+'<small>peak logits memory</small>';
+    el('peakB').innerHTML=fmt(peak)+'<small>peak logits memory</small>';
+    el('fillB').style.width=(100*peak/full).toFixed(4)+'%';
+    var h='';for(var i=0;i<k;i++){h+='<i'+(i===0?' class="live"':'')+'></i>';}
+    el('seg').innerHTML=h;
+    el('segnote').textContent=k===1?'One chunk, which is the whole batch. This setting is the panel on the left.':k.toLocaleString('en-US')+' chunks. One is resident at a time and each is discarded once its partial sum is taken.';
+    var a=meanAll(),b=meanChunked(c);
+    el('lossA').textContent=a.toFixed(10);
+    el('lossB').textContent=b.toFixed(10);
+    el('delta').textContent=(a-b).toFixed(10);
+    el('reduce').textContent='Memory reduction: '+(full/peak).toFixed(0)+'×.';
+  }
+  chunk.addEventListener('input',render);render();
+}());
+(function(){var fe;try{fe=window.frameElement;}catch(e){return;}if(!fe)return;var last=0;
+function fit(){var h=Math.ceil(document.body.scrollHeight)+8;if(Math.abs(h-last)>2){last=h;fe.style.height=h+'px';}}
+if(window.ResizeObserver){new ResizeObserver(fit).observe(document.body);}
+window.addEventListener('load',fit);
+document.addEventListener('click',function(){setTimeout(fit,60);setTimeout(fit,260);},true);
+document.addEventListener('input',function(){setTimeout(fit,60);},true);
+[0,120,400,900].forEach(function(t){setTimeout(fit,t);});}());
+</script>
+</body>
+</html>

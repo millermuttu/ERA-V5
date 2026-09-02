@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Session 9 Widget 6 - Three Routes, One Update</title>
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--red:#dc2626}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:13px/1.45 Inter,system-ui,sans-serif}
+.w{max-width:1240px;margin:0 auto;padding:13px 18px 15px}
+.k{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--violet)}
+h1{font-size:21px;line-height:1.12;margin:3px 0 4px}
+.sub{color:var(--muted);max-width:1060px;margin:0 0 9px;font-size:12px}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:9px}
+.tab{border:1px solid var(--line);background:#fff;border-radius:9px;padding:6px 10px;font:inherit;text-align:left;cursor:pointer;line-height:1.2}
+.tab b{display:block;font-size:12px;font-weight:800;color:var(--ink)}
+.tab span{display:block;font-size:10px;color:var(--muted);margin-top:2px}
+.tab.on{border-color:var(--violet);background:#f5f3ff;box-shadow:inset 0 0 0 1px var(--violet)}
+.tab:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid #c4b5fd;outline-offset:2px}
+.card{background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 26px #14305212;padding:11px 12px}
+.ctl{display:flex;align-items:center;gap:9px;flex-wrap:wrap;border:1px solid #c4b5fd;background:linear-gradient(180deg,#f5f3ff,#fff);border-radius:9px;padding:7px 10px;margin-bottom:9px}
+.ctl label{font-size:11.5px;font-weight:800;white-space:nowrap}
+input[type=range]{flex:1 1 160px;min-width:150px;max-width:340px;accent-color:var(--violet);margin:0}
+output{font-family:ui-monospace,monospace;font-size:12px;font-weight:800;color:var(--violet);min-width:54px;text-align:right}
+button{border:1px solid var(--violet);background:#fff;color:var(--violet);border-radius:8px;padding:6px 12px;font:inherit;font-size:11.5px;font-weight:800;cursor:pointer}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:9px}
+.comp{border:1px solid var(--line);border-radius:9px;padding:7px 9px;background:#fbfdff}
+.comp.win{border-color:#86efac;background:#f0fdf4}
+.comp.lose{border-color:#fecaca;background:#fef2f2}
+.comp h3{margin:0 0 3px;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.comp p{margin:0;font-size:12px;font-weight:700;font-family:ui-monospace,monospace;line-height:1.4}
+.eq{font-family:ui-monospace,monospace;font-size:11.5px;background:#0f172a;color:#dbeafe;border-radius:8px;padding:8px 11px;line-height:1.65;white-space:pre;overflow-x:auto;margin:0 0 9px}
+.eq i{color:#fbbf24;font-style:normal}
+.say{border:1px solid #c4b5fd;background:#f5f3ff;color:#4c1d95;border-radius:8px;padding:8px 10px;font-size:11.5px;line-height:1.5;margin-top:9px}
+.say b{color:#5b21b6;font-family:ui-monospace,monospace;font-weight:800}
+.say.cy{border-color:#a5f3fc;background:#ecfeff;color:#155e75}
+.say.cy b{color:#0e7490}
+table{width:100%;border-collapse:collapse;font-size:11.5px}
+th{text-align:left;font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);padding:4px 5px;border-bottom:1px solid var(--line);font-weight:800}
+td{padding:4px 5px;border-bottom:1px solid #eef2f7;font-family:ui-monospace,monospace}
+td.lbl{font-family:inherit;font-weight:700}
+tr.mv td{background:#faf5ff;color:#5b21b6;font-weight:800}
+tr.fix td{background:#f0fdf4;color:#166534;font-weight:800}
+.bar{height:11px;border-radius:3px;display:inline-block;vertical-align:middle;min-width:1px}
+.bar.g{background:var(--green)}
+.bar.r{background:var(--red)}
+.mets{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px}
+.met{border:1px solid var(--line);border-radius:9px;background:#fbfdff;padding:7px;text-align:center}
+.met b{display:block;font-family:ui-monospace,monospace;font-size:15px}
+.met span{display:block;color:var(--muted);font-size:9.5px;line-height:1.3;margin-top:2px}
+.met.hero{border-color:#86efac;background:#f0fdf4}
+.met.hero b{color:#166534;font-size:17px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:start}
+svg{display:block;width:100%;height:auto}
+@media(max-width:1000px){.two{grid-template-columns:1fr}.tabs{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="w">
+  <div class="k">ERA V5 Session 9 · Sections 18 and 19</div>
+  <h1>Three routes, one update</h1>
+  <p class="sub">One prompt, two completions, one preference. Use the tabs to see the reward gap, the DPO cancellation and the GRPO group baseline.</p>
+
+  <div class="tabs" id="tabs" role="tablist"></div>
+
+  <section class="card">
+    <div class="ctl" id="ctl">
+      <span id="c-rm" style="display:contents">
+        <label for="rw">r_w on the chosen</label><input id="rw" type="range" min="-300" max="300" step="5" value="140" aria-label="Reward on the chosen completion, from minus 3 to plus 3"><output id="rwv">+1.40</output>
+        <label for="rl">r_l on the rejected</label><input id="rl" type="range" min="-300" max="300" step="5" value="30" aria-label="Reward on the rejected completion, from minus 3 to plus 3"><output id="rlv">+0.30</output>
+      </span>
+      <span id="c-dpo" style="display:contents">
+        <label for="lz">log Z(x), the term nobody can compute</label><input id="lz" type="range" min="-450" max="130" step="1" value="0" aria-label="log Z of the prompt, from minus 4.5 to plus 1.3"><output id="lzv">+0.00</output>
+      </span>
+      <span id="c-grpo" style="display:contents">
+        <label for="g">Group size G</label><input id="g" type="range" min="4" max="12" step="1" value="8" aria-label="Completions sampled per prompt, from 4 to 12"><output id="gv">8</output>
+        <button id="newg" type="button" aria-label="Draw a fresh group of completions">New group</button>
+      </span>
+    </div>
+    <div id="panel"></div>
+  </section>
+</main>
+
+<script>
+(function(){
+'use strict';
+/* One prompt, two completions. Each position has four candidates with fixed reference logits, so
+   every sequence log probability is a real softmax. The recovered rewards are carried in exact two
+   term form, which makes the log Z cancellation exact rather than nearly exact. */
+function twoSum(a,b){var s=a+b,bb=s-a;return [s,(a-(s-bb))+(b-bb)];}
+function ddSub(ah,al,bh,bl){var t=twoSum(ah,-bh);return t[0]+(t[1]+(al-bl));}
+function softmax(a){var m=-Infinity,i,e=[],s=0;for(i=0;i<a.length;i++)if(a[i]>m)m=a[i];
+  for(i=0;i<a.length;i++){var x=Math.exp(a[i]-m);e.push(x);s+=x;}for(i=0;i<a.length;i++)e[i]/=s;return e;}
+function sigmoid(x){return 1/(1+Math.exp(-x));}
+var WW=['it','follows','the','slope','downhill'],WL=['it','is','a','thing'];
+var REFW=[[2.1,0.4,-0.3,0.9],[1.6,1.1,0.2,-0.4],[0.8,1.9,0.3,0.1],[2.4,0.6,-0.1,0.7],[1.2,0.9,1.5,-0.2]];
+var REFL=[[2.1,0.4,-0.3,0.9],[0.7,1.8,0.2,0.4],[1.1,0.3,1.6,-0.5],[0.5,0.9,0.2,1.7]];
+var TAKW=[0,0,1,0,2],TAKL=[0,1,2,3],BETA=0.10,STEP=6;
+function seqLogp(ref,tak,shift){
+  var t=0,i;
+  for(i=0;i<ref.length;i++){var lg=ref[i].slice();lg[tak[i]]+=shift;t+=Math.log(softmax(lg)[tak[i]]);}
+  return t;
+}
+var S={tab:0,rw:1.40,rl:0.30,logZ:0,G:8,seed:1};
+var el=function(id){return document.getElementById(id);};
+function f(x,p){return Number(x).toFixed(p===undefined?3:p);}
+function sgn(x,p){var v=Number(x);return (v>=0?'+':'')+v.toFixed(p===undefined?4:p);}
+/* two digit exponent, so an exact zero reads 0.00e+00 */
+function expo(x,d){return Number(x).toExponential(d===undefined?2:d).replace(/e([+-])(\d)$/,'e$10$2');}
+function core(){
+  var lpW=seqLogp(REFW,TAKW,STEP*0.10),lrW=seqLogp(REFW,TAKW,0);
+  var lpL=seqLogp(REFL,TAKL,-STEP*0.08),lrL=seqLogp(REFL,TAKL,0);
+  var bA=BETA*(lpW-lrW),bB=BETA*(lpL-lrL),bz=BETA*S.logZ;
+  var W=twoSum(bA,bz),L=twoSum(bB,bz),gap=ddSub(W[0],W[1],L[0],L[1]);
+  var bt=-Math.log(sigmoid(gap)),dpo=-Math.log(sigmoid(bA-bB));
+  return {lpW:lpW,lrW:lrW,lpL:lpL,lrL:lrL,bA:bA,bB:bB,bz:bz,rw:W[0],rl:L[0],gap:gap,bt:bt,dpo:dpo,diff:bt-dpo};
+}
+function sweepDiff(){
+  /* every stop the log Z slider can take */
+  var bA=BETA*(seqLogp(REFW,TAKW,STEP*0.10)-seqLogp(REFW,TAKW,0));
+  var bB=BETA*(seqLogp(REFL,TAKL,-STEP*0.08)-seqLogp(REFL,TAKL,0));
+  var dpo=-Math.log(sigmoid(bA-bB)),worst=0,n=0,z;
+  for(z=-450;z<=130;z++){
+    var bz=BETA*(z/100),W=twoSum(bA,bz),L=twoSum(bB,bz);
+    var d=(-Math.log(sigmoid(ddSub(W[0],W[1],L[0],L[1]))))-dpo;
+    n++;if(Math.abs(d)>Math.abs(worst))worst=d;
+  }
+  return {worst:worst,n:n};
+}
+function group(seed,G){
+  var s=(seed*7919+13)>>>0,rew=[],i,mean=0,vr=0;
+  function r(){s=(s*1664525+1013904223)>>>0;return s/4294967296;}
+  for(i=0;i<G;i++){var u=r(),v=r();rew.push(Math.max(0,Math.min(1,0.52+0.26*Math.sqrt(-2*Math.log(u+1e-12))*Math.cos(2*Math.PI*v))));}
+  for(i=0;i<G;i++)mean+=rew[i];mean/=G;
+  for(i=0;i<G;i++)vr+=(rew[i]-mean)*(rew[i]-mean);vr/=G;
+  var sd=Math.sqrt(vr)+1e-8,adv=rew.map(function(x){return (x-mean)/sd;}),sum=0;
+  for(i=0;i<G;i++)sum+=adv[i];
+  return {rew:rew,mean:mean,sd:sd,adv:adv,sum:sum};
+}
+function pairHTML(){
+  return '<div class="pair"><div class="comp win"><h3>chosen y_w · human preferred</h3><p>'+WW.join(' ')+'</p></div>'+
+    '<div class="comp lose"><h3>rejected y_l</h3><p>'+WL.join(' ')+'</p></div></div>';
+}
+var TABS=[{b:'The reward model',s:'Bradley-Terry on the gap'},{b:'DPO',s:'watch log Z cancel'},{b:'GRPO',s:'the group is the baseline'}];
+el('tabs').innerHTML=TABS.map(function(t,i){
+  return '<button class="tab'+(i===0?' on':'')+'" type="button" role="tab" data-i="'+i+'" aria-selected="'+(i===0)+'" aria-label="'+t.b+', '+t.s+'"><b>'+t.b+'</b><span>'+t.s+'</span></button>';}).join('');
+el('tabs').addEventListener('click',function(e){var b=e.target.closest('.tab');if(!b)return;
+  S.tab=+b.dataset.i;
+  var ns=document.querySelectorAll('.tab'),j;
+  for(j=0;j<ns.length;j++){ns[j].classList.toggle('on',j===S.tab);ns[j].setAttribute('aria-selected',j===S.tab);}
+  render();});
+function render(){
+  var h='',c=core(),i;
+  el('c-rm').hidden=(S.tab!==0);el('c-dpo').hidden=(S.tab!==1);el('c-grpo').hidden=(S.tab!==2);
+  el('c-rm').style.display=S.tab===0?'contents':'none';
+  el('c-dpo').style.display=S.tab===1?'contents':'none';
+  el('c-grpo').style.display=S.tab===2?'contents':'none';
+
+  if(S.tab===0){
+    var gap0=S.rw-S.rl,pw=sigmoid(gap0),bt0=-Math.log(pw);
+    h+='<div class="eq">P(y_w > y_l | x) = sigmoid( r(x,y_w) - r(x,y_l) )\nL_RM = -log sigmoid( r_w - r_l )        only the difference enters</div>'+pairHTML()+'<div class="two"><div>';
+    h+='<table><tr><th>quantity</th><th>value</th></tr>'+
+      '<tr><td class="lbl">r_w, reward on the chosen</td><td>'+sgn(S.rw,3)+'</td></tr>'+
+      '<tr><td class="lbl">r_l, reward on the rejected</td><td>'+sgn(S.rl,3)+'</td></tr>'+
+      '<tr class="fix"><td class="lbl">gap r_w minus r_l</td><td>'+sgn(gap0,3)+'</td></tr>'+
+      '<tr><td class="lbl">P(chosen wins)</td><td>'+f(pw,5)+'</td></tr>'+
+      '<tr><td class="lbl">L_RM in nats</td><td>'+f(bt0,5)+'</td></tr>'+
+      '<tr><td class="lbl">dL / dr_w</td><td>'+sgn(-(1-pw),5)+'</td></tr>'+
+      '<tr><td class="lbl">dL / dr_l</td><td>'+sgn(1-pw,5)+'</td></tr></table>'+
+      '<div class="say cy">Add the same constant to both rewards and the gap holds, so the loss holds. A reward model is pinned only up to that constant, the fact DPO exploits.</div></div><div>';
+    var Wd=460,sv='',gx,q,path='';
+    for(gx=-6;gx<=6;gx+=2)sv+='<text x="'+f(40+(gx+6)/12*(Wd-70),1)+'" y="166" font-size="9" text-anchor="middle" fill="#94a3b8">'+gx+'</text>';
+    sv+='<line x1="40" y1="150" x2="'+(Wd-30)+'" y2="150" stroke="#cbd5e1"/><line x1="40" y1="24" x2="40" y2="150" stroke="#cbd5e1"/>';
+    for(q=0;q<=120;q++){var gv=-6+12*q/120;path+=(q?' L ':'M ')+f(40+(gv+6)/12*(Wd-70),1)+' '+f(150-sigmoid(gv)*126,1);}
+    var cx=40+(Math.max(-6,Math.min(6,gap0))+6)/12*(Wd-70),cy=150-pw*126;
+    sv+='<path d="'+path+'" fill="none" stroke="#7c3aed" stroke-width="2.5"/>'+
+      '<line x1="'+f(cx,1)+'" y1="150" x2="'+f(cx,1)+'" y2="'+f(cy,1)+'" stroke="#159447" stroke-width="1.5" stroke-dasharray="3 3"/>'+
+      '<circle cx="'+f(cx,1)+'" cy="'+f(cy,1)+'" r="5.5" fill="#159447"/>'+
+      '<text x="'+f(cx,1)+'" y="'+f(cy-11,1)+'" font-size="10.5" font-weight="800" text-anchor="middle" fill="#166534">'+f(pw,3)+'</text>'+
+      '<text x="40" y="16" font-size="10.5" font-weight="800" fill="#152033">P(chosen wins) against the reward gap</text>'+
+      '<text x="'+(Wd-30)+'" y="182" font-size="9" text-anchor="end" fill="#94a3b8">reward gap</text>';
+    h+='<svg viewBox="0 0 '+Wd+' 196" role="img" aria-label="Sigmoid of the reward gap with the current gap marked">'+sv+'</svg>'+
+      '<div class="mets"><div class="met"><b>'+f(pw*100,2)+'%</b><span>model agrees with the human</span></div>'+
+      '<div class="met"><b>'+f(bt0,4)+'</b><span>Bradley-Terry loss in nats</span></div></div></div></div>';
+  }
+
+  if(S.tab===1){
+    var sw=sweepDiff();
+    h+='<div class="eq">RLHF optimum:   pi*(y|x)  =  (1 / Z(x)) · pi_ref(y|x) · exp( r(x,y) / beta )\n'+
+      'invert it:      r(x,y)  =  beta · log( pi(y|x) / pi_ref(y|x) )  +  <i>beta · log Z(x)</i>\n'+
+      'DPO loss:       L  =  -log sigmoid( beta·log(pi_w/pi_ref_w)  -  beta·log(pi_l/pi_ref_l) )        beta = 0.10</div>';
+    h+='<div class="two"><div><table><tr><th>term</th><th>chosen y_w</th><th>rejected y_l</th></tr>'+
+      '<tr><td class="lbl">log pi(y|x)</td><td>'+f(c.lpW,4)+'</td><td>'+f(c.lpL,4)+'</td></tr>'+
+      '<tr><td class="lbl">log pi_ref(y|x)</td><td>'+f(c.lrW,4)+'</td><td>'+f(c.lrL,4)+'</td></tr>'+
+      '<tr><td class="lbl">beta · log(pi / pi_ref)</td><td>'+sgn(c.bA,4)+'</td><td>'+sgn(c.bB,4)+'</td></tr>'+
+      '<tr class="mv"><td class="lbl">beta · log Z(x)</td><td>'+sgn(c.bz,4)+'</td><td>'+sgn(c.bz,4)+'</td></tr>'+
+      '<tr class="mv"><td class="lbl">recovered reward r</td><td>'+sgn(c.rw,4)+'</td><td>'+sgn(c.rl,4)+'</td></tr>'+
+      '<tr class="fix"><td class="lbl">r_w minus r_l</td><td colspan="2">'+sgn(c.gap,6)+'</td></tr></table>';
+    var W2=460,sv2='',lo=Math.min(c.bA,c.bB)+BETA*-4.5-0.08,hi=Math.max(c.bA,c.bB)+BETA*1.3+0.08;
+    var px=function(v){return 34+(Math.max(lo,Math.min(hi,v))-lo)/(hi-lo)*(W2-64);};
+    var tick=Math.max(0.05,Math.round((hi-lo)/5/0.05)*0.05),ti;
+    sv2+='<text x="34" y="15" font-size="10.5" font-weight="800" fill="#152033">Both rewards slide. The gap does not.</text>';
+    for(ti=Math.ceil(lo/tick);ti<=Math.floor(hi/tick);ti++){var t2=ti*tick;if(Math.abs(t2)<1e-9)t2=0;
+      sv2+='<line x1="'+f(px(t2),1)+'" y1="30" x2="'+f(px(t2),1)+'" y2="92" stroke="#eef2f7"/><text x="'+f(px(t2),1)+'" y="106" font-size="9" text-anchor="middle" fill="#94a3b8">'+f(t2,2)+'</text>';}
+    var xw=px(c.rw),xl=px(c.rl);
+    sv2+='<line x1="34" y1="92" x2="'+(W2-30)+'" y2="92" stroke="#cbd5e1"/>'+
+      '<line x1="'+f(xl,1)+'" y1="48" x2="'+f(xw,1)+'" y2="48" stroke="#159447" stroke-width="2.5"/>'+
+      '<path d="M '+f(xl,1)+' 48 l 7 -5 v 10 z M '+f(xw,1)+' 48 l -7 -5 v 10 z" fill="#159447"/>'+
+      '<text x="'+f((xw+xl)/2,1)+'" y="41" font-size="10" font-weight="800" text-anchor="middle" fill="#166534">gap '+f(c.gap,4)+'</text>'+
+      '<circle cx="'+f(xl,1)+'" cy="70" r="7" fill="#0891b2"/><circle cx="'+f(xw,1)+'" cy="70" r="7" fill="#7c3aed"/>'+
+      '<text x="'+f(xl,1)+'" y="74" font-size="9" text-anchor="middle" fill="#fff" font-weight="800">l</text>'+
+      '<text x="'+f(xw,1)+'" y="74" font-size="9" text-anchor="middle" fill="#fff" font-weight="800">w</text>'+
+      '<text x="34" y="128" font-size="9.5" fill="#65758b">r_l = '+sgn(c.rl,4)+'   r_w = '+sgn(c.rw,4)+'   at log Z = '+sgn(S.logZ,2)+'</text>';
+    h+='<svg viewBox="0 0 '+W2+' 136" role="img" aria-label="The two recovered rewards on a number line with a fixed gap between them">'+sv2+'</svg></div><div>';
+    h+='<table><tr><th>loss</th><th>computed from</th><th>value in nats</th></tr>'+
+      '<tr><td class="lbl">Bradley-Terry</td><td>r_w and r_l, log Z included</td><td>'+c.bt.toFixed(12)+'</td></tr>'+
+      '<tr><td class="lbl">DPO</td><td>the log ratios only, no log Z</td><td>'+c.dpo.toFixed(12)+'</td></tr></table>'+
+      '<div class="mets"><div class="met hero"><b>'+expo(c.diff,2)+'</b><span>Bradley-Terry minus DPO, at this log Z</span></div>'+
+      '<div class="met hero"><b>'+expo(sw.worst,2)+'</b><span>largest difference over all '+sw.n+' log Z stops on the slider</span></div></div>'+
+      '<div class="say">beta·log Z lands on r_w and r_l equally, so it leaves the subtraction. The rewards are carried in exact two term form, so nothing is lost on the way.</div>'+
+      '<div class="say cy">That is the whole trick. The reward model disappears into the policy, and the term nobody could compute never had to be computed.</div></div></div>';
+  }
+
+  if(S.tab===2){
+    var g=group(S.seed,S.G),rows='',mn=Math.min.apply(null,g.adv),mxa=Math.max.apply(null,g.adv);
+    h+='<div class="eq">sample G completions for one prompt, score each one\n'+
+      'A_i = ( r_i - mean(r) ) / std(r)        sum of A_i = 0 by construction, so no value network is needed</div><div class="two"><div>';
+    for(i=0;i<S.G;i++)rows+='<tr><td class="lbl">'+(i+1)+'</td><td>'+f(g.rew[i],4)+'</td><td>'+sgn(g.rew[i]-g.mean,4)+'</td><td>'+sgn(g.adv[i],4)+
+      '</td><td><span class="bar '+(g.adv[i]>=0?'g':'r')+'" style="width:'+Math.round(Math.abs(g.adv[i])/Math.max(Math.abs(mn),mxa)*70)+'px"></span></td></tr>';
+    h+='<table><tr><th>completion</th><th>reward</th><th>r minus mean</th><th>advantage</th><th></th></tr>'+rows+
+      '<tr class="fix"><td class="lbl">sum</td><td>'+f(g.mean*S.G,4)+'</td><td>'+expo(g.rew.reduce(function(p,x){return p+(x-g.mean);},0),2)+
+      '</td><td colspan="2"><b>'+expo(g.sum,2)+'</b></td></tr></table></div><div>';
+    h+='<div class="mets"><div class="met"><b>'+f(g.mean,4)+'</b><span>group mean, standing in for V(x)</span></div>'+
+      '<div class="met"><b>'+f(g.sd,4)+'</b><span>group standard deviation</span></div>'+
+      '<div class="met hero"><b>'+expo(g.sum,2)+'</b><span>sum of the '+S.G+' advantages</span></div>'+
+      '<div class="met"><b>0</b><span>value network parameters</span></div></div>'+
+      '<div class="say">Subtracting the group mean forces the advantages to sum to zero, which is what a learned baseline was there to arrange. The residue above is floating point, <b>'+expo(g.sum,2)+'</b> against advantages of order one.</div>'+
+      '<div class="say cy">PPO carried a value network the size of the policy to estimate V(x). GRPO reads the same baseline off G samples of the same prompt.</div></div></div>';
+  }
+  el('panel').innerHTML=h;
+}
+function bind(id,out,fn){el(id).addEventListener('input',function(){fn(+this.value);render();});}
+bind('rw','rwv',function(v){S.rw=v/100;el('rwv').textContent=sgn(S.rw,2);});
+bind('rl','rlv',function(v){S.rl=v/100;el('rlv').textContent=sgn(S.rl,2);});
+bind('lz','lzv',function(v){S.logZ=v/100;el('lzv').textContent=sgn(S.logZ,2);});
+bind('g','gv',function(v){S.G=v;el('gv').textContent=S.G;});
+el('newg').addEventListener('click',function(){S.seed=S.seed%97+1;render();});
+render();
+})();
+</script>
+<script>
+/* Self-sizing: the frame is same origin, so it is resized from inside. Nothing takes focus. */
+(function(){
+  var fe;try{fe=window.frameElement;}catch(e){return;}
+  if(!fe)return;
+  var last=0;
+  function fit(){var h=Math.ceil(document.body.scrollHeight)+8;if(Math.abs(h-last)>2){last=h;fe.style.height=h+'px';}}
+  if(window.ResizeObserver)new ResizeObserver(fit).observe(document.body);
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){setTimeout(fit,60);setTimeout(fit,260);},true);
+  document.addEventListener('input',function(){setTimeout(fit,60);},true);
+  [0,120,400,900,1800].forEach(function(t){setTimeout(fit,t);});
+})();
+</script>
+</body>
+</html>

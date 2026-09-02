@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Session 9 Widget 13 - Draft and Verify</title>
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:13px/1.45 Inter,system-ui,sans-serif}
+.s9w13-w{max-width:1240px;margin:0 auto;padding:13px 18px 15px}
+.s9w13-k{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.s9w13-w h1{font-size:21px;line-height:1.12;margin:3px 0 4px}
+.s9w13-sub{color:var(--muted);max-width:1040px;margin:0 0 9px;font-size:12px}
+.s9w13-card{background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 26px #14305212;padding:11px 12px}
+.s9w13-ctl{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.s9w13-ctl label{font-size:11.5px;font-weight:800}
+.s9w13-w input[type=range]{flex:0 1 200px;accent-color:var(--cyan);margin:0}
+.s9w13-val{font:800 12px ui-monospace,monospace;color:var(--cyan);margin-right:6px}
+.s9w13-w button{border:1px solid var(--cyan);background:var(--cyan);color:#fff;border-radius:8px;padding:6px 12px;font:inherit;font-size:11.5px;font-weight:800;cursor:pointer}
+.s9w13-w button.s9w13-ghost{background:#fff;color:var(--cyan)}
+.s9w13-eq{font:11.5px/1.6 ui-monospace,monospace;background:#0f172a;color:#dbeafe;border-radius:8px;padding:8px 11px;white-space:pre;overflow-x:auto;margin:0 0 9px}
+.s9w13-scroll{max-height:172px;overflow:auto;border:1px solid var(--line);border-radius:9px}
+.s9w13-w table{width:100%;border-collapse:collapse;font-size:11px}
+.s9w13-w th{text-align:left;font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);padding:3px 5px;border-bottom:1px solid var(--line);font-weight:800;background:#fff;position:sticky;top:0}
+.s9w13-w td{padding:3px 5px;border-bottom:1px solid #eef2f7;font-family:ui-monospace,monospace}
+.s9w13-chip{display:inline-block;border-radius:5px;padding:2px 6px;font:800 10.5px ui-monospace,monospace;margin-right:3px;background:#f1f5f9;color:#94a3b8}
+.s9w13-ok{background:#dcfce7;color:#166534}
+.s9w13-no{background:#fee2e2;color:#991b1b;text-decoration:line-through}
+.s9w13-mets{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:9px}
+.s9w13-met{border:1px solid var(--line);border-radius:9px;background:#fbfdff;padding:7px;text-align:center}
+.s9w13-met b{display:block;font:15px ui-monospace,monospace}
+.s9w13-met span{display:block;color:var(--muted);font-size:9.5px;line-height:1.3;margin-top:2px}
+.s9w13-say{border:1px solid #fcd34d;background:#fffbeb;color:#92400e;border-radius:8px;padding:8px 10px;font-size:11.5px;line-height:1.5;margin-top:9px}
+.s9w13-say b{color:#b45309;font-family:ui-monospace,monospace;font-weight:800}
+@media(max-width:980px){.s9w13-mets{grid-template-columns:1fr 1fr}}
+@media (prefers-reduced-motion:reduce){.s9w13-w *{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s9w13-w">
+  <div class="s9w13-k">ERA V5 Session 9 · Section 13</div>
+  <h1>Draft and verify</h1>
+  <p class="s9w13-sub">Extra heads propose tokens from the same trunk state. The ordinary head verifies them, keeps the longest matching prefix and reports the acceptance rate.</p>
+
+  <section class="s9w13-card">
+    <div class="s9w13-ctl">
+      <label for="s9w13-k">Draft length K</label>
+      <input id="s9w13-k" type="range" min="2" max="4" step="1" value="4" aria-label="How many tokens one verification pass covers, from 2 to 4">
+      <span class="s9w13-val" id="s9w13-kv">4</span>
+      <button id="s9w13-run" type="button" aria-label="Run eight more passes">Run 8 more passes</button>
+      <button id="s9w13-reset" class="s9w13-ghost" type="button" aria-label="Start the passes again">Reset</button>
+    </div>
+    <div class="s9w13-eq">draft:   ỹ_(t+k) = argmax( W_k h_t )   for k = 2 .. K
+verify:  keep the longest prefix on which head 1 agrees, discard the rest</div>
+    <div class="s9w13-scroll"><table id="s9w13-passes"></table></div>
+    <div class="s9w13-mets" id="s9w13-mets"></div>
+    <div class="s9w13-say" id="s9w13-say"></div>
+  </section>
+</main>
+
+<script>
+(function(){
+'use strict';
+/* Trunk from one fixed seed; the four heads are fitted here by full batch gradient descent. */
+var VOC=['the','model','reads','every','token','and','writes','one','word','next','into','then'];
+var NV=12,D=8,IX={};
+VOC.forEach(function(w,i){IX[w]=i;});
+var CORP=['the model reads every token and then writes one word','the model reads every word and then writes one token',
+ 'the model reads one token and writes the next word','every token reads into the model and then writes one word',
+ 'the model writes one word and then reads every token','one token reads into every model and then writes the next word',
+ 'the model reads the next token and writes one word','every model reads one word and then writes the next token',
+ 'the model writes the next word and then reads one token','one word reads into the model and then writes every token'];
+var SEQ=CORP.map(function(s){return s.split(' ').map(function(w){return IX[w];});});
+var sd=20260916>>>0;
+function R(){sd^=sd<<13;sd>>>=0;sd^=sd>>17;sd^=sd<<5;sd>>>=0;return sd/4294967296*2-1;}
+function mat(r,c,s){var M=[],i,j;for(i=0;i<r;i++){var w=[];for(j=0;j<c;j++)w.push(R()*s);M.push(w);}return M;}
+var EMB=mat(NV,D,0.9),Wh=mat(D,D,0.55),We=mat(D,D,0.85);
+function softmax(a){var m=-Infinity,i,e=[],s=0;for(i=0;i<a.length;i++)if(a[i]>m)m=a[i];
+  for(i=0;i<a.length;i++){var x=Math.exp(a[i]-m);e.push(x);s+=x;}for(i=0;i<a.length;i++)e[i]/=s;return e;}
+function argmax(a){var b=0,i;for(i=1;i<a.length;i++)if(a[i]>a[b])b=i;return b;}
+function trunk(s,upTo){
+  var h=[],i,j,t;for(i=0;i<D;i++)h.push(0);
+  for(t=0;t<=upTo;t++){var e=EMB[s[t]],n=[];
+    for(i=0;i<D;i++){var v=0;for(j=0;j<D;j++)v+=h[j]*Wh[j][i]+e[j]*We[j][i];n.push(Math.tanh(v));}h=n;}
+  return h;}
+var HEAD=[1,2,3,4].map(function(k){
+  var P=[];SEQ.forEach(function(s){for(var t=0;t<s.length-k;t++)P.push({h:trunk(s,t),y:s[t+k]});});
+  var W=mat(NV,D,0),b=[],v,d,ep,i;for(v=0;v<NV;v++){for(d=0;d<D;d++)W[v][d]=0;b.push(0);}
+  for(ep=0;ep<600;ep++){
+    var gW=mat(NV,D,0),gb=[];for(v=0;v<NV;v++){for(d=0;d<D;d++)gW[v][d]=0;gb.push(0);}
+    for(i=0;i<P.length;i++){var p=softmax(logits({W:W,b:b},P[i].h));
+      for(v=0;v<NV;v++){var g=p[v]-(v===P[i].y?1:0);gb[v]+=g;for(d=0;d<D;d++)gW[v][d]+=g*P[i].h[d];}}
+    for(v=0;v<NV;v++){b[v]-=3*gb[v]/P.length;for(d=0;d<D;d++)W[v][d]-=3*gW[v][d]/P.length;}}
+  return {W:W,b:b};});
+function logits(hd,h){var z=[],v,d;for(v=0;v<NV;v++){var s=hd.b[v];for(d=0;d<D;d++)s+=hd.W[v][d]*h[d];z.push(s);}return z;}
+var S={K:4,seq:[],passes:[],prop:0,acc:0,emit:0,hit:[0,0,0,0,0],tot:[0,0,0,0,0]};
+var el=function(id){return document.getElementById(id);},f=function(x,p){return Number(x).toFixed(p);};
+function runPass(){
+  var h=trunk(S.seq,S.seq.length-1),drafts=[],truth=[],work=S.seq.slice(),marks=[],a=0,brk=false,k,i;
+  for(k=2;k<=S.K;k++)drafts.push(argmax(logits(HEAD[k-1],h)));
+  for(k=1;k<=S.K;k++){var y=argmax(logits(HEAD[0],trunk(work,work.length-1)));work.push(y);truth.push(y);}
+  for(i=0;i<drafts.length;i++){var ok=(drafts[i]===truth[i+1]);marks.push(brk?'':(ok?'s9w13-ok':'s9w13-no'));if(ok&&!brk)a++;else brk=true;}
+  S.prop+=drafts.length;S.acc+=a;S.emit+=1+a;
+  for(i=0;i<marks.length;i++){S.tot[i+2]++;if(marks[i]==='s9w13-ok')S.hit[i+2]++;}
+  S.passes.push({drafts:drafts,truth:truth,acc:a,marks:marks});
+  for(i=0;i<=a;i++)S.seq.push(truth[i]);
+}
+function resetAll(){S.seq=[IX.the,IX.model];S.passes=[];S.prop=0;S.acc=0;S.emit=0;S.hit=[0,0,0,0,0];S.tot=[0,0,0,0,0];for(var i=0;i<8;i++)runPass();}
+function render(){
+  var out='<tr><th>pass</th><th>drafted by heads 2 to '+S.K+'</th><th>head 1 verified</th><th>kept</th><th>thrown away</th></tr>',i,k;
+  for(i=S.passes.length-1;i>=Math.max(0,S.passes.length-7);i--){var p=S.passes[i];
+    out+='<tr><td>'+(i+1)+'</td><td>'+p.drafts.map(function(dr,q){return '<span class="s9w13-chip '+p.marks[q]+'">'+VOC[dr]+'</span>';}).join('')+
+      '</td><td>'+p.truth.map(function(x){return VOC[x];}).join(' ')+'</td><td><b>'+(1+p.acc)+' of '+S.K+'</b></td><td>'+(p.drafts.length-p.acc)+'</td></tr>';}
+  el('s9w13-passes').innerHTML=out;
+  var rate=S.prop?S.acc/S.prop:0,per=S.passes.length?S.emit/S.passes.length:0;
+  el('s9w13-mets').innerHTML='<div class="s9w13-met"><b>'+S.acc+' / '+S.prop+'</b><span>drafts accepted over '+S.passes.length+' passes</span></div>'+
+    '<div class="s9w13-met"><b>'+f(rate*100,1)+'%</b><span>acceptance rate at K = '+S.K+'</span></div>'+
+    '<div class="s9w13-met"><b>'+f(per,2)+'</b><span>tokens emitted per pass, against 1.00 plain</span></div>'+
+    '<div class="s9w13-met"><b>'+(S.prop-S.acc)+'</b><span>drafted tokens thrown away</span></div>';
+  var pr=[];for(k=2;k<=S.K;k++)pr.push('head '+k+' <b>'+(S.tot[k]?f(S.hit[k]/S.tot[k]*100,0):'0')+'%</b>');
+  el('s9w13-say').innerHTML='It is not K out of K. Share of passes on which each drafted position was kept: '+pr.join(' · ')+
+    '. A rejected draft throws away every draft behind it, so the later positions land far less often than the first, and <b>'+(S.prop-S.acc)+
+    '</b> of the <b>'+S.prop+'</b> drafted tokens were computed and discarded. Head 1 runs on every token either way, so quality is unchanged and the saving is the passes avoided: <b>'+f(per,2)+'</b> tokens for the price of one.';
+}
+el('s9w13-k').addEventListener('input',function(){S.K=+this.value;el('s9w13-kv').textContent=S.K;resetAll();render();});
+el('s9w13-run').addEventListener('click',function(){for(var i=0;i<8;i++)runPass();render();});
+el('s9w13-reset').addEventListener('click',function(){resetAll();render();});
+resetAll();render();
+})();
+</script>
+<script>
+/* Self-sizing: the frame is same origin, so it is resized from inside. Nothing takes focus. */
+(function(){
+  var fe;try{fe=window.frameElement;}catch(e){return;}
+  if(!fe)return;
+  var last=0;
+  function fit(){var h=Math.ceil(document.body.scrollHeight)+8;if(Math.abs(h-last)>2){last=h;fe.style.height=h+'px';}}
+  if(window.ResizeObserver)new ResizeObserver(fit).observe(document.body);
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){setTimeout(fit,60);setTimeout(fit,260);},true);
+  document.addEventListener('input',function(){setTimeout(fit,60);},true);
+  [0,120,400,900,1800].forEach(function(t){setTimeout(fit,t);});
+})();
+</script>
+</body>
+</html>

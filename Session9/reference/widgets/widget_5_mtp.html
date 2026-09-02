@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Session 9 Widget 5 - Four Heads, One Summed Loss</title>
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:13px/1.45 Inter,system-ui,sans-serif}
+.w{max-width:1240px;margin:0 auto;padding:13px 18px 15px}
+.k{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+h1{font-size:21px;line-height:1.12;margin:3px 0 4px}
+.sub{color:var(--muted);max-width:1040px;margin:0 0 9px;font-size:12px}
+.card{background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 26px #14305212;padding:11px 12px}
+.ctl{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.ctl label{font-size:11.5px;font-weight:800}
+input[type=range]{flex:0 1 260px;accent-color:var(--cyan);margin:0}
+.val{font:800 12px ui-monospace,monospace;color:var(--cyan)}
+.eq{font:11.5px/1.6 ui-monospace,monospace;background:#0f172a;color:#dbeafe;border-radius:8px;padding:8px 11px;white-space:pre;overflow-x:auto;margin:0 0 9px}
+.strip{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px}
+.tok{border:1.5px solid var(--line);background:#fff;border-radius:7px;padding:4px 8px;font:700 11.5px ui-monospace,monospace;position:relative}
+.tok.cur{border-color:var(--cyan);background:#ecfeff;color:#0e7490}
+.tok.t1,.tok.t2,.tok.t3,.tok.t4{border-color:#c4b5fd;background:#f7f4ff;color:#6d28d9}
+.tok i{position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-size:8.5px;font-style:normal;font-weight:800;color:var(--muted);background:#fff;padding:0 2px}
+.four{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.hd,.met{border:1px solid var(--line);border-radius:9px;background:#fbfdff}
+.hd{padding:8px}
+.hd h3{margin:0 0 4px;font-size:11.5px;font-weight:800}
+.tgt{font-size:10.5px;color:var(--muted);margin-bottom:5px}
+.tgt b{font-family:ui-monospace,monospace;color:var(--violet)}
+.lk{margin-top:6px;font:800 12px ui-monospace,monospace}
+.cm{font-size:9.5px;color:var(--muted);margin-top:2px}
+table{width:100%;border-collapse:collapse;font-size:11px}
+td{padding:3px 5px;border-bottom:1px solid #eef2f7;font-family:ui-monospace,monospace}
+td.lbl{font-family:inherit;font-weight:700}
+tr.hit td{background:#f0fdf4}
+.mets{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:9px}
+.met{padding:7px;text-align:center}
+.met b{display:block;font:15px ui-monospace,monospace}
+.met span{display:block;color:var(--muted);font-size:9.5px;line-height:1.3;margin-top:2px}
+.say{border:1px solid #a5f3fc;background:#ecfeff;color:#155e75;border-radius:8px;padding:8px 10px;font-size:11.5px;line-height:1.5;margin-top:9px}
+.say b{color:#0e7490;font-family:ui-monospace,monospace;font-weight:800}
+@media(max-width:980px){.four,.mets{grid-template-columns:1fr 1fr}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="w">
+  <div class="k">ERA V5 Session 9 · Section 13</div>
+  <h1>Four heads, one summed loss</h1>
+  <p class="sub">One trunk, four output heads, four prediction distances. Watch later heads carry harder losses and remember that every extra dense head has a parameter cost.</p>
+
+  <section class="card">
+    <div class="ctl">
+      <label for="pos">Position t</label>
+      <input id="pos" type="range" min="0" max="5" step="1" value="3" aria-label="Position t, the last token the trunk has read">
+      <span class="val" id="posv">3</span>
+    </div>
+    <div class="eq">L = L₁ + L₂ + L₃ + L₄     L_k = -log softmax(W_k h_t + b_k)[x_(t+k)]</div>
+    <div class="strip" id="strip"></div>
+    <div class="four" id="heads"></div>
+    <div class="mets" id="mets"></div>
+    <div class="say" id="say"></div>
+  </section>
+</main>
+
+<script>
+(function(){
+'use strict';
+/* Trunk from one fixed seed; the four heads are fitted here by full batch gradient descent. */
+var VOC=['the','model','reads','every','token','and','writes','one','word','next','into','then'];
+var NV=12,D=8,NH=4,IX={};
+VOC.forEach(function(w,i){IX[w]=i;});
+var CORP=['the model reads every token and then writes one word','the model reads every word and then writes one token',
+ 'the model reads one token and writes the next word','every token reads into the model and then writes one word',
+ 'the model writes one word and then reads every token','one token reads into every model and then writes the next word',
+ 'the model reads the next token and writes one word','every model reads one word and then writes the next token',
+ 'the model writes the next word and then reads one token','one word reads into the model and then writes every token'];
+var SEQ=CORP.map(function(s){return s.split(' ').map(function(w){return IX[w];});}),DEMO=SEQ[0];
+var sd=20260916>>>0;
+function R(){sd^=sd<<13;sd>>>=0;sd^=sd>>17;sd^=sd<<5;sd>>>=0;return sd/4294967296*2-1;}
+function mat(r,c,s){var M=[],i,j;for(i=0;i<r;i++){var w=[];for(j=0;j<c;j++)w.push(R()*s);M.push(w);}return M;}
+var EMB=mat(NV,D,0.9),Wh=mat(D,D,0.55),We=mat(D,D,0.85);
+function softmax(a){var m=-Infinity,i,e=[],s=0;for(i=0;i<a.length;i++)if(a[i]>m)m=a[i];
+  for(i=0;i<a.length;i++){var x=Math.exp(a[i]-m);e.push(x);s+=x;}for(i=0;i<a.length;i++)e[i]/=s;return e;}
+function argmax(a){var b=0,i;for(i=1;i<a.length;i++)if(a[i]>a[b])b=i;return b;}
+function trunk(s,upTo){
+  var h=[],i,j,t;for(i=0;i<D;i++)h.push(0);
+  for(t=0;t<=upTo;t++){var e=EMB[s[t]],n=[];
+    for(i=0;i<D;i++){var v=0;for(j=0;j<D;j++)v+=h[j]*Wh[j][i]+e[j]*We[j][i];n.push(Math.tanh(v));}h=n;}
+  return h;}
+var DATA=[1,2,3,4].map(function(k){var P=[];SEQ.forEach(function(s){for(var t=0;t<s.length-k;t++)P.push({h:trunk(s,t),y:s[t+k]});});return P;});
+var HEAD=DATA.map(function(P){
+  var W=mat(NV,D,0),b=[],v,d,ep,i;for(v=0;v<NV;v++){for(d=0;d<D;d++)W[v][d]=0;b.push(0);}
+  for(ep=0;ep<600;ep++){
+    var gW=mat(NV,D,0),gb=[];for(v=0;v<NV;v++){for(d=0;d<D;d++)gW[v][d]=0;gb.push(0);}
+    for(i=0;i<P.length;i++){var p=softmax(logits({W:W,b:b},P[i].h));
+      for(v=0;v<NV;v++){var g=p[v]-(v===P[i].y?1:0);gb[v]+=g;for(d=0;d<D;d++)gW[v][d]+=g*P[i].h[d];}}
+    for(v=0;v<NV;v++){b[v]-=3*gb[v]/P.length;for(d=0;d<D;d++)W[v][d]-=3*gW[v][d]/P.length;}}
+  return {W:W,b:b};});
+function logits(hd,h){var z=[],v,d;for(v=0;v<NV;v++){var s=hd.b[v];for(d=0;d<D;d++)s+=hd.W[v][d]*h[d];z.push(s);}return z;}
+function probs(hd,h){return softmax(logits(hd,h));}
+var HSTAT=DATA.map(function(P,i){var tot=0,acc=0;
+  P.forEach(function(p){tot+=-Math.log(probs(HEAD[i],p.h)[p.y]+1e-12);if(argmax(logits(HEAD[i],p.h))===p.y)acc++;});
+  return {loss:tot/P.length,acc:acc/P.length,n:P.length};});
+var pos=3,el=function(id){return document.getElementById(id);},f=function(x,p){return Number(x).toFixed(p);};
+function render(){
+  var h=trunk(DEMO,pos),i,k,out='',tot=0;
+  for(i=0;i<DEMO.length;i++){var c='tok',g='';
+    if(i===pos){c+=' cur';g='<i>t</i>';}else if(i>pos&&i<=pos+4){c+=' t'+(i-pos);g='<i>t+'+(i-pos)+'</i>';}
+    out+='<span class="'+c+'">'+g+VOC[DEMO[i]]+'</span>';}
+  el('strip').innerHTML=out;out='';
+  for(k=1;k<=NH;k++){
+    var yk=DEMO[pos+k],pk=probs(HEAD[k-1],h),lk=-Math.log(pk[yk]+1e-12);tot+=lk;
+    var top=pk.map(function(x,j){return {i:j,p:x};}).sort(function(a,b){return b.p-a.p;}).slice(0,3);
+    out+='<div class="hd"><h3>Head '+k+' → t+'+k+'</h3><div class="tgt">target <b>'+VOC[yk]+'</b></div><table>'+
+      top.map(function(o){return '<tr'+(o.i===yk?' class="hit"':'')+'><td class="lbl">'+VOC[o.i]+'</td><td>'+f(o.p,3)+'</td></tr>';}).join('')+
+      '</table><div class="lk" style="color:'+(lk<1?'#159447':'#d97706')+'">L'+k+' = '+f(lk,4)+'</div>'+
+      '<div class="cm">corpus '+f(HSTAT[k-1].loss,3)+' · '+f(HSTAT[k-1].acc*100,0)+'% top-1</div></div>';
+  }
+  el('heads').innerHTML=out;el('mets').innerHTML='<div class="met"><b>'+f(tot,4)+'</b><span>L₁ + L₂ + L₃ + L₄ here</span></div>'+
+    '<div class="met"><b>'+f(tot/4,4)+'</b><span>mean of the four</span></div>'+
+    '<div class="met"><b>'+f(HSTAT[0].loss,3)+' → '+f(HSTAT[3].loss,3)+'</b><span>corpus loss, head 1 to 4</span></div>'+
+    '<div class="met"><b>'+f(HSTAT[0].acc*100,1)+'% → '+f(HSTAT[3].acc*100,1)+'%</b><span>corpus top-1, head 1 to 4</span></div>';
+  el('say').innerHTML='Four gradients reach the trunk from four distances, the training argument for extra heads. Across the corpus the loss climbs from <b>'+f(HSTAT[0].loss,3)+'</b> at head 1 to <b>'+f(HSTAT[3].loss,3)+'</b> at head 4, because t+4 depends on three tokens the trunk has not read.';
+}
+el('pos').addEventListener('input',function(){pos=+this.value;el('posv').textContent=pos;render();});
+render();
+})();
+</script>
+<script>
+/* Self-sizing: the frame is same origin, so it is resized from inside. Nothing takes focus. */
+(function(){
+  var fe;try{fe=window.frameElement;}catch(e){return;}
+  if(!fe)return;
+  var last=0;
+  function fit(){var h=Math.ceil(document.body.scrollHeight)+8;if(Math.abs(h-last)>2){last=h;fe.style.height=h+'px';}}
+  if(window.ResizeObserver)new ResizeObserver(fit).observe(document.body);
+  window.addEventListener('load',fit);
+  document.addEventListener('input',function(){setTimeout(fit,60);},true);
+  [0,120,400,900,1800].forEach(function(t){setTimeout(fit,t);});
+})();
+</script>
+</body>
+</html>

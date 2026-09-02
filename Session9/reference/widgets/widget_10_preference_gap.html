@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Session 9 Widget 10 - The Preference Gap</title>
+<style>
+:root{--ink:#162033;--muted:#66758a;--line:#d8e2ee;--cyan:#087f9d;--violet:#7540d4;--red:#d94747;--green:#198754}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.w{max-width:1180px;margin:auto;padding:18px 22px}
+.k{color:var(--cyan);font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+h1{font-size:24px;line-height:1.15;margin:4px 0 6px}
+.sub{max-width:920px;color:var(--muted);margin:0 0 14px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 28px #14305212;padding:14px 16px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:14px}
+.control{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:7px}
+.control label{font-weight:750;font-size:12.5px;min-width:166px}
+input[type=range]{accent-color:var(--cyan);width:200px}
+input#c{accent-color:var(--violet)}
+.value{font:800 12.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--cyan);min-width:58px}
+.value.v{color:var(--violet)}
+.line{position:relative;height:124px;margin:16px 0 4px;border-bottom:2px solid var(--line)}
+.tick{position:absolute;bottom:-1px;width:1px;height:7px;background:#c3d2e2}
+.ticklab{position:absolute;bottom:-20px;transform:translateX(-50%);font:10.5px ui-monospace,monospace;color:var(--muted)}
+.dot{position:absolute;bottom:0;transform:translateX(-50%);text-align:center;transition:left .18s}
+.dot i{display:block;width:14px;height:14px;border-radius:50%;margin:4px auto 0}
+.dot b{display:block;font:800 11.5px ui-monospace,monospace;white-space:nowrap}
+.dot.w{bottom:74px}.dot.w i{background:var(--green)}.dot.w b{color:#14532d}
+.dot.l{bottom:4px}.dot.l i{background:var(--red)}.dot.l b{color:#7f1d1d}
+.span{position:absolute;height:3px;border-radius:2px;background:var(--violet);bottom:52px;transition:left .18s,width .18s}
+.spanlab{position:absolute;bottom:57px;transform:translateX(-50%);font:800 11.5px ui-monospace,monospace;color:var(--violet);white-space:nowrap;transition:left .18s}
+svg{display:block;width:100%;height:186px;border:1px solid var(--line);border-radius:9px;background:#fff}
+.readout{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}
+.metric{border:1px solid var(--line);border-radius:9px;background:#fbfdff;padding:9px 10px}
+.metric b{display:block;font:800 18px ui-monospace,SFMono-Regular,Consolas,monospace}
+.metric span{display:block;color:var(--muted);font-size:10.5px;margin-top:3px}
+.formula{margin-top:11px;background:#0f172a;color:#dbeafe;border-radius:9px;padding:10px 12px;font:12px/1.7 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre-wrap}
+.verdict{margin-top:11px;border:1px solid #a9dfba;background:#effbf3;border-radius:9px;padding:10px 12px;color:#14532d;font-size:12.5px}
+.verdict b{font-family:ui-monospace,monospace}
+.takeaway{margin-top:12px;border:1px solid #b7e0e9;background:#f1fbfd;border-radius:9px;padding:10px 12px;font-size:12.5px}
+.takeaway b{color:#075985}
+@media(max-width:960px){.layout{grid-template-columns:1fr}.control label{min-width:0}}
+@media(prefers-reduced-motion:reduce){.dot,.span,.spanlab{transition:none}}
+</style>
+</head>
+<body>
+<main class="w">
+  <div class="k">ERA V5 Session 9 · Section 16</div>
+  <h1>Only the gap reaches the loss</h1>
+  <p class="sub">Drag two reward scores. Bradley-Terry uses only their gap, so shifting both rewards together leaves the preference loss unchanged.</p>
+
+  <section class="card layout">
+    <div>
+      <div class="control">
+        <label for="rw">Reward of the winner y_w</label>
+        <input id="rw" type="range" min="-4" max="4" step="0.25" value="1.5" aria-label="Reward assigned to the preferred completion">
+        <span class="value" id="rwv"></span>
+      </div>
+      <div class="control">
+        <label for="rl">Reward of the loser y_l</label>
+        <input id="rl" type="range" min="-4" max="4" step="0.25" value="0.25" aria-label="Reward assigned to the rejected completion">
+        <span class="value" id="rlv"></span>
+      </div>
+      <div class="control">
+        <label for="c">Add the same constant to both</label>
+        <input id="c" type="range" min="-3" max="3" step="0.25" value="0" aria-label="Constant added to both rewards">
+        <span class="value v" id="cv"></span>
+      </div>
+
+      <div class="line" id="line" aria-label="Both rewards on one axis with the gap between them"></div>
+      <div style="height:22px"></div>
+
+      <div class="formula" id="formula"></div>
+    </div>
+
+    <div>
+      <svg id="chart" viewBox="0 0 420 186" role="img" aria-label="Sigmoid of the reward gap with the current gap marked"></svg>
+      <div class="readout">
+        <div class="metric"><b id="mGap" style="color:var(--violet)"></b><span>gap r(y_w) minus r(y_l)</span></div>
+        <div class="metric"><b id="mSig" style="color:var(--cyan)"></b><span>sigmoid of the gap, P(y_w wins)</span></div>
+        <div class="metric"><b id="mLoss" style="color:var(--green)"></b><span>Bradley-Terry loss</span></div>
+        <div class="metric"><b id="mBase"></b><span>the same loss at constant 0</span></div>
+      </div>
+      <div class="verdict" id="verdict" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <div class="takeaway"><b>Takeaway:</b> the constant slides both rewards along the axis and the gap never moves, so the loss never moves. Section 16 uses exactly this: the intractable term in the DPO derivation is shared by both completions, so it cancels in the difference.</div>
+</main>
+<script>
+(function(){
+  'use strict';
+  function el(id){return document.getElementById(id);}
+  var rw=el('rw'),rl=el('rl'),c=el('c');
+  function bt(g){return g>=0?Math.log1p(Math.exp(-g)):-g+Math.log1p(Math.exp(g));}
+  function pos(v){return (v+8)/16*100;}
+  var curve='';for(var i=0;i<=160;i++){var g=-8+16*i/160;curve+=(i?'L':'M')+(24+(g+8)/16*384).toFixed(1)+','+(160-1/(1+Math.exp(-g))*136).toFixed(1);}
+  function render(){
+    var W=+rw.value,L=+rl.value,K=+c.value,a=W+K,b=L+K,g=a-b,s=1/(1+Math.exp(-g)),loss=bt(g),base=bt(W-L);
+    el('rwv').textContent=W.toFixed(2);el('rlv').textContent=L.toFixed(2);el('cv').textContent=(K>=0?'+':'')+K.toFixed(2);
+    var lo=Math.min(a,b),hi=Math.max(a,b),h='';
+    for(var t=-8;t<=8;t+=2){h+='<span class="tick" style="left:'+pos(t)+'%"></span><span class="ticklab" style="left:'+pos(t)+'%">'+t+'</span>';}
+    h+='<span class="span" style="left:'+pos(lo)+'%;width:'+(pos(hi)-pos(lo))+'%"></span>';
+    h+='<span class="spanlab" style="left:'+((pos(lo)+pos(hi))/2)+'%">gap '+g.toFixed(2)+'</span>';
+    h+='<span class="dot w" style="left:'+pos(a)+'%"><b>y_w '+a.toFixed(2)+'</b><i></i></span>';
+    h+='<span class="dot l" style="left:'+pos(b)+'%"><b>y_l '+b.toFixed(2)+'</b><i></i></span>';
+    el('line').innerHTML=h;
+    var cx=24+(Math.max(-8,Math.min(8,g))+8)/16*384,cy=160-s*136;
+    el('chart').innerHTML='<line x1="24" y1="160" x2="408" y2="160" stroke="#d8e2ee"/><line x1="216" y1="24" x2="216" y2="160" stroke="#eef3f8"/>'
+      +'<line x1="24" y1="92" x2="408" y2="92" stroke="#eef3f8"/><path d="'+curve+'" fill="none" stroke="#087f9d" stroke-width="2.5"/>'
+      +'<line x1="'+cx.toFixed(1)+'" y1="24" x2="'+cx.toFixed(1)+'" y2="160" stroke="#7540d4" stroke-width="1.5" stroke-dasharray="4 4"/>'
+      +'<circle cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="5.5" fill="#7540d4"/>'
+      +'<text x="24" y="18" font-size="10.5" font-weight="700" fill="#66758a">P(y_w preferred) = sigma(gap)</text>'
+      +'<text x="216" y="176" font-size="10.5" text-anchor="middle" fill="#66758a">reward gap</text>'
+      +'<text x="18" y="96" font-size="10" text-anchor="end" fill="#66758a">0.5</text>';
+    el('mGap').textContent=g.toFixed(4);el('mSig').textContent=s.toFixed(6);
+    el('mLoss').textContent=loss.toFixed(6);el('mBase').textContent=base.toFixed(6);
+    el('formula').textContent='r(y_w) = '+W.toFixed(2)+' + ('+K.toFixed(2)+') = '+a.toFixed(2)+'\nr(y_l) = '+L.toFixed(2)+' + ('+K.toFixed(2)+') = '+b.toFixed(2)+'\ngap    = '+a.toFixed(2)+' - '+b.toFixed(2)+' = '+g.toFixed(2)+'\nL_RM   = -log sigma(gap) = '+loss.toFixed(6);
+    el('verdict').innerHTML='The constant is <b>'+(K>=0?'+':'')+K.toFixed(2)+'</b> and the loss is <b>'+loss.toFixed(6)+'</b>, matching the loss at constant 0 to every digit. Difference <b>'+(loss-base).toFixed(6)+'</b>.';
+  }
+  rw.addEventListener('input',render);rl.addEventListener('input',render);c.addEventListener('input',render);render();
+}());
+(function(){var fe;try{fe=window.frameElement;}catch(e){return;}if(!fe)return;var last=0;
+function fit(){var h=Math.ceil(document.body.scrollHeight)+8;if(Math.abs(h-last)>2){last=h;fe.style.height=h+'px';}}
+if(window.ResizeObserver){new ResizeObserver(fit).observe(document.body);}
+window.addEventListener('load',fit);
+document.addEventListener('click',function(){setTimeout(fit,60);setTimeout(fit,260);},true);
+document.addEventListener('input',function(){setTimeout(fit,60);},true);
+[0,120,400,900].forEach(function(t){setTimeout(fit,t);});}());
+</script>
+</body>
+</html>
