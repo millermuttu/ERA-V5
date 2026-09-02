@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 10 Widget 7 - Where a Gradient Dies</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s10w7-w{max-width:1180px;margin:0 auto;padding:14px 22px 16px}
+.s10w7-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--violet)}
+.s10w7-w h1{font-size:24px;line-height:1.12;margin:3px 0 5px}
+.s10w7-sub{color:var(--muted);margin:0 0 10px;font-size:13px;line-height:1.45;max-width:940px}
+.s10w7-sub b{color:var(--ink)}
+.s10w7-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.s10w7-sl{display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 10px;font-size:11.5px;font-weight:700;color:var(--muted)}
+.s10w7-sl input{vertical-align:middle;accent-color:var(--violet)}
+.s10w7-sl b{font:800 12.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--ink);min-width:62px}
+.s10w7-bar button{border:1px solid var(--violet);background:#fff;color:var(--violet);border-radius:8px;padding:7px 14px;font:800 12.5px Inter,sans-serif;cursor:pointer}
+.s10w7-bar button.on{background:var(--violet);color:#fff}
+.s10w7-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:11px 13px;margin-bottom:10px}
+.s10w7-card h2{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px;font-weight:800}
+.s10w7-card svg{display:block;width:100%;height:auto}
+.s10w7-g{display:grid;grid-template-columns:1.02fr 1fr;gap:10px;align-items:start}
+.s10w7-t{width:100%;border-collapse:collapse;font-size:12px}
+.s10w7-t th{text-align:right;font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);font-weight:800;padding:3px 5px;border-bottom:1px solid var(--line)}
+.s10w7-t td{padding:5px;border-bottom:1px solid #eef3f9;font:700 12.5px ui-monospace,SFMono-Regular,Consolas,monospace;text-align:right;white-space:nowrap}
+.s10w7-t th:first-child,.s10w7-t td:first-child{text-align:left;font:800 12.5px Inter,sans-serif}
+.s10w7-t td:last-child{text-align:left;font:700 11.5px Inter,sans-serif}
+.s10w7-ok{color:var(--green)}.s10w7-sn{color:var(--amber)}.s10w7-no{color:var(--red)}
+.s10w7-p{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-size:12px}
+.s10w7-p span{color:var(--muted);font-weight:700;padding:3px 0}
+.s10w7-p b{font:800 13px ui-monospace,SFMono-Regular,Consolas,monospace;padding:3px 0}
+.s10w7-p i{font-style:normal;color:var(--muted);font-weight:600;font-size:11px}
+.s10w7-p .s10w7-hr{grid-column:1/3;border-top:1px solid #eef3f9;margin:3px 0}
+.s10w7-say{margin:8px 0 0;border-radius:8px;padding:8px 10px;font-size:12.5px;line-height:1.5;border:1px solid #ddd6fe;background:#f5f3ff;color:#4c1d95}
+.s10w7-say.bad{border-color:#fecaca;background:#fff8f8;color:#991b1b}
+.s10w7-say.good{border-color:#bbf7d0;background:#f7fff9;color:#14532d}
+.s10w7-note{margin:8px 0 0;font-size:12px;color:var(--muted);line-height:1.5}
+.s10w7-note b{color:var(--ink)}
+@media(max-width:940px){.s10w7-g{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s10w7-w">
+<div class="s10w7-k">ERA V5 Session 10 · why bf16 replaced fp16</div>
+<h1>Where a gradient dies</h1>
+<p class="s10w7-sub">fp16 and bf16 both spend 16 bits. fp16 spends more of them on precision, bf16 spends more on <b>range</b>. Drag a gradient down toward zero and watch which of the two reaches it first.</p>
+
+<div class="s10w7-bar">
+<label class="s10w7-sl" for="s10w7-g">gradient magnitude <input id="s10w7-g" type="range" min="-450" max="0" step="1" value="-80" style="width:230px" aria-label="Gradient magnitude, from 1e-45 up to 1"><b id="s10w7-gv"></b></label>
+<label class="s10w7-sl" for="s10w7-s">loss scale <input id="s10w7-s" type="range" min="0" max="16" step="1" value="0" style="width:130px" aria-label="Loss scaling factor, as a power of two"><b id="s10w7-sv"></b></label>
+<button id="s10w7-q" type="button" aria-label="Set the gradient to 1e-8 and the loss scale to 1024">The 1e-8 case with scaling 1024</button>
+<button id="s10w7-r" type="button" aria-label="Reset the gradient to 1e-8 and turn loss scaling off">Reset</button>
+</div>
+
+<section class="s10w7-card">
+<h2>How far down each format reaches</h2>
+<svg id="s10w7-ax" viewBox="0 0 1000 178" role="img" aria-label="Log scale number line showing how far down fp32, bf16 and fp16 reach, with the gradient marked"></svg>
+</section>
+
+<section class="s10w7-g">
+<div class="s10w7-card">
+<h2>Your gradient stored in each format</h2>
+<table class="s10w7-t">
+<thead><tr><th>format</th><th>smallest it holds</th><th>reads back as</th><th>error</th><th>what happened</th></tr></thead>
+<tbody id="s10w7-rows"></tbody>
+</table>
+<p class="s10w7-note" id="s10w7-note"></p>
+</div>
+<div class="s10w7-card">
+<h2>Loss scaling, the rescue</h2>
+<div class="s10w7-p" id="s10w7-pipe"></div>
+<p class="s10w7-say" id="s10w7-say"></p>
+</div>
+</section>
+</main>
+
+<script>
+(function(){
+'use strict';
+var F=[{n:'fp32',e:8,m:23,c:'#0891b2'},{n:'bf16',e:8,m:7,c:'#159447'},{n:'fp16',e:5,m:10,c:'#dc2626'}];
+function $(i){return document.getElementById('s10w7-'+i);}
+function ex(x){return x===0?'0':!isFinite(x)?'infinity':x.toExponential(2);}
+function q(x,eb,mb){
+  if(x===0)return 0;
+  var b=(1<<(eb-1))-1,lo=1-b,hi=b,p=Math.floor(Math.log2(x));
+  while(Math.pow(2,p)>x)p--;
+  while(Math.pow(2,p+1)<=x)p++;
+  if(p<lo)p=lo;
+  var s=Math.pow(2,p-mb),v=Math.round(x/s)*s;
+  if(v>=Math.pow(2,p+1)&&p<hi){s=Math.pow(2,p+1-mb);v=Math.round(x/s)*s;}
+  return v>(2-Math.pow(2,-mb))*Math.pow(2,hi)?Infinity:v;
+}
+function lo(f){return Math.pow(2,2-(1<<(f.e-1))-f.m);}
+function px(v){return Math.max(40,Math.min(990,40+(Math.log(v)/Math.LN10+45.6)/46.2*950));}
+function axis(g,gs){
+  var s='',i,d,x,y,f,a;
+  for(i=-45;i<=0;i+=5){x=px(Math.pow(10,i));s+='<line x1="'+x.toFixed(1)+'" y1="26" x2="'+x.toFixed(1)+'" y2="122" stroke="#eef3f9"/><text x="'+x.toFixed(1)+'" y="138" text-anchor="middle" font-size="10" fill="#8b9aad">1e'+i+'</text>';}
+  for(i=0;i<3;i++){f=F[i];y=34+i*30;a=px(lo(f));
+    s+='<rect x="40" y="'+y+'" width="'+(a-40).toFixed(1)+'" height="21" rx="5" fill="#fef2f2" stroke="#fecaca"/>';
+    s+='<rect x="'+a.toFixed(1)+'" y="'+y+'" width="'+(990-a).toFixed(1)+'" height="21" rx="5" fill="'+f.c+'22" stroke="'+f.c+'"/>';
+    s+='<text x="'+(a>250?47:a+8).toFixed(1)+'" y="'+(y+14.5)+'" font-size="11" font-weight="800" fill="'+f.c+'">'+f.n+' reaches down to '+ex(lo(f))+'</text>';
+    if(a>250)s+='<text x="'+(a-8).toFixed(1)+'" y="'+(y+14.5)+'" text-anchor="end" font-size="10" font-weight="700" fill="#b91c1c">all of this becomes 0</text>';
+  }
+  d=px(g);
+  s+='<line x1="'+d.toFixed(1)+'" y1="20" x2="'+d.toFixed(1)+'" y2="126" stroke="#152033" stroke-width="2"/>';
+  s+='<text x="'+d.toFixed(1)+'" y="14" text-anchor="middle" font-size="11" font-weight="800" fill="#152033">gradient '+ex(g)+'</text>';
+  if(gs!==g){x=px(gs);
+    s+='<line x1="'+x.toFixed(1)+'" y1="20" x2="'+x.toFixed(1)+'" y2="126" stroke="#7c3aed" stroke-width="2" stroke-dasharray="5 4"/>';
+    s+='<line x1="'+d.toFixed(1)+'" y1="152" x2="'+x.toFixed(1)+'" y2="152" stroke="#7c3aed" stroke-width="2" marker-end="url(#s10w7-a)"/>';
+    s+='<text x="'+((d+x)/2).toFixed(1)+'" y="168" text-anchor="middle" font-size="10.5" font-weight="800" fill="#6d28d9">loss scaling lifts it to '+ex(gs)+'</text>';
+  }
+  s+='<defs><marker id="s10w7-a" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0 0 6 3 0 6z" fill="#7c3aed"/></marker></defs>';
+  $('ax').innerHTML=s;
+}
+function draw(){
+  var g=Math.pow(10,+$('g').value/10),S=Math.pow(2,+$('s').value),gs=g*S,i,f,v,r='',cls,txt;
+  $('gv').textContent=ex(g); $('sv').textContent='×'+S;
+  for(i=0;i<3;i++){f=F[i];v=q(gs,f.e,f.m);
+    cls=v===0?'no':!isFinite(v)?'no':v<Math.pow(2,2-(1<<(f.e-1)))?'sn':'ok';
+    txt=v===0?'flushed to zero':!isFinite(v)?'overflowed to infinity':cls==='sn'?'held as a subnormal, precision reduced':'held normally';
+    r+='<tr><td>'+f.n+'</td><td>'+ex(lo(f))+'</td><td class="s10w7-'+cls+'">'+ex(v)+'</td><td class="s10w7-'+cls+'">'+(v===0?'100%':isFinite(v)?(Math.abs(v-gs)/gs*100).toFixed(3)+'%':'over range')+'</td><td class="s10w7-'+cls+'">'+txt+'</td></tr>';
+  }
+  $('rows').innerHTML=r;
+  $('note').innerHTML='fp16 keeps 10 mantissa bits and only 5 exponent bits, so it runs out of room below <b>'+ex(lo(F[2]))+'</b>. bf16 trades 3 mantissa bits for 3 exponent bits and reaches <b>'+ex(lo(F[1]))+'</b>, roughly '+(Math.log(lo(F[2])/lo(F[1]))/Math.LN10).toFixed(0)+' decades further down. That range is the entire reason it took over.';
+  var h=q(gs,5,10),back=h/S,ov=!isFinite(h),ok=!ov&&back>0,cl=ok?'ok':'no',err=Math.abs(back-g)/g*100;
+  $('pipe').innerHTML='<span>the true gradient</span><b>'+ex(g)+'</b>'
+    +'<span>multiply the loss by '+S+'</span><b style="color:#7c3aed">'+ex(gs)+' <i>every gradient scales with it</i></b>'
+    +'<div class="s10w7-hr"></div>'
+    +'<span>stored in fp16</span><b class="s10w7-'+cl+'">'+ex(h)+'</b>'
+    +'<span>divide the result back by '+S+'</span><b class="s10w7-'+cl+'">'+ex(back)+'</b>'
+    +'<div class="s10w7-hr"></div>'
+    +'<span>error against the true gradient</span><b class="s10w7-'+cl+'">'+(ov?'over range':back===0?'100%':err.toFixed(3)+'%')+'</b>';
+  $('say').className='s10w7-say '+(ok?(S>1?'good':''):'bad');
+  $('say').innerHTML=ov
+    ?'×'+S+' pushes '+ex(g)+' up to '+gs.toFixed(0)+', past the fp16 ceiling of '+((2-Math.pow(2,-10))*Math.pow(2,15))+'. It saturates to infinity and the step is lost at the top of the range rather than the bottom. A loss scale has a ceiling as well as a floor, which is why real trainers halve it whenever an infinity appears.'
+    :back===0?'At ×'+S+' the gradient still lands under '+ex(lo(F[2]))+' and fp16 returns exactly zero. That weight receives no update at all this step. Push the loss scale higher, or move to bf16.'
+    :S===1?'With no scaling, fp16 stores '+ex(h)+'. Raise the loss scale slider and the same gradient is lifted into the range fp16 can still see.'
+    :'×'+S+' lifts '+ex(g)+' to '+ex(gs)+', which clears the fp16 floor of '+ex(lo(F[2]))+'. Dividing back by '+S+' returns '+ex(back)+', off by '+err.toFixed(3)+'%. The scale factor cancels out and the update is honest.';
+  axis(g,gs);
+}
+$('g').addEventListener('input',draw);
+$('s').addEventListener('input',draw);
+$('q').addEventListener('click',function(){$('g').value=-80;$('s').value=10;draw();});
+$('r').addEventListener('click',function(){$('g').value=-80;$('s').value=0;draw();});
+draw();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

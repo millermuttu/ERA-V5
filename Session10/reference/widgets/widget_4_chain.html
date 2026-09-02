@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 10 Widget 4 - Following the Loss Backwards</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s10w4-w{max-width:1180px;margin:0 auto;padding:14px 22px 16px}
+.s10w4-k{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--violet)}
+.s10w4-w h1{font-size:24px;line-height:1.12;margin:4px 0 9px}
+.s10w4-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:12px 14px;margin-bottom:11px}
+.s10w4-card h2{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 9px;font-weight:800}
+.s10w4-bar{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-bottom:11px}
+.s10w4-bar button{border:1px solid var(--violet);background:var(--violet);color:#fff;border-radius:8px;padding:7px 16px;font:800 12.5px Inter,sans-serif;cursor:pointer}
+.s10w4-bar button.g{background:#fff;color:var(--violet)}
+.s10w4-bar button:disabled{opacity:.42;cursor:default}
+.s10w4-sl{display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700}
+.s10w4-sl input{width:120px;vertical-align:middle;accent-color:var(--violet)}
+.s10w4-sl b{font:800 12.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--violet);min-width:26px}
+.s10w4-st{font-size:12px;font-weight:700;color:var(--muted)}
+.s10w4-ch{display:grid;grid-template-columns:1fr .85fr 1fr .85fr 1fr .95fr 1fr;gap:6px 4px;align-items:center}
+.s10w4-bx{border:1px solid #cbd5e1;background:#fff;border-radius:9px;padding:6px 4px;text-align:center}
+.s10w4-bx span{display:block;font-size:9.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.s10w4-bx b{display:block;font:800 18px ui-monospace,SFMono-Regular,Consolas,monospace;margin-top:1px}
+.s10w4-bx.r{border-color:#fca5a5;background:#fff8f8}.s10w4-bx.r b{color:var(--red)}
+.s10w4-ar{text-align:center;color:var(--cyan)}
+.s10w4-ar i{display:block;font:700 10.5px ui-monospace,SFMono-Regular,Consolas,monospace;font-style:normal}
+.s10w4-ar u{display:block;height:2px;background:var(--cyan);position:relative;margin-top:3px;text-decoration:none}
+.s10w4-ar u::after{content:"";position:absolute;right:-1px;top:-3px;border:4px solid transparent;border-left-color:var(--cyan)}
+.s10w4-gp{border-radius:9px;padding:5px 4px;text-align:center;border:1px dashed #cbd5e1;background:#fafcff;opacity:.45;transition:opacity .2s,border-color .2s,background .2s}
+.s10w4-gp.on{opacity:1;border-style:solid;border-color:#c4b5fd;background:#f5f3ff}
+.s10w4-gp span{display:block;font:800 10px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--violet)}
+.s10w4-gp b{display:block;font:800 16px ui-monospace,SFMono-Regular,Consolas,monospace;color:#4c1d95;margin-top:1px}
+.s10w4-fl{grid-column:1/8;border-top:2px dashed #ddd6fe;margin-top:2px;padding-top:5px;font-size:11.5px;font-weight:700;color:var(--violet)}
+.s10w4-fl b{font-weight:800}
+.s10w4-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.s10w4-s{border:1px solid var(--line);border-radius:10px;background:#fbfdff;padding:10px 11px;opacity:.38;transition:opacity .2s,transform .2s,border-color .2s,box-shadow .2s}
+.s10w4-s.on{opacity:1;border-color:#c4b5fd;box-shadow:0 0 0 3px rgba(124,58,237,.1);transform:translateY(-2px)}
+.s10w4-s.done{opacity:1;border-color:#bbf7d0;background:#f8fff9}
+.s10w4-n{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#f5f3ff;color:#5b21b6;font-weight:800;font-size:12px;margin-right:6px}
+.s10w4-s.done .s10w4-n{background:#dcfce7;color:#166534}
+.s10w4-s h3{display:inline;font:800 14px ui-monospace,SFMono-Regular,Consolas,monospace}
+.s10w4-m{font:800 13px ui-monospace,SFMono-Regular,Consolas,monospace;background:#fff;border:1px solid var(--line);border-radius:8px;padding:7px 4px;text-align:center;margin:8px 0 7px}
+.s10w4-s.done .s10w4-m{border-color:#bbf7d0}
+.s10w4-s p{margin:0;font-size:11.5px;line-height:1.42;color:var(--muted)}
+.s10w4-ex{margin:10px 0 0;padding:9px 12px;border-left:3px solid var(--violet);background:#f5f3ff;color:#4c1d95;border-radius:0 8px 8px 0;font-size:13px;line-height:1.45;min-height:38px}
+.s10w4-foot{margin:0;font-size:12.5px;color:var(--muted);line-height:1.5}
+.s10w4-foot b{color:var(--ink)}
+@media(max-width:940px){.s10w4-steps{grid-template-columns:1fr 1fr}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s10w4-w">
+<div class="s10w4-k">ERA V5 Session 10 · following the loss backwards</div>
+<h1>Four links, walked backwards one at a time</h1>
+<div class="s10w4-bar">
+<button id="s10w4-next" type="button" aria-label="Walk back one link of the chain">Walk back one link</button>
+<button id="s10w4-reset" class="g" type="button" aria-label="Start the backward walk again">Start over</button>
+<label class="s10w4-sl" for="s10w4-t">what counts as right <input id="s10w4-t" type="range" min="4" max="40" value="20" aria-label="Target: the answer we want for input 2"><b id="s10w4-tv">20</b></label>
+<span class="s10w4-st" id="s10w4-status" aria-live="polite"></span>
+</div>
+<section class="s10w4-card">
+<h2>Forward in cyan, backward in violet</h2>
+<div class="s10w4-ch">
+<div class="s10w4-bx"><span>input x</span><b>2</b></div>
+<div class="s10w4-ar"><i>× w1 = 3</i><u></u></div>
+<div class="s10w4-bx"><span>hidden h</span><b id="s10w4-vh"></b></div>
+<div class="s10w4-ar"><i>× w2 = 4</i><u></u></div>
+<div class="s10w4-bx"><span>output y</span><b id="s10w4-vy"></b></div>
+<div class="s10w4-ar"><i>(y − target)²</i><u></u></div>
+<div class="s10w4-bx r"><span>loss</span><b id="s10w4-vl"></b></div>
+<div></div>
+<div class="s10w4-gp" id="s10w4-p4"><span>dL/dw1</span><b id="s10w4-gw1"></b></div>
+<div class="s10w4-gp" id="s10w4-p3"><span>dL/dh</span><b id="s10w4-gh"></b></div>
+<div class="s10w4-gp" id="s10w4-p2"><span>dL/dw2</span><b id="s10w4-gw2"></b></div>
+<div class="s10w4-gp" id="s10w4-p1"><span>dL/dy</span><b id="s10w4-gy"></b></div>
+<div></div>
+<div class="s10w4-st" style="text-align:center;color:var(--violet)">the walk starts here</div>
+<div class="s10w4-fl">← <b>the gradient travels right to left.</b> Each link multiplies it by one more local number, and that is the whole of the chain rule.</div>
+</div>
+</section>
+<section class="s10w4-card">
+<h2>Each link, with its multiplication</h2>
+<div class="s10w4-steps">
+<article class="s10w4-s" id="s10w4-s1"><span class="s10w4-n">1</span><h3>dL/dy</h3><div class="s10w4-m" id="s10w4-m1"></div><p>The loss is the gap squared, so its slope at the output is twice the gap.</p></article>
+<article class="s10w4-s" id="s10w4-s2"><span class="s10w4-n">2</span><h3>dL/dw2</h3><div class="s10w4-m" id="s10w4-m2"></div><p>y is w2 times h. Raise w2 by one and y moves by h, so multiply by h.</p></article>
+<article class="s10w4-s" id="s10w4-s3"><span class="s10w4-n">3</span><h3>dL/dh</h3><div class="s10w4-m" id="s10w4-m3"></div><p>h feeds the same y through w2. Raise h by one and y moves by w2.</p></article>
+<article class="s10w4-s" id="s10w4-s4"><span class="s10w4-n">4</span><h3>dL/dw1</h3><div class="s10w4-m" id="s10w4-m4"></div><p>h is w1 times x. One more multiplication and the first weight has its gradient.</p></article>
+</div>
+<p class="s10w4-ex" id="s10w4-ex"></p>
+</section>
+<section class="s10w4-card">
+<p class="s10w4-foot" id="s10w4-foot"></p>
+</section>
+</main>
+<script>
+(function(){
+'use strict';
+var X=2,W1=3,W2=4,stage=0;
+function $(i){return document.getElementById('s10w4-'+i);}
+function f3(v){return v.toFixed(3);}
+function draw(){
+  var t=+$('t').value,h=W1*X,y=W2*h,d=y-t,l=d*d,gy=2*d,gw2=gy*h,gh=gy*W2,gw1=gh*X,i,
+      o={tv:t,vh:f3(h),vy:f3(y),vl:f3(l),gy:stage>0?f3(gy):'·',gw2:stage>1?f3(gw2):'·',gh:stage>2?f3(gh):'·',gw1:stage>3?f3(gw1):'·',
+      m1:'2 × ('+f3(y)+' − '+t+') = '+f3(gy),
+      m2:f3(gy)+' × '+f3(h)+' = '+f3(gw2),
+      m3:f3(gy)+' × '+f3(W2)+' = '+f3(gh),
+      m4:f3(gh)+' × '+f3(X)+' = '+f3(gw1)},k;
+  for(k in o)$(k).textContent=o[k];
+  for(i=1;i<=4;i++){
+    $('s'+i).className='s10w4-s'+(i<stage?' done':i===stage?' on':'');
+    $('p'+i).className='s10w4-gp'+(i<=stage?' on':'');
+  }
+  $('ex').innerHTML=[
+    'Press the button. The walk starts at the loss and moves one link to the left each time.',
+    'The output sits <b>'+f3(d)+'</b> away from the target, so the loss is <b>'+f3(l)+'</b>. Move y by one and the loss moves by <b>'+f3(gy)+'</b>.',
+    'w2 reaches the loss only through y, so carry <b>'+f3(gy)+'</b> across and multiply by h. w2 has its gradient: <b>'+f3(gw2)+'</b>.',
+    'h reaches the loss through the same y. Carry the same <b>'+f3(gy)+'</b> and multiply by w2 instead, giving <b>'+f3(gh)+'</b>.',
+    'One last multiplication by the input gives w1 a gradient of <b>'+f3(gw1)+'</b>. Both weights came out of a single walk.'
+  ][stage];
+  $('next').textContent=['Walk back one link','Next link: dL/dw2','Next link: dL/dh','Next link: dL/dw1','Walk complete'][stage];
+  $('next').disabled=stage===4;
+  $('status').textContent=stage===0?'Nothing carried yet.':stage===4?'All four gradients are out.':'Link '+stage+' of 4 done.';
+  $('foot').innerHTML='The previous widget spent <b>two forward passes</b> to measure one weight. This walk touched every link <b>once</b> and handed back a gradient for every weight in the network. That is the only reason a model with billions of weights can be trained at all.';
+}
+$('next').addEventListener('click',function(){if(stage<4){stage++;draw();}});
+$('reset').addEventListener('click',function(){stage=0;$('t').value=20;draw();});
+$('t').addEventListener('input',draw);
+draw();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

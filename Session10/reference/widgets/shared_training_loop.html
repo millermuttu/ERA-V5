@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>The training loop: loss, gradient, repeat</title>
+
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --surface: #ffffff;
+      --surface-alt: #fbfdff;
+      --ink: #102338;
+      --ink-body: #1f3850;
+      --ink-muted: #60768d;
+      --muted-2: #7d90a5;
+      --rule: #e2e9f0;
+      --rule-strong: #cfdbe6;
+      --accent: #00a7d8;
+      --accent-soft: #eafaff;
+      --accent-ink: #0f6e8c;
+      --green: #24b36b;
+      --green-soft: #e7fff2;
+      --amber: #d99a13;
+      --amber-soft: #fff7df;
+      --red: #e05f6e;
+      --red-soft: #fff0f2;
+      --sgd: #7b61ff;
+      --sgd-soft: #eeeaff;
+      --adam: #1597b8;
+      --adam-soft: #e9f9fd;
+      --shadow: 0 12px 34px rgba(16, 35, 56, .08);
+      --shadow-soft: 0 8px 22px rgba(16, 35, 56, .05);
+      --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0
+    }
+
+    body {
+      background: linear-gradient(180deg, #f8fafc 0%, #f3f6fa 100%);
+      color: var(--ink-body);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.55;
+      padding: 22px;
+    }
+
+    .widget {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 6px 10px;
+      margin-bottom: 12px;
+      border: 1px solid #d9e9f3;
+      border-radius: 999px;
+      background: #f4fbfe;
+      color: #157ca2;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+    }
+
+    .title {
+      margin: 0;
+      color: var(--ink);
+      font-family: var(--font-sans);
+      font-size: clamp(28px, 3vw, 42px);
+      font-weight: 800;
+      letter-spacing: -.035em;
+      line-height: 1.08;
+    }
+
+    .subtitle {
+      max-width: 930px;
+      margin: 8px 0 14px;
+      color: var(--ink-muted);
+      font-family: var(--font-sans);
+      font-size: 15px;
+      font-style: normal;
+      line-height: 1.62;
+    }
+
+    .panel {
+      margin-bottom: 12px;
+      padding: 13px 18px;
+      border: 1px solid var(--rule);
+      border-radius: 18px;
+      background: var(--surface-alt);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .lbl {
+      color: var(--ink-muted);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+    }
+
+    .callout {
+      color: var(--ink-muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .callout b {
+      color: var(--ink)
+    }
+
+    .callout ol {
+      margin: 2px 0 6px 20px;
+      padding: 0
+    }
+
+    .callout .land {
+      display: inline-block;
+      margin-top: 7px;
+      padding: 4px 9px;
+      border: 1px solid #cceefa;
+      border-radius: 8px;
+      background: var(--accent-soft);
+      color: var(--accent-ink);
+      font-weight: 800;
+    }
+
+    select,
+    input[type=number] {
+      min-height: 34px;
+      padding: 7px 10px;
+      border: 1px solid var(--rule-strong);
+      border-radius: 10px;
+      outline: none;
+      background: #fff;
+      color: var(--ink);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      transition: .18s ease;
+    }
+
+    select:focus,
+    input:focus {
+      border-color: #8ddff5;
+      box-shadow: 0 0 0 3px #e8f9fd;
+    }
+
+    input[type=number] {
+      width: 78px
+    }
+
+    button {
+      min-height: 34px;
+      padding: 8px 13px;
+      border: 1px solid var(--rule-strong);
+      border-radius: 10px;
+      background: #fff;
+      color: var(--ink-body);
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: .18s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      border-color: #8ddff5;
+      color: var(--accent-ink);
+    }
+
+    button:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    button.primary {
+      border-color: #bcefff;
+      background: linear-gradient(180deg, #f2fcff, #e7f9ff);
+      color: var(--accent-ink);
+    }
+
+    button.primary:hover {
+      background: #e4f8fe;
+      color: #0c617b;
+    }
+
+    .seg-btns {
+      display: inline-flex;
+      gap: 4px;
+      padding: 4px;
+      border: 1px solid var(--rule);
+      border-radius: 12px;
+      background: #fff;
+    }
+
+    .seg-btns button {
+      min-height: 30px;
+      padding: 7px 11px;
+      border: 0;
+      border-radius: 9px;
+      background: transparent;
+      color: var(--ink-muted);
+    }
+
+    .seg-btns button.on {
+      background: linear-gradient(180deg, #f2fcff, #e7f9ff);
+      color: var(--accent-ink);
+      box-shadow: inset 0 0 0 1px #bcefff;
+    }
+
+    .ctrl-line {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      flex-wrap: wrap;
+    }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .grid2.solo {
+      grid-template-columns: 1fr
+    }
+
+    .card {
+      overflow: hidden;
+      border: 1px solid var(--rule);
+      border-radius: 16px;
+      background: #fff;
+      box-shadow: 0 6px 18px rgba(16, 35, 56, .04);
+    }
+
+    .card.sgd {
+      border-color: #d5cdfd
+    }
+
+    .card.adam {
+      border-color: #c7eaf2
+    }
+
+    .card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      padding: 9px 13px;
+      border-bottom: 1px solid var(--rule);
+      color: var(--ink);
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .card.sgd .card-head {
+      background: linear-gradient(180deg, #faf9ff, #f3f0ff);
+      color: #5e4bc5;
+    }
+
+    .card.adam .card-head {
+      background: linear-gradient(180deg, #f5fcfe, #eaf9fc);
+      color: #126f87;
+    }
+
+    .card-head .ww {
+      display: inline-block;
+      color: inherit;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      opacity: .95;
+    }
+
+    .card-head .ww.changed {
+      animation: wp .7s ease
+    }
+
+    @keyframes wp {
+      0% {
+        transform: scale(1)
+      }
+
+      40% {
+        transform: scale(1.18)
+      }
+
+      100% {
+        transform: scale(1)
+      }
+    }
+
+    .calc {
+      overflow-x: auto;
+      padding: 8px 13px 9px;
+      color: #28445f;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      line-height: 1.72;
+    }
+
+    .calc .h {
+      display: block;
+      margin: 0 0 3px;
+      color: var(--muted-2);
+      font-size: 9.5px;
+      font-weight: 800;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+    }
+
+    .calc .ph {
+      margin: 4px -7px;
+      padding: 5px 8px;
+      border-radius: 9px;
+      white-space: pre;
+      transition: opacity .3s ease, background-color .35s ease;
+    }
+
+    .calc .ph.pending {
+      opacity: 0
+    }
+
+    .calc .ph.active {
+      border: 1px solid #efdfb2;
+      background: var(--amber-soft);
+      opacity: 1;
+    }
+
+    .calc .big {
+      color: var(--ink);
+      font-weight: 800
+    }
+
+    .calc .pos {
+      color: var(--green)
+    }
+
+    .calc .neg {
+      color: var(--red)
+    }
+
+    .calc .res {
+      color: var(--accent-ink);
+      font-weight: 800
+    }
+
+    .spark {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 6px 11px;
+      border-top: 1px solid var(--rule);
+      background: #fcfdff;
+    }
+
+    .spark canvas {
+      display: block;
+      flex: 1
+    }
+
+    .spark .lv {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .data-strip {
+      margin-bottom: 10px;
+      padding: 8px 12px;
+      border: 1px solid var(--rule);
+      border-radius: 11px;
+      background: #fff;
+      color: var(--ink-muted);
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+
+    .data-strip b {
+      color: var(--ink)
+    }
+
+    .plot-wrap {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border: 1px solid var(--rule);
+      border-radius: 16px;
+      background: #fff;
+      box-shadow: 0 6px 18px rgba(16, 35, 56, .04);
+    }
+
+    .plot-title {
+      margin-bottom: 5px;
+      color: var(--muted-2);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    canvas {
+      display: block;
+      width: 100%
+    }
+
+    .legend {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+      color: var(--ink-muted);
+      font-size: 11px;
+    }
+
+    .legend i {
+      font-style: normal
+    }
+
+    .sw {
+      display: inline-block;
+      width: 16px;
+      height: 0;
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--rule);
+      color: var(--ink-muted);
+      font-size: 12px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      white-space: nowrap;
+      padding: 5px 10px;
+      border: 1px solid #d9e9f3;
+      border-radius: 999px;
+      background: #f4fbfe;
+      color: var(--accent-ink);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    @media(max-width:820px) {
+      body {
+        padding: 12px
+      }
+
+      .widget {
+        padding: 0
+      }
+
+      .grid2 {
+        grid-template-columns: 1fr
+      }
+
+      .footer {
+        align-items: flex-start;
+        flex-direction: column
+      }
+    }
+  </style>
+
+</head>
+
+<body>
+  <div class="widget">
+    <h1 class="title">Loss, then a nudge, then repeat</h1>
+    <p class="subtitle">One tiny neuron, three data points, every number on screen. Step it by hand or let it run, and
+      compare two ways to take the nudge.</p>
+
+    <div class="panel">
+      <div class="callout">
+        <ol>
+          <li><b>Loss</b> measures how wrong the prediction is.</li>
+          <li><b>Gradient descent</b> nudges every weight a little in the direction that reduces the loss.</li>
+          <li>This <b>repeats</b>, over and over, across the examples.</li>
+        </ol>
+        <span class="land">learning = repeatedly adjusting weights to make errors smaller</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="ctrl-line" style="margin-bottom:10px">
+        <span class="lbl">loss</span>
+        <select id="lossSel">
+          <option value="l2">squared · L2</option>
+          <option value="l1">absolute · L1</option>
+          <option value="ce">cross-entropy</option>
+        </select>
+        <span class="lbl">learning rate</span><input type="number" id="lr" value="0.08" min="0.001" step="0.01">
+        <label class="lbl" style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;margin-left:6px"><input
+            type="checkbox" id="showAdam"> show Adam alongside</label>
+      </div>
+      <div class="ctrl-line" style="margin-bottom:10px">
+        <button id="animBtn" class="primary">Animate one step</button>
+        <button id="stepBtn">Step ×1</button>
+        <button id="step10Btn">Step ×10</button>
+        <button id="runBtn">Run</button>
+        <button id="stopBtn" disabled>Stop</button>
+        <button id="resetBtn">Reset</button>
+        <span class="lbl" style="margin-left:auto">step</span><span class="lbl big" id="vStep"
+          style="font-size:14px;color:var(--ink);font-weight:700">0</span>
+      </div>
+      <div class="data-strip" id="dataStrip"></div>
+
+      <div class="grid2 solo" id="cards">
+        <div class="card sgd">
+          <div class="card-head"><span>SGD: step = learning rate × gradient</span><span class="ww" id="wwSgd"></span>
+          </div>
+          <div class="calc" id="calcSgd"></div>
+          <div class="spark"><canvas id="sparkSgd" height="34"></canvas><span class="lv" id="lvSgd"
+              style="color:var(--sgd)"></span></div>
+        </div>
+        <div class="card adam" id="cardAdam" style="display:none">
+          <div class="card-head"><span>Adam: momentum m, per-weight scale v</span><span class="ww" id="wwAdam"></span>
+          </div>
+          <div class="calc" id="calcAdam"></div>
+          <div class="spark"><canvas id="sparkAdam" height="34"></canvas><span class="lv" id="lvAdam"
+              style="color:var(--adam)"></span></div>
+        </div>
+      </div>
+
+      <div class="plot-wrap">
+        <div class="plot-title">the fit · data points and what each optimizer predicts</div>
+        <canvas id="plot" height="150"></canvas>
+        <div class="legend">
+          <i><span class="sw" style="border-top:9px solid #274158"></span>data</i>
+          <i><span class="sw" style="border-top:3px dashed #9DADBC"></span>target</i>
+          <i><span class="sw" style="border-top:3px solid var(--sgd)"></span>SGD</i>
+          <i id="legAdam" style="display:none"><span class="sw" style="border-top:3px solid var(--adam)"></span>Adam</i>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>Both columns see the same gradient. SGD walks straight down it; Adam remembers a running average and scales
+        each weight on its own. Different walk, same destination.</span>
+      <span class="badge">w ← w − step</span>
+    </div>
+  </div>
+
+  <script>
+    "use strict";
+    (function () {
+      const $ = id => document.getElementById(id);
+      const f = v => (v < 0 ? "−" : "") + Math.abs(v).toFixed(3);
+      const sgn = v => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(3);
+      const sig = z => 1 / (1 + Math.exp(-z));
+      const B1 = 0.9, B2 = 0.999, EPS = 1e-8;
+      const LRDEF = { l2: 0.08, l1: 0.03, ce: 0.2 };
+      const DATA = { reg: { X: [1, 2, 3], T: [2, 3, 4] }, cls: { X: [-2, -1, 1, 2], T: [0, 0, 1, 1] } };
+
+      let loss = "l2", lr = 0.08, step = 0, running = false, stopFlag = false, showAdam = false;
+      let anim = { active: false, idx: 0 };
+      const PHASES = ["forward", "loss", "grad", "update"];
+      function dset() { return loss === "ce" ? DATA.cls : DATA.reg; }
+      function isCE() { return loss === "ce"; }
+      function fwd(w, b, x) { const z = w * x + b; return { z, yh: isCE() ? sig(z) : Math.max(0, z) }; }
+
+      function grad(w, b) {
+        const { X, T } = dset(), N = X.length; let L = 0, gw = 0, gb = 0; const rows = [];
+        for (let i = 0; i < N; i++) {
+          const { z, yh } = fwd(w, b, X[i]); const t = T[i]; let Lp, dz;
+          if (loss === "ce") { Lp = -(t * Math.log(yh + 1e-9) + (1 - t) * Math.log(1 - yh + 1e-9)); dz = (yh - t) / N; }
+          else if (loss === "l1") { Lp = Math.abs(yh - t); dz = Math.sign(yh - t) * (z > 0 ? 1 : 0) / N; }
+          else { Lp = (yh - t) * (yh - t); dz = 2 * (yh - t) * (z > 0 ? 1 : 0) / N; }
+          L += Lp; gw += dz * X[i]; gb += dz; rows.push({ x: X[i], t, z, yh, err: yh - t, lp: Lp });
+        }
+        return { L: L / N, gw, gb, rows };
+      }
+      function mkOpt(type) { return { type, w: 0.3, b: 0.1, mw: 0, vw: 0, mb: 0, vb: 0, t: 0, hist: [] }; }
+      let SGD = mkOpt("sgd"), ADAM = mkOpt("adam");
+
+      function preview(o, g) {
+        if (o.type === "sgd") return { dw: -lr * g.gw, db: -lr * g.gb };
+        const t = o.t + 1;
+        const mw = B1 * o.mw + (1 - B1) * g.gw, vw = B2 * o.vw + (1 - B2) * g.gw * g.gw;
+        const mb = B1 * o.mb + (1 - B1) * g.gb, vb = B2 * o.vb + (1 - B2) * g.gb * g.gb;
+        const mhw = mw / (1 - Math.pow(B1, t)), vhw = vw / (1 - Math.pow(B2, t));
+        const mhb = mb / (1 - Math.pow(B1, t)), vhb = vb / (1 - Math.pow(B2, t));
+        return { dw: -lr * mhw / (Math.sqrt(vhw) + EPS), db: -lr * mhb / (Math.sqrt(vhb) + EPS), mw, vw, mb, vb, t, mhw, vhw };
+      }
+      function commit(o) {
+        const g = grad(o.w, o.b); const u = preview(o, g); o.hist.push(g.L);
+        if (o.type === "adam") { o.mw = u.mw; o.vw = u.vw; o.mb = u.mb; o.vb = u.vb; o.t = u.t; }
+        o.w += u.dw; o.b += u.db;
+      }
+      function doStep() { commit(SGD); commit(ADAM); step++; }
+
+      // ---- rendering ----
+      function lossCalc(g) {
+        const N = g.rows.length, R = g.rows;
+        if (loss === "l2") {
+          return "L = mean (ŷ − t)²\n"
+            + "  = [ " + R.map(r => "(" + sgn(r.err) + ")²").join(" + ") + " ] / " + N + "\n"
+            + "  = [ " + R.map(r => f(r.lp)).join(" + ") + " ] / " + N + "\n"
+            + "  = <span class='big'>" + f(g.L) + "</span>";
+        } else if (loss === "l1") {
+          return "L = mean |ŷ − t|\n"
+            + "  = ( " + R.map(r => f(Math.abs(r.err))).join(" + ") + " ) / " + N + "\n"
+            + "  = <span class='big'>" + f(g.L) + "</span>";
+        } else {
+          return "L = mean −[ t·ln p + (1−t)·ln(1−p) ]\n"
+            + "  = ( " + R.map(r => f(r.lp)).join(" + ") + " ) / " + N + "\n"
+            + "  = <span class='big'>" + f(g.L) + "</span>";
+        }
+      }
+      function calcHTML(o) {
+        const g = grad(o.w, o.b), u = preview(o, g);
+        const yname = isCE() ? "σ(z)" : "ReLU(z)";
+        let fwd = "";
+        for (const r of g.rows) {
+          const ec = r.err >= 0 ? "pos" : "neg";
+          fwd += "x=" + r.x + "  ŷ=" + f(r.yh) + "  t=" + r.t + "  err=<span class='" + ec + "'>" + sgn(r.err) + "</span>\n";
+        }
+        let upd, updTitle;
+        if (o.type === "sgd") {
+          updTitle = "update · w ← w − lr·g";
+          upd = "Δw = −" + f(lr) + "·(" + f(g.gw) + ") = <span class='res'>" + sgn(u.dw) + "</span>\n"
+            + "Δb = −" + f(lr) + "·(" + f(g.gb) + ") = <span class='res'>" + sgn(u.db) + "</span>\n"
+            + "w: " + f(o.w) + " → <span class='big'>" + f(o.w + u.dw) + "</span>    b: " + f(o.b) + " → <span class='big'>" + f(o.b + u.db) + "</span>";
+        } else {
+          updTitle = "update · Adam keeps m and v";
+          upd = "m_w = .9·" + f(o.mw) + " +.1·" + f(g.gw) + " = " + f(u.mw) + "\n"
+            + "v_w = .999·" + f(o.vw) + " +.001·" + f(g.gw * g.gw) + " = " + f(u.vw) + "\n"
+            + "Δw = −lr·m̂/(√v̂+ε) = <span class='res'>" + sgn(u.dw) + "</span>\n"
+            + "w: " + f(o.w) + " → <span class='big'>" + f(o.w + u.dw) + "</span>    b: " + f(o.b) + " → <span class='big'>" + f(o.b + u.db) + "</span>";
+        }
+        return '<div class="ph" data-ph="forward"><span class="h">forward · ŷ = ' + yname + ', z = w·x + b</span>' + fwd + '</div>'
+          + '<div class="ph" data-ph="loss"><span class="h">loss · how wrong</span>' + lossCalc(g) + '</div>'
+          + '<div class="ph" data-ph="grad"><span class="h">gradient · which way reduces L</span>g_w = ' + f(g.gw) + '   g_b = ' + f(g.gb) + '</div>'
+          + '<div class="ph" data-ph="update"><span class="h">' + updTitle + '</span>' + upd + '</div>';
+      }
+      function spark(cv, hist, color) {
+        const dpr = window.devicePixelRatio || 1, w = cv.clientWidth || 120, h = 34;
+        if (cv.width !== Math.round(w * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+        const ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
+        if (hist.length < 2) return; let mx = 0; for (const l of hist) if (l > mx) mx = l; if (mx <= 0) mx = 1;
+        ctx.strokeStyle = color; ctx.lineWidth = 1.6; ctx.beginPath();
+        hist.forEach((l, i) => { const x = 2 + (w - 4) * (i / (hist.length - 1)); const y = 2 + (h - 4) * (1 - l / mx); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.stroke();
+      }
+      function drawPlot() {
+        const cv = $("plot"), dpr = window.devicePixelRatio || 1, w = cv.clientWidth || 600, h = 150;
+        if (cv.width !== Math.round(w * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+        const ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
+        const { X, T } = dset();
+        const xmin = isCE() ? -3.2 : 0, xmax = isCE() ? 3.2 : 3.6;
+        let ymin, ymax; if (isCE()) { ymin = -0.15; ymax = 1.15; } else { ymin = 0; ymax = Math.max(...T) + 1; }
+        const m = 30, PX = x => m + (x - xmin) / (xmax - xmin) * (w - m - 12), PY = y => (h - 22) - (y - ymin) / (ymax - ymin) * (h - 22 - 10);
+        ctx.strokeStyle = "#EEF3F7"; ctx.strokeRect(m, 10, w - m - 12, h - 22 - 10);
+        if (0 >= ymin && 0 <= ymax) { ctx.strokeStyle = "#D8E2EB"; ctx.beginPath(); ctx.moveTo(m, PY(0)); ctx.lineTo(w - 12, PY(0)); ctx.stroke(); }
+        // target dashed (regression line / for CE the 0..1 levels via data)
+        if (!isCE()) {
+          ctx.strokeStyle = "#9DADBC"; ctx.setLineDash([5, 4]); ctx.lineWidth = 2; ctx.beginPath();
+          ctx.moveTo(PX(xmin), PY(xmin + 1)); ctx.lineTo(PX(xmax), PY(xmax + 1)); ctx.stroke(); ctx.setLineDash([]);
+        }
+        // optimizer curves
+        const curve = (o, col) => {
+          ctx.strokeStyle = col; ctx.lineWidth = 2.6; ctx.beginPath();
+          for (let i = 0; i <= 160; i++) { const x = xmin + (xmax - xmin) * i / 160; const { yh } = fwd(o.w, o.b, x); const px = PX(x), py = PY(yh); i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); } ctx.stroke();
+        };
+        curve(SGD, "#7B61FF"); if (showAdam) curve(ADAM, "#1597B8");
+        // data points
+        for (let i = 0; i < X.length; i++) { ctx.beginPath(); ctx.arc(PX(X[i]), PY(T[i]), 4.5, 0, 7); ctx.fillStyle = "#274158"; ctx.fill(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.5; ctx.stroke(); }
+      }
+      function render() {
+        const { X, T } = dset();
+        $("dataStrip").innerHTML = "model: <b>" + (isCE() ? "p = σ(w·x + b)" : "ŷ = ReLU(w·x + b)") + "</b> &nbsp; · &nbsp; data: " + X.map((x, i) => "(" + x + "→" + T[i] + ")").join("  ");
+        $("cardAdam").style.display = showAdam ? "" : "none";
+        $("cards").classList.toggle("solo", !showAdam);
+        $("legAdam").style.display = showAdam ? "" : "none";
+        $("calcSgd").innerHTML = calcHTML(SGD);
+        $("wwSgd").textContent = "w=" + f(SGD.w) + "  b=" + f(SGD.b);
+        $("vStep").textContent = step;
+        spark($("sparkSgd"), SGD.hist, "#7B61FF");
+        $("lvSgd").textContent = "loss " + f(grad(SGD.w, SGD.b).L);
+        if (showAdam) {
+          $("calcAdam").innerHTML = calcHTML(ADAM); $("wwAdam").textContent = "w=" + f(ADAM.w) + "  b=" + f(ADAM.b);
+          spark($("sparkAdam"), ADAM.hist, "#1597B8"); $("lvAdam").textContent = "loss " + f(grad(ADAM.w, ADAM.b).L);
+        }
+        drawPlot();
+      }
+
+      function run() {
+        cancelAnim(); running = true; stopFlag = false; $("runBtn").disabled = true; $("stopBtn").disabled = false;
+        function frame() {
+          for (let i = 0; i < 2 && !stopFlag; i++) doStep(); render();
+          if (!stopFlag && step < 3000) requestAnimationFrame(frame); else { running = false; $("runBtn").disabled = false; $("stopBtn").disabled = true; }
+        }
+        requestAnimationFrame(frame);
+      }
+      function resetAll() { SGD = mkOpt("sgd"); ADAM = mkOpt("adam"); step = 0; anim.active = false; render(); animLabel(); }
+
+      function pulse(id) { const el = $(id); el.classList.remove("changed"); void el.offsetWidth; el.classList.add("changed"); }
+      function hideAllPhases() {
+        const phs = document.querySelectorAll(".calc .ph");
+        phs.forEach(p => { p.style.transition = "none"; p.classList.add("pending"); p.classList.remove("active"); });
+        void document.body.offsetWidth;
+        phs.forEach(p => { p.style.transition = ""; });
+      }
+      function revealPhase(i) {
+        document.querySelectorAll(".calc .ph.active").forEach(p => p.classList.remove("active"));
+        document.querySelectorAll('.calc .ph[data-ph="' + PHASES[i] + '"]').forEach(p => { p.classList.remove("pending"); p.classList.add("active"); });
+      }
+      function animLabel() {
+        $("animBtn").textContent = !anim.active ? "Animate one step"
+          : anim.idx === 1 ? "next: show loss" : anim.idx === 2 ? "next: show gradient"
+            : anim.idx === 3 ? "next: show update" : "apply, then next step";
+      }
+      function startAnimStep() { render(); hideAllPhases(); anim.active = true; anim.idx = 1; revealPhase(0); animLabel(); }
+      function reapplyAnim() {
+        hideAllPhases();
+        for (let i = 0; i < anim.idx; i++) document.querySelectorAll('.calc .ph[data-ph="' + PHASES[i] + '"]').forEach(p => p.classList.remove("pending"));
+        if (anim.idx > 0) revealPhase(anim.idx - 1);
+      }
+      function cancelAnim() { if (anim.active) { anim.active = false; animLabel(); } }
+      function animClick() {
+        if (running) return;
+        if (!anim.active) { startAnimStep(); return; }
+        if (anim.idx < 4) { revealPhase(anim.idx); anim.idx++; animLabel(); return; }
+        doStep(); startAnimStep(); pulse("wwSgd"); if (showAdam) pulse("wwAdam");
+      }
+
+      $("lossSel").addEventListener("change", e => { loss = e.target.value; lr = LRDEF[loss]; $("lr").value = lr; resetAll(); });
+      $("showAdam").addEventListener("change", e => { showAdam = e.target.checked; resetAll(); });
+      $("lr").addEventListener("input", () => { cancelAnim(); lr = Math.max(0.001, parseFloat($("lr").value) || 0.08); render(); });
+      $("animBtn").onclick = animClick;
+      $("stepBtn").onclick = () => { cancelAnim(); doStep(); render(); };
+      $("step10Btn").onclick = () => { cancelAnim(); for (let i = 0; i < 10; i++) doStep(); render(); };
+      $("runBtn").onclick = run;
+      $("stopBtn").onclick = () => { stopFlag = true; };
+      $("resetBtn").onclick = resetAll;
+      window.addEventListener("resize", () => { render(); if (anim.active) reapplyAnim(); });
+
+      render();
+    })();
+  </script>
+</body>
+
+</html>

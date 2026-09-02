@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 10 Widget 6 - The Wrong Average</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s10w6-w{max-width:1180px;margin:0 auto;padding:14px 22px 16px}
+.s10w6-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--amber)}
+.s10w6-w h1{font-size:24px;line-height:1.12;margin:3px 0 5px}
+.s10w6-sub{color:var(--muted);margin:0 0 10px;font-size:13px;line-height:1.45;max-width:920px}
+.s10w6-sub b{color:var(--ink)}
+.s10w6-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.s10w6-sl{display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 10px;font-size:11.5px;font-weight:700;color:var(--muted)}
+.s10w6-sl input{width:96px;vertical-align:middle;accent-color:var(--amber)}
+.s10w6-sl b{font:800 12.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--ink);min-width:12px}
+.s10w6-bar button{border:1px solid var(--amber);background:var(--amber);color:#fff;border-radius:8px;padding:7px 15px;font:800 12.5px Inter,sans-serif;cursor:pointer}
+.s10w6-bar button.g{background:#fff;color:var(--amber)}
+.s10w6-g{display:grid;grid-template-columns:1.08fr 1fr;gap:12px;align-items:start}
+.s10w6-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:11px 13px}
+.s10w6-card h2{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;font-weight:800}
+.s10w6-r{display:grid;grid-template-columns:118px minmax(0,1fr);gap:10px;align-items:center;padding:6px 0;border-top:1px solid #eef3f9}
+.s10w6-r:first-child{border-top:0}
+.s10w6-r span{font:800 12px Inter,sans-serif}
+.s10w6-r span b{display:block;font-weight:700;font-size:10.5px;color:var(--muted);margin-top:1px}
+.s10w6-cs{display:flex;gap:3px;flex-wrap:wrap}
+.s10w6-c{display:inline-grid;place-items:center;width:33px;height:25px;border-radius:5px;background:#ecfeff;border:1px solid #a5f3fc;color:#0e5f70;font:800 11px ui-monospace,SFMono-Regular,Consolas,monospace;font-style:normal}
+.s10w6-c.hot{background:#fff1f2;border-color:#fca5a5;color:#b91c1c}
+.s10w6-vt{margin-top:9px;padding-top:9px;border-top:1px solid #eef3f9}
+.s10w6-vr{margin-bottom:7px}
+.s10w6-vl{display:flex;justify-content:space-between;font-size:10.5px;font-weight:800;color:var(--muted);margin-bottom:3px}
+.s10w6-vb{display:flex;height:20px;border-radius:6px;overflow:hidden;border:1px solid var(--line)}
+.s10w6-vb i{display:grid;place-items:center;font:800 10.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:#fff;font-style:normal;transition:width .22s ease}
+.s10w6-box{border:1px solid var(--line);border-radius:9px;padding:8px 10px;margin-bottom:8px}
+.s10w6-box h3{font-size:11px;margin:0 0 5px;font-weight:800}
+.s10w6-good{border-color:#bbf7d0;background:#f7fff9}.s10w6-good h3{color:#166534}
+.s10w6-bad{border-color:#fecaca;background:#fff8f8}.s10w6-bad h3{color:#991b1b}
+.s10w6-eq{font:700 12.5px/1.7 ui-monospace,SFMono-Regular,Consolas,monospace;color:#334155;white-space:nowrap;overflow-x:auto}
+.s10w6-an{font:800 19px ui-monospace,SFMono-Regular,Consolas,monospace;margin-top:3px}
+.s10w6-good .s10w6-an{color:var(--green)}.s10w6-bad .s10w6-an{color:var(--red)}
+.s10w6-err{border-radius:9px;padding:9px 11px;font-size:12.5px;line-height:1.5;border:1px solid #fcd34d;background:#fffbeb;color:#7c4a03}
+.s10w6-err.zero{border-color:#bbf7d0;background:#f0fdf4;color:#14532d}
+.s10w6-err b{font:800 17px ui-monospace,SFMono-Regular,Consolas,monospace;display:block}
+.s10w6-note{margin:8px 0 0;font-size:12px;color:var(--muted);line-height:1.5}
+.s10w6-note b{color:var(--ink)}
+.s10w6-tail{margin-top:12px}
+@media(max-width:940px){.s10w6-g{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.s10w6-vb i{transition:none}}
+</style>
+</head>
+<body>
+<main class="s10w6-w">
+<div class="s10w6-k">ERA V5 Session 10 · a mistake worth studying</div>
+<h1>Two ways to combine micro-batch losses</h1>
+<p class="s10w6-sub">Three micro-batches ran. Each handed back one number: the mean loss over the tokens it happened to hold. <b>Combining those three numbers has a right way and a wrong way.</b> Drag the token counts and watch the gap between them open and close.</p>
+
+<div class="s10w6-bar">
+<label class="s10w6-sl" for="s10w6-n0">batch 1 tokens <input id="s10w6-n0" type="range" min="1" max="8" value="4" aria-label="Valid tokens in micro-batch 1"><b id="s10w6-n0v">4</b></label>
+<label class="s10w6-sl" for="s10w6-n1">batch 2 tokens <input id="s10w6-n1" type="range" min="1" max="8" value="4" aria-label="Valid tokens in micro-batch 2"><b id="s10w6-n1v">4</b></label>
+<label class="s10w6-sl" for="s10w6-n2">batch 3 tokens <input id="s10w6-n2" type="range" min="1" max="8" value="2" aria-label="Valid tokens in micro-batch 3"><b id="s10w6-n2v">2</b></label>
+<button id="s10w6-eq" type="button" aria-label="Give all three micro-batches the same token count">Make them equal</button>
+<button id="s10w6-rs" class="g" type="button" aria-label="Reset the token counts to 4, 4 and 2">Reset</button>
+</div>
+
+<section class="s10w6-g">
+<div class="s10w6-card">
+<h2>Every token that went through the model</h2>
+<div id="s10w6-rows"></div>
+<div class="s10w6-vt">
+<div class="s10w6-vr">
+<div class="s10w6-vl"><span>share of the tokens · what each batch has earned</span><span id="s10w6-wa"></span></div>
+<div class="s10w6-vb" id="s10w6-ba" aria-label="Share of tokens held by each micro-batch"></div>
+</div>
+<div class="s10w6-vr">
+<div class="s10w6-vl"><span>share of the vote the naive average hands out</span><span id="s10w6-wb"></span></div>
+<div class="s10w6-vb" id="s10w6-bb" aria-label="Share of the vote under the naive average"></div>
+</div>
+</div>
+<p class="s10w6-note" id="s10w6-vote"></p>
+</div>
+
+<div class="s10w6-card">
+<h2>Combining them</h2>
+<div class="s10w6-box s10w6-good">
+<h3>Right way: add the losses, divide by the tokens</h3>
+<div class="s10w6-eq" id="s10w6-eqa"></div>
+<div class="s10w6-an" id="s10w6-ana"></div>
+</div>
+<div class="s10w6-box s10w6-bad">
+<h3>Wrong way: average the three averages</h3>
+<div class="s10w6-eq" id="s10w6-eqb"></div>
+<div class="s10w6-an" id="s10w6-anb"></div>
+</div>
+<div class="s10w6-err" id="s10w6-err"></div>
+</div>
+</section>
+
+<section class="s10w6-card s10w6-tail">
+<h2>Why this hid inside every major framework until 2024</h2>
+<p class="s10w6-note" id="s10w6-hid"></p>
+</section>
+</main>
+
+<script>
+(function(){
+'use strict';
+var L=[2,2,5],D=[4,4,2],n=[4,4,2],C=['#0891b2','#7c3aed','#dc2626'];
+function $(i){return document.getElementById('s10w6-'+i);}
+function f(x,d){return x.toFixed(d);}
+function seg(el,w){
+  var s='',i;
+  for(i=0;i<3;i++)s+='<i style="width:'+f(w[i]*100,3)+'%;background:'+C[i]+'">'+(w[i]>=0.13?f(w[i]*100,1)+'%':'')+'</i>';
+  el.innerHTML=s;
+}
+function draw(){
+  var i,j,N=0,S=0,rows='';
+  for(i=0;i<3;i++){N+=n[i];S+=n[i]*L[i];$('n'+i+'v').textContent=n[i];}
+  var corr=S/N,naive=(L[0]+L[1]+L[2])/3,gap=naive-corr,pct=gap/corr*100,even=n[0]===n[1]&&n[1]===n[2];
+  for(i=0;i<3;i++){
+    var c='';
+    for(j=0;j<n[i];j++)c+='<i class="s10w6-c'+(L[i]>3?' hot':'')+'">'+f(L[i],1)+'</i>';
+    rows+='<div class="s10w6-r"><span>micro-batch '+(i+1)+'<b>'+n[i]+' token'+(n[i]===1?'':'s')+' · mean '+f(L[i],1)+'</b></span><div class="s10w6-cs">'+c+'</div></div>';
+  }
+  $('rows').innerHTML=rows;
+  seg($('ba'),[n[0]/N,n[1]/N,n[2]/N]);
+  seg($('bb'),[1/3,1/3,1/3]);
+  $('wa').textContent=f(n[0]/N*100,1)+' / '+f(n[1]/N*100,1)+' / '+f(n[2]/N*100,1)+' %';
+  $('wb').textContent='33.3 / 33.3 / 33.3 %';
+  $('eqa').innerHTML=n[0]+'&times;'+f(L[0],1)+' + '+n[1]+'&times;'+f(L[1],1)+' + '+n[2]+'&times;'+f(L[2],1)+' = '+f(S,1)+'<br>'+f(S,1)+' &divide; '+N+' tokens';
+  $('ana').textContent=f(corr,4);
+  $('eqb').innerHTML='('+f(L[0],1)+' + '+f(L[1],1)+' + '+f(L[2],1)+') &divide; 3 = '+f(L[0]+L[1]+L[2],1)+' &divide; 3<br>the token counts never enter this line';
+  $('anb').textContent=f(naive,4);
+  $('err').className='s10w6-err'+(Math.abs(pct)<0.05?' zero':'');
+  $('err').innerHTML=Math.abs(pct)<0.05
+    ?'<b>0.0% wrong</b>All three batches hold '+n[0]+' tokens, so both routes give '+f(corr,4)+'. The gap has closed completely.'
+    :'<b>'+f(Math.abs(pct),1)+'% wrong</b>The naive answer sits '+(gap>0?'+':'')+f(gap,4)+' away from '+f(corr,4)+'. Every gradient built from it is scaled by that much.';
+  var r=(N/3)/n[2];
+  $('vote').innerHTML=even
+    ?'The two bars are identical. When every micro-batch holds the same number of tokens, one third of the vote <b>is</b> the correct weight, and the broken formula lands on the right answer by accident.'
+    :'Batch 3 holds '+f(n[2]/N*100,1)+'% of the tokens and is handed 33.3% of the vote. Its loss of '+f(L[2],1)+' therefore counts <b>'+f(r,2)+' times '+(r>=1?'heavier':'lighter')+'</b> than the tokens behind it can support.';
+  var dN=D[0]+D[1]+D[2],dS=D[0]*L[0]+D[1]*L[1]+D[2]*L[2],dE=((L[0]+L[1]+L[2])/3-dS/dN)/(dS/dN)*100;
+  $('hid').innerHTML='Training code almost always packs micro-batches to the same length, and while the counts match, the two routes agree to the last digit. The gap opens only where a document runs out mid-sequence and the final batch comes back short, which is rare enough that the loss curve still looks healthy. Set the sliders to <b>'+D.join(', ')+'</b> and the error reads '+f(dE,1)+'%. Set them equal and it reads 0.0%. That is how the bug stayed hidden inside every major framework until 2024.';
+}
+function bind(i){$('n'+i).addEventListener('input',function(){n[i]=+this.value;draw();});}
+for(var k=0;k<3;k++)bind(k);
+$('eq').addEventListener('click',function(){var v=Math.max(n[0],n[1],n[2]);for(var i=0;i<3;i++){n[i]=v;$('n'+i).value=v;}draw();});
+$('rs').addEventListener('click',function(){for(var i=0;i<3;i++){n[i]=D[i];$('n'+i).value=D[i];}draw();});
+draw();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

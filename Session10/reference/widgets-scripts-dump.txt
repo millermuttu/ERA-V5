@@ -1,0 +1,1319 @@
+=== shared_one_neuron.html ===
+
+    "use strict";
+    (function () {
+      const $ = id => document.getElementById(id);
+      const SQRT2 = Math.SQRT2, SQRT2PI = Math.sqrt(2 * Math.PI);
+      function erf(x) {
+        const s = x < 0 ? -1 : 1; x = Math.abs(x); const t = 1 / (1 + 0.3275911 * x);
+        const y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x); return s * y;
+      }
+      const ACT = {
+        none: { name: "none", f: z => z, df: z => 1 },
+        relu: { name: "ReLU", f: z => z > 0 ? z : 0, df: z => z > 0 ? 1 : 0 },
+        swish: { name: "Swish", f: z => z / (1 + Math.exp(-z)), df: z => { const s = 1 / (1 + Math.exp(-z)); return s + z * s * (1 - s); } },
+        gelu: { name: "GELU", f: z => z * 0.5 * (1 + erf(z / SQRT2)), df: z => { const P = 0.5 * (1 + erf(z / SQRT2)), p = Math.exp(-z * z / 2) / SQRT2PI; return P + z * p; } },
+      };
+
+      const st = { x1: 1.5, x2: 1, w1: 0.8, w2: -1.2, b: 0.5, act: "none" };
+      const tgt = { w1: -0.6, w2: 1.1, b: -0.4 };   // the target ("teacher") surface
+      window.__neuron = { st, tgt, f: (a, z) => ACT[a].f(z) };
+      const f2 = v => (v < 0 ? "-" : "") + Math.abs(v).toFixed(2);
+      const signed = v => (v >= 0 ? "+ " : "− ") + Math.abs(v).toFixed(2);
+      function wcolor(v) { return v >= 0 ? "#E05F6E" : "#00A7D8"; }
+
+      function recompute() {
+        const a = ACT[st.act];
+        const p1 = st.w1 * st.x1, p2 = st.w2 * st.x2, z = p1 + p2 + st.b, y = a.f(z);
+
+        // diagram
+        $("nx1").textContent = st.x1.toFixed(2); $("nx2").textContent = st.x2.toFixed(2);
+        $("nb").textContent = f2(st.b); $("nz").textContent = "z " + f2(z); $("ny").textContent = f2(y);
+        $("nact").textContent = a.name; $("nw1").textContent = "w₁ " + f2(st.w1); $("nw2").textContent = "w₂ " + f2(st.w2);
+        const e1 = $("wire1"), e2 = $("wire2"), eb = $("wireB");
+        e1.setAttribute("stroke", wcolor(st.w1)); e1.setAttribute("stroke-width", (1 + Math.abs(st.w1) * 0.9).toFixed(1));
+        e2.setAttribute("stroke", wcolor(st.w2)); e2.setAttribute("stroke-width", (1 + Math.abs(st.w2) * 0.9).toFixed(1));
+        eb.setAttribute("stroke", wcolor(st.b)); eb.setAttribute("stroke-width", (1 + Math.abs(st.b) * 0.9).toFixed(1));
+
+        // equation
+        const open = st.act === "none" ? "" : a.name + "( ";
+        const close = st.act === "none" ? "" : " )";
+        let html = '<div class="muted">y = f( w₁·x₁ + w₂·x₂ + b )</div>';
+        html += '<div>y = ' + open + f2(st.w1) + '·' + st.x1.toFixed(2) + ' ' + signed(st.w2) + '·' + st.x2.toFixed(2) + ' ' + signed(st.b) + close + '</div>';
+        html += '<div>y = ' + open + p1.toFixed(2) + ' ' + signed(p2) + ' ' + signed(st.b) + close + '</div>';
+        html += '<div>y = ' + open + '<span class="z">' + f2(z) + '</span>' + close + '</div>';
+        if (st.act === "none") html += '<div>y = <span class="y">' + f2(y) + '</span> <span class="muted">(none: the squish does nothing, so this is just w·x + b)</span></div>';
+        else html += '<div>y = ' + a.name + '( <span class="z">' + f2(z) + '</span> ) = <span class="y">' + f2(y) + '</span></div>';
+        $("eq").innerHTML = html;
+
+        if (window.NeuronSurface) window.NeuronSurface.update();
+        drawAct(z, y);
+
+        // note
+        const el = $("note");
+        const legend = ' <span class="leg"><b style="color:#19824e">●</b> neuron output at x₁,x₂ · <b style="color:#d98a0b">●</b> target there · <b style="color:#e05f6e">coral line</b> = the error.</span>';
+        if (st.act === "none") { el.className = "plot-note lin"; el.innerHTML = '<b>Linear.</b> A flat tilted <b>plane</b>: w₁ tilts it along x₁, w₂ tilts it along x₂, and b lifts the whole plane up or down.' + legend; }
+        else if (st.act === "relu") { el.className = "plot-note non"; el.innerHTML = '<b>Non-linear.</b> ReLU folds the plane into a hinged surface, so it can no longer lie flat on the target.' + legend; }
+        else { el.className = "plot-note non"; el.innerHTML = '<b>Non-linear.</b> ' + a.name + ' bends the plane into a curved surface, so it cannot perfectly match a flat target.' + legend; }
+      }
+
+      function setCanvas(cv, h) {
+        const dpr = window.devicePixelRatio || 1, w = cv.clientWidth || 300;
+        if (cv.width !== Math.round(w * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+        const ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h); return { ctx, w, h };
+      }
+
+      function drawPlot() {
+        const { ctx, w, h } = setCanvas($("plot"), 208);
+        const a = ACT[st.act], c = st.w2 * st.x2 + st.b;
+        const xmin = -6, xmax = 6, Yf = x => a.f(st.w1 * x + c);
+        let ymin = Infinity, ymax = -Infinity;
+        for (let i = 0; i <= 120; i++) { const x = xmin + (xmax - xmin) * i / 120, v = Yf(x); if (v < ymin) ymin = v; if (v > ymax) ymax = v; }
+        ymin = Math.min(ymin, 0); ymax = Math.max(ymax, 0); const pad = (ymax - ymin) * 0.14 || 1; ymin -= pad; ymax += pad;
+        const m = 30, X = x => m + (x - xmin) / (xmax - xmin) * (w - m - 12), Y = y => (h - 22) - (y - ymin) / (ymax - ymin) * (h - 22 - 12);
+        ctx.strokeStyle = "#EEF3F7"; ctx.strokeRect(m, 12, w - m - 12, h - 22 - 12);
+        ctx.strokeStyle = "#D7E1EA";
+        if (0 >= ymin && 0 <= ymax) { ctx.beginPath(); ctx.moveTo(m, Y(0)); ctx.lineTo(w - 12, Y(0)); ctx.stroke(); }
+        ctx.beginPath(); ctx.moveTo(X(0), 12); ctx.lineTo(X(0), h - 22); ctx.stroke();
+        ctx.fillStyle = "#9AAEC0"; ctx.font = "10px " + getComputedStyle(document.body).getPropertyValue('--font-mono'); ctx.fillText("x₁", w - 22, h - 9);
+        ctx.strokeStyle = "#24B36B"; ctx.lineWidth = 2.6; ctx.beginPath();
+        for (let i = 0; i <= 240; i++) { const x = xmin + (xmax - xmin) * i / 240; const px = X(x), py = Y(Yf(x)); i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }
+        ctx.stroke();
+        if (st.x1 >= xmin && st.x1 <= xmax) {
+          const px = X(st.x1), py = Y(Yf(st.x1));
+          ctx.strokeStyle = "rgba(22,163,74,0.5)"; ctx.setLineDash([3, 3]); ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(px, h - 22); ctx.lineTo(px, py); ctx.lineTo(m, py); ctx.stroke(); ctx.setLineDash([]);
+          ctx.fillStyle = "#24B36B"; ctx.beginPath(); ctx.arc(px, py, 4.5, 0, 7); ctx.fill(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.5; ctx.stroke();
+        }
+      }
+      function drawAct(z, y) {
+        const { ctx, w, h } = setCanvas($("actCv"), 62);
+        const a = ACT[st.act], hmin = -4, hmax = 4;
+        let vmin = -1, vmax = 1; for (let i = 0; i <= 60; i++) { const x = hmin + (hmax - hmin) * i / 60, v = a.f(x); if (v < vmin) vmin = v; if (v > vmax) vmax = v; }
+        const padv = (vmax - vmin) * 0.1 || 0.4; vmin -= padv; vmax += padv;
+        const X = x => 6 + (x - hmin) / (hmax - hmin) * (w - 12), Y = v => (h - 6) - (v - vmin) / (vmax - vmin) * (h - 12);
+        ctx.strokeStyle = "#E8EEF4"; ctx.beginPath(); ctx.moveTo(X(0), 4); ctx.lineTo(X(0), h - 4);
+        if (0 >= vmin && 0 <= vmax) { ctx.moveTo(6, Y(0)); ctx.lineTo(w - 6, Y(0)); } ctx.stroke();
+        ctx.strokeStyle = "#D99A13"; ctx.lineWidth = 2; ctx.beginPath();
+        for (let i = 0; i <= 80; i++) { const x = hmin + (hmax - hmin) * i / 80, v = a.f(x); i ? ctx.lineTo(X(x), Y(v)) : ctx.moveTo(X(x), Y(v)); }
+        ctx.stroke();
+        const zc = Math.max(hmin, Math.min(hmax, z));
+        ctx.fillStyle = "#0F87AB"; ctx.beginPath(); ctx.arc(X(zc), Y(Math.max(vmin, Math.min(vmax, y))), 4, 0, 7); ctx.fill();
+        ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.4; ctx.stroke();
+      }
+
+      function bind(sl, lab, key) { const s = $(sl); s.addEventListener("input", () => { st[key] = parseFloat(s.value); $(lab).textContent = f2(st[key]); recompute(); }); }
+      bind("sx1", "vx1", "x1"); bind("sx2", "vx2", "x2"); bind("sw1", "vw1", "w1"); bind("sw2", "vw2", "w2"); bind("sb", "vb", "b");
+      $("actSel").addEventListener("click", e => {
+        const b = e.target.closest("button"); if (!b) return; st.act = b.dataset.a;
+        document.querySelectorAll("#actSel button").forEach(x => x.classList.toggle("on", x.dataset.a === st.act)); recompute();
+      });
+      window.addEventListener("resize", recompute);
+
+      // ---------- train the neuron to match the target surface ----------
+      const TG = 11;                 // training grid is TG×TG points over [-4,4]²
+      function lossAndGrad() {
+        const a = ACT[st.act], M = TG * TG; let L = 0, g1 = 0, g2 = 0, gb = 0;
+        for (let j = 0; j < TG; j++) for (let i = 0; i < TG; i++) {
+          const x1 = -4 + 8 * i / (TG - 1), x2 = -4 + 8 * j / (TG - 1);
+          const z = st.w1 * x1 + st.w2 * x2 + st.b, y = a.f(z);
+          const t = tgt.w1 * x1 + tgt.w2 * x2 + tgt.b;   // target is a fixed flat plane
+          const e = y - t; L += e * e;
+          const d = 2 * e * a.df(z) / M; g1 += d * x1; g2 += d * x2; gb += d;
+        }
+        return { L: L / M, g1, g2, gb };
+      }
+      function syncSliders() {
+        $("sw1").value = st.w1; $("sw2").value = st.w2; $("sb").value = st.b;
+        $("vw1").textContent = f2(st.w1); $("vw2").textContent = f2(st.w2); $("vb").textContent = f2(st.b);
+      }
+      let training = false, step = 0;
+      function setTrainBtn(on) { const b = $("btnTrain"); if (b) { b.textContent = on ? "Stop" : "Train"; b.classList.toggle("primary", !on); } }
+      function showLoss(L) { const el = $("surfLoss"); if (el) el.innerHTML = 'loss <b>' + (L < 1e-4 ? "0.0000" : L.toFixed(4)) + '</b> · step ' + step; }
+      function trainTick() {
+        if (!training) return;
+        const lr = 0.08;
+        const g = lossAndGrad(); st.w1 -= lr * g.g1; st.w2 -= lr * g.g2; st.b -= lr * g.gb; step++;
+        syncSliders(); recompute(); showLoss(g.L);
+        if (g.L < 1e-4 || step > 4000) { training = false; setTrainBtn(false); }
+        else setTimeout(trainTick, 60);   // one gradient step every 60ms, slow enough to watch
+      }
+      function startStop() { training = !training; setTrainBtn(training); if (training) trainTick(); }
+      function newTarget() {
+        const r = (a, b) => +(a + Math.random() * (b - a)).toFixed(2);
+        tgt.w1 = r(-2.2, 2.2); tgt.w2 = r(-2.2, 2.2); tgt.b = r(-1.8, 1.8);
+        training = false; setTrainBtn(false); step = 0; recompute(); showLoss(lossAndGrad().L);
+      }
+      function resetStudent() {
+        const r = () => +(Math.random() * 0.6 - 0.3).toFixed(2);
+        st.w1 = r(); st.w2 = r(); st.b = r(); training = false; setTrainBtn(false); step = 0;
+        syncSliders(); recompute(); showLoss(lossAndGrad().L);
+      }
+      $("btnTrain").addEventListener("click", startStop);
+      $("btnTarget").addEventListener("click", newTarget);
+      $("btnReset").addEventListener("click", resetStudent);
+
+      recompute();
+      showLoss(lossAndGrad().L);
+    })();
+  
+
+
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  
+
+
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    const host = document.getElementById('surf3d');
+    const api = window.__neuron;          // { st, f } shared with the main script
+    const D = 4, N = 36, YS = 0.35;       // x-domain ±4, grid N×N, vertical scale
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 200);
+    camera.position.set(8.5, 7, 9.5);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    host.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.12;
+    controls.target.set(0, 0.5, 0);
+    controls.minDistance = 6;
+    controls.maxDistance = 32;
+
+    // ground grid at y = 0 (reference plane so the bias "lift" is visible)
+    const grid = new THREE.GridHelper(2 * D, 12, 0xbcd0df, 0xdce7ef);
+    scene.add(grid);
+
+    // x₁ / x₂ / y axis lines
+    const axis = (a, b, color) => new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([a, b]),
+      new THREE.LineBasicMaterial({ color }));
+    scene.add(axis(new THREE.Vector3(-D, 0, 0), new THREE.Vector3(D, 0, 0), 0xc0455a)); // x₁
+    scene.add(axis(new THREE.Vector3(0, 0, -D), new THREE.Vector3(0, 0, D), 0x0f87ab)); // x₂
+    scene.add(axis(new THREE.Vector3(0, 0, 0),  new THREE.Vector3(0, 4, 0), 0x19824e)); // y
+
+    // surface mesh (positions in x/z, height in y)
+    const VN = (N + 1) * (N + 1);
+    const pos = new Float32Array(VN * 3);
+    const col = new Float32Array(VN * 3);
+    const idx = [];
+    for (let j = 0; j <= N; j++) for (let i = 0; i <= N; i++) {
+      const k = j * (N + 1) + i;
+      pos[k * 3]     = -D + 2 * D * i / N; // x₁
+      pos[k * 3 + 2] = -D + 2 * D * j / N; // x₂
+    }
+    for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+      const a = j * (N + 1) + i, b = a + 1, c = a + (N + 1), d = c + 1;
+      idx.push(a, c, b, b, c, d);
+    }
+    const geom = new THREE.BufferGeometry();
+    geom.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geom.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    geom.setIndex(idx);
+
+    const surf = new THREE.Mesh(geom, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide }));
+    const wire = new THREE.Mesh(geom, new THREE.MeshBasicMaterial({ color: 0x102338, wireframe: true, transparent: true, opacity: 0.10 }));
+    scene.add(surf); scene.add(wire);
+
+    // target ("teacher") surface — translucent amber, the shape the neuron trains to match
+    const tpos = new Float32Array(VN * 3);
+    for (let k = 0; k < VN; k++) { tpos[k * 3] = pos[k * 3]; tpos[k * 3 + 2] = pos[k * 3 + 2]; }
+    const tgeom = new THREE.BufferGeometry();
+    tgeom.setAttribute('position', new THREE.BufferAttribute(tpos, 3));
+    tgeom.setIndex(idx);
+    const tgtSurf = new THREE.Mesh(tgeom, new THREE.MeshBasicMaterial({ color: 0xf3a93a, transparent: true, opacity: 0.20, side: THREE.DoubleSide, depthWrite: false }));
+    const tgtWire = new THREE.Mesh(tgeom, new THREE.MeshBasicMaterial({ color: 0xd98a0b, wireframe: true, transparent: true, opacity: 0.5, depthWrite: false }));
+    scene.add(tgtSurf); scene.add(tgtWire);
+
+    // current-point marker + dashed drop line to the floor
+    const marker = new THREE.Mesh(new THREE.SphereGeometry(0.16, 16, 16), new THREE.MeshBasicMaterial({ color: 0x19824e }));
+    scene.add(marker);
+    const drop = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]),
+      new THREE.LineDashedMaterial({ color: 0x19824e, dashSize: 0.22, gapSize: 0.16, transparent: true, opacity: 0.5 }));
+    scene.add(drop);
+
+    // matching point on the target + the error between prediction and target at this input
+    const tgtDot = new THREE.Mesh(new THREE.SphereGeometry(0.13, 14, 14), new THREE.MeshBasicMaterial({ color: 0xd98a0b }));
+    scene.add(tgtDot);
+    const errLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]),
+      new THREE.LineBasicMaterial({ color: 0xe05f6e }));
+    scene.add(errLine);
+
+    // blue → neutral → red height ramp (matches the widget palette)
+    const LO = new THREE.Color(0x00a7d8), MID = new THREE.Color(0xeef3f7), HI = new THREE.Color(0xe05f6e), tmp = new THREE.Color();
+    const ramp = t => t < 0 ? tmp.copy(MID).lerp(LO, Math.min(1, -t)) : tmp.copy(MID).lerp(HI, Math.min(1, t));
+
+    function update() {
+      const s = api.st, f = api.f;
+      let maxAbs = 1e-6;
+      for (let k = 0; k < VN; k++) {
+        const y = f(s.act, s.w1 * pos[k * 3] + s.w2 * pos[k * 3 + 2] + s.b) * YS;
+        pos[k * 3 + 1] = y;
+        if (Math.abs(y) > maxAbs) maxAbs = Math.abs(y);
+      }
+      for (let k = 0; k < VN; k++) {
+        const c = ramp(pos[k * 3 + 1] / maxAbs);
+        col[k * 3] = c.r; col[k * 3 + 1] = c.g; col[k * 3 + 2] = c.b;
+      }
+      geom.attributes.position.needsUpdate = true;
+      geom.attributes.color.needsUpdate = true;
+      const t = api.tgt;   // target is a fixed plane, independent of the activation
+      for (let k = 0; k < VN; k++) tpos[k * 3 + 1] = (t.w1 * tpos[k * 3] + t.w2 * tpos[k * 3 + 2] + t.b) * YS;
+      tgeom.attributes.position.needsUpdate = true;
+      const my = f(s.act, s.w1 * s.x1 + s.w2 * s.x2 + s.b) * YS;   // neuron's output at this input
+      const ty = (t.w1 * s.x1 + t.w2 * s.x2 + t.b) * YS;           // target's value at this input
+      marker.position.set(s.x1, my, s.x2);
+      tgtDot.position.set(s.x1, ty, s.x2);
+      errLine.geometry.setFromPoints([new THREE.Vector3(s.x1, my, s.x2), new THREE.Vector3(s.x1, ty, s.x2)]);
+      drop.geometry.setFromPoints([new THREE.Vector3(s.x1, 0, s.x2), new THREE.Vector3(s.x1, my, s.x2)]);
+      drop.computeLineDistances();
+    }
+    window.NeuronSurface = { update };
+
+    function resize() {
+      const w = host.clientWidth, h = host.clientHeight;
+      if (!w || !h) return;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h; camera.updateProjectionMatrix();
+    }
+    new ResizeObserver(resize).observe(host);
+    resize(); update();
+    (function loop() { requestAnimationFrame(loop); controls.update(); renderer.render(scene, camera); })();
+  
+
+=== shared_training_loop.html ===
+
+    "use strict";
+    (function () {
+      const $ = id => document.getElementById(id);
+      const f = v => (v < 0 ? "−" : "") + Math.abs(v).toFixed(3);
+      const sgn = v => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(3);
+      const sig = z => 1 / (1 + Math.exp(-z));
+      const B1 = 0.9, B2 = 0.999, EPS = 1e-8;
+      const LRDEF = { l2: 0.08, l1: 0.03, ce: 0.2 };
+      const DATA = { reg: { X: [1, 2, 3], T: [2, 3, 4] }, cls: { X: [-2, -1, 1, 2], T: [0, 0, 1, 1] } };
+
+      let loss = "l2", lr = 0.08, step = 0, running = false, stopFlag = false, showAdam = false;
+      let anim = { active: false, idx: 0 };
+      const PHASES = ["forward", "loss", "grad", "update"];
+      function dset() { return loss === "ce" ? DATA.cls : DATA.reg; }
+      function isCE() { return loss === "ce"; }
+      function fwd(w, b, x) { const z = w * x + b; return { z, yh: isCE() ? sig(z) : Math.max(0, z) }; }
+
+      function grad(w, b) {
+        const { X, T } = dset(), N = X.length; let L = 0, gw = 0, gb = 0; const rows = [];
+        for (let i = 0; i < N; i++) {
+          const { z, yh } = fwd(w, b, X[i]); const t = T[i]; let Lp, dz;
+          if (loss === "ce") { Lp = -(t * Math.log(yh + 1e-9) + (1 - t) * Math.log(1 - yh + 1e-9)); dz = (yh - t) / N; }
+          else if (loss === "l1") { Lp = Math.abs(yh - t); dz = Math.sign(yh - t) * (z > 0 ? 1 : 0) / N; }
+          else { Lp = (yh - t) * (yh - t); dz = 2 * (yh - t) * (z > 0 ? 1 : 0) / N; }
+          L += Lp; gw += dz * X[i]; gb += dz; rows.push({ x: X[i], t, z, yh, err: yh - t, lp: Lp });
+        }
+        return { L: L / N, gw, gb, rows };
+      }
+      function mkOpt(type) { return { type, w: 0.3, b: 0.1, mw: 0, vw: 0, mb: 0, vb: 0, t: 0, hist: [] }; }
+      let SGD = mkOpt("sgd"), ADAM = mkOpt("adam");
+
+      function preview(o, g) {
+        if (o.type === "sgd") return { dw: -lr * g.gw, db: -lr * g.gb };
+        const t = o.t + 1;
+        const mw = B1 * o.mw + (1 - B1) * g.gw, vw = B2 * o.vw + (1 - B2) * g.gw * g.gw;
+        const mb = B1 * o.mb + (1 - B1) * g.gb, vb = B2 * o.vb + (1 - B2) * g.gb * g.gb;
+        const mhw = mw / (1 - Math.pow(B1, t)), vhw = vw / (1 - Math.pow(B2, t));
+        const mhb = mb / (1 - Math.pow(B1, t)), vhb = vb / (1 - Math.pow(B2, t));
+        return { dw: -lr * mhw / (Math.sqrt(vhw) + EPS), db: -lr * mhb / (Math.sqrt(vhb) + EPS), mw, vw, mb, vb, t, mhw, vhw };
+      }
+      function commit(o) {
+        const g = grad(o.w, o.b); const u = preview(o, g); o.hist.push(g.L);
+        if (o.type === "adam") { o.mw = u.mw; o.vw = u.vw; o.mb = u.mb; o.vb = u.vb; o.t = u.t; }
+        o.w += u.dw; o.b += u.db;
+      }
+      function doStep() { commit(SGD); commit(ADAM); step++; }
+
+      // ---- rendering ----
+      function lossCalc(g) {
+        const N = g.rows.length, R = g.rows;
+        if (loss === "l2") {
+          return "L = mean (ŷ − t)²\n"
+            + "  = [ " + R.map(r => "(" + sgn(r.err) + ")²").join(" + ") + " ] / " + N + "\n"
+            + "  = [ " + R.map(r => f(r.lp)).join(" + ") + " ] / " + N + "\n"
+            + "  = <span class='big'>" + f(g.L) + "</span>";
+        } else if (loss === "l1") {
+          return "L = mean |ŷ − t|\n"
+            + "  = ( " + R.map(r => f(Math.abs(r.err))).join(" + ") + " ) / " + N + "\n"
+            + "  = <span class='big'>" + f(g.L) + "</span>";
+        } else {
+          return "L = mean −[ t·ln p + (1−t)·ln(1−p) ]\n"
+            + "  = ( " + R.map(r => f(r.lp)).join(" + ") + " ) / " + N + "\n"
+            + "  = <span class='big'>" + f(g.L) + "</span>";
+        }
+      }
+      function calcHTML(o) {
+        const g = grad(o.w, o.b), u = preview(o, g);
+        const yname = isCE() ? "σ(z)" : "ReLU(z)";
+        let fwd = "";
+        for (const r of g.rows) {
+          const ec = r.err >= 0 ? "pos" : "neg";
+          fwd += "x=" + r.x + "  ŷ=" + f(r.yh) + "  t=" + r.t + "  err=<span class='" + ec + "'>" + sgn(r.err) + "</span>\n";
+        }
+        let upd, updTitle;
+        if (o.type === "sgd") {
+          updTitle = "update · w ← w − lr·g";
+          upd = "Δw = −" + f(lr) + "·(" + f(g.gw) + ") = <span class='res'>" + sgn(u.dw) + "</span>\n"
+            + "Δb = −" + f(lr) + "·(" + f(g.gb) + ") = <span class='res'>" + sgn(u.db) + "</span>\n"
+            + "w: " + f(o.w) + " → <span class='big'>" + f(o.w + u.dw) + "</span>    b: " + f(o.b) + " → <span class='big'>" + f(o.b + u.db) + "</span>";
+        } else {
+          updTitle = "update · Adam keeps m and v";
+          upd = "m_w = .9·" + f(o.mw) + " +.1·" + f(g.gw) + " = " + f(u.mw) + "\n"
+            + "v_w = .999·" + f(o.vw) + " +.001·" + f(g.gw * g.gw) + " = " + f(u.vw) + "\n"
+            + "Δw = −lr·m̂/(√v̂+ε) = <span class='res'>" + sgn(u.dw) + "</span>\n"
+            + "w: " + f(o.w) + " → <span class='big'>" + f(o.w + u.dw) + "</span>    b: " + f(o.b) + " → <span class='big'>" + f(o.b + u.db) + "</span>";
+        }
+        return '<div class="ph" data-ph="forward"><span class="h">forward · ŷ = ' + yname + ', z = w·x + b</span>' + fwd + '</div>'
+          + '<div class="ph" data-ph="loss"><span class="h">loss · how wrong</span>' + lossCalc(g) + '</div>'
+          + '<div class="ph" data-ph="grad"><span class="h">gradient · which way reduces L</span>g_w = ' + f(g.gw) + '   g_b = ' + f(g.gb) + '</div>'
+          + '<div class="ph" data-ph="update"><span class="h">' + updTitle + '</span>' + upd + '</div>';
+      }
+      function spark(cv, hist, color) {
+        const dpr = window.devicePixelRatio || 1, w = cv.clientWidth || 120, h = 34;
+        if (cv.width !== Math.round(w * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+        const ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
+        if (hist.length < 2) return; let mx = 0; for (const l of hist) if (l > mx) mx = l; if (mx <= 0) mx = 1;
+        ctx.strokeStyle = color; ctx.lineWidth = 1.6; ctx.beginPath();
+        hist.forEach((l, i) => { const x = 2 + (w - 4) * (i / (hist.length - 1)); const y = 2 + (h - 4) * (1 - l / mx); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.stroke();
+      }
+      function drawPlot() {
+        const cv = $("plot"), dpr = window.devicePixelRatio || 1, w = cv.clientWidth || 600, h = 150;
+        if (cv.width !== Math.round(w * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+        const ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
+        const { X, T } = dset();
+        const xmin = isCE() ? -3.2 : 0, xmax = isCE() ? 3.2 : 3.6;
+        let ymin, ymax; if (isCE()) { ymin = -0.15; ymax = 1.15; } else { ymin = 0; ymax = Math.max(...T) + 1; }
+        const m = 30, PX = x => m + (x - xmin) / (xmax - xmin) * (w - m - 12), PY = y => (h - 22) - (y - ymin) / (ymax - ymin) * (h - 22 - 10);
+        ctx.strokeStyle = "#EEF3F7"; ctx.strokeRect(m, 10, w - m - 12, h - 22 - 10);
+        if (0 >= ymin && 0 <= ymax) { ctx.strokeStyle = "#D8E2EB"; ctx.beginPath(); ctx.moveTo(m, PY(0)); ctx.lineTo(w - 12, PY(0)); ctx.stroke(); }
+        // target dashed (regression line / for CE the 0..1 levels via data)
+        if (!isCE()) {
+          ctx.strokeStyle = "#9DADBC"; ctx.setLineDash([5, 4]); ctx.lineWidth = 2; ctx.beginPath();
+          ctx.moveTo(PX(xmin), PY(xmin + 1)); ctx.lineTo(PX(xmax), PY(xmax + 1)); ctx.stroke(); ctx.setLineDash([]);
+        }
+        // optimizer curves
+        const curve = (o, col) => {
+          ctx.strokeStyle = col; ctx.lineWidth = 2.6; ctx.beginPath();
+          for (let i = 0; i <= 160; i++) { const x = xmin + (xmax - xmin) * i / 160; const { yh } = fwd(o.w, o.b, x); const px = PX(x), py = PY(yh); i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); } ctx.stroke();
+        };
+        curve(SGD, "#7B61FF"); if (showAdam) curve(ADAM, "#1597B8");
+        // data points
+        for (let i = 0; i < X.length; i++) { ctx.beginPath(); ctx.arc(PX(X[i]), PY(T[i]), 4.5, 0, 7); ctx.fillStyle = "#274158"; ctx.fill(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.5; ctx.stroke(); }
+      }
+      function render() {
+        const { X, T } = dset();
+        $("dataStrip").innerHTML = "model: <b>" + (isCE() ? "p = σ(w·x + b)" : "ŷ = ReLU(w·x + b)") + "</b> &nbsp; · &nbsp; data: " + X.map((x, i) => "(" + x + "→" + T[i] + ")").join("  ");
+        $("cardAdam").style.display = showAdam ? "" : "none";
+        $("cards").classList.toggle("solo", !showAdam);
+        $("legAdam").style.display = showAdam ? "" : "none";
+        $("calcSgd").innerHTML = calcHTML(SGD);
+        $("wwSgd").textContent = "w=" + f(SGD.w) + "  b=" + f(SGD.b);
+        $("vStep").textContent = step;
+        spark($("sparkSgd"), SGD.hist, "#7B61FF");
+        $("lvSgd").textContent = "loss " + f(grad(SGD.w, SGD.b).L);
+        if (showAdam) {
+          $("calcAdam").innerHTML = calcHTML(ADAM); $("wwAdam").textContent = "w=" + f(ADAM.w) + "  b=" + f(ADAM.b);
+          spark($("sparkAdam"), ADAM.hist, "#1597B8"); $("lvAdam").textContent = "loss " + f(grad(ADAM.w, ADAM.b).L);
+        }
+        drawPlot();
+      }
+
+      function run() {
+        cancelAnim(); running = true; stopFlag = false; $("runBtn").disabled = true; $("stopBtn").disabled = false;
+        function frame() {
+          for (let i = 0; i < 2 && !stopFlag; i++) doStep(); render();
+          if (!stopFlag && step < 3000) requestAnimationFrame(frame); else { running = false; $("runBtn").disabled = false; $("stopBtn").disabled = true; }
+        }
+        requestAnimationFrame(frame);
+      }
+      function resetAll() { SGD = mkOpt("sgd"); ADAM = mkOpt("adam"); step = 0; anim.active = false; render(); animLabel(); }
+
+      function pulse(id) { const el = $(id); el.classList.remove("changed"); void el.offsetWidth; el.classList.add("changed"); }
+      function hideAllPhases() {
+        const phs = document.querySelectorAll(".calc .ph");
+        phs.forEach(p => { p.style.transition = "none"; p.classList.add("pending"); p.classList.remove("active"); });
+        void document.body.offsetWidth;
+        phs.forEach(p => { p.style.transition = ""; });
+      }
+      function revealPhase(i) {
+        document.querySelectorAll(".calc .ph.active").forEach(p => p.classList.remove("active"));
+        document.querySelectorAll('.calc .ph[data-ph="' + PHASES[i] + '"]').forEach(p => { p.classList.remove("pending"); p.classList.add("active"); });
+      }
+      function animLabel() {
+        $("animBtn").textContent = !anim.active ? "Animate one step"
+          : anim.idx === 1 ? "next: show loss" : anim.idx === 2 ? "next: show gradient"
+            : anim.idx === 3 ? "next: show update" : "apply, then next step";
+      }
+      function startAnimStep() { render(); hideAllPhases(); anim.active = true; anim.idx = 1; revealPhase(0); animLabel(); }
+      function reapplyAnim() {
+        hideAllPhases();
+        for (let i = 0; i < anim.idx; i++) document.querySelectorAll('.calc .ph[data-ph="' + PHASES[i] + '"]').forEach(p => p.classList.remove("pending"));
+        if (anim.idx > 0) revealPhase(anim.idx - 1);
+      }
+      function cancelAnim() { if (anim.active) { anim.active = false; animLabel(); } }
+      function animClick() {
+        if (running) return;
+        if (!anim.active) { startAnimStep(); return; }
+        if (anim.idx < 4) { revealPhase(anim.idx); anim.idx++; animLabel(); return; }
+        doStep(); startAnimStep(); pulse("wwSgd"); if (showAdam) pulse("wwAdam");
+      }
+
+      $("lossSel").addEventListener("change", e => { loss = e.target.value; lr = LRDEF[loss]; $("lr").value = lr; resetAll(); });
+      $("showAdam").addEventListener("change", e => { showAdam = e.target.checked; resetAll(); });
+      $("lr").addEventListener("input", () => { cancelAnim(); lr = Math.max(0.001, parseFloat($("lr").value) || 0.08); render(); });
+      $("animBtn").onclick = animClick;
+      $("stepBtn").onclick = () => { cancelAnim(); doStep(); render(); };
+      $("step10Btn").onclick = () => { cancelAnim(); for (let i = 0; i < 10; i++) doStep(); render(); };
+      $("runBtn").onclick = run;
+      $("stopBtn").onclick = () => { stopFlag = true; };
+      $("resetBtn").onclick = resetAll;
+      window.addEventListener("resize", () => { render(); if (anim.active) reapplyAnim(); });
+
+      render();
+    })();
+  
+
+=== widget_10_memory.html ===
+
+(function(){
+'use strict';
+var P=[['weight, bf16',2,'#0891b2'],['gradient, bf16',2,'#7c3aed'],['master copy, fp32',4,'#159447'],['Adam m, fp32',4,'#d97706'],['Adam v, fp32',4,'#dc2626']],
+    GIB=1073741824,CARD=80,FIT=CARD*GIB/16;
+function $(i){return document.getElementById('s10w10-'+i);}
+function gib(n,b){return n*b/GIB;}
+function fm(v){return v>=100?v.toFixed(1):v.toFixed(2);}
+function bn(n){return (n/1e9).toFixed(1)+'B';}
+function lx(n){return 30+Math.log(n/5e8)/Math.log(240)*426;}
+function ly(g){return 214-Math.log(g/4)/Math.log(1024)*196;}
+function tx(x,y,s,c,a,b){return '<text x="'+x+'" y="'+y+'" text-anchor="'+(a||'middle')+'" font-size="'+(b||9.5)+'" font-weight="700" fill="'+c+'">'+s+'</text>';}
+function chart(n,g){
+  var s='',i,ticks=[[5e8,'0.5B'],[2e9,'2B'],[9e9,'9B'],[20e9,'20B'],[120e9,'120B']],yt=[4,32,256,2048];
+  for(i=0;i<yt.length;i++)s+='<line x1="30" y1="'+ly(yt[i])+'" x2="456" y2="'+ly(yt[i])+'" stroke="#eef3f9"/>'+tx(27,ly(yt[i])+3.5,yt[i],'#8b9aad','end',9);
+  for(i=0;i<ticks.length;i++)s+=tx(lx(ticks[i][0]),230,ticks[i][1],'#8b9aad');
+  s+='<rect x="30" y="'+ly(CARD)+'" width="426" height="'+(214-ly(CARD))+'" fill="rgba(21,148,71,.06)"/>';
+  s+='<line x1="30" y1="'+ly(CARD)+'" x2="456" y2="'+ly(CARD)+'" stroke="#159447" stroke-width="1.6" stroke-dasharray="6 4"/>';
+  s+=tx(454,ly(CARD)-5,'one 80 GiB card','#159447','end');
+  s+='<line x1="30" y1="'+ly(8*CARD)+'" x2="456" y2="'+ly(8*CARD)+'" stroke="#d97706" stroke-width="1.4" stroke-dasharray="4 4"/>';
+  s+=tx(454,ly(8*CARD)-5,'a node of eight, 640 GiB','#b45309','end');
+  s+='<line x1="'+lx(5e8)+'" y1="'+ly(gib(5e8,16))+'" x2="'+lx(120e9)+'" y2="'+ly(gib(120e9,16))+'" stroke="#0891b2" stroke-width="2.6"/>';
+  s+='<line x1="'+lx(FIT)+'" y1="'+ly(CARD)+'" x2="'+lx(FIT)+'" y2="214" stroke="#0e7490" stroke-width="1.3" stroke-dasharray="3 3"/>';
+  s+='<circle cx="'+lx(FIT)+'" cy="'+ly(CARD)+'" r="4" fill="#0891b2"/>'+tx(lx(FIT)-8,ly(CARD)+16,'one card is full at '+bn(FIT),'#0e7490','end',10);
+  s+='<circle cx="'+lx(n)+'" cy="'+ly(g)+'" r="5.4" fill="#159447" stroke="#fff" stroke-width="2"/>';
+  s+=tx(lx(n),ly(g)-11,bn(n)+' needs '+fm(g)+' GiB','#166534',lx(n)>300?'end':'start',10.5);
+  s+=tx(30,12,'GiB of optimiser state','#8b9aad','start');
+  $('chart').innerHTML=s;
+}
+function draw(){
+  var n=+$('n').value*5e8,g=gib(n,16),i,r='',st='';
+  $('nv').textContent=bn(n);$('hd').textContent='at '+bn(n);
+  for(i=0;i<P.length;i++){
+    r+='<tr><td class="n"><em style="background:'+P[i][2]+'"></em>'+P[i][0]+'</td><td>'+P[i][1]+'</td><td>'+(P[i][1]/16*100).toFixed(1)+'%</td><td>'+fm(gib(n,P[i][1]))+' GiB</td></tr>';
+  }
+  for(i=0;i<16;i++){var k=i<2?0:i<4?1:i<8?2:i<12?3:4;st+='<i style="background:'+P[k][2]+'"></i>';}
+  $('strip').innerHTML=st;$('rows').innerHTML=r;$('tot').textContent=fm(g)+' GiB';
+  $('mg').textContent=fm(g);$('mc').textContent=Math.ceil(g/CARD);$('mx').textContent=bn(FIT);
+  $('say').innerHTML='A '+bn(n)+' model keeps <b>16 bytes per weight</b> while it trains, which is '+bn(n)+' x 16 = <b>'+fm(g)+' GiB</b>. One 80 GiB card fills at <b>'+bn(FIT)+'</b> weights, so this run needs <b>'+Math.ceil(g/CARD)+'</b> of them before a single activation is stored.';
+  chart(n,g);
+}
+$('n').addEventListener('input',draw);
+Array.prototype.forEach.call(document.querySelectorAll('.s10w10-q'),function(b){
+  b.addEventListener('click',function(){$('n').value=b.getAttribute('data-v');draw();});
+});
+draw();
+}());
+
+
+
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+
+
+=== widget_11_mfu.html ===
+
+(function(){
+'use strict';
+var PEAK=989e12,BUD=100e9,HEAL=0.45,PATH='';
+function $(i){return document.getElementById('s10w11-'+i);}
+function co(v,d){return v.toLocaleString('en-US',{minimumFractionDigits:d||0,maximumFractionDigits:d||0});}
+function tx(x,y,s,c,a,b){return '<text x="'+x+'" y="'+y+'" text-anchor="'+(a||'middle')+'" font-size="'+(b||10)+'" font-weight="700" fill="'+c+'">'+s+'</text>';}
+function curve(){var p='',i,k;for(i=0;i<=52;i++){k=i/52;p+=(40+k*466).toFixed(1)+','+(18+ (1-Math.exp(-3.6*k))*84).toFixed(1)+' ';}return p;}
+function panel(id,days,col){
+  var s='',i,d;
+  for(i=0;i<=4;i++){d=days*i/4;s+='<line x1="'+(40+i/4*466)+'" y1="14" x2="'+(40+i/4*466)+'" y2="106" stroke="#eef3f9"/>'+tx(40+i/4*466,122,d.toFixed(d<10?1:0),'#8b9aad','middle',9.5);}
+  s+='<line x1="40" y1="106" x2="506" y2="106" stroke="#e6edf6"/>'+tx(34,60,'loss','#8b9aad','end',9.5);
+  s+='<polyline points="'+PATH+'" fill="none" stroke="'+col+'" stroke-width="2.6" stroke-linejoin="round"/>';
+  s+=tx(273,10,'elapsed days','#8b9aad','middle',9.5);
+  $(id).innerHTML=s;
+}
+function gauge(mfu,ps){
+  var s='',i,x=40+Math.min(1,mfu)*1040;
+  s+='<rect x="40" y="24" width="1040" height="20" rx="10" fill="#eef3f9" stroke="#d9e2ef"/>';
+  s+='<rect x="'+(40+0.35*1040)+'" y="24" width="'+(0.15*1040)+'" height="20" fill="rgba(21,148,71,.20)"/>';
+  s+='<rect x="40" y="24" width="'+Math.min(1,mfu)*1040+'" height="20" rx="10" fill="'+(mfu>=0.35?'#159447':mfu>=0.2?'#d97706':'#dc2626')+'"/>';
+  for(i=0;i<=10;i++)s+=tx(40+i*104,62,(i*10)+'%','#8b9aad','middle',9.5);
+  s+=tx(40+0.425*1040,18,'healthy, 35% to 50%','#166534','middle',10.5);
+  s+='<line x1="'+x+'" y1="20" x2="'+x+'" y2="48" stroke="#152033" stroke-width="2"/>';
+  s+=tx(x,72,ps+'%','#152033',x>980?'end':x<70?'start':'middle',11.5);
+  $('gauge').innerHTML=s;
+}
+function draw(){
+  var n=+$('n').value*5e8,tps=+$('t').value*500,g=+$('g').value,
+      ach=6*n*tps,peak=g*PEAK,mfu=ach/peak,
+      hs=HEAL*peak/(6*n),d0=BUD/tps/86400,d1=BUD/hs/86400,r=d0/d1,ps=(mfu*100).toFixed(mfu<0.05?2:1);
+  $('nv').textContent=(n/1e9).toFixed(1)+'B';$('tv').textContent=co(tps);$('gv').textContent=g;
+  $('eq').innerHTML='<i>achieved  </i>6 x '+co(n/1e9,1)+'e9 weights x '+co(tps)+' tokens/s  =  <b>'+co(ach/1e12)+' TFLOP/s</b>\n'
+    +'<i>peak      </i>'+g+' H100 x 989 TFLOP/s                 =  <b>'+co(peak/1e12)+' TFLOP/s</b>\n'
+    +'<i>MFU       </i>'+co(ach/1e12)+' / '+co(peak/1e12)+'  =  <u>'+ps+'%</u>';
+  $('m1').textContent=co(ach/1e12);$('m2').textContent=co(peak/1e12);
+  $('m3').textContent=ps+'%';$('m3').style.color=mfu>=0.35?'#159447':mfu>=0.2?'#d97706':'#dc2626';
+  $('m4').textContent=r.toFixed(1)+'x';
+  $('h1').textContent='this run, '+ps+'% MFU';
+  $('p1').innerHTML='<b>'+d0.toFixed(1)+' days</b> of wall clock, which is <b>'+co(g*d0*24)+'</b> GPU-hours.';
+  $('p2').innerHTML='<b>'+d1.toFixed(1)+' days</b> of wall clock, which is <b>'+co(g*d1*24)+'</b> GPU-hours.';
+  $('say').innerHTML='Training costs six FLOPs per weight per token. This run does <b>'+co(ach/1e12)+' TFLOP/s</b> of the <b>'+co(peak/1e12)+' TFLOP/s</b> the cards can do, so MFU is <b>'+ps+'%</b>'+(mfu>1?'. Nothing above 100% is real, so a figure like this means the token count or the model size is wrong.':mfu<0.35?', and the rest of the machine waits on memory or on the network.':', which sits inside the healthy band.');
+  $('note').innerHTML='Both traces above are the same drawing, because they are the same run over the same tokens. Only the numbers along the bottom differ. <b>'+(r>=1.05?'Watching the loss alone hides '+co(g*(d0-d1)*24)+' wasted GPU-hours.':'These clocks agree, so the machine is being used.')+'</b>';
+  gauge(mfu,ps);panel('c1',d0,'#dc2626');panel('c2',d1,'#159447');
+}
+PATH=curve();
+$('n').addEventListener('input',draw);$('t').addEventListener('input',draw);$('g').addEventListener('input',draw);
+$('reset').addEventListener('click',function(){$('n').value=18;$('t').value=24;$('g').value=8;draw();});
+draw();
+}());
+
+
+
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+
+
+=== widget_1_step.html ===
+
+(function(){
+'use strict';
+var X=2,B1=0.9,B2=0.999,EPS=1e-8,CAP=24,st,hist,timer=null,mx=1,vx=1;
+function $(i){return document.getElementById('s10w1-'+i);}
+function set(i,v){$(i).textContent=v;}
+function tg(){return +$('t').value;}
+function lr(){return +$('lr').value/100;}
+function fwd(){var h=st.w1*X,y=st.w2*h,d=y-tg(),g=2*d;
+  return {h:h,y:y,d:d,loss:d*d,gy:g,gw2:g*h,gh:g*st.w2,gw1:g*st.w2*X};}
+function reset(){stop();st={w1:3,w2:4,m1:0,v1:0,m2:0,v2:0,n:0};hist=[fwd().loss];mx=1;vx=1;draw();}
+function stop(){if(timer){clearInterval(timer);timer=null;}$('run').textContent='Run';}
+function step(){
+  var f=fwd(),n=st.n+1,c1=1-Math.pow(B1,n),c2=1-Math.pow(B2,n);
+  st.m1=B1*st.m1+0.1*f.gw1; st.v1=B2*st.v1+0.001*f.gw1*f.gw1;
+  st.m2=B1*st.m2+0.1*f.gw2; st.v2=B2*st.v2+0.001*f.gw2*f.gw2;
+  st.w1-=lr()*(st.m1/c1)/(Math.sqrt(st.v1/c2)+EPS);
+  st.w2-=lr()*(st.m2/c1)/(Math.sqrt(st.v2/c2)+EPS);
+  st.n=n; hist.push(fwd().loss);
+  if(n>=CAP)stop();
+  draw();
+}
+function bar(id,val,scale,mid){
+  var p=Math.min(100,Math.abs(val)/scale*(mid?50:100)),e=$(id).style;
+  if(mid){e.left=(val<0?50-p:50)+'%';}else{e.left='0%';}
+  e.width=Math.max(val===0?0:1.2,p)+'%';
+}
+function chart(){
+  var L=36,R=8,T=12,B=26,iw=400-L-R,ih=158-T-B,i,x,y,lx=L,pts='',dots='',
+      top=Math.max.apply(null,hist)||1,den=Math.max(6,hist.length-1),s='';
+  for(i=0;i<hist.length;i++){
+    x=L+i/den*iw; y=T+ih-hist[i]/top*ih; lx=x;
+    pts+=x.toFixed(1)+','+y.toFixed(1)+' ';
+    dots+='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+(i===hist.length-1?4:2.4)+'" fill="'+(i===hist.length-1?'#dc2626':'#f0a3a3')+'"/>';
+  }
+  for(i=0;i<=2;i++){y=T+ih-i/2*ih;s+='<line x1="'+L+'" y1="'+y+'" x2="'+(400-R)+'" y2="'+y+'" stroke="#eef3f9"/><text x="'+(L-6)+'" y="'+(y+3.5)+'" text-anchor="end" font-size="9.5" fill="#8b9aad">'+(top*i/2).toFixed(top>=10?0:2)+'</text>';}
+  s+='<path d="M'+L+','+(T+ih)+' L'+pts.trim().split(' ').join(' L')+' L'+lx.toFixed(1)+','+(T+ih)+'Z" fill="rgba(220,38,38,.09)"/>';
+  s+='<polyline points="'+pts+'" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linejoin="round"/>'+dots;
+  s+='<text x="'+(L+iw/2)+'" y="152" text-anchor="middle" font-size="9.5" fill="#8b9aad">training step</text>';
+  $('chart').innerHTML=s;
+}
+function draw(){
+  var f=fwd(),t=tg(),d=f.d;
+  set('lrv',lr().toFixed(2)); set('tv',t);
+  $("say").innerHTML='<b>We want this network to turn the input 2 into '+t+'.</b> Right now it turns 2 into <b>'+f.y.toFixed(2)+'</b>, which is <span class="s10w1-t">'+(d>=0?'+':'')+d.toFixed(2)+'</span> away. The loss squares that gap: <b>'+f.loss.toFixed(2)+'</b>.';
+  set('cw1','w1 = '+st.w1.toFixed(4)); set('cw2','w2 = '+st.w2.toFixed(4)); set('ctg','target '+t);
+  set('vh',f.h.toFixed(2)); set('vy',f.y.toFixed(2)); set('vloss',f.loss.toFixed(2));
+  set('gw1',f.gw1.toFixed(2)); set('gh',f.gh.toFixed(2)); set('gw2',f.gw2.toFixed(2)); set('gy',f.gy.toFixed(2));
+  set('sign',d>0.0005?'The output sits above the target. Every gradient is positive, which pushes both weights down.':d<-0.0005?'The output sits below the target. Every gradient is negative, which pushes both weights up.':'The output sits on the target. Every gradient is zero and the weights stop moving.');
+  set('aw1',st.w1.toFixed(4)); set('aw2',st.w2.toFixed(4));
+  set('m1',st.m1.toFixed(3)); set('m2',st.m2.toFixed(3)); set('v1',st.v1.toFixed(2)); set('v2',st.v2.toFixed(2));
+  mx=Math.max(mx,Math.abs(st.m1),Math.abs(st.m2)); vx=Math.max(vx,st.v1,st.v2);
+  bar('mb1',st.m1,mx,1); bar('mb2',st.m2,mx,1); bar('vb1',st.v1,vx,0); bar('vb2',st.v2,vx,0);
+  set('mstep',st.n); set('mloss',f.loss.toFixed(2)); set('mgap',(d>=0?'+':'')+d.toFixed(2));
+  set('status',st.n===0?'Step 0. Nothing has moved yet.':'Step '+st.n+(st.n>=CAP?'. Stopped at '+CAP+'.':'. Loss '+f.loss.toFixed(3)+'.'));
+  $('step').disabled=st.n>=CAP;
+  chart();
+}
+$('step').addEventListener('click',function(){stop();step();});
+$('reset').addEventListener('click',function(){$('lr').value=10;$('t').value=20;reset();});
+$('run').addEventListener('click',function(){
+  if(timer){stop();return;}
+  if(st.n>=CAP)reset();
+  $('run').textContent='Pause'; timer=setInterval(function(){if(st.n>=CAP){stop();draw();}else step();},420);
+});
+$('lr').addEventListener('input',function(){reset();set('status','Learning rate changed. Restarted from the beginning.');});
+$('t').addEventListener('input',function(){reset();set('status','Target changed. Restarted from the beginning.');});
+reset();
+}());
+
+
+
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+
+
+=== widget_2_floats.html ===
+
+(function(){
+  'use strict';
+  var FMT=[['fp32',8,23],['fp16',5,10],['bf16',8,7],['fp8 E4M3',4,3],['fp8 E5M2',5,2],['fp4 E2M1',2,1],['custom',6,9]];
+  var pick=0,val=0.1,cE=6,cM=9,pat=null,touched=false;
+  function $(i){return document.getElementById('s10w2-'+i);}
+  function P(n){return Math.pow(2,n);}
+  function wid(i){return i===6?[cE,cM]:[FMT[i][1],FMT[i][2]];}
+  function rne(x){var f=Math.floor(x),d=x-f;return d>.5?f+1:d<.5?f:(f%2?f+1:f);}
+  function enc(x,eb,mb){
+    var bias=P(eb-1)-1,emin=1-bias,top=P(eb)-1;
+    if(!x)return{s:0,E:0,M:0};
+    var s=x<0?1:0,a=Math.abs(x),e=Math.floor(Math.log2(a));
+    while(a<P(e))e--;while(a>=P(e+1))e++;
+    if(e>=emin){var M=rne((a/P(e)-1)*P(mb));if(M===P(mb)){M=0;e++;}
+      return e+bias>=top?{s:s,E:top,M:0}:{s:s,E:e+bias,M:M};}
+    var q=rne(a/P(emin)*P(mb));
+    return q>=P(mb)?{s:s,E:1,M:0}:{s:s,E:0,M:q};
+  }
+  function dec(b,eb,mb){var bias=P(eb-1)-1,g=b.s?-1:1;
+    if(b.E===P(eb)-1)return b.M?NaN:g*Infinity;
+    return b.E?g*(1+b.M/P(mb))*P(b.E-bias):g*b.M/P(mb)*P(1-bias);}
+  function kase(b,eb,u){return b.E===P(eb)-1?(b.M?'reserved pattern':'overflow to infinity'):b.E?'normal':(b.M?'subnormal':(u&&val?'underflow to zero':'zero'));}
+  function fv(v){return v!==v?'not a number':v===0?'0':!isFinite(v)?(v>0?'infinity':'-infinity'):(Math.abs(v)>=1e-4&&Math.abs(v)<1e7)?String(+v.toPrecision(8)):v.toExponential(4);}
+  function d6(v){if(!isFinite(v)||v!==v)return fv(v);var a=Math.abs(v);return a>=1e4?String(+v.toPrecision(8)):(a>=1e-4||!v)?(rne(v*1e6)/1e6).toFixed(6):v.toExponential(6);}
+  function er(v,r){return v!==v?'-':!isFinite(v)?'infinite':!r?(v?'-':'0'):(Math.abs(v-r)/Math.abs(r)*100).toFixed(3);}
+  function bin(n,w){var b='';for(var i=w-1;i>=0;i--)b+=(Math.floor(n/P(i))%2);return b;}
+  function pad(a){while(a.length<28)a+=' ';return a;}
+  function grid(k,n,bs,worth,cw){
+    var g='<span class="s10w2-lb">bits</span>',i,nm=k==='e'?'exponent':'mantissa';
+    for(i=0;i<n;i++)g+='<button class="s10w2-b s10w2-k'+k+'" data-k="'+k+'" data-i="'+i+'" aria-label="'+nm+' bit '+(i+1)+' is '+bs[i]+', click to flip">'+bs[i]+'</button>';
+    g+='<span class="s10w2-lb">worth</span>';
+    for(i=0;i<n;i++)g+='<span class="s10w2-w">'+worth[i]+'</span>';
+    g+='<span class="s10w2-lb">on?</span>';
+    for(i=0;i<n;i++)g+='<span class="s10w2-o'+(bs[i]==='1'?' hot">'+worth[i]:'">·')+'</span>';
+    return '<div class="s10w2-g" style="grid-template-columns:64px repeat('+n+','+cw+'px)">'+g+'</div>';
+  }
+  function sum(a){return a.join(' + ');}
+  function render(){
+    var w=wid(pick),eb=w[0],mb=w[1],bias=P(eb-1)-1,b=pat||(pat=enc(val,eb,mb));
+    var ebs=bin(b.E,eb),mbs=bin(b.M,mb),v=dec(b,eb,mb),ref=dec(enc(val,8,23),8,23);
+    var ew=[],mw=[],et=[],mt=[],i,den=P(mb);
+    for(i=0;i<eb;i++){ew.push(P(eb-1-i));if(ebs[i]==='1')et.push(P(eb-1-i));}
+    for(i=0;i<mb;i++){mw.push('<i>1</i><b>'+P(i+1)+'</b>');if(mbs[i]==='1')mt.push(P(mb-1-i));}
+    $('head').innerHTML=FMT[pick][0]+' &nbsp;·&nbsp; 1 sign + '+eb+' exponent + '+mb+' mantissa = '+(1+eb+mb)+' bits &nbsp; <em>'+(touched?'you flipped a bit by hand':'the closest pattern this format has to '+val)+'</em>';
+    $('sb').textContent=b.s;
+    $('signsay').innerHTML='<b>sign bit '+b.s+'</b> means the number is '+(b.s?'negative':'positive')+'. One bit, nothing to work out.';
+    $('ex').innerHTML=grid('e',eb,ebs,ew,40)+
+      '<div class="s10w2-sum">'+(et.length?sum(et)+' = '+b.E:'every column is off, so the exponent bits say 0')+'</div>'+
+      '<p class="s10w2-say">An exponent has to reach below 1, because numbers smaller than 1 exist, and bits can never be negative. So a fixed number is always taken off. For '+eb+' exponent bits that number is the <b>bias</b>, 2<sup>'+eb+'-1</sup> - 1 = '+bias+'. Here '+b.E+' - '+bias+' = <b>'+(b.E-bias)+'</b>'+(b.E?', so the scale is 2<sup>'+(b.E-bias)+'</sup> = '+d6(P(b.E-bias)):', but all-zero exponent bits are the subnormal case, where the scale is fixed at 2<sup>'+(1-bias)+'</sup> = '+d6(P(1-bias)))+'.</p>';
+    $('mn').innerHTML=grid('m',mb,mbs,mw,46)+
+      '<div class="s10w2-sum">'+(mt.length?'give every column the same bottom, 2^'+mb+' = '+den+', and the tops that are on add up:  '+sum(mt)+' = '+b.M:'every column is off, so the tops add to 0')+'</div>'+
+      '<div class="s10w2-sum">and that is where the divide comes from:  '+b.M+' / '+den+' = '+d6(b.M/den)+'</div>'+
+      '<p class="s10w2-say">A mantissa is a <b>binary fraction</b>. The first column is worth a half, the next a quarter, then an eighth, on down to 1/'+den+'. Adding fractions needs one shared bottom number, so every column is rewritten over 2<sup>'+mb+'</sup> = '+den+'. That single division is the whole mystery of the divide.</p>';
+    var sn=!b.E,ex=sn?1-bias:b.E-bias,lead=sn?0:1,fr=b.M/den,L=[];
+    L.push(pad('you asked to store')+val);
+    L.push(pad('sign bit '+b.s)+(b.s?'negative':'positive'));
+    L.push(pad('exponent bits')+ebs+' = '+b.E);
+    L.push(pad(sn?'all zero, so no bias here':'minus the bias '+bias)+(sn?'exponent fixed at 1 - '+bias:b.E+' - '+bias)+' = '+ex);
+    L.push(pad('the scale')+'2^'+ex+' = '+d6(P(ex)));
+    L.push(pad('mantissa bits')+b.M+' / '+den+' = '+d6(fr));
+    L.push(pad(lead?'the free leading 1':'no leading 1 down here')+lead+' + '+d6(fr)+' = '+d6(lead+fr));
+    L.push(pad('multiply')+d6(lead+fr)+' x '+d6(P(ex))+' = '+d6((lead+fr)*P(ex)));
+    if(b.E===P(eb)-1)L=[L[0],L[1],pad('exponent bits')+ebs+' = '+b.E+', all ones',pad('all ones is reserved')+'this pattern is not a normal number'];
+    L.push(pad('reads back as')+fv(v)+'   ('+kase(b,eb,!touched)+')');
+    L.push(pad('off by')+er(v,ref)+' %   against fp32');
+    $('asm').textContent=L.join('\n');
+    var t='<tr><th>format</th><th>layout</th><th>reads back</th><th>error</th><th>case</th></tr>',sc=Math.max(1,Math.abs(val))/127,q=rne(val/sc),iv=q*sc;
+    for(i=0;i<FMT.length;i++){
+      var u=wid(i),p=enc(val,u[0],u[1]),x=dec(p,u[0],u[1]),e2=er(x,ref);
+      t+='<tr class="'+(i?(i===pick?'on':''):'base')+'"><td>'+FMT[i][0]+(i?'':' reference')+'</td><td>1+'+u[0]+'+'+u[1]+'</td><td>'+fv(x)+'</td><td'+(parseFloat(e2)>1?' class="s10w2-bad"':'')+'>'+(i?e2+'%':'0%')+'</td><td>'+kase(p,u[0],1)+'</td></tr>';
+    }
+    t+='<tr><td>int8</td><td>8 whole</td><td>'+fv(iv)+'</td><td'+(parseFloat(er(iv,ref))>1?' class="s10w2-bad"':'')+'>'+er(iv,ref)+'%</td><td>'+q+' x scale</td></tr>';
+    $('tbl').innerHTML=t;
+    $('int8').innerHTML='<b>int8 has no exponent at all.</b> One <b>scale</b> is shared by the whole tensor: biggest value '+d6(Math.max(1,Math.abs(val)))+' / 127 = '+sc.toExponential(4)+'. This number becomes the whole number '+q+', and reads back as '+q+' x scale = '+fv(iv)+'. A float gives every number its own exponent. int8 makes the whole tensor share one.';
+    $('ev').textContent=cE;$('mv').textContent=cM;$('tot').textContent='custom total: 1+'+cE+'+'+cM+' = '+(1+cE+cM)+' bits';
+  }
+  function mark(){var n=$('fmts').children,i;for(i=0;i<n.length;i++)n[i].className=i===pick?'on':'';}
+  function reset(){pat=null;touched=false;mark();render();}
+  $('fmts').innerHTML=FMT.map(function(F,i){return '<button data-i="'+i+'"'+(i===pick?' class="on"':'')+' aria-label="show format '+F[0]+'">'+F[0]+'</button>';}).join('');
+  $('fmts').addEventListener('click',function(e){var t=e.target.closest('button');if(t){pick=+t.dataset.i;reset();}});
+  $('val').addEventListener('input',function(){var x=parseFloat(this.value);if(isFinite(x)){val=x;reset();}});
+  $('e').addEventListener('input',function(){cE=+this.value;pick=6;reset();});
+  $('m').addEventListener('input',function(){cM=+this.value;pick=6;reset();});
+  Array.prototype.forEach.call(document.querySelectorAll('.s10w2-q'),function(t){t.addEventListener('click',function(){val=parseFloat(t.dataset.v);$('val').value=t.dataset.v;reset();});});
+  document.addEventListener('click',function(e){
+    var t=e.target.closest('.s10w2-b');if(!t)return;
+    var w=wid(pick),k=t.dataset.k,i=+t.dataset.i;
+    if(k==='s')pat.s=pat.s?0:1;else if(k==='e')pat.E^=P(w[0]-1-i);else pat.M^=P(w[1]-1-i);
+    touched=true;render();
+    var n=document.querySelector('.s10w2-b[data-k="'+k+'"][data-i="'+i+'"]');if(n)n.focus();
+  });
+  render();
+})();
+
+
+
+(function(){var fe;try{fe=window.frameElement;}catch(e){return;}if(!fe)return;var last=0;
+function fit(){var h=Math.ceil(document.body.scrollHeight)+8;if(Math.abs(h-last)>2){last=h;fe.style.height=h+'px';}}
+if(window.ResizeObserver)new ResizeObserver(fit).observe(document.body);
+window.addEventListener('load',fit);
+document.addEventListener('click',function(){setTimeout(fit,60);setTimeout(fit,300);},true);
+document.addEventListener('input',function(){setTimeout(fit,60);},true);
+[0,120,400,900].forEach(function(t){setTimeout(fit,t);});})();
+
+
+=== widget_3_nudge.html ===
+
+(function(){
+'use strict';
+var X=2,W2=4,T=20,NUD=[0.5,0.2,0.05,0.01,0.001],WMIN=1.4,WMAX=4.4,LMAX=240,
+    LFT=40,RGT=10,TOP=10,IW=440-LFT-RGT,IH=196;
+function $(i){return document.getElementById('s10w3-'+i);}
+function L(w){var d=W2*X*w-T;return d*d;}
+function px(w){return LFT+(w-WMIN)/(WMAX-WMIN)*IW;}
+function py(l){return TOP+IH-Math.max(0,Math.min(LMAX,l))/LMAX*IH;}
+function f3(v){return v.toFixed(3);}
+function tr(v){return String(+v.toFixed(3));}
+function sg(v){return(v>0?'+':'')+f3(v);}
+function chart(wa,wb,la,lb,m){
+  var i,w,s='',pts='',y0=la-m*(wa-WMIN),y1=la+m*(WMAX-wa);
+  for(i=0;i<=3;i++){w=TOP+IH-i/3*IH;s+='<line x1="'+LFT+'" y1="'+w+'" x2="'+(440-RGT)+'" y2="'+w+'" stroke="#eef3f9"/><text x="'+(LFT-6)+'" y="'+(w+3.5)+'" text-anchor="end" class="s10w3-ax">'+(LMAX*i/3)+'</text>';}
+  for(i=2;i<=8;i++){w=i/2;s+='<text x="'+px(w)+'" y="222" text-anchor="middle" class="s10w3-ax">'+w.toFixed(1)+'</text>';}
+  for(i=0;i<=80;i++){w=WMIN+i/80*(WMAX-WMIN);pts+=px(w).toFixed(1)+','+py(L(w)).toFixed(1)+' ';}
+  s+='<line x1="'+px(2.5)+'" y1="'+TOP+'" x2="'+px(2.5)+'" y2="'+(TOP+IH)+'" stroke="#bbf7d0" stroke-width="2" stroke-dasharray="4 4"/>';
+  s+='<text x="'+(px(2.5)+6)+'" y="'+(TOP+32)+'" class="s10w3-ax" fill="#159447">the bottom of the curve: loss 0, slope 0</text>';
+  s+='<polyline points="'+pts+'" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linejoin="round"/>';
+  s+='<g clip-path="url(#s10w3-cp)"><line x1="'+px(WMIN)+'" y1="'+py(y0)+'" x2="'+px(WMAX)+'" y2="'+py(y1)+'" stroke="#d97706" stroke-width="2.5"/></g>';
+  s+='<circle cx="'+px(wa)+'" cy="'+py(la)+'" r="5.5" fill="#0891b2"/><text x="'+(px(wa)-9)+'" y="'+(py(la)-9)+'" text-anchor="end" class="s10w3-pl" fill="#0891b2">A</text>';
+  s+='<circle cx="'+px(wb)+'" cy="'+py(lb)+'" r="5.5" fill="#7c3aed"/><text x="'+(px(wb)+9)+'" y="'+(py(lb)-9)+'" class="s10w3-pl" fill="#7c3aed">B</text>';
+  s+='<text x="'+(440-RGT)+'" y="'+(TOP+13)+'" text-anchor="end" class="s10w3-pl" fill="#d97706">slope '+tr(m)+'</text>';
+  s+='<text x="6" y="'+(TOP+IH/2)+'" transform="rotate(-90 6 '+(TOP+IH/2)+')" text-anchor="middle" class="s10w3-ax">loss</text>';
+  s+='<text x="'+(LFT+IW/2)+'" y="244" text-anchor="middle" class="s10w3-ax">the value held in weight w1</text>';
+  s+='<defs><clipPath id="s10w3-cp"><rect x="'+LFT+'" y="'+TOP+'" width="'+IW+'" height="'+IH+'"/></clipPath></defs>';
+  $('chart').innerHTML=s;
+}
+function draw(){
+  var wa=+$('wt').value/1000,h=NUD[+$('nu').value],wb=wa+h,
+      ya=W2*X*wa,yb=W2*X*wb,la=L(wa),lb=L(wb),
+      ra=Math.round(la*1000),rb=Math.round(lb*1000),rise=(rb-ra)/1000,m=rise/h,
+      ex=2*(ya-T)*W2*X,o={wtv:f3(wa),nuv:tr(h),wa:f3(wa),wb:f3(wb),ya:f3(ya),yb:f3(yb),
+      la:f3(ra/1000),lb:f3(rb/1000),dw:sg(h),dy:sg(yb-ya),dl:sg(rise)},k;
+  for(k in o)$(k).textContent=o[k];
+  $('say').innerHTML='This network turns the input 2 into <b>'+f3(ya)+'</b> and we want <b>20</b>, so the loss is <b>'+f3(la)+'</b>. Raise the weight by <b>'+tr(h)+'</b> and the loss becomes <b>'+f3(rb/1000)+'</b>. The gradient is that pair of readings divided.';
+  $('eq').innerHTML='slope = <u>'+sg(rise)+'</u> ÷ <i>'+tr(h)+'</i> = <u>'+tr(m)+'</u>';
+  $('sign').textContent=Math.abs(m-ex)<5e-4?'That slope is the gradient of the loss with respect to w1. Calculus gives the same number from one run: 2 × ('+f3(ya)+' − 20) × 4 × 2 = '+tr(ex)+'.':'Measured slope '+tr(m)+' against a true slope of '+tr(ex)+'. The curve bends across a nudge this wide, so the reading is off by '+tr(Math.abs(m-ex))+'. Shrink the nudge and the two meet.';
+  $('status').textContent=Math.abs(m)<5e-4?'Slope 0. This weight is already at the bottom.':m>0?'Slope is positive, so lowering w1 lowers the loss.':'Slope is negative, so raising w1 lowers the loss.';
+  $('cnote').innerHTML='The grey curve is the loss at every weight. <b>A</b> is where the weight sits now, <b>B</b> is the nudged copy, and the amber line runs through both.';
+  $('foot').innerHTML='Two forward passes measured <b>one</b> weight. A model with 8 billion weights would need 8 billion pairs of passes, which no one can afford. The next widget gets every gradient from a single walk backwards.';
+  chart(wa,wb,la,lb,m);
+}
+$('wt').addEventListener('input',draw);
+$('nu').addEventListener('input',draw);
+draw();
+}());
+
+
+
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+
+
+=== widget_4_chain.html ===
+
+(function(){
+'use strict';
+var X=2,W1=3,W2=4,stage=0;
+function $(i){return document.getElementById('s10w4-'+i);}
+function f3(v){return v.toFixed(3);}
+function draw(){
+  var t=+$('t').value,h=W1*X,y=W2*h,d=y-t,l=d*d,gy=2*d,gw2=gy*h,gh=gy*W2,gw1=gh*X,i,
+      o={tv:t,vh:f3(h),vy:f3(y),vl:f3(l),gy:stage>0?f3(gy):'·',gw2:stage>1?f3(gw2):'·',gh:stage>2?f3(gh):'·',gw1:stage>3?f3(gw1):'·',
+      m1:'2 × ('+f3(y)+' − '+t+') = '+f3(gy),
+      m2:f3(gy)+' × '+f3(h)+' = '+f3(gw2),
+      m3:f3(gy)+' × '+f3(W2)+' = '+f3(gh),
+      m4:f3(gh)+' × '+f3(X)+' = '+f3(gw1)},k;
+  for(k in o)$(k).textContent=o[k];
+  for(i=1;i<=4;i++){
+    $('s'+i).className='s10w4-s'+(i<stage?' done':i===stage?' on':'');
+    $('p'+i).className='s10w4-gp'+(i<=stage?' on':'');
+  }
+  $('ex').innerHTML=[
+    'Press the button. The walk starts at the loss and moves one link to the left each time.',
+    'The output sits <b>'+f3(d)+'</b> away from the target, so the loss is <b>'+f3(l)+'</b>. Move y by one and the loss moves by <b>'+f3(gy)+'</b>.',
+    'w2 reaches the loss only through y, so carry <b>'+f3(gy)+'</b> across and multiply by h. w2 has its gradient: <b>'+f3(gw2)+'</b>.',
+    'h reaches the loss through the same y. Carry the same <b>'+f3(gy)+'</b> and multiply by w2 instead, giving <b>'+f3(gh)+'</b>.',
+    'One last multiplication by the input gives w1 a gradient of <b>'+f3(gw1)+'</b>. Both weights came out of a single walk.'
+  ][stage];
+  $('next').textContent=['Walk back one link','Next link: dL/dw2','Next link: dL/dh','Next link: dL/dw1','Walk complete'][stage];
+  $('next').disabled=stage===4;
+  $('status').textContent=stage===0?'Nothing carried yet.':stage===4?'All four gradients are out.':'Link '+stage+' of 4 done.';
+  $('foot').innerHTML='The previous widget spent <b>two forward passes</b> to measure one weight. This walk touched every link <b>once</b> and handed back a gradient for every weight in the network. That is the only reason a model with billions of weights can be trained at all.';
+}
+$('next').addEventListener('click',function(){if(stage<4){stage++;draw();}});
+$('reset').addEventListener('click',function(){stage=0;$('t').value=20;draw();});
+$('t').addEventListener('input',draw);
+draw();
+}());
+
+
+
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+
+
+=== widget_5_accumulate.html ===
+
+(function(){
+'use strict';
+var done=0,W2=4,T=20;
+function $(i){return document.getElementById('s10w5-'+i);}
+function f3(v){return v.toFixed(3);}
+function gx(i){var x=1+((i-1)%8)*0.25;return 2*(12*x-T)*W2*x;}
+function avg(a,b){var s=0,i;for(i=a;i<=b;i++)s+=gx(i);return s/(b-a+1);}
+function chart(mb,ac,means,gm){
+  var L=44,R=10,TP=12,B=28,iw=440-L-R,ih=200-TP-B,i,lo=0,hi=0,s='',bw,x,z,v,r,rm=0,pts='';
+  for(i=0;i<ac;i++){lo=Math.min(lo,means[i]);hi=Math.max(hi,means[i]);}
+  r=(hi-lo)*0.1||1;hi=Math.ceil((hi+r)/25)*25;lo=Math.floor((lo-r)/25)*25;
+  function py(v){return TP+ih-(v-lo)/(hi-lo)*ih;}
+  z=py(0);bw=iw/ac*0.6;
+  s+='<text x="'+(L-6)+'" y="'+(py(hi)+9)+'" text-anchor="end" class="s10w5-ax">'+hi+'</text>';
+  s+='<text x="'+(L-6)+'" y="'+(z+3.5)+'" text-anchor="end" class="s10w5-ax">0</text>';
+  s+='<text x="'+(L-6)+'" y="'+(py(lo)-3)+'" text-anchor="end" class="s10w5-ax">'+lo+'</text>';
+  for(i=0;i<ac;i++){
+    x=L+(i+0.5)/ac*iw;
+    v=i<done?py(means[i]):z-3;
+    s+='<rect x="'+(x-bw/2).toFixed(1)+'" y="'+Math.min(z,v).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+Math.max(2,Math.abs(v-z)).toFixed(1)+'" rx="2" fill="'+(i<done?(means[i]<0?'#d97706':'#7c3aed'):'#e2e8f0')+'"/>';
+    s+='<text x="'+x.toFixed(1)+'" y="194" text-anchor="middle" class="s10w5-ax">'+(i+1)+'</text>';
+    if(i===done-1)s+='<text x="'+x.toFixed(1)+'" y="'+(means[i]<0?v+11:v-5).toFixed(1)+'" text-anchor="middle" class="s10w5-ax" fill="'+(means[i]<0?'#b45309':'#5b21b6')+'">'+f3(means[i])+'</text>';
+    if(i<done){rm+=means[i];pts+=x.toFixed(1)+','+py(rm/(i+1)).toFixed(1)+' ';}
+  }
+  s+='<line x1="'+L+'" y1="'+z+'" x2="'+(440-R)+'" y2="'+z+'" stroke="#c3cede"/>';
+  s+='<line x1="'+L+'" y1="'+py(gm)+'" x2="'+(440-R)+'" y2="'+py(gm)+'" stroke="#159447" stroke-width="2" stroke-dasharray="5 4"/>';
+  s+='<text x="'+(440-R)+'" y="'+(py(gm)-5)+'" text-anchor="end" class="s10w5-ax" fill="#159447">the whole batch averages '+f3(gm)+'</text>';
+  if(done)s+='<polyline points="'+pts+'" fill="none" stroke="#0891b2" stroke-width="2.5" stroke-linejoin="round"/>';
+  $('chart').innerHTML=s;
+}
+function draw(){
+  var mb=+$('mb').value,ac=+$('ac').value,gm=avg(1,mb*ac),means=[],i,sum=0;
+  if(done>ac)done=ac;
+  for(i=0;i<ac;i++)means.push(avg(i*mb+1,(i+1)*mb));
+  for(i=0;i<done;i++)sum+=means[i];
+  var o={mbv:mb,acv:ac,c1:mb,c2:ac,c3:mb*ac,r1:done+' of '+ac,r2:done*mb+' of '+mb*ac,
+      r3:f3(sum),r4:done?f3(sum/done):'nothing yet'},k;
+  for(k in o)$(k).textContent=o[k];
+  $('blurb').textContent='One pass holds '+mb+' example'+(mb>1?'s':'')+' in memory. The step behaves as if '+mb*ac+' were there.';
+  $('eq').innerHTML=done===ac?'<u>'+f3(sum)+'</u> ÷ <u>'+ac+'</u> = <i>'+f3(sum/ac)+'</i>   the gradient the optimizer steps on':'buffer = '+f3(sum)+'\nwaiting on '+(ac-done)+' more micro-batch'+(ac-done===1?'':'es');
+  $('badge').hidden=done!==ac;
+  $('badge').textContent='One optimizer step taken on '+f3(sum/ac);
+  $('sign').textContent=done===ac?'The same '+mb*ac+' examples run as one batch average '+f3(gm)+'. The pile-up matched it to the last digit and never held more than '+mb+' at once.':done?'Micro-batch '+done+' alone reported '+f3(means[done-1])+', which is '+(means[done-1]*gm<0?'the opposite direction to the full batch. One slice on its own is a poor guide.':'off the full batch by '+f3(Math.abs(means[done-1]-gm))+'. Averaging the slices is what closes that.'):'The buffer is empty. Run a micro-batch to start piling gradients into it.';
+  $('cnote').innerHTML='Violet bars pull the weight down, amber bars pull it up. The <b>cyan line</b> is the average of everything run so far, closing on the green target.';
+  $('status').textContent=done===ac?'All '+ac+' micro-batches in. Step taken.':done+' of '+ac+' micro-batches in.';
+  $('next').disabled=done===ac;
+  $('foot').innerHTML='A batch of '+mb*ac+' would need '+ac+' times the activation memory of a batch of '+mb+'. Accumulation buys the large batch with the small memory, and the only cost is '+ac+' forward and backward passes before the weights move once.';
+  chart(mb,ac,means,gm);
+}
+$('next').addEventListener('click',function(){if(done<+$('ac').value){done++;draw();}});
+$('reset').addEventListener('click',function(){done=0;$('mb').value=4;$('ac').value=8;draw();});
+$('mb').addEventListener('input',function(){done=0;draw();});
+$('ac').addEventListener('input',function(){done=0;draw();});
+draw();
+}());
+
+
+
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+
+
+=== widget_6_wrong_average.html ===
+
+(function(){
+'use strict';
+var L=[2,2,5],D=[4,4,2],n=[4,4,2],C=['#0891b2','#7c3aed','#dc2626'];
+function $(i){return document.getElementById('s10w6-'+i);}
+function f(x,d){return x.toFixed(d);}
+function seg(el,w){
+  var s='',i;
+  for(i=0;i<3;i++)s+='<i style="width:'+f(w[i]*100,3)+'%;background:'+C[i]+'">'+(w[i]>=0.13?f(w[i]*100,1)+'%':'')+'</i>';
+  el.innerHTML=s;
+}
+function draw(){
+  var i,j,N=0,S=0,rows='';
+  for(i=0;i<3;i++){N+=n[i];S+=n[i]*L[i];$('n'+i+'v').textContent=n[i];}
+  var corr=S/N,naive=(L[0]+L[1]+L[2])/3,gap=naive-corr,pct=gap/corr*100,even=n[0]===n[1]&&n[1]===n[2];
+  for(i=0;i<3;i++){
+    var c='';
+    for(j=0;j<n[i];j++)c+='<i class="s10w6-c'+(L[i]>3?' hot':'')+'">'+f(L[i],1)+'</i>';
+    rows+='<div class="s10w6-r"><span>micro-batch '+(i+1)+'<b>'+n[i]+' token'+(n[i]===1?'':'s')+' · mean '+f(L[i],1)+'</b></span><div class="s10w6-cs">'+c+'</div></div>';
+  }
+  $('rows').innerHTML=rows;
+  seg($('ba'),[n[0]/N,n[1]/N,n[2]/N]);
+  seg($('bb'),[1/3,1/3,1/3]);
+  $('wa').textContent=f(n[0]/N*100,1)+' / '+f(n[1]/N*100,1)+' / '+f(n[2]/N*100,1)+' %';
+  $('wb').textContent='33.3 / 33.3 / 33.3 %';
+  $('eqa').innerHTML=n[0]+'&times;'+f(L[0],1)+' + '+n[1]+'&times;'+f(L[1],1)+' + '+n[2]+'&times;'+f(L[2],1)+' = '+f(S,1)+'<br>'+f(S,1)+' &divide; '+N+' tokens';
+  $('ana').textContent=f(corr,4);
+  $('eqb').innerHTML='('+f(L[0],1)+' + '+f(L[1],1)+' + '+f(L[2],1)+') &divide; 3 = '+f(L[0]+L[1]+L[2],1)+' &divide; 3<br>the token counts never enter this line';
+  $('anb').textContent=f(naive,4);
+  $('err').className='s10w6-err'+(Math.abs(pct)<0.05?' zero':'');
+  $('err').innerHTML=Math.abs(pct)<0.05
+    ?'<b>0.0% wrong</b>All three batches hold '+n[0]+' tokens, so both routes give '+f(corr,4)+'. The gap has closed completely.'
+    :'<b>'+f(Math.abs(pct),1)+'% wrong</b>The naive answer sits '+(gap>0?'+':'')+f(gap,4)+' away from '+f(corr,4)+'. Every gradient built from it is scaled by that much.';
+  var r=(N/3)/n[2];
+  $('vote').innerHTML=even
+    ?'The two bars are identical. When every micro-batch holds the same number of tokens, one third of the vote <b>is</b> the correct weight, and the broken formula lands on the right answer by accident.'
+    :'Batch 3 holds '+f(n[2]/N*100,1)+'% of the tokens and is handed 33.3% of the vote. Its loss of '+f(L[2],1)+' therefore counts <b>'+f(r,2)+' times '+(r>=1?'heavier':'lighter')+'</b> than the tokens behind it can support.';
+  var dN=D[0]+D[1]+D[2],dS=D[0]*L[0]+D[1]*L[1]+D[2]*L[2],dE=((L[0]+L[1]+L[2])/3-dS/dN)/(dS/dN)*100;
+  $('hid').innerHTML='Training code almost always packs micro-batches to the same length, and while the counts match, the two routes agree to the last digit. The gap opens only where a document runs out mid-sequence and the final batch comes back short, which is rare enough that the loss curve still looks healthy. Set the sliders to <b>'+D.join(', ')+'</b> and the error reads '+f(dE,1)+'%. Set them equal and it reads 0.0%. That is how the bug stayed hidden inside every major framework until 2024.';
+}
+function bind(i){$('n'+i).addEventListener('input',function(){n[i]=+this.value;draw();});}
+for(var k=0;k<3;k++)bind(k);
+$('eq').addEventListener('click',function(){var v=Math.max(n[0],n[1],n[2]);for(var i=0;i<3;i++){n[i]=v;$('n'+i).value=v;}draw();});
+$('rs').addEventListener('click',function(){for(var i=0;i<3;i++){n[i]=D[i];$('n'+i).value=D[i];}draw();});
+draw();
+}());
+
+
+
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+
+
+=== widget_7_underflow.html ===
+
+(function(){
+'use strict';
+var F=[{n:'fp32',e:8,m:23,c:'#0891b2'},{n:'bf16',e:8,m:7,c:'#159447'},{n:'fp16',e:5,m:10,c:'#dc2626'}];
+function $(i){return document.getElementById('s10w7-'+i);}
+function ex(x){return x===0?'0':!isFinite(x)?'infinity':x.toExponential(2);}
+function q(x,eb,mb){
+  if(x===0)return 0;
+  var b=(1<<(eb-1))-1,lo=1-b,hi=b,p=Math.floor(Math.log2(x));
+  while(Math.pow(2,p)>x)p--;
+  while(Math.pow(2,p+1)<=x)p++;
+  if(p<lo)p=lo;
+  var s=Math.pow(2,p-mb),v=Math.round(x/s)*s;
+  if(v>=Math.pow(2,p+1)&&p<hi){s=Math.pow(2,p+1-mb);v=Math.round(x/s)*s;}
+  return v>(2-Math.pow(2,-mb))*Math.pow(2,hi)?Infinity:v;
+}
+function lo(f){return Math.pow(2,2-(1<<(f.e-1))-f.m);}
+function px(v){return Math.max(40,Math.min(990,40+(Math.log(v)/Math.LN10+45.6)/46.2*950));}
+function axis(g,gs){
+  var s='',i,d,x,y,f,a;
+  for(i=-45;i<=0;i+=5){x=px(Math.pow(10,i));s+='<line x1="'+x.toFixed(1)+'" y1="26" x2="'+x.toFixed(1)+'" y2="122" stroke="#eef3f9"/><text x="'+x.toFixed(1)+'" y="138" text-anchor="middle" font-size="10" fill="#8b9aad">1e'+i+'</text>';}
+  for(i=0;i<3;i++){f=F[i];y=34+i*30;a=px(lo(f));
+    s+='<rect x="40" y="'+y+'" width="'+(a-40).toFixed(1)+'" height="21" rx="5" fill="#fef2f2" stroke="#fecaca"/>';
+    s+='<rect x="'+a.toFixed(1)+'" y="'+y+'" width="'+(990-a).toFixed(1)+'" height="21" rx="5" fill="'+f.c+'22" stroke="'+f.c+'"/>';
+    s+='<text x="'+(a>250?47:a+8).toFixed(1)+'" y="'+(y+14.5)+'" font-size="11" font-weight="800" fill="'+f.c+'">'+f.n+' reaches down to '+ex(lo(f))+'</text>';
+    if(a>250)s+='<text x="'+(a-8).toFixed(1)+'" y="'+(y+14.5)+'" text-anchor="end" font-size="10" font-weight="700" fill="#b91c1c">all of this becomes 0</text>';
+  }
+  d=px(g);
+  s+='<line x1="'+d.toFixed(1)+'" y1="20" x2="'+d.toFixed(1)+'" y2="126" stroke="#152033" stroke-width="2"/>';
+  s+='<text x="'+d.toFixed(1)+'" y="14" text-anchor="middle" font-size="11" font-weight="800" fill="#152033">gradient '+ex(g)+'</text>';
+  if(gs!==g){x=px(gs);
+    s+='<line x1="'+x.toFixed(1)+'" y1="20" x2="'+x.toFixed(1)+'" y2="126" stroke="#7c3aed" stroke-width="2" stroke-dasharray="5 4"/>';
+    s+='<line x1="'+d.toFixed(1)+'" y1="152" x2="'+x.toFixed(1)+'" y2="152" stroke="#7c3aed" stroke-width="2" marker-end="url(#s10w7-a)"/>';
+    s+='<text x="'+((d+x)/2).toFixed(1)+'" y="168" text-anchor="middle" font-size="10.5" font-weight="800" fill="#6d28d9">loss scaling lifts it to '+ex(gs)+'</text>';
+  }
+  s+='<defs><marker id="s10w7-a" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0 0 6 3 0 6z" fill="#7c3aed"/></marker></defs>';
+  $('ax').innerHTML=s;
+}
+function draw(){
+  var g=Math.pow(10,+$('g').value/10),S=Math.pow(2,+$('s').value),gs=g*S,i,f,v,r='',cls,txt;
+  $('gv').textContent=ex(g); $('sv').textContent='×'+S;
+  for(i=0;i<3;i++){f=F[i];v=q(gs,f.e,f.m);
+    cls=v===0?'no':!isFinite(v)?'no':v<Math.pow(2,2-(1<<(f.e-1)))?'sn':'ok';
+    txt=v===0?'flushed to zero':!isFinite(v)?'overflowed to infinity':cls==='sn'?'held as a subnormal, precision reduced':'held normally';
+    r+='<tr><td>'+f.n+'</td><td>'+ex(lo(f))+'</td><td class="s10w7-'+cls+'">'+ex(v)+'</td><td class="s10w7-'+cls+'">'+(v===0?'100%':isFinite(v)?(Math.abs(v-gs)/gs*100).toFixed(3)+'%':'over range')+'</td><td class="s10w7-'+cls+'">'+txt+'</td></tr>';
+  }
+  $('rows').innerHTML=r;
+  $('note').innerHTML='fp16 keeps 10 mantissa bits and only 5 exponent bits, so it runs out of room below <b>'+ex(lo(F[2]))+'</b>. bf16 trades 3 mantissa bits for 3 exponent bits and reaches <b>'+ex(lo(F[1]))+'</b>, roughly '+(Math.log(lo(F[2])/lo(F[1]))/Math.LN10).toFixed(0)+' decades further down. That range is the entire reason it took over.';
+  var h=q(gs,5,10),back=h/S,ov=!isFinite(h),ok=!ov&&back>0,cl=ok?'ok':'no',err=Math.abs(back-g)/g*100;
+  $('pipe').innerHTML='<span>the true gradient</span><b>'+ex(g)+'</b>'
+    +'<span>multiply the loss by '+S+'</span><b style="color:#7c3aed">'+ex(gs)+' <i>every gradient scales with it</i></b>'
+    +'<div class="s10w7-hr"></div>'
+    +'<span>stored in fp16</span><b class="s10w7-'+cl+'">'+ex(h)+'</b>'
+    +'<span>divide the result back by '+S+'</span><b class="s10w7-'+cl+'">'+ex(back)+'</b>'
+    +'<div class="s10w7-hr"></div>'
+    +'<span>error against the true gradient</span><b class="s10w7-'+cl+'">'+(ov?'over range':back===0?'100%':err.toFixed(3)+'%')+'</b>';
+  $('say').className='s10w7-say '+(ok?(S>1?'good':''):'bad');
+  $('say').innerHTML=ov
+    ?'×'+S+' pushes '+ex(g)+' up to '+gs.toFixed(0)+', past the fp16 ceiling of '+((2-Math.pow(2,-10))*Math.pow(2,15))+'. It saturates to infinity and the step is lost at the top of the range rather than the bottom. A loss scale has a ceiling as well as a floor, which is why real trainers halve it whenever an infinity appears.'
+    :back===0?'At ×'+S+' the gradient still lands under '+ex(lo(F[2]))+' and fp16 returns exactly zero. That weight receives no update at all this step. Push the loss scale higher, or move to bf16.'
+    :S===1?'With no scaling, fp16 stores '+ex(h)+'. Raise the loss scale slider and the same gradient is lifted into the range fp16 can still see.'
+    :'×'+S+' lifts '+ex(g)+' to '+ex(gs)+', which clears the fp16 floor of '+ex(lo(F[2]))+'. Dividing back by '+S+' returns '+ex(back)+', off by '+err.toFixed(3)+'%. The scale factor cancels out and the update is honest.';
+  axis(g,gs);
+}
+$('g').addEventListener('input',draw);
+$('s').addEventListener('input',draw);
+$('q').addEventListener('click',function(){$('g').value=-80;$('s').value=10;draw();});
+$('r').addEventListener('click',function(){$('g').value=-80;$('s').value=0;draw();});
+draw();
+}());
+
+
+
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+
+
+=== widget_8_block_scale.html ===
+
+(function(){
+'use strict';
+var G=[0,0.5,1,1.5,2,3,4,6],raw=[],sd=7;
+function $(i){return document.getElementById('s10w8-'+i);}
+function rnd(){sd=(sd*1103515+12345)%2147483647;return sd/2147483647;}
+function gen(){raw=[];for(var i=0;i<32;i++)raw.push((rnd()+rnd()+rnd()-1.5)*0.62+(rnd()<0.5?0.02:-0.02));}
+function fp4(x){var a=Math.abs(x),b=0,i;for(i=1;i<8;i++)if(Math.abs(G[i]-a)<Math.abs(G[b]-a))b=i;return b;}
+function bin(v,w){var s='';while(w--)s+=(v>>w)&1;return s;}
+function build(){
+  var n=+$('n').value,K=+$('o').value/10,a=raw.slice(0,n),m=0,i;
+  for(i=1;i<n;i++)m=Math.max(m,Math.abs(a[i]));
+  a[0]=(raw[0]<0?-1:1)*K*m;
+  var amax=0;for(i=0;i<n;i++)amax=Math.max(amax,Math.abs(a[i]));
+  var p=Math.floor(Math.log(amax)/Math.LN2),sc=Math.pow(2,p-2),c=[],r=[];
+  for(i=0;i<n;i++){c.push(fp4(a[i]/sc));r.push((a[i]<0?-1:1)*G[c[i]]*sc);}
+  return {n:n,K:K,a:a,c:c,r:r,sc:sc,p:p,amax:amax};
+}
+function chart(d){
+  var s='',i,w=952/d.n,bw=Math.min(30,w*0.62),cx,yo,yr,h=56,base=90;
+  s+='<line x1="24" y1="'+base+'" x2="976" y2="'+base+'" stroke="#cbd5e1"/>';
+  for(i=0;i<d.n;i++){
+    cx=24+(i+0.5)*w; yo=base-d.a[i]/d.amax*h; yr=base-d.r[i]/d.amax*h;
+    s+='<rect x="'+(cx-bw/2).toFixed(1)+'" y="'+Math.min(base,yo).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+Math.abs(yo-base).toFixed(1)+'" fill="none" stroke="#64748b" stroke-dasharray="3 2"/>';
+    s+='<rect x="'+(cx-bw/2+3).toFixed(1)+'" y="'+Math.min(base,yr).toFixed(1)+'" width="'+(bw-6).toFixed(1)+'" height="'+Math.abs(yr-base).toFixed(1)+'" rx="2" fill="'+(i===0?'#7c3aed':'#159447')+'"/>';
+    if(d.n<=16)s+='<text x="'+cx.toFixed(1)+'" y="170" text-anchor="middle" font-size="10" font-weight="700" font-family="ui-monospace,monospace" fill="'+(i===0?'#6d28d9':'#64748b')+'">'+(d.a[i]<0?1:0)+bin(d.c[i],3)+'</text>';
+    s+='<text x="'+cx.toFixed(1)+'" y="182" text-anchor="middle" font-size="9" fill="#94a3b8">'+i+'</text>';
+  }
+  s+='<text x="24" y="14" font-size="10.5" font-weight="800" fill="#6d28d9">value 0 is the outlier, '+d.K.toFixed(1)+'× the largest of the rest</text>';
+  s+='<text x="976" y="14" text-anchor="end" font-size="10.5" font-weight="800" fill="#64748b">block maximum '+d.amax.toFixed(4)+'</text>';
+  $('ch').innerHTML=s;
+}
+function draw(){
+  var d=build(),i,e,mx=0,su=0,av=0,z=0,tot=d.n*4+8,bpv=tot/d.n,wi=0;
+  for(i=0;i<d.n;i++){e=Math.abs(d.r[i]-d.a[i]);su+=e;av+=Math.abs(d.a[i]);if(d.r[i]===0)z++;if(e>mx){mx=e;wi=i;}}
+  var rel=su/av*100,step=d.sc/2;
+  $('nv').textContent=d.n; $('ov').textContent=d.K.toFixed(1)+'×';
+  $('pipe').innerHTML='<span>largest magnitude in the block</span><em>'+d.amax.toFixed(6)+'</em>'
+   +'<span>its power of two, floor of log2</span><em>'+d.p+'</em>'
+   +'<span>fp4 E2M1 tops out at 6, which is 2^2</span><em>shift by 2</em>'
+   +'<div class="s10w8-hr"></div>'
+   +'<span>shared scale, 2^('+d.p+' &minus; 2)</span><em style="color:#5b21b6">'+Math.pow(2,d.p-2).toExponential(3)+'</em>'
+   +'<span>stored as an 8-bit exponent, '+(d.p-2)+' + 127</span><em style="color:#5b21b6">'+bin(d.p-2+127&255,8)+'</em>';
+  var ch='';
+  for(i=0;i<d.n;i++)ch+='<i>4</i>';
+  $('chips').innerHTML=ch+'<i class="sc">8 shared</i>';
+  $('budget').innerHTML='('+d.n+' × 4 + 8) &divide; '+d.n+' = <b>'+bpv.toFixed(2)+'</b> bits per value';
+  $('stats').innerHTML='<tr><td>bits stored, fp32 against this</td><td>'+d.n*32+' &rarr; '+tot+'</td></tr>'
+   +'<tr><td>memory shrinks by</td><td>'+(d.n*32/tot).toFixed(2)+'×</td></tr>'
+   +'<tr><td>smallest step this block can express</td><td>'+step.toExponential(3)+'</td></tr>'
+   +'<tr><td>largest error, at value '+wi+'</td><td>'+mx.toFixed(6)+'</td></tr>'
+   +'<tr><td>mean error against the average magnitude</td><td>'+rel.toFixed(2)+'%</td></tr>'
+   +'<tr><td>values crushed to exactly zero</td><td>'+z+' of '+d.n+'</td></tr>';
+  $('say').className='s10w8-say'+(z*4>=d.n?' warn':'');
+  $('say').innerHTML='The block maximum '+d.amax.toFixed(4)+' fixes the shared scale, so the smallest step anything here can express is '+step.toExponential(3)+'. '
+   +(z===1?'One of the '+d.n+' values falls below half a step and comes back as zero. ':z>1?z+' of the '+d.n+' values fall below half a step and come back as zero. ':'Every value clears that step, so none of them collapse. ')
+   +'Mean error '+rel.toFixed(2)+'% of the average magnitude, for '+bpv.toFixed(2)+' bits per value in place of 32.'
+   +(z*4>=d.n?' A shorter block means fewer values trapped behind one large one.':'');
+  chart(d);
+}
+$('n').addEventListener('input',draw);
+$('o').addEventListener('input',draw);
+$('g2').addEventListener('click',function(){gen();draw();});
+$('r').addEventListener('click',function(){$('n').value=16;$('o').value=15;sd=7;gen();draw();});
+gen();draw();
+}());
+
+
+
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+
+
+=== widget_9_clip.html ===
+
+(function(){
+'use strict';
+var N=40,SP=24,DIR=[0.75,0.5,0.4330127];
+function $(i){return document.getElementById('s10w9-'+i);}
+function rnd(i){var x=Math.sin(i*12.9898)*43758.5453;return x-Math.floor(x);}
+function sim(cap,spk){
+  var n=[],a=[],l=[3.2],i,d,hits=0;
+  for(i=0;i<=N;i++)n.push(i===SP?spk:0.30+0.55*Math.exp(-i/14)+0.22*rnd(i));
+  for(i=0;i<=N;i++){a.push(Math.min(n[i],cap));if(n[i]>cap)hits++;}
+  for(i=0;i<N;i++){d=i>=1?Math.max(0,a[i-1]-1.2)*0.42:0;l.push(Math.max(0.35,l[i]*0.955)+d);}
+  return {n:n,a:a,l:l,hits:hits};
+}
+function px(i){return 44+i/N*566;}
+function yn(v){return 150-(Math.log(Math.max(0.1,Math.min(12,v)))/Math.LN10+1)/2.1*120;}
+function poly(p,c,w,d){return '<polyline points="'+p+'" fill="none" stroke="'+c+'" stroke-width="'+w+'"'+(d?' stroke-dasharray="'+d+'"':'')+' stroke-linejoin="round"/>';}
+function tx(x,y,s,c,a,b){return '<text x="'+x+'" y="'+y+'" text-anchor="'+(a||'middle')+'" font-size="'+(b||9.5)+'" font-weight="700" fill="'+c+'">'+s+'</text>';}
+function chart(m,mu,cap,react){
+  var s='',i,mx=0,pr='',pa='',pl='',pu='',ycap=yn(cap);
+  for(i=0;i<=N;i++)mx=Math.max(mx,m.l[i],mu.l[i]);mx*=1.12;
+  s+=tx(44,15,'gradient norm, log scale','#7c3aed','start',10.5);
+  s+=tx(44,196,'training loss','#dc2626','start',10.5);
+  for(i=-1;i<=1;i++)s+='<line x1="44" y1="'+yn(Math.pow(10,i))+'" x2="610" y2="'+yn(Math.pow(10,i))+'" stroke="#eef3f9"/>'+tx(39,yn(Math.pow(10,i))+3.5,i<0?'0.1':i?'10':'1','#8b9aad','end');
+  s+='<line x1="44" y1="300" x2="610" y2="300" stroke="#e6edf6"/>'+tx(39,303,'0','#8b9aad','end')+tx(39,208,mx.toFixed(1),'#8b9aad','end');
+  s+='<rect x="44" y="'+ycap+'" width="566" height="'+(150-ycap)+'" fill="rgba(21,148,71,.06)"/>';
+  s+='<line x1="44" y1="'+ycap+'" x2="610" y2="'+ycap+'" stroke="#159447" stroke-width="1.6" stroke-dasharray="6 4"/>';
+  s+=tx(608,ycap-5,'cap '+cap.toFixed(2),'#159447','end');
+  for(i=0;i<=N;i++){pr+=px(i).toFixed(1)+','+yn(m.n[i]).toFixed(1)+' ';pa+=px(i).toFixed(1)+','+yn(m.a[i]).toFixed(1)+' ';
+    pl+=px(i).toFixed(1)+','+(300-m.l[i]/mx*92).toFixed(1)+' ';pu+=px(i).toFixed(1)+','+(300-mu.l[i]/mx*92).toFixed(1)+' ';}
+  s+=poly(pr,'#c4b5fd',2.6)+poly(pa,'#7c3aed',2.6)+poly(pu,'#f0a3a3',2.2,'6 4')+poly(pl,'#dc2626',2.6);
+  s+='<line x1="'+px(SP)+'" y1="26" x2="'+px(SP)+'" y2="300" stroke="#d97706" stroke-width="1.3" stroke-dasharray="3 3"/>';
+  s+='<circle cx="'+px(SP)+'" cy="'+yn(m.n[SP])+'" r="4.2" fill="#7c3aed"/>'+tx(px(SP),yn(m.n[SP])-8,'norm '+m.n[SP].toFixed(2),'#5b21b6');
+  s+=tx(px(SP),325,'step '+SP,'#b45309');
+  if(react>0){s+='<line x1="'+px(react)+'" y1="200" x2="'+px(react)+'" y2="300" stroke="#dc2626" stroke-width="1.3" stroke-dasharray="3 3"/>';
+    s+='<circle cx="'+px(react)+'" cy="'+(300-mu.l[react]/mx*92).toFixed(1)+'" r="4.2" fill="#dc2626"/>';
+    s+=tx(px(react)+4,325,'loss reacts at step '+react+', '+(react-SP)+' steps later','#b91c1c','start');}
+  s+=tx(327,15,'raw norm in pale violet, norm after clipping in solid violet','#8b9aad');
+  s+=tx(610,196,'solid: with the cap.  dashed: with no cap at all','#8b9aad','end');
+  $('chart').innerHTML=s;
+}
+function vec(spk,cap,sc){
+  var ax=Math.cos(-0.5),ay=Math.sin(-0.5),L1=spk/12*112,L2=Math.min(spk,cap)/12*112,s='';
+  s+='<circle cx="26" cy="106" r="3" fill="#94a3b8"/>';
+  s+='<line x1="26" y1="106" x2="'+(26+ax*L1)+'" y2="'+(106+ay*L1)+'" stroke="#c4b5fd" stroke-width="7" stroke-linecap="round"/>';
+  s+='<line x1="26" y1="106" x2="'+(26+ax*L2)+'" y2="'+(106+ay*L2)+'" stroke="#159447" stroke-width="7" stroke-linecap="round"/>';
+  s+=tx(26+ax*L1+8,106+ay*L1-6,'raw, length '+spk.toFixed(2),'#6d28d9','start',10.5);
+  s+=tx(26+ax*L2+8,106+ay*L2+16,'clipped, length '+Math.min(spk,cap).toFixed(2),'#166534','start',10.5);
+  s+=tx(26,130,'Both arrows lie on the same ray, so the direction','#8b9aad','start',10);
+  s+=tx(26,143,'is untouched. Only the length changes, by x'+sc.toFixed(3),'#8b9aad','start',10);
+  $('vec').innerHTML=s;
+}
+function draw(){
+  var cap=+$('cap').value/10,spk=+$('spk').value/10,m=sim(cap,spk),mu=sim(1e9,spk),sc=Math.min(1,cap/spk),i,best=0,bd=0.02;
+  for(i=1;i<=N;i++)if(mu.l[i]-mu.l[i-1]>bd){bd=mu.l[i]-mu.l[i-1];best=i;}
+  $('capv').textContent=cap.toFixed(2);$('spkv').textContent=spk.toFixed(2);
+  $('say').innerHTML='One batch out of '+(N+1)+' produces a gradient of length <b>'+spk.toFixed(2)+'</b> while the cap is <b>'+cap.toFixed(2)+'</b>. Every gradient in the model is multiplied by '+cap.toFixed(2)+' / '+spk.toFixed(2)+' = <b>'+sc.toFixed(3)+'</b>'+(sc<1?'.':', so nothing is held back.');
+  for(i=0;i<3;i++){$('r'+(i+1)).textContent=(spk*DIR[i]).toFixed(3);$('c'+(i+1)).textContent=(spk*sc*DIR[i]).toFixed(3);}
+  $('rn').textContent=spk.toFixed(3);$('cn').textContent=(spk*sc).toFixed(3);
+  $('scale').textContent=sc.toFixed(3);$('hits').textContent=m.hits;
+  $('note').innerHTML=(best>0?'The norm rose at step '+SP+'. The uncapped loss only rose at step '+best+', <b>'+(best-SP)+' steps later</b>. ':'')+'Peak loss reaches <b>'+Math.max.apply(null,m.l).toFixed(2)+'</b> with this cap and <b>'+Math.max.apply(null,mu.l).toFixed(2)+'</b> with no cap at all.';
+  $('status').textContent=m.hits+' of '+(N+1)+' steps clipped. The norm is measured before the update, so it warns first.';
+  chart(m,mu,cap,best);vec(spk,cap,sc);
+}
+$('cap').addEventListener('input',draw);$('spk').addEventListener('input',draw);
+draw();
+}());
+
+
+
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+

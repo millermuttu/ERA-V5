@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 10 Widget 5 - Borrowing a Bigger Batch</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s10w5-w{max-width:1180px;margin:0 auto;padding:14px 22px 16px}
+.s10w5-k{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--amber)}
+.s10w5-w h1{font-size:24px;line-height:1.12;margin:4px 0 9px}
+.s10w5-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:12px 14px}
+.s10w5-card h2{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 9px;font-weight:800}
+.s10w5-bar{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-bottom:11px}
+.s10w5-bar button{border:1px solid var(--amber);background:var(--amber);color:#fff;border-radius:8px;padding:7px 16px;font:800 12.5px Inter,sans-serif;cursor:pointer}
+.s10w5-bar button.g{background:#fff;color:var(--amber)}
+.s10w5-bar button:disabled{opacity:.42;cursor:default}
+.s10w5-sl{display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700}
+.s10w5-sl input{width:110px;vertical-align:middle;accent-color:var(--amber)}
+.s10w5-sl b{font:800 12.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--amber);min-width:20px}
+.s10w5-st{font-size:12px;font-weight:700;color:var(--muted)}
+.s10w5-eqn{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:11px}
+.s10w5-ch{border:1px solid var(--line);background:#fff;border-radius:9px;padding:5px 12px;text-align:center;min-width:112px}
+.s10w5-ch span{display:block;font-size:9.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.s10w5-ch b{display:block;font:800 19px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--ink)}
+.s10w5-ch.hot{border-color:#fcd34d;background:#fffbeb}.s10w5-ch.hot b{color:#b45309}
+.s10w5-op{font:800 17px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--muted)}
+.s10w5-g{display:grid;grid-template-columns:1.3fr 1fr;gap:13px;align-items:start}
+.s10w5-g svg{display:block;width:100%;height:auto}
+.s10w5-note{margin:8px 0 0;font-size:12px;color:var(--muted);line-height:1.45}
+.s10w5-note b{color:var(--ink)}
+.s10w5-t{width:100%;border-collapse:collapse;font-size:13px}
+.s10w5-t td{padding:5px 4px;border-bottom:1px solid #eef2f7}
+.s10w5-t td:first-child{font:800 11px Inter,sans-serif;letter-spacing:.03em;text-transform:uppercase;color:var(--muted)}
+.s10w5-t td:last-child{text-align:right;font:800 15px ui-monospace,SFMono-Regular,Consolas,monospace}
+.s10w5-t tr.q td:last-child{color:var(--amber)}
+.s10w5-t tr.g td:last-child{color:var(--green)}
+.s10w5-t tr.e td{border-bottom:0}
+.s10w5-eq{font:800 14px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;background:#0f172a;color:#dbeafe;border-radius:9px;padding:8px 11px;margin-top:9px;white-space:pre;overflow-x:auto}
+.s10w5-eq u{color:#fbbf24;text-decoration:none}
+.s10w5-eq i{color:#86efac;font-style:normal}
+.s10w5-badge{display:inline-block;margin-top:9px;padding:5px 11px;border-radius:999px;background:#dcfce7;border:1px solid #86efac;color:#166534;font-size:11.5px;font-weight:800}
+.s10w5-sign{margin:9px 0 0;font-size:12.5px;font-weight:700;color:var(--amber);border-left:3px solid var(--amber);padding-left:9px;line-height:1.45}
+.s10w5-ax{font:700 9.5px Inter,sans-serif;fill:#8b9aad}
+@media(max-width:940px){.s10w5-g{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s10w5-w">
+<div class="s10w5-k">ERA V5 Session 10 · borrowing a bigger batch</div>
+<h1>Pile the gradients up, then take one step</h1>
+<div class="s10w5-bar">
+<button id="s10w5-next" type="button" aria-label="Run the next micro-batch and add its gradient to the buffer">Run one micro-batch</button>
+<button id="s10w5-reset" class="g" type="button" aria-label="Empty the buffer and start again">Start over</button>
+<label class="s10w5-sl" for="s10w5-mb">micro-batch <input id="s10w5-mb" type="range" min="1" max="8" value="4" aria-label="Examples in one micro-batch"><b id="s10w5-mbv">4</b></label>
+<label class="s10w5-sl" for="s10w5-ac">accumulation steps <input id="s10w5-ac" type="range" min="1" max="12" value="8" aria-label="Micro-batches accumulated before one optimizer step"><b id="s10w5-acv">8</b></label>
+<span class="s10w5-st" id="s10w5-status" aria-live="polite"></span>
+</div>
+<div class="s10w5-eqn">
+<div class="s10w5-ch"><span>examples per pass</span><b id="s10w5-c1"></b></div>
+<span class="s10w5-op">×</span>
+<div class="s10w5-ch"><span>passes before a step</span><b id="s10w5-c2"></b></div>
+<span class="s10w5-op">=</span>
+<div class="s10w5-ch hot"><span>global batch</span><b id="s10w5-c3"></b></div>
+<span class="s10w5-st" id="s10w5-blurb"></span>
+</div>
+<section class="s10w5-g">
+<div class="s10w5-card">
+<h2>Each micro-batch gradient, and the average they are heading for</h2>
+<svg id="s10w5-chart" viewBox="0 0 440 200" role="img" aria-label="Bar chart of the gradient from each micro-batch, with the running average and the full batch average marked"></svg>
+<p class="s10w5-note" id="s10w5-cnote"></p>
+</div>
+<div class="s10w5-card">
+<h2>What the buffer holds</h2>
+<table class="s10w5-t">
+<tr><td>micro-batches run</td><td id="s10w5-r1"></td></tr>
+<tr><td>examples seen</td><td id="s10w5-r2"></td></tr>
+<tr class="q"><td>gradients piled up</td><td id="s10w5-r3"></td></tr>
+<tr class="e"><td>average so far</td><td id="s10w5-r4"></td></tr>
+</table>
+<div class="s10w5-eq" id="s10w5-eq"></div>
+<span class="s10w5-badge" id="s10w5-badge" hidden></span>
+<p class="s10w5-sign" id="s10w5-sign"></p>
+</div>
+</section>
+<section class="s10w5-card" style="margin-top:11px">
+<p class="s10w5-note" id="s10w5-foot"></p>
+</section>
+</main>
+<script>
+(function(){
+'use strict';
+var done=0,W2=4,T=20;
+function $(i){return document.getElementById('s10w5-'+i);}
+function f3(v){return v.toFixed(3);}
+function gx(i){var x=1+((i-1)%8)*0.25;return 2*(12*x-T)*W2*x;}
+function avg(a,b){var s=0,i;for(i=a;i<=b;i++)s+=gx(i);return s/(b-a+1);}
+function chart(mb,ac,means,gm){
+  var L=44,R=10,TP=12,B=28,iw=440-L-R,ih=200-TP-B,i,lo=0,hi=0,s='',bw,x,z,v,r,rm=0,pts='';
+  for(i=0;i<ac;i++){lo=Math.min(lo,means[i]);hi=Math.max(hi,means[i]);}
+  r=(hi-lo)*0.1||1;hi=Math.ceil((hi+r)/25)*25;lo=Math.floor((lo-r)/25)*25;
+  function py(v){return TP+ih-(v-lo)/(hi-lo)*ih;}
+  z=py(0);bw=iw/ac*0.6;
+  s+='<text x="'+(L-6)+'" y="'+(py(hi)+9)+'" text-anchor="end" class="s10w5-ax">'+hi+'</text>';
+  s+='<text x="'+(L-6)+'" y="'+(z+3.5)+'" text-anchor="end" class="s10w5-ax">0</text>';
+  s+='<text x="'+(L-6)+'" y="'+(py(lo)-3)+'" text-anchor="end" class="s10w5-ax">'+lo+'</text>';
+  for(i=0;i<ac;i++){
+    x=L+(i+0.5)/ac*iw;
+    v=i<done?py(means[i]):z-3;
+    s+='<rect x="'+(x-bw/2).toFixed(1)+'" y="'+Math.min(z,v).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+Math.max(2,Math.abs(v-z)).toFixed(1)+'" rx="2" fill="'+(i<done?(means[i]<0?'#d97706':'#7c3aed'):'#e2e8f0')+'"/>';
+    s+='<text x="'+x.toFixed(1)+'" y="194" text-anchor="middle" class="s10w5-ax">'+(i+1)+'</text>';
+    if(i===done-1)s+='<text x="'+x.toFixed(1)+'" y="'+(means[i]<0?v+11:v-5).toFixed(1)+'" text-anchor="middle" class="s10w5-ax" fill="'+(means[i]<0?'#b45309':'#5b21b6')+'">'+f3(means[i])+'</text>';
+    if(i<done){rm+=means[i];pts+=x.toFixed(1)+','+py(rm/(i+1)).toFixed(1)+' ';}
+  }
+  s+='<line x1="'+L+'" y1="'+z+'" x2="'+(440-R)+'" y2="'+z+'" stroke="#c3cede"/>';
+  s+='<line x1="'+L+'" y1="'+py(gm)+'" x2="'+(440-R)+'" y2="'+py(gm)+'" stroke="#159447" stroke-width="2" stroke-dasharray="5 4"/>';
+  s+='<text x="'+(440-R)+'" y="'+(py(gm)-5)+'" text-anchor="end" class="s10w5-ax" fill="#159447">the whole batch averages '+f3(gm)+'</text>';
+  if(done)s+='<polyline points="'+pts+'" fill="none" stroke="#0891b2" stroke-width="2.5" stroke-linejoin="round"/>';
+  $('chart').innerHTML=s;
+}
+function draw(){
+  var mb=+$('mb').value,ac=+$('ac').value,gm=avg(1,mb*ac),means=[],i,sum=0;
+  if(done>ac)done=ac;
+  for(i=0;i<ac;i++)means.push(avg(i*mb+1,(i+1)*mb));
+  for(i=0;i<done;i++)sum+=means[i];
+  var o={mbv:mb,acv:ac,c1:mb,c2:ac,c3:mb*ac,r1:done+' of '+ac,r2:done*mb+' of '+mb*ac,
+      r3:f3(sum),r4:done?f3(sum/done):'nothing yet'},k;
+  for(k in o)$(k).textContent=o[k];
+  $('blurb').textContent='One pass holds '+mb+' example'+(mb>1?'s':'')+' in memory. The step behaves as if '+mb*ac+' were there.';
+  $('eq').innerHTML=done===ac?'<u>'+f3(sum)+'</u> ÷ <u>'+ac+'</u> = <i>'+f3(sum/ac)+'</i>   the gradient the optimizer steps on':'buffer = '+f3(sum)+'\nwaiting on '+(ac-done)+' more micro-batch'+(ac-done===1?'':'es');
+  $('badge').hidden=done!==ac;
+  $('badge').textContent='One optimizer step taken on '+f3(sum/ac);
+  $('sign').textContent=done===ac?'The same '+mb*ac+' examples run as one batch average '+f3(gm)+'. The pile-up matched it to the last digit and never held more than '+mb+' at once.':done?'Micro-batch '+done+' alone reported '+f3(means[done-1])+', which is '+(means[done-1]*gm<0?'the opposite direction to the full batch. One slice on its own is a poor guide.':'off the full batch by '+f3(Math.abs(means[done-1]-gm))+'. Averaging the slices is what closes that.'):'The buffer is empty. Run a micro-batch to start piling gradients into it.';
+  $('cnote').innerHTML='Violet bars pull the weight down, amber bars pull it up. The <b>cyan line</b> is the average of everything run so far, closing on the green target.';
+  $('status').textContent=done===ac?'All '+ac+' micro-batches in. Step taken.':done+' of '+ac+' micro-batches in.';
+  $('next').disabled=done===ac;
+  $('foot').innerHTML='A batch of '+mb*ac+' would need '+ac+' times the activation memory of a batch of '+mb+'. Accumulation buys the large batch with the small memory, and the only cost is '+ac+' forward and backward passes before the weights move once.';
+  chart(mb,ac,means,gm);
+}
+$('next').addEventListener('click',function(){if(done<+$('ac').value){done++;draw();}});
+$('reset').addEventListener('click',function(){done=0;$('mb').value=4;$('ac').value=8;draw();});
+$('mb').addEventListener('input',function(){done=0;draw();});
+$('ac').addEventListener('input',function(){done=0;draw();});
+draw();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

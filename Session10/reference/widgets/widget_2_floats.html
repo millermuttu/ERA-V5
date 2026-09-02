@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 10 Widget 2 - How a Number Is Made</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px Inter,ui-sans-serif,system-ui,sans-serif}
+.s10w2-wrap{max-width:1280px;margin:0 auto;padding:10px 20px 12px}
+.s10w2-kick{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--violet)}
+.s10w2-wrap h1{font-size:21px;line-height:1.1;margin:2px 0 3px}
+.s10w2-sub{color:var(--muted);margin:0 0 7px;line-height:1.35;font-size:12.5px}
+.s10w2-run{display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-bottom:6px;font-size:11.5px;font-weight:700;color:var(--muted)}
+.s10w2-run button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:4px 10px;font-family:inherit;font-size:11.5px;font-weight:700;color:var(--muted);cursor:pointer}
+.s10w2-run button.on{border-color:var(--violet);color:#5b21b6;background:#f5f3ff;box-shadow:inset 0 0 0 1px var(--violet)}
+.s10w2-run input[type=text]{border:1px solid var(--line);border-radius:7px;padding:4px 8px;font:700 12px ui-monospace,monospace;width:92px}
+.s10w2-run label{margin-left:8px}
+.s10w2-run input[type=range]{accent-color:var(--violet);width:88px;vertical-align:middle}
+.s10w2-tot{font-family:ui-monospace,monospace;font-weight:800;color:var(--violet);margin-left:8px}
+.s10w2-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 22px rgba(20,42,75,.07);padding:9px 11px;margin-bottom:7px}
+.s10w2-card h2{font-size:10.5px;margin:0 0 6px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.s10w2-card h2 em{font-style:normal;text-transform:none;letter-spacing:0;color:var(--violet);font-size:11px}
+.s10w2-g{display:grid;gap:1px 2px;align-items:center;margin-bottom:3px}
+.s10w2-lb{font-size:9.5px;font-weight:800;text-transform:uppercase;color:var(--muted);text-align:right;padding-right:7px}
+.s10w2-b{height:21px;border:0;border-radius:3px;font:800 11px ui-monospace,monospace;color:#fff;cursor:pointer;padding:0}
+.s10w2-ks{background:#64748b;width:22px}.s10w2-ke{background:var(--amber)}.s10w2-km{background:var(--cyan)}
+.s10w2-b:focus-visible{outline:2px solid var(--violet);outline-offset:1px}
+.s10w2-w,.s10w2-o{font:600 10px ui-monospace,monospace;color:#94a3b8;text-align:center;line-height:1.15}
+.s10w2-o.hot{color:var(--ink);font-weight:800}
+.s10w2-w i,.s10w2-o i{display:block;font-style:normal;border-bottom:1px solid currentColor;font-size:9px;line-height:1.1}
+.s10w2-w b,.s10w2-o b{display:block;font-weight:inherit;font-size:9px;line-height:1.15}
+.s10w2-sum{font:700 11.5px ui-monospace,monospace;margin:2px 0 1px}
+.s10w2-say{font-size:11.5px;color:var(--muted);line-height:1.4;margin:0}
+.s10w2-say b{color:var(--ink)}
+.s10w2-sign{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.s10w2-two{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.s10w2-eq{font:12px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;background:#0f172a;color:#dbeafe;border-radius:8px;padding:8px 10px;white-space:pre;overflow-x:auto}
+.s10w2-t{width:100%;border-collapse:collapse;font-size:11.5px}
+.s10w2-t th{text-align:right;font-size:9px;text-transform:uppercase;color:var(--muted);padding:2px 4px;border-bottom:1px solid var(--line);font-weight:800}
+.s10w2-t td{padding:2px 4px;border-bottom:1px solid #eef2f7;font-family:ui-monospace,monospace;text-align:right;white-space:nowrap}
+.s10w2-t th:first-child,.s10w2-t td:first-child{text-align:left;font-family:Inter,sans-serif}
+.s10w2-t td:last-child{color:var(--muted);font-size:10.5px;font-family:Inter,sans-serif}
+.s10w2-t tr.base td{background:#f8fafc;font-weight:800}
+.s10w2-t tr.on td{background:#f5f3ff}
+.s10w2-bad{color:var(--red);font-weight:800}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media(max-width:900px){.s10w2-two{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main class="s10w2-wrap">
+  <div class="s10w2-kick">ERA V5 Session 10</div>
+  <h1>How a number is made</h1>
+  <p class="s10w2-sub">A computer stores a number as three pieces: a <b>sign</b>, an <b>exponent</b> that says how big, and a <b>mantissa</b> that says the digits. Click any bit to flip it, and every number below rebuilds itself one column at a time.</p>
+
+  <div class="s10w2-run" id="s10w2-fmts"></div>
+  <div class="s10w2-run">
+    <span>store this value</span>
+    <input id="s10w2-val" type="text" value="0.1" aria-label="the number to store">
+    <button class="s10w2-q" data-v="0.1" aria-label="store 0.1">0.1</button>
+    <button class="s10w2-q" data-v="1e-8" aria-label="store 1e-8, a small gradient">1e-8</button>
+    <button class="s10w2-q" data-v="3.14159" aria-label="store 3.14159">3.14159</button>
+    <button class="s10w2-q" data-v="65000" aria-label="store 65000">65000</button>
+    <label for="s10w2-e">exponent bits <b id="s10w2-ev"></b></label>
+    <input id="s10w2-e" type="range" min="2" max="11" value="6" aria-label="number of exponent bits">
+    <label for="s10w2-m">mantissa bits <b id="s10w2-mv"></b></label>
+    <input id="s10w2-m" type="range" min="1" max="23" value="9" aria-label="number of mantissa bits">
+    <span class="s10w2-tot" id="s10w2-tot"></span>
+  </div>
+
+  <section class="s10w2-card">
+    <h2 id="s10w2-head"></h2>
+    <div class="s10w2-sign">
+      <button class="s10w2-b s10w2-ks" data-k="s" data-i="0" id="s10w2-sb" aria-label="sign bit, click to flip"></button>
+      <span class="s10w2-say" id="s10w2-signsay"></span>
+    </div>
+    <div id="s10w2-ex"></div>
+    <div id="s10w2-mn"></div>
+  </section>
+
+  <div class="s10w2-two">
+    <section class="s10w2-card">
+      <h2>Now put the pieces together</h2>
+      <div class="s10w2-eq" id="s10w2-asm"></div>
+    </section>
+    <section class="s10w2-card">
+      <h2>The same value in every format</h2>
+      <table class="s10w2-t" id="s10w2-tbl"></table>
+      <p class="s10w2-say" id="s10w2-int8" style="margin-top:6px"></p>
+    </section>
+  </div>
+</main>
+
+<script>
+(function(){
+  'use strict';
+  var FMT=[['fp32',8,23],['fp16',5,10],['bf16',8,7],['fp8 E4M3',4,3],['fp8 E5M2',5,2],['fp4 E2M1',2,1],['custom',6,9]];
+  var pick=0,val=0.1,cE=6,cM=9,pat=null,touched=false;
+  function $(i){return document.getElementById('s10w2-'+i);}
+  function P(n){return Math.pow(2,n);}
+  function wid(i){return i===6?[cE,cM]:[FMT[i][1],FMT[i][2]];}
+  function rne(x){var f=Math.floor(x),d=x-f;return d>.5?f+1:d<.5?f:(f%2?f+1:f);}
+  function enc(x,eb,mb){
+    var bias=P(eb-1)-1,emin=1-bias,top=P(eb)-1;
+    if(!x)return{s:0,E:0,M:0};
+    var s=x<0?1:0,a=Math.abs(x),e=Math.floor(Math.log2(a));
+    while(a<P(e))e--;while(a>=P(e+1))e++;
+    if(e>=emin){var M=rne((a/P(e)-1)*P(mb));if(M===P(mb)){M=0;e++;}
+      return e+bias>=top?{s:s,E:top,M:0}:{s:s,E:e+bias,M:M};}
+    var q=rne(a/P(emin)*P(mb));
+    return q>=P(mb)?{s:s,E:1,M:0}:{s:s,E:0,M:q};
+  }
+  function dec(b,eb,mb){var bias=P(eb-1)-1,g=b.s?-1:1;
+    if(b.E===P(eb)-1)return b.M?NaN:g*Infinity;
+    return b.E?g*(1+b.M/P(mb))*P(b.E-bias):g*b.M/P(mb)*P(1-bias);}
+  function kase(b,eb,u){return b.E===P(eb)-1?(b.M?'reserved pattern':'overflow to infinity'):b.E?'normal':(b.M?'subnormal':(u&&val?'underflow to zero':'zero'));}
+  function fv(v){return v!==v?'not a number':v===0?'0':!isFinite(v)?(v>0?'infinity':'-infinity'):(Math.abs(v)>=1e-4&&Math.abs(v)<1e7)?String(+v.toPrecision(8)):v.toExponential(4);}
+  function d6(v){if(!isFinite(v)||v!==v)return fv(v);var a=Math.abs(v);return a>=1e4?String(+v.toPrecision(8)):(a>=1e-4||!v)?(rne(v*1e6)/1e6).toFixed(6):v.toExponential(6);}
+  function er(v,r){return v!==v?'-':!isFinite(v)?'infinite':!r?(v?'-':'0'):(Math.abs(v-r)/Math.abs(r)*100).toFixed(3);}
+  function bin(n,w){var b='';for(var i=w-1;i>=0;i--)b+=(Math.floor(n/P(i))%2);return b;}
+  function pad(a){while(a.length<28)a+=' ';return a;}
+  function grid(k,n,bs,worth,cw){
+    var g='<span class="s10w2-lb">bits</span>',i,nm=k==='e'?'exponent':'mantissa';
+    for(i=0;i<n;i++)g+='<button class="s10w2-b s10w2-k'+k+'" data-k="'+k+'" data-i="'+i+'" aria-label="'+nm+' bit '+(i+1)+' is '+bs[i]+', click to flip">'+bs[i]+'</button>';
+    g+='<span class="s10w2-lb">worth</span>';
+    for(i=0;i<n;i++)g+='<span class="s10w2-w">'+worth[i]+'</span>';
+    g+='<span class="s10w2-lb">on?</span>';
+    for(i=0;i<n;i++)g+='<span class="s10w2-o'+(bs[i]==='1'?' hot">'+worth[i]:'">·')+'</span>';
+    return '<div class="s10w2-g" style="grid-template-columns:64px repeat('+n+','+cw+'px)">'+g+'</div>';
+  }
+  function sum(a){return a.join(' + ');}
+  function render(){
+    var w=wid(pick),eb=w[0],mb=w[1],bias=P(eb-1)-1,b=pat||(pat=enc(val,eb,mb));
+    var ebs=bin(b.E,eb),mbs=bin(b.M,mb),v=dec(b,eb,mb),ref=dec(enc(val,8,23),8,23);
+    var ew=[],mw=[],et=[],mt=[],i,den=P(mb);
+    for(i=0;i<eb;i++){ew.push(P(eb-1-i));if(ebs[i]==='1')et.push(P(eb-1-i));}
+    for(i=0;i<mb;i++){mw.push('<i>1</i><b>'+P(i+1)+'</b>');if(mbs[i]==='1')mt.push(P(mb-1-i));}
+    $('head').innerHTML=FMT[pick][0]+' &nbsp;·&nbsp; 1 sign + '+eb+' exponent + '+mb+' mantissa = '+(1+eb+mb)+' bits &nbsp; <em>'+(touched?'you flipped a bit by hand':'the closest pattern this format has to '+val)+'</em>';
+    $('sb').textContent=b.s;
+    $('signsay').innerHTML='<b>sign bit '+b.s+'</b> means the number is '+(b.s?'negative':'positive')+'. One bit, nothing to work out.';
+    $('ex').innerHTML=grid('e',eb,ebs,ew,40)+
+      '<div class="s10w2-sum">'+(et.length?sum(et)+' = '+b.E:'every column is off, so the exponent bits say 0')+'</div>'+
+      '<p class="s10w2-say">An exponent has to reach below 1, because numbers smaller than 1 exist, and bits can never be negative. So a fixed number is always taken off. For '+eb+' exponent bits that number is the <b>bias</b>, 2<sup>'+eb+'-1</sup> - 1 = '+bias+'. Here '+b.E+' - '+bias+' = <b>'+(b.E-bias)+'</b>'+(b.E?', so the scale is 2<sup>'+(b.E-bias)+'</sup> = '+d6(P(b.E-bias)):', but all-zero exponent bits are the subnormal case, where the scale is fixed at 2<sup>'+(1-bias)+'</sup> = '+d6(P(1-bias)))+'.</p>';
+    $('mn').innerHTML=grid('m',mb,mbs,mw,46)+
+      '<div class="s10w2-sum">'+(mt.length?'give every column the same bottom, 2^'+mb+' = '+den+', and the tops that are on add up:  '+sum(mt)+' = '+b.M:'every column is off, so the tops add to 0')+'</div>'+
+      '<div class="s10w2-sum">and that is where the divide comes from:  '+b.M+' / '+den+' = '+d6(b.M/den)+'</div>'+
+      '<p class="s10w2-say">A mantissa is a <b>binary fraction</b>. The first column is worth a half, the next a quarter, then an eighth, on down to 1/'+den+'. Adding fractions needs one shared bottom number, so every column is rewritten over 2<sup>'+mb+'</sup> = '+den+'. That single division is the whole mystery of the divide.</p>';
+    var sn=!b.E,ex=sn?1-bias:b.E-bias,lead=sn?0:1,fr=b.M/den,L=[];
+    L.push(pad('you asked to store')+val);
+    L.push(pad('sign bit '+b.s)+(b.s?'negative':'positive'));
+    L.push(pad('exponent bits')+ebs+' = '+b.E);
+    L.push(pad(sn?'all zero, so no bias here':'minus the bias '+bias)+(sn?'exponent fixed at 1 - '+bias:b.E+' - '+bias)+' = '+ex);
+    L.push(pad('the scale')+'2^'+ex+' = '+d6(P(ex)));
+    L.push(pad('mantissa bits')+b.M+' / '+den+' = '+d6(fr));
+    L.push(pad(lead?'the free leading 1':'no leading 1 down here')+lead+' + '+d6(fr)+' = '+d6(lead+fr));
+    L.push(pad('multiply')+d6(lead+fr)+' x '+d6(P(ex))+' = '+d6((lead+fr)*P(ex)));
+    if(b.E===P(eb)-1)L=[L[0],L[1],pad('exponent bits')+ebs+' = '+b.E+', all ones',pad('all ones is reserved')+'this pattern is not a normal number'];
+    L.push(pad('reads back as')+fv(v)+'   ('+kase(b,eb,!touched)+')');
+    L.push(pad('off by')+er(v,ref)+' %   against fp32');
+    $('asm').textContent=L.join('\n');
+    var t='<tr><th>format</th><th>layout</th><th>reads back</th><th>error</th><th>case</th></tr>',sc=Math.max(1,Math.abs(val))/127,q=rne(val/sc),iv=q*sc;
+    for(i=0;i<FMT.length;i++){
+      var u=wid(i),p=enc(val,u[0],u[1]),x=dec(p,u[0],u[1]),e2=er(x,ref);
+      t+='<tr class="'+(i?(i===pick?'on':''):'base')+'"><td>'+FMT[i][0]+(i?'':' reference')+'</td><td>1+'+u[0]+'+'+u[1]+'</td><td>'+fv(x)+'</td><td'+(parseFloat(e2)>1?' class="s10w2-bad"':'')+'>'+(i?e2+'%':'0%')+'</td><td>'+kase(p,u[0],1)+'</td></tr>';
+    }
+    t+='<tr><td>int8</td><td>8 whole</td><td>'+fv(iv)+'</td><td'+(parseFloat(er(iv,ref))>1?' class="s10w2-bad"':'')+'>'+er(iv,ref)+'%</td><td>'+q+' x scale</td></tr>';
+    $('tbl').innerHTML=t;
+    $('int8').innerHTML='<b>int8 has no exponent at all.</b> One <b>scale</b> is shared by the whole tensor: biggest value '+d6(Math.max(1,Math.abs(val)))+' / 127 = '+sc.toExponential(4)+'. This number becomes the whole number '+q+', and reads back as '+q+' x scale = '+fv(iv)+'. A float gives every number its own exponent. int8 makes the whole tensor share one.';
+    $('ev').textContent=cE;$('mv').textContent=cM;$('tot').textContent='custom total: 1+'+cE+'+'+cM+' = '+(1+cE+cM)+' bits';
+  }
+  function mark(){var n=$('fmts').children,i;for(i=0;i<n.length;i++)n[i].className=i===pick?'on':'';}
+  function reset(){pat=null;touched=false;mark();render();}
+  $('fmts').innerHTML=FMT.map(function(F,i){return '<button data-i="'+i+'"'+(i===pick?' class="on"':'')+' aria-label="show format '+F[0]+'">'+F[0]+'</button>';}).join('');
+  $('fmts').addEventListener('click',function(e){var t=e.target.closest('button');if(t){pick=+t.dataset.i;reset();}});
+  $('val').addEventListener('input',function(){var x=parseFloat(this.value);if(isFinite(x)){val=x;reset();}});
+  $('e').addEventListener('input',function(){cE=+this.value;pick=6;reset();});
+  $('m').addEventListener('input',function(){cM=+this.value;pick=6;reset();});
+  Array.prototype.forEach.call(document.querySelectorAll('.s10w2-q'),function(t){t.addEventListener('click',function(){val=parseFloat(t.dataset.v);$('val').value=t.dataset.v;reset();});});
+  document.addEventListener('click',function(e){
+    var t=e.target.closest('.s10w2-b');if(!t)return;
+    var w=wid(pick),k=t.dataset.k,i=+t.dataset.i;
+    if(k==='s')pat.s=pat.s?0:1;else if(k==='e')pat.E^=P(w[0]-1-i);else pat.M^=P(w[1]-1-i);
+    touched=true;render();
+    var n=document.querySelector('.s10w2-b[data-k="'+k+'"][data-i="'+i+'"]');if(n)n.focus();
+  });
+  render();
+})();
+</script>
+<script>
+(function(){var fe;try{fe=window.frameElement;}catch(e){return;}if(!fe)return;var last=0;
+function fit(){var h=Math.ceil(document.body.scrollHeight)+8;if(Math.abs(h-last)>2){last=h;fe.style.height=h+'px';}}
+if(window.ResizeObserver)new ResizeObserver(fit).observe(document.body);
+window.addEventListener('load',fit);
+document.addEventListener('click',function(){setTimeout(fit,60);setTimeout(fit,300);},true);
+document.addEventListener('input',function(){setTimeout(fit,60);},true);
+[0,120,400,900].forEach(function(t){setTimeout(fit,t);});})();
+</script>
+</body>
+</html>

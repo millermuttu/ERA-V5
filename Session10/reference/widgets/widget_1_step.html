@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 10 Widget 1 - One Training Step</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s10w1-w{max-width:1180px;margin:0 auto;padding:16px 22px 18px}
+.s10w1-k{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.s10w1-w h1{font-size:25px;line-height:1.12;margin:4px 0 10px}
+.s10w1-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:12px 14px}
+.s10w1-card h2{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;font-weight:800}
+.s10w1-say{border:1px solid #a5f3fc;background:#ecfeff;border-radius:10px;padding:10px 13px;color:#134e57;font-size:14.5px;line-height:1.5;margin-bottom:11px}
+.s10w1-say b{color:#0e5f70;font-weight:800}
+.s10w1-say .s10w1-t{color:var(--violet)}
+.s10w1-bar{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-bottom:11px}
+.s10w1-bar button{border:1px solid var(--cyan);background:var(--cyan);color:#fff;border-radius:8px;padding:7px 16px;font:800 12.5px Inter,sans-serif;cursor:pointer}
+.s10w1-bar button.g{background:#fff;color:var(--cyan)}
+.s10w1-bar button:disabled{opacity:.42;cursor:default}
+.s10w1-sl{display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700}
+.s10w1-sl input{width:112px;vertical-align:middle;accent-color:var(--violet)}
+.s10w1-sl b{font:800 12.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--violet);min-width:38px}
+.s10w1-st{font-size:12px;font-weight:700;color:var(--muted)}
+.s10w1-g{display:grid;grid-template-columns:1.5fr 1fr;gap:13px;align-items:start}
+.s10w1-g svg{display:block;width:100%;height:auto}
+.s10w1-sign{margin:9px 0 0;font-size:12.5px;font-weight:700;color:var(--violet);border-left:3px solid var(--violet);padding-left:9px;line-height:1.4}
+.s10w1-met{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:8px}
+.s10w1-met div{border:1px solid var(--line);border-radius:8px;background:#fbfdff;padding:6px 8px}
+.s10w1-met b{display:block;font:800 15px ui-monospace,SFMono-Regular,Consolas,monospace}
+.s10w1-met span{display:block;color:var(--muted);font-size:10px;margin-top:1px}
+.s10w1-ad{margin-top:13px}
+.s10w1-row{display:grid;grid-template-columns:132px minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:center;padding:7px 0;border-top:1px solid #eaf0f7}
+.s10w1-wn{font:800 13px Inter,sans-serif}
+.s10w1-wn b{display:block;font:800 17px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--cyan)}
+.s10w1-lb{display:flex;justify-content:space-between;align-items:baseline;font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px}
+.s10w1-lb b{font:800 13px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--ink)}
+.s10w1-tr{position:relative;height:13px;border-radius:7px;background:#eef3f9;border:1px solid var(--line)}
+.s10w1-tr.mid::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:#c3cede}
+.s10w1-fi{position:absolute;top:1px;bottom:1px;border-radius:6px;transition:left .25s ease,width .25s ease}
+.s10w1-fm{background:var(--amber)}.s10w1-fv{background:var(--green)}
+.s10w1-note{margin:9px 0 0;font-size:12.5px;color:var(--muted);line-height:1.5}
+.s10w1-note b{color:var(--ink)}
+.s10w1-hd{font:800 10px Inter,sans-serif;letter-spacing:.09em;text-transform:uppercase}
+.s10w1-nl{font:700 9.5px Inter,sans-serif;fill:var(--muted);text-anchor:middle}
+.s10w1-nv{font:800 17px ui-monospace,SFMono-Regular,Consolas,monospace;text-anchor:middle;fill:var(--ink)}
+.s10w1-cv{font:800 12.5px ui-monospace,SFMono-Regular,Consolas,monospace;text-anchor:middle}
+.s10w1-gr{fill:#f5f3ff;stroke:#ddd6fe}.s10w1-wr{fill:#ecfeff;stroke:#67e8f9}.s10w1-br{fill:#fff;stroke:#cbd5e1}
+.s10w1-fa{stroke:var(--cyan);stroke-width:2.5;marker-end:url(#s10w1-af)}.s10w1-nl.v{fill:var(--violet)}.s10w1-nl.r{fill:#b91c1c}.s10w1-nl.a{fill:#b45309}.s10w1-cv.p{fill:#6d28d9}.s10w1-cv.a{fill:#92400e}.s10w1-nv.r{fill:var(--red)}.s10w1-cv.d{fill:#4c1d95}.s10w1-cv.c{fill:#0e7490}
+.s10w1-fm2{font:700 10px ui-monospace,SFMono-Regular,Consolas,monospace;fill:#8b9aad;text-anchor:middle}
+.s10w1-flow{stroke-dasharray:11 7;animation:s10w1-d 1.1s linear infinite}
+@keyframes s10w1-d{to{stroke-dashoffset:-18}}
+@media(max-width:940px){.s10w1-g{grid-template-columns:1fr}.s10w1-row{grid-template-columns:1fr;gap:7px}}
+@media(prefers-reduced-motion:reduce){.s10w1-flow{animation:none}.s10w1-fi{transition:none}}
+</style>
+</head>
+<body>
+<main class="s10w1-w">
+<div class="s10w1-k">ERA V5 Session 10 · one training step</div>
+<h1>Forward, loss, backward, Adam, update</h1>
+<p class="s10w1-say" id="s10w1-say"></p>
+<div class="s10w1-bar">
+<button id="s10w1-step" type="button" aria-label="Take one training step">Step</button>
+<button id="s10w1-run" class="g" type="button" aria-label="Run training steps automatically">Run</button>
+<button id="s10w1-reset" class="g" type="button" aria-label="Reset to the starting weights">Reset</button>
+<label class="s10w1-sl" for="s10w1-lr">learning rate <input id="s10w1-lr" type="range" min="1" max="40" value="10" aria-label="Learning rate"><b id="s10w1-lrv">0.10</b></label>
+<label class="s10w1-sl" for="s10w1-t">what counts as right <input id="s10w1-t" type="range" min="4" max="40" value="20" aria-label="Target: the answer we want for input 2"><b id="s10w1-tv">20</b></label>
+<span class="s10w1-st" id="s10w1-status" aria-live="polite">Step 0. Nothing has moved yet.</span>
+</div>
+<section class="s10w1-g">
+<div class="s10w1-card">
+<h2>The network, with live numbers</h2>
+<svg viewBox="0 0 660 232" role="img" aria-label="Network diagram: input two times weight one gives hidden h, times weight two gives output y, compared with the target to give the loss, and the gradient flowing back">
+<text x="6" y="11" class="s10w1-hd" fill="var(--cyan)">Forward · numbers flow right</text>
+<rect x="95" y="22" width="96" height="24" rx="7" class="s10w1-wr"/>
+<text x="143" y="38" class="s10w1-cv c" id="s10w1-cw1">w1 = 3.0000</text>
+<line x1="143" y1="46" x2="143" y2="78" stroke="#a5f3fc" stroke-width="1.5"/>
+<rect x="285" y="22" width="96" height="24" rx="7" class="s10w1-wr"/>
+<text x="333" y="38" class="s10w1-cv c" id="s10w1-cw2">w2 = 4.0000</text>
+<line x1="333" y1="46" x2="333" y2="78" stroke="#a5f3fc" stroke-width="1.5"/>
+<rect x="470" y="22" width="96" height="24" rx="7" fill="#f5f3ff" stroke="#c4b5fd"/>
+<text x="518" y="38" class="s10w1-cv p" id="s10w1-ctg">target 20</text>
+<line x1="518" y1="46" x2="518" y2="78" stroke="#ddd6fe" stroke-width="1.5"/>
+<line x1="92" y1="78" x2="192" y2="78" class="s10w1-fa"/>
+<line x1="282" y1="78" x2="382" y2="78" class="s10w1-fa"/>
+<line x1="472" y1="78" x2="562" y2="78" class="s10w1-fa"/>
+<text x="143" y="99" class="s10w1-fm2">h = w1 × x</text>
+<text x="333" y="99" class="s10w1-fm2">y = w2 × h</text>
+<text x="518" y="99" class="s10w1-fm2">(y − target)²</text>
+<rect x="6" y="50" width="84" height="52" rx="9" class="s10w1-br"/>
+<text x="48" y="68" class="s10w1-nl">input x</text><text x="48" y="90" class="s10w1-nv">2</text>
+<rect x="196" y="50" width="84" height="52" rx="9" class="s10w1-br"/>
+<text x="238" y="68" class="s10w1-nl">hidden h</text><text x="238" y="90" class="s10w1-nv" id="s10w1-vh">6.00</text>
+<rect x="386" y="50" width="84" height="52" rx="9" class="s10w1-br"/>
+<text x="428" y="68" class="s10w1-nl">output y</text><text x="428" y="90" class="s10w1-nv" id="s10w1-vy">24.00</text>
+<rect x="566" y="50" width="88" height="52" rx="9" fill="#fff8f8" stroke="#fca5a5"/>
+<text x="610" y="68" class="s10w1-nl r">loss</text><text x="610" y="90" class="s10w1-nv r" id="s10w1-vloss">16.00</text>
+<line x1="6" y1="114" x2="654" y2="114" stroke="#e6edf6"/>
+<text x="6" y="130" class="s10w1-hd" fill="var(--violet)">Backward · the gradient flows left</text>
+<line x1="654" y1="154" x2="104" y2="154" stroke="var(--violet)" stroke-width="2.5" class="s10w1-flow" marker-end="url(#s10w1-ab)"/>
+<rect x="98" y="164" width="90" height="34" rx="8" class="s10w1-gr"/>
+<text x="143" y="177" class="s10w1-nl v">dL/dw1</text><text x="143" y="192" class="s10w1-cv d" id="s10w1-gw1">64.00</text>
+<rect x="193" y="164" width="90" height="34" rx="8" class="s10w1-gr"/>
+<text x="238" y="177" class="s10w1-nl v">dL/dh</text><text x="238" y="192" class="s10w1-cv d" id="s10w1-gh">32.00</text>
+<rect x="288" y="164" width="90" height="34" rx="8" class="s10w1-gr"/>
+<text x="333" y="177" class="s10w1-nl v">dL/dw2</text><text x="333" y="192" class="s10w1-cv d" id="s10w1-gw2">48.00</text>
+<rect x="383" y="164" width="90" height="34" rx="8" class="s10w1-gr"/>
+<text x="428" y="177" class="s10w1-nl v">dL/dy</text><text x="428" y="192" class="s10w1-cv d" id="s10w1-gy">8.00</text>
+<rect x="486" y="164" width="168" height="34" rx="8" fill="#fffbeb" stroke="#fcd34d"/>
+<text x="570" y="177" class="s10w1-nl a">Adam turns g into the step</text>
+<text x="570" y="192" class="s10w1-cv a">w ← w − lr × m̂ / √v̂</text>
+<text x="6" y="220" fill="#8b9aad" style="font:700 9.5px Inter,sans-serif">Each gradient equals the one to its right multiplied by one more number. That is the chain rule.</text>
+<defs>
+<marker id="s10w1-af" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0 0 6 3 0 6z" fill="#0891b2"/></marker>
+<marker id="s10w1-ab" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0 0 6 3 0 6z" fill="#7c3aed"/></marker>
+</defs>
+</svg>
+<p class="s10w1-sign" id="s10w1-sign"></p>
+</div>
+<div class="s10w1-card">
+<h2>Loss after each step</h2>
+<svg id="s10w1-chart" viewBox="0 0 400 158" role="img" aria-label="Loss falling across training steps"></svg>
+<div class="s10w1-met">
+<div><b id="s10w1-mstep" style="color:var(--violet)">0</b><span>steps taken</span></div>
+<div><b id="s10w1-mloss" style="color:var(--red)">16.00</b><span>loss now</span></div>
+<div><b id="s10w1-mgap" style="color:var(--cyan)">+4.00</b><span>y minus target</span></div>
+</div>
+</div>
+</section>
+<section class="s10w1-card s10w1-ad">
+<h2>What Adam stores for every single weight</h2>
+<div class="s10w1-row">
+<div class="s10w1-wn">weight w1<b id="s10w1-aw1">3.0000</b></div>
+<div><div class="s10w1-lb"><span>m · running average of the gradient</span><b id="s10w1-m1">0.000</b></div><div class="s10w1-tr mid"><i class="s10w1-fi s10w1-fm" id="s10w1-mb1"></i></div></div>
+<div><div class="s10w1-lb"><span>v · running average of its square</span><b id="s10w1-v1">0.00</b></div><div class="s10w1-tr"><i class="s10w1-fi s10w1-fv" id="s10w1-vb1"></i></div></div>
+</div>
+<div class="s10w1-row">
+<div class="s10w1-wn">weight w2<b id="s10w1-aw2">4.0000</b></div>
+<div><div class="s10w1-lb"><span>m · running average of the gradient</span><b id="s10w1-m2">0.000</b></div><div class="s10w1-tr mid"><i class="s10w1-fi s10w1-fm" id="s10w1-mb2"></i></div></div>
+<div><div class="s10w1-lb"><span>v · running average of its square</span><b id="s10w1-v2">0.00</b></div><div class="s10w1-tr"><i class="s10w1-fi s10w1-fv" id="s10w1-vb2"></i></div></div>
+</div>
+<p class="s10w1-note">Two weights here means <b>four extra numbers held in memory</b> for the whole of training. A model with 8 billion weights holds 16 billion of them. Running the finished model holds none.</p>
+</section>
+</main>
+<script>
+(function(){
+'use strict';
+var X=2,B1=0.9,B2=0.999,EPS=1e-8,CAP=24,st,hist,timer=null,mx=1,vx=1;
+function $(i){return document.getElementById('s10w1-'+i);}
+function set(i,v){$(i).textContent=v;}
+function tg(){return +$('t').value;}
+function lr(){return +$('lr').value/100;}
+function fwd(){var h=st.w1*X,y=st.w2*h,d=y-tg(),g=2*d;
+  return {h:h,y:y,d:d,loss:d*d,gy:g,gw2:g*h,gh:g*st.w2,gw1:g*st.w2*X};}
+function reset(){stop();st={w1:3,w2:4,m1:0,v1:0,m2:0,v2:0,n:0};hist=[fwd().loss];mx=1;vx=1;draw();}
+function stop(){if(timer){clearInterval(timer);timer=null;}$('run').textContent='Run';}
+function step(){
+  var f=fwd(),n=st.n+1,c1=1-Math.pow(B1,n),c2=1-Math.pow(B2,n);
+  st.m1=B1*st.m1+0.1*f.gw1; st.v1=B2*st.v1+0.001*f.gw1*f.gw1;
+  st.m2=B1*st.m2+0.1*f.gw2; st.v2=B2*st.v2+0.001*f.gw2*f.gw2;
+  st.w1-=lr()*(st.m1/c1)/(Math.sqrt(st.v1/c2)+EPS);
+  st.w2-=lr()*(st.m2/c1)/(Math.sqrt(st.v2/c2)+EPS);
+  st.n=n; hist.push(fwd().loss);
+  if(n>=CAP)stop();
+  draw();
+}
+function bar(id,val,scale,mid){
+  var p=Math.min(100,Math.abs(val)/scale*(mid?50:100)),e=$(id).style;
+  if(mid){e.left=(val<0?50-p:50)+'%';}else{e.left='0%';}
+  e.width=Math.max(val===0?0:1.2,p)+'%';
+}
+function chart(){
+  var L=36,R=8,T=12,B=26,iw=400-L-R,ih=158-T-B,i,x,y,lx=L,pts='',dots='',
+      top=Math.max.apply(null,hist)||1,den=Math.max(6,hist.length-1),s='';
+  for(i=0;i<hist.length;i++){
+    x=L+i/den*iw; y=T+ih-hist[i]/top*ih; lx=x;
+    pts+=x.toFixed(1)+','+y.toFixed(1)+' ';
+    dots+='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+(i===hist.length-1?4:2.4)+'" fill="'+(i===hist.length-1?'#dc2626':'#f0a3a3')+'"/>';
+  }
+  for(i=0;i<=2;i++){y=T+ih-i/2*ih;s+='<line x1="'+L+'" y1="'+y+'" x2="'+(400-R)+'" y2="'+y+'" stroke="#eef3f9"/><text x="'+(L-6)+'" y="'+(y+3.5)+'" text-anchor="end" font-size="9.5" fill="#8b9aad">'+(top*i/2).toFixed(top>=10?0:2)+'</text>';}
+  s+='<path d="M'+L+','+(T+ih)+' L'+pts.trim().split(' ').join(' L')+' L'+lx.toFixed(1)+','+(T+ih)+'Z" fill="rgba(220,38,38,.09)"/>';
+  s+='<polyline points="'+pts+'" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linejoin="round"/>'+dots;
+  s+='<text x="'+(L+iw/2)+'" y="152" text-anchor="middle" font-size="9.5" fill="#8b9aad">training step</text>';
+  $('chart').innerHTML=s;
+}
+function draw(){
+  var f=fwd(),t=tg(),d=f.d;
+  set('lrv',lr().toFixed(2)); set('tv',t);
+  $("say").innerHTML='<b>We want this network to turn the input 2 into '+t+'.</b> Right now it turns 2 into <b>'+f.y.toFixed(2)+'</b>, which is <span class="s10w1-t">'+(d>=0?'+':'')+d.toFixed(2)+'</span> away. The loss squares that gap: <b>'+f.loss.toFixed(2)+'</b>.';
+  set('cw1','w1 = '+st.w1.toFixed(4)); set('cw2','w2 = '+st.w2.toFixed(4)); set('ctg','target '+t);
+  set('vh',f.h.toFixed(2)); set('vy',f.y.toFixed(2)); set('vloss',f.loss.toFixed(2));
+  set('gw1',f.gw1.toFixed(2)); set('gh',f.gh.toFixed(2)); set('gw2',f.gw2.toFixed(2)); set('gy',f.gy.toFixed(2));
+  set('sign',d>0.0005?'The output sits above the target. Every gradient is positive, which pushes both weights down.':d<-0.0005?'The output sits below the target. Every gradient is negative, which pushes both weights up.':'The output sits on the target. Every gradient is zero and the weights stop moving.');
+  set('aw1',st.w1.toFixed(4)); set('aw2',st.w2.toFixed(4));
+  set('m1',st.m1.toFixed(3)); set('m2',st.m2.toFixed(3)); set('v1',st.v1.toFixed(2)); set('v2',st.v2.toFixed(2));
+  mx=Math.max(mx,Math.abs(st.m1),Math.abs(st.m2)); vx=Math.max(vx,st.v1,st.v2);
+  bar('mb1',st.m1,mx,1); bar('mb2',st.m2,mx,1); bar('vb1',st.v1,vx,0); bar('vb2',st.v2,vx,0);
+  set('mstep',st.n); set('mloss',f.loss.toFixed(2)); set('mgap',(d>=0?'+':'')+d.toFixed(2));
+  set('status',st.n===0?'Step 0. Nothing has moved yet.':'Step '+st.n+(st.n>=CAP?'. Stopped at '+CAP+'.':'. Loss '+f.loss.toFixed(3)+'.'));
+  $('step').disabled=st.n>=CAP;
+  chart();
+}
+$('step').addEventListener('click',function(){stop();step();});
+$('reset').addEventListener('click',function(){$('lr').value=10;$('t').value=20;reset();});
+$('run').addEventListener('click',function(){
+  if(timer){stop();return;}
+  if(st.n>=CAP)reset();
+  $('run').textContent='Pause'; timer=setInterval(function(){if(st.n>=CAP){stop();draw();}else step();},420);
+});
+$('lr').addEventListener('input',function(){reset();set('status','Learning rate changed. Restarted from the beginning.');});
+$('t').addEventListener('input',function(){reset();set('status','Target changed. Restarted from the beginning.');});
+reset();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

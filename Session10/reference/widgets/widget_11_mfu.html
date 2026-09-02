@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 10 Widget 11 - Model FLOPs Utilisation</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s10w11-w{max-width:1180px;margin:0 auto;padding:14px 22px 16px}
+.s10w11-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.s10w11-w h1{font-size:24px;line-height:1.12;margin:3px 0 8px}
+.s10w11-say{border:1px solid #a5f3fc;background:#ecfeff;border-radius:10px;padding:9px 12px;color:#134e57;font-size:13.5px;line-height:1.5;margin:0 0 10px}
+.s10w11-say b{color:#0e5f70;font-weight:800}
+.s10w11-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.s10w11-sl{display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700}
+.s10w11-sl input{width:132px;vertical-align:middle;accent-color:var(--cyan)}
+.s10w11-sl b{font:800 12.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--cyan);min-width:52px}
+.s10w11-bar button{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;padding:5px 12px;font:800 11.5px Inter,sans-serif;cursor:pointer}
+.s10w11-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:11px 13px;margin-bottom:10px}
+.s10w11-card h2{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 7px;font-weight:800}
+.s10w11-card svg{display:block;width:100%;height:auto}
+.s10w11-eq{font:13px/1.75 ui-monospace,SFMono-Regular,Consolas,monospace;background:#0f172a;color:#dbeafe;border-radius:9px;padding:9px 12px;overflow-x:auto;white-space:pre}
+.s10w11-eq b{color:#67e8f9;font-weight:700}
+.s10w11-eq i{color:#94a3b8;font-style:normal}
+.s10w11-eq u{color:#86efac;text-decoration:none}
+.s10w11-two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.s10w11-two>div{border:1px solid var(--line);border-radius:9px;padding:8px 10px;background:#fbfdff}
+.s10w11-two h3{margin:0 0 4px;font:800 12px Inter,sans-serif}
+.s10w11-two p{margin:5px 0 0;font-size:11.5px;color:var(--muted);line-height:1.4}
+.s10w11-two p b{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+.s10w11-bad h3{color:var(--red)}.s10w11-good h3{color:var(--green)}
+.s10w11-met{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:9px}
+.s10w11-met div{border:1px solid var(--line);border-radius:8px;background:#fbfdff;padding:6px 8px}
+.s10w11-met b{display:block;font:800 16px ui-monospace,SFMono-Regular,Consolas,monospace}
+.s10w11-met span{display:block;color:var(--muted);font-size:10px;margin-top:1px}
+.s10w11-note{margin:8px 0 0;font-size:12.5px;color:var(--muted);line-height:1.45}
+.s10w11-note b{color:var(--ink)}
+@media(max-width:860px){.s10w11-two{grid-template-columns:1fr}.s10w11-met{grid-template-columns:1fr 1fr}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s10w11-w">
+<div class="s10w11-k">ERA V5 Session 10 · watching a run</div>
+<h1>The only trace that catches a wasted machine</h1>
+<p class="s10w11-say" id="s10w11-say"></p>
+<div class="s10w11-bar">
+<label class="s10w11-sl" for="s10w11-n">model size <input id="s10w11-n" type="range" min="1" max="240" value="18" aria-label="Model size in billions of weights"><b id="s10w11-nv">9.0B</b></label>
+<label class="s10w11-sl" for="s10w11-t">tokens per second <input id="s10w11-t" type="range" min="4" max="360" value="24" aria-label="Tokens processed per second"><b id="s10w11-tv">12,000</b></label>
+<label class="s10w11-sl" for="s10w11-g">H100s <input id="s10w11-g" type="range" min="1" max="64" value="8" aria-label="Number of H100 GPUs"><b id="s10w11-gv">8</b></label>
+<button type="button" id="s10w11-reset" aria-label="Reset to nine billion weights at twelve thousand tokens per second on eight H100s">Reset</button>
+</div>
+<section class="s10w11-card">
+<h2>Work actually done, over work the cards could have done</h2>
+<div class="s10w11-eq" id="s10w11-eq"></div>
+<svg id="s10w11-gauge" viewBox="0 0 1120 78" role="img" aria-label="Model FLOPs utilisation on a scale from zero to one hundred percent, with the healthy band from thirty five to fifty percent marked"></svg>
+<div class="s10w11-met">
+<div><b id="s10w11-m1" style="color:var(--cyan)">648</b><span>TFLOP/s achieved</span></div>
+<div><b id="s10w11-m2" style="color:var(--muted)">7,912</b><span>TFLOP/s peak</span></div>
+<div><b id="s10w11-m3" style="color:var(--red)">8.2%</b><span>MFU</span></div>
+<div><b id="s10w11-m4" style="color:var(--amber)">5.5x</b><span>vs the same job at 45%</span></div>
+</div>
+</section>
+<section class="s10w11-card">
+<h2>The same 100 billion tokens, the same loss curve, two different clocks</h2>
+<div class="s10w11-two">
+<div class="s10w11-bad"><h3 id="s10w11-h1">this run, 8.2% MFU</h3><svg id="s10w11-c1" viewBox="0 0 520 132" role="img" aria-label="Loss falling against elapsed days for this run"></svg><p id="s10w11-p1"></p></div>
+<div class="s10w11-good"><h3 id="s10w11-h2">the same job at 45% MFU</h3><svg id="s10w11-c2" viewBox="0 0 520 132" role="img" aria-label="The identical loss curve against elapsed days for a healthy run"></svg><p id="s10w11-p2"></p></div>
+</div>
+<p class="s10w11-note" id="s10w11-note"></p>
+</section>
+</main>
+<script>
+(function(){
+'use strict';
+var PEAK=989e12,BUD=100e9,HEAL=0.45,PATH='';
+function $(i){return document.getElementById('s10w11-'+i);}
+function co(v,d){return v.toLocaleString('en-US',{minimumFractionDigits:d||0,maximumFractionDigits:d||0});}
+function tx(x,y,s,c,a,b){return '<text x="'+x+'" y="'+y+'" text-anchor="'+(a||'middle')+'" font-size="'+(b||10)+'" font-weight="700" fill="'+c+'">'+s+'</text>';}
+function curve(){var p='',i,k;for(i=0;i<=52;i++){k=i/52;p+=(40+k*466).toFixed(1)+','+(18+ (1-Math.exp(-3.6*k))*84).toFixed(1)+' ';}return p;}
+function panel(id,days,col){
+  var s='',i,d;
+  for(i=0;i<=4;i++){d=days*i/4;s+='<line x1="'+(40+i/4*466)+'" y1="14" x2="'+(40+i/4*466)+'" y2="106" stroke="#eef3f9"/>'+tx(40+i/4*466,122,d.toFixed(d<10?1:0),'#8b9aad','middle',9.5);}
+  s+='<line x1="40" y1="106" x2="506" y2="106" stroke="#e6edf6"/>'+tx(34,60,'loss','#8b9aad','end',9.5);
+  s+='<polyline points="'+PATH+'" fill="none" stroke="'+col+'" stroke-width="2.6" stroke-linejoin="round"/>';
+  s+=tx(273,10,'elapsed days','#8b9aad','middle',9.5);
+  $(id).innerHTML=s;
+}
+function gauge(mfu,ps){
+  var s='',i,x=40+Math.min(1,mfu)*1040;
+  s+='<rect x="40" y="24" width="1040" height="20" rx="10" fill="#eef3f9" stroke="#d9e2ef"/>';
+  s+='<rect x="'+(40+0.35*1040)+'" y="24" width="'+(0.15*1040)+'" height="20" fill="rgba(21,148,71,.20)"/>';
+  s+='<rect x="40" y="24" width="'+Math.min(1,mfu)*1040+'" height="20" rx="10" fill="'+(mfu>=0.35?'#159447':mfu>=0.2?'#d97706':'#dc2626')+'"/>';
+  for(i=0;i<=10;i++)s+=tx(40+i*104,62,(i*10)+'%','#8b9aad','middle',9.5);
+  s+=tx(40+0.425*1040,18,'healthy, 35% to 50%','#166534','middle',10.5);
+  s+='<line x1="'+x+'" y1="20" x2="'+x+'" y2="48" stroke="#152033" stroke-width="2"/>';
+  s+=tx(x,72,ps+'%','#152033',x>980?'end':x<70?'start':'middle',11.5);
+  $('gauge').innerHTML=s;
+}
+function draw(){
+  var n=+$('n').value*5e8,tps=+$('t').value*500,g=+$('g').value,
+      ach=6*n*tps,peak=g*PEAK,mfu=ach/peak,
+      hs=HEAL*peak/(6*n),d0=BUD/tps/86400,d1=BUD/hs/86400,r=d0/d1,ps=(mfu*100).toFixed(mfu<0.05?2:1);
+  $('nv').textContent=(n/1e9).toFixed(1)+'B';$('tv').textContent=co(tps);$('gv').textContent=g;
+  $('eq').innerHTML='<i>achieved  </i>6 x '+co(n/1e9,1)+'e9 weights x '+co(tps)+' tokens/s  =  <b>'+co(ach/1e12)+' TFLOP/s</b>\n'
+    +'<i>peak      </i>'+g+' H100 x 989 TFLOP/s                 =  <b>'+co(peak/1e12)+' TFLOP/s</b>\n'
+    +'<i>MFU       </i>'+co(ach/1e12)+' / '+co(peak/1e12)+'  =  <u>'+ps+'%</u>';
+  $('m1').textContent=co(ach/1e12);$('m2').textContent=co(peak/1e12);
+  $('m3').textContent=ps+'%';$('m3').style.color=mfu>=0.35?'#159447':mfu>=0.2?'#d97706':'#dc2626';
+  $('m4').textContent=r.toFixed(1)+'x';
+  $('h1').textContent='this run, '+ps+'% MFU';
+  $('p1').innerHTML='<b>'+d0.toFixed(1)+' days</b> of wall clock, which is <b>'+co(g*d0*24)+'</b> GPU-hours.';
+  $('p2').innerHTML='<b>'+d1.toFixed(1)+' days</b> of wall clock, which is <b>'+co(g*d1*24)+'</b> GPU-hours.';
+  $('say').innerHTML='Training costs six FLOPs per weight per token. This run does <b>'+co(ach/1e12)+' TFLOP/s</b> of the <b>'+co(peak/1e12)+' TFLOP/s</b> the cards can do, so MFU is <b>'+ps+'%</b>'+(mfu>1?'. Nothing above 100% is real, so a figure like this means the token count or the model size is wrong.':mfu<0.35?', and the rest of the machine waits on memory or on the network.':', which sits inside the healthy band.');
+  $('note').innerHTML='Both traces above are the same drawing, because they are the same run over the same tokens. Only the numbers along the bottom differ. <b>'+(r>=1.05?'Watching the loss alone hides '+co(g*(d0-d1)*24)+' wasted GPU-hours.':'These clocks agree, so the machine is being used.')+'</b>';
+  gauge(mfu,ps);panel('c1',d0,'#dc2626');panel('c2',d1,'#159447');
+}
+PATH=curve();
+$('n').addEventListener('input',draw);$('t').addEventListener('input',draw);$('g').addEventListener('input',draw);
+$('reset').addEventListener('click',function(){$('n').value=18;$('t').value=24;$('g').value=8;draw();});
+draw();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

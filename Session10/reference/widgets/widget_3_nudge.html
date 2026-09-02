@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 10 Widget 3 - Where a Gradient Comes From</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s10w3-w{max-width:1180px;margin:0 auto;padding:14px 22px 16px}
+.s10w3-k{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.s10w3-w h1{font-size:24px;line-height:1.12;margin:4px 0 9px}
+.s10w3-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:12px 14px}
+.s10w3-card h2{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;font-weight:800}
+.s10w3-say{border:1px solid #a5f3fc;background:#ecfeff;border-radius:10px;padding:10px 13px;color:#134e57;font-size:14.5px;line-height:1.5;margin:0 0 11px}
+.s10w3-say b{color:#0e5f70;font-weight:800}
+.s10w3-bar{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-bottom:11px}
+.s10w3-sl{display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700}
+.s10w3-sl input{width:132px;vertical-align:middle;accent-color:var(--violet)}
+.s10w3-sl b{font:800 12.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--violet);min-width:44px}
+.s10w3-st{font-size:12px;font-weight:700;color:var(--muted)}
+.s10w3-g{display:grid;grid-template-columns:1.25fr 1fr;gap:13px;align-items:start}
+.s10w3-g svg{display:block;width:100%;height:auto}
+.s10w3-t{width:100%;border-collapse:collapse;font-size:13px}
+.s10w3-t th{text-align:right;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:800;padding:2px 5px;border-bottom:1px solid var(--line)}
+.s10w3-t td{padding:5px;border-bottom:1px solid #eef2f7;font:800 14px ui-monospace,SFMono-Regular,Consolas,monospace;text-align:right}
+.s10w3-t th:first-child,.s10w3-t td:first-child{text-align:left;font:800 11px Inter,sans-serif;letter-spacing:.04em;text-transform:uppercase}
+.s10w3-t tr.a td:first-child{color:var(--cyan)}
+.s10w3-t tr.b td:first-child{color:var(--violet)}
+.s10w3-t tr.d td{border-bottom:0;color:var(--amber);font-size:13px}
+.s10w3-t tr.d td:first-child{color:var(--muted)}
+.s10w3-eq{font:800 15px/1.75 ui-monospace,SFMono-Regular,Consolas,monospace;background:#0f172a;color:#dbeafe;border-radius:9px;padding:9px 11px;margin-top:9px;white-space:pre;overflow-x:auto}
+.s10w3-eq i{color:#7dd3fc;font-style:normal}
+.s10w3-eq u{color:#fbbf24;text-decoration:none}
+.s10w3-sign{margin:9px 0 0;font-size:12.5px;font-weight:700;color:var(--violet);border-left:3px solid var(--violet);padding-left:9px;line-height:1.45}
+.s10w3-note{margin:8px 0 0;font-size:12px;color:var(--muted);line-height:1.45}
+.s10w3-note b{color:var(--ink)}
+.s10w3-foot{margin-top:12px}
+.s10w3-foot p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.5}
+.s10w3-foot b{color:var(--ink)}
+.s10w3-ax{font:700 9.5px Inter,sans-serif;fill:#8b9aad}
+.s10w3-pl{font:800 11px ui-monospace,SFMono-Regular,Consolas,monospace}
+@media(max-width:940px){.s10w3-g{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s10w3-w">
+<div class="s10w3-k">ERA V5 Session 10 · where a gradient comes from</div>
+<h1>Nudge one weight and read the slope</h1>
+<p class="s10w3-say" id="s10w3-say"></p>
+<div class="s10w3-bar">
+<label class="s10w3-sl" for="s10w3-wt">weight w1 <input id="s10w3-wt" type="range" min="1500" max="4000" step="25" value="3000" aria-label="Weight w1, the weight being measured"><b id="s10w3-wtv">3.000</b></label>
+<label class="s10w3-sl" for="s10w3-nu">nudge size <input id="s10w3-nu" type="range" min="0" max="4" step="1" value="4" aria-label="Size of the nudge added to the weight"><b id="s10w3-nuv">0.001</b></label>
+<span class="s10w3-st" id="s10w3-status" aria-live="polite"></span>
+</div>
+<section class="s10w3-g">
+<div class="s10w3-card">
+<h2>The loss for every weight this network could hold</h2>
+<svg id="s10w3-chart" viewBox="0 0 440 254" role="img" aria-label="Loss plotted against the value of weight w1, with the two readings marked and the line through them drawn"></svg>
+<p class="s10w3-note" id="s10w3-cnote"></p>
+</div>
+<div class="s10w3-card">
+<h2>Run the network twice</h2>
+<table class="s10w3-t">
+<tr><th>run</th><th>weight w1</th><th>output y</th><th>loss</th></tr>
+<tr class="a"><td>A</td><td id="s10w3-wa"></td><td id="s10w3-ya"></td><td id="s10w3-la"></td></tr>
+<tr class="b"><td>B</td><td id="s10w3-wb"></td><td id="s10w3-yb"></td><td id="s10w3-lb"></td></tr>
+<tr class="d"><td>B minus A</td><td id="s10w3-dw"></td><td id="s10w3-dy"></td><td id="s10w3-dl"></td></tr>
+</table>
+<div class="s10w3-eq" id="s10w3-eq"></div>
+<p class="s10w3-sign" id="s10w3-sign"></p>
+<p class="s10w3-note">Widen the nudge and B slides away from A along the curve. The amber line then cuts across the bend, and the reading drifts above the true slope.</p>
+</div>
+</section>
+<section class="s10w3-card s10w3-foot">
+<p id="s10w3-foot"></p>
+</section>
+</main>
+<script>
+(function(){
+'use strict';
+var X=2,W2=4,T=20,NUD=[0.5,0.2,0.05,0.01,0.001],WMIN=1.4,WMAX=4.4,LMAX=240,
+    LFT=40,RGT=10,TOP=10,IW=440-LFT-RGT,IH=196;
+function $(i){return document.getElementById('s10w3-'+i);}
+function L(w){var d=W2*X*w-T;return d*d;}
+function px(w){return LFT+(w-WMIN)/(WMAX-WMIN)*IW;}
+function py(l){return TOP+IH-Math.max(0,Math.min(LMAX,l))/LMAX*IH;}
+function f3(v){return v.toFixed(3);}
+function tr(v){return String(+v.toFixed(3));}
+function sg(v){return(v>0?'+':'')+f3(v);}
+function chart(wa,wb,la,lb,m){
+  var i,w,s='',pts='',y0=la-m*(wa-WMIN),y1=la+m*(WMAX-wa);
+  for(i=0;i<=3;i++){w=TOP+IH-i/3*IH;s+='<line x1="'+LFT+'" y1="'+w+'" x2="'+(440-RGT)+'" y2="'+w+'" stroke="#eef3f9"/><text x="'+(LFT-6)+'" y="'+(w+3.5)+'" text-anchor="end" class="s10w3-ax">'+(LMAX*i/3)+'</text>';}
+  for(i=2;i<=8;i++){w=i/2;s+='<text x="'+px(w)+'" y="222" text-anchor="middle" class="s10w3-ax">'+w.toFixed(1)+'</text>';}
+  for(i=0;i<=80;i++){w=WMIN+i/80*(WMAX-WMIN);pts+=px(w).toFixed(1)+','+py(L(w)).toFixed(1)+' ';}
+  s+='<line x1="'+px(2.5)+'" y1="'+TOP+'" x2="'+px(2.5)+'" y2="'+(TOP+IH)+'" stroke="#bbf7d0" stroke-width="2" stroke-dasharray="4 4"/>';
+  s+='<text x="'+(px(2.5)+6)+'" y="'+(TOP+32)+'" class="s10w3-ax" fill="#159447">the bottom of the curve: loss 0, slope 0</text>';
+  s+='<polyline points="'+pts+'" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linejoin="round"/>';
+  s+='<g clip-path="url(#s10w3-cp)"><line x1="'+px(WMIN)+'" y1="'+py(y0)+'" x2="'+px(WMAX)+'" y2="'+py(y1)+'" stroke="#d97706" stroke-width="2.5"/></g>';
+  s+='<circle cx="'+px(wa)+'" cy="'+py(la)+'" r="5.5" fill="#0891b2"/><text x="'+(px(wa)-9)+'" y="'+(py(la)-9)+'" text-anchor="end" class="s10w3-pl" fill="#0891b2">A</text>';
+  s+='<circle cx="'+px(wb)+'" cy="'+py(lb)+'" r="5.5" fill="#7c3aed"/><text x="'+(px(wb)+9)+'" y="'+(py(lb)-9)+'" class="s10w3-pl" fill="#7c3aed">B</text>';
+  s+='<text x="'+(440-RGT)+'" y="'+(TOP+13)+'" text-anchor="end" class="s10w3-pl" fill="#d97706">slope '+tr(m)+'</text>';
+  s+='<text x="6" y="'+(TOP+IH/2)+'" transform="rotate(-90 6 '+(TOP+IH/2)+')" text-anchor="middle" class="s10w3-ax">loss</text>';
+  s+='<text x="'+(LFT+IW/2)+'" y="244" text-anchor="middle" class="s10w3-ax">the value held in weight w1</text>';
+  s+='<defs><clipPath id="s10w3-cp"><rect x="'+LFT+'" y="'+TOP+'" width="'+IW+'" height="'+IH+'"/></clipPath></defs>';
+  $('chart').innerHTML=s;
+}
+function draw(){
+  var wa=+$('wt').value/1000,h=NUD[+$('nu').value],wb=wa+h,
+      ya=W2*X*wa,yb=W2*X*wb,la=L(wa),lb=L(wb),
+      ra=Math.round(la*1000),rb=Math.round(lb*1000),rise=(rb-ra)/1000,m=rise/h,
+      ex=2*(ya-T)*W2*X,o={wtv:f3(wa),nuv:tr(h),wa:f3(wa),wb:f3(wb),ya:f3(ya),yb:f3(yb),
+      la:f3(ra/1000),lb:f3(rb/1000),dw:sg(h),dy:sg(yb-ya),dl:sg(rise)},k;
+  for(k in o)$(k).textContent=o[k];
+  $('say').innerHTML='This network turns the input 2 into <b>'+f3(ya)+'</b> and we want <b>20</b>, so the loss is <b>'+f3(la)+'</b>. Raise the weight by <b>'+tr(h)+'</b> and the loss becomes <b>'+f3(rb/1000)+'</b>. The gradient is that pair of readings divided.';
+  $('eq').innerHTML='slope = <u>'+sg(rise)+'</u> ÷ <i>'+tr(h)+'</i> = <u>'+tr(m)+'</u>';
+  $('sign').textContent=Math.abs(m-ex)<5e-4?'That slope is the gradient of the loss with respect to w1. Calculus gives the same number from one run: 2 × ('+f3(ya)+' − 20) × 4 × 2 = '+tr(ex)+'.':'Measured slope '+tr(m)+' against a true slope of '+tr(ex)+'. The curve bends across a nudge this wide, so the reading is off by '+tr(Math.abs(m-ex))+'. Shrink the nudge and the two meet.';
+  $('status').textContent=Math.abs(m)<5e-4?'Slope 0. This weight is already at the bottom.':m>0?'Slope is positive, so lowering w1 lowers the loss.':'Slope is negative, so raising w1 lowers the loss.';
+  $('cnote').innerHTML='The grey curve is the loss at every weight. <b>A</b> is where the weight sits now, <b>B</b> is the nudged copy, and the amber line runs through both.';
+  $('foot').innerHTML='Two forward passes measured <b>one</b> weight. A model with 8 billion weights would need 8 billion pairs of passes, which no one can afford. The next widget gets every gradient from a single walk backwards.';
+  chart(wa,wb,la,lb,m);
+}
+$('wt').addEventListener('input',draw);
+$('nu').addEventListener('input',draw);
+draw();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>
