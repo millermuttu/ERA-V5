@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 11 Widget 9 - Learning Rate Transfer Across Width</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s11w9-w{max-width:1180px;margin:0 auto;padding:14px 22px 16px}
+.s11w9-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--violet)}
+.s11w9-w h1{font-size:24px;line-height:1.12;margin:3px 0 8px}
+.s11w9-say{border:1px solid #ddd6fe;background:#f7f5ff;border-radius:10px;padding:9px 12px;color:#4c1d95;font-size:13.5px;line-height:1.5;margin:0 0 10px}
+.s11w9-say b{color:#5b21b6;font-weight:800}
+.s11w9-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.s11w9-lb{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.s11w9-bar button{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;padding:5px 12px;font:800 11.5px Inter,sans-serif;cursor:pointer}
+.s11w9-bar button.on{border-color:var(--violet);color:#5b21b6;background:#f7f5ff;box-shadow:inset 0 0 0 1px var(--violet)}
+.s11w9-sep{width:1px;height:20px;background:var(--line);margin:0 3px}
+.s11w9-g{display:grid;grid-template-columns:1.7fr 1fr;gap:12px;align-items:start}
+.s11w9-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:11px 13px}
+.s11w9-card h2{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 7px;font-weight:800}
+.s11w9-card svg{display:block;width:100%;height:auto}
+.s11w9-t{width:100%;border-collapse:collapse;font-size:12px}
+.s11w9-t th{text-align:right;font-size:9px;text-transform:uppercase;color:var(--muted);padding:3px 4px;border-bottom:1px solid var(--line);font-weight:800}
+.s11w9-t td{padding:4px 4px;border-bottom:1px solid #eef2f7;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;text-align:right;font-weight:700}
+.s11w9-t th:first-child,.s11w9-t td:first-child{text-align:left;font-family:Inter,sans-serif}
+.s11w9-t td.n{display:flex;align-items:center;gap:6px}
+.s11w9-t td.n em{width:10px;height:10px;border-radius:3px;flex:none}
+.s11w9-t tr.ex td{background:#fff5f5;border-bottom:0}
+.s11w9-t tr.sel td{background:#f7f5ff}
+.s11w9-met{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:9px}
+.s11w9-met div{border:1px solid var(--line);border-radius:8px;background:#fbfdff;padding:6px 8px}
+.s11w9-met b{display:block;font:800 15px ui-monospace,SFMono-Regular,Consolas,monospace}
+.s11w9-met span{display:block;color:var(--muted);font-size:10px;margin-top:1px}
+.s11w9-note{margin:9px 0 0;font-size:12.5px;color:var(--muted);line-height:1.45}
+.s11w9-note b{color:var(--ink)}
+@media(max-width:940px){.s11w9-g{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s11w9-w">
+<div class="s11w9-k">ERA V5 Session 11 · hyperparameter transfer</div>
+<h1>Learning Rate Transfer Across Width</h1>
+<p class="s11w9-say" id="s11w9-say"></p>
+<div class="s11w9-bar">
+<span class="s11w9-lb">parameterization</span>
+<button type="button" class="s11w9-p" data-v="0" aria-label="Standard parameterization, muP off">muP off</button>
+<button type="button" class="s11w9-p" data-v="1" aria-label="muP parameterization, muP on">muP on</button>
+<span class="s11w9-sep" aria-hidden="true"></span>
+<span class="s11w9-lb">sweep run at width</span>
+<button type="button" class="s11w9-s" data-v="256" aria-label="Run the sweep at width 256">256</button>
+<button type="button" class="s11w9-s" data-v="512" aria-label="Run the sweep at width 512">512</button>
+<button type="button" class="s11w9-s" data-v="1024" aria-label="Run the sweep at width 1024">1024</button>
+<button type="button" class="s11w9-s" data-v="2048" aria-label="Run the sweep at width 2048">2048</button>
+</div>
+<section class="s11w9-g">
+<div class="s11w9-card">
+<h2>Loss against learning rate, log scale on the learning rate</h2>
+<svg id="s11w9-chart" viewBox="0 0 620 300" role="img" aria-label="Loss against learning rate at four model widths, with the minimum of each curve marked"></svg>
+</div>
+<div class="s11w9-card">
+<h2>Best learning rate at each width</h2>
+<table class="s11w9-t">
+<tr><th>width</th><th>best eta</th><th>vs width 4096</th></tr>
+<tbody id="s11w9-rows"></tbody>
+</table>
+<div class="s11w9-met">
+<div><b id="s11w9-ms" style="color:var(--violet)">3.0e-3</b><span>sweep answer</span></div>
+<div><b id="s11w9-mt" style="color:var(--red)">1.9e-4</b><span>width 4096 needs</span></div>
+<div><b id="s11w9-mr" style="color:var(--amber)">16.0x</b><span>too large</span></div>
+</div>
+<p class="s11w9-note" id="s11w9-note"></p>
+</div>
+</section>
+</main>
+<script>
+(function(){
+'use strict';
+var W=[256,512,1024,2048],TARGET=4096,K=0.768,BASE=3.0e-3,
+    COL=['#0891b2','#7c3aed','#159447','#d97706'],
+    LO=1e-4,HI=1e-2,YLO=2.4,YHI=3.9,
+    mup=0,sweep=256;
+function $(i){return document.getElementById('s11w9-'+i);}
+function best(w){return mup?BASE:K/w;}
+function lmin(w){return 3.05-0.2*(Math.log(w/256)/Math.LN2);}
+function loss(w,e){var c=Math.log(e/best(w))/Math.LN10;return lmin(w)+(c<0?0.30*c*c:0.55*c*c);}
+function ef(v){var e=Math.floor(Math.log(v)/Math.LN10),m=v/Math.pow(10,e);if(m>=9.95){m/=10;e++;}return m.toFixed(1)+'e'+e;}
+function px(e){return 46+(Math.log(e/LO)/Math.LN10)/(Math.log(HI/LO)/Math.LN10)*548;}
+function py(l){return 252-(Math.min(YHI,Math.max(YLO,l))-YLO)/(YHI-YLO)*230;}
+function tx(x,y,s,c,a,b,h){return '<text x="'+x+'" y="'+y+'" text-anchor="'+(a||'middle')+'" font-size="'+(b||9.5)+'" font-weight="700" fill="'+c+'"'+(h?' stroke="#fff" stroke-width="3" paint-order="stroke"':'')+'>'+s+'</text>';}
+function chart(){
+  var s='',i,j,e,p,tk=[1e-4,3e-4,1e-3,3e-3,1e-2],b,x,y;
+  for(i=0;i<tk.length;i++)s+='<line x1="'+px(tk[i])+'" y1="22" x2="'+px(tk[i])+'" y2="252" stroke="#eef3f9"/>'+tx(px(tk[i]),268,ef(tk[i]),'#8b9aad');
+  s+='<line x1="46" y1="252" x2="594" y2="252" stroke="#e6edf6"/>';
+  s+=tx(320,286,'learning rate','#8b9aad','middle',10.5);
+  s+=tx(46,16,'training loss after a fixed budget','#8b9aad','start',10.5);
+  b=best(TARGET);
+  s+='<line x1="'+px(b)+'" y1="22" x2="'+px(b)+'" y2="252" stroke="#dc2626" stroke-width="1.4" stroke-dasharray="5 4"/>';
+  s+=tx(px(b)+5,34,'width 4096 optimum '+ef(b),'#b91c1c','start',10,1);
+  for(i=0;i<W.length;i++){
+    p='';
+    for(j=0;j<=72;j++){e=LO*Math.pow(HI/LO,j/72);p+=px(e).toFixed(1)+','+py(loss(W[i],e)).toFixed(1)+' ';}
+    s+='<polyline points="'+p+'" fill="none" stroke="'+COL[i]+'" stroke-width="'+(W[i]===sweep?3:2)+'" stroke-linejoin="round" opacity="'+(W[i]===sweep?1:0.75)+'"/>';
+  }
+  for(i=0;i<W.length;i++){
+    x=px(best(W[i]));y=py(lmin(W[i]));
+    s+='<line x1="'+x+'" y1="'+y+'" x2="'+x+'" y2="252" stroke="'+COL[i]+'" stroke-width="1" stroke-dasharray="2 3" opacity=".7"/>';
+    s+='<circle cx="'+x+'" cy="'+y+'" r="5" fill="'+COL[i]+'" stroke="#fff" stroke-width="2"/>';
+    s+=tx(mup?x+10:x,y-10,'width '+W[i]+', '+ef(best(W[i])),COL[i],mup?'start':'middle',10,1);
+  }
+  $('chart').innerHTML=s;
+}
+function draw(){
+  var r='',i,bs=best(sweep),bt=best(TARGET),ratio=bs/bt;
+  for(i=0;i<W.length;i++)
+    r+='<tr class="'+(W[i]===sweep?'sel':'')+'"><td class="n"><em style="background:'+COL[i]+'"></em>'+W[i]+'</td><td>'+ef(best(W[i]))+'</td><td>'+(best(W[i])/bt).toFixed(1)+'x</td></tr>';
+  r+='<tr class="ex"><td class="n"><em style="background:#dc2626"></em>4096</td><td>'+ef(bt)+'</td><td>1.0x</td></tr>';
+  $('rows').innerHTML=r;
+  $('ms').textContent=ef(bs);$('mt').textContent=ef(bt);$('mr').textContent=ratio.toFixed(1)+'x';
+  $('mr').style.color=ratio>1.05?'var(--amber)':'var(--green)';
+  $('say').innerHTML=mup
+    ? 'Under muP the four curves have their minimum at the same learning rate, <b>'+ef(BASE)+'</b>. A sweep at width '+sweep+' hands width 4096 a value that is <b>'+ratio.toFixed(1)+'x</b> its own optimum, so the small sweep answers the large question.'
+    : 'Under the standard parameterization the best learning rate falls in proportion to one over the width. The minima at widths 256 to 2048 sit at '+ef(best(256))+' down to '+ef(best(2048))+', and width 4096 extrapolates to <b>'+ef(bt)+'</b>. Carrying the width '+sweep+' answer across would be <b>'+ratio.toFixed(1)+'x</b> too large.';
+  $('note').innerHTML=mup
+    ? 'Every minimum lands on the same vertical line, and the curves stack in width order. <b>The sweep transfers.</b>'
+    : 'Doubling the width halves the best learning rate, so the minima shift leftwards. <b>Width 256 to 4096 is '+(best(256)/bt).toFixed(1)+'x.</b>';
+  chart();
+}
+function seg(cls,val){
+  Array.prototype.forEach.call(document.querySelectorAll('.s11w9-'+cls),function(b){
+    b.classList.toggle('on',+b.getAttribute('data-v')===val);
+  });
+}
+function sync(){seg('p',mup);seg('s',sweep);draw();}
+Array.prototype.forEach.call(document.querySelectorAll('.s11w9-p'),function(b){
+  b.addEventListener('click',function(){mup=+b.getAttribute('data-v');sync();});
+});
+Array.prototype.forEach.call(document.querySelectorAll('.s11w9-s'),function(b){
+  b.addEventListener('click',function(){sweep=+b.getAttribute('data-v');sync();});
+});
+sync();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

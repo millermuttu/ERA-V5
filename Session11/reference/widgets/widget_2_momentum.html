@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 11 Widget 2 - Momentum</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s11w2-w{max-width:1180px;margin:0 auto;padding:13px 22px 14px}
+.s11w2-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.s11w2-w h1{font-size:24px;line-height:1.12;margin:3px 0 8px}
+.s11w2-say{border:1px solid #a5f3fc;background:#ecfeff;border-radius:10px;padding:9px 12px;color:#134e57;font-size:13.5px;line-height:1.5;margin:0 0 9px}
+.s11w2-say b{color:#0e5f70;font-weight:800}
+.s11w2-bar{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-bottom:9px}
+.s11w2-sl{display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700}
+.s11w2-sl input{width:210px;vertical-align:middle;accent-color:var(--cyan)}
+.s11w2-sl b{font:800 12.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--cyan);min-width:38px}
+.s11w2-st{font-size:12px;font-weight:700;color:var(--muted)}
+.s11w2-g{display:grid;grid-template-columns:1fr 1.34fr;gap:12px;align-items:start}
+.s11w2-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:10px 13px}
+.s11w2-card h2{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 7px;font-weight:800}
+.s11w2-card h2 i{font-style:normal;text-transform:none;letter-spacing:0}
+.s11w2-card svg{display:block;width:100%;height:auto}
+.s11w2-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.s11w2-btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 9px;font:800 11px Inter,ui-sans-serif,sans-serif;color:var(--muted);cursor:pointer}
+.s11w2-btn[aria-pressed="true"]{border-color:var(--cyan);background:#ecfeff;color:#0e7490}
+.s11w2-gin{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.s11w2-gin span{font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.s11w2-gin input{width:54px;padding:4px 5px;border:1px solid var(--line);border-radius:6px;font:800 12px ui-monospace,SFMono-Regular,Consolas,monospace;text-align:right;color:var(--violet);background:#fff}
+.s11w2-t{width:100%;border-collapse:collapse;font-size:11.5px;margin-top:7px}
+.s11w2-t th{text-align:right;font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:3px 4px;border-bottom:1px solid var(--line);font-weight:800}
+.s11w2-t td{padding:3px 4px;border-bottom:1px solid #eef2f7;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;text-align:right;font-weight:700}
+.s11w2-t th:first-child,.s11w2-t td:first-child{text-align:left;font-family:Inter,sans-serif;color:var(--muted);font-weight:700}
+.s11w2-t tr.f td{background:#ecfeff;color:#0e5f70}
+.s11w2-met{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.s11w2-met div{border:1px solid var(--line);border-radius:8px;background:#fbfdff;padding:6px 8px}
+.s11w2-met b{display:block;font:800 16px ui-monospace,SFMono-Regular,Consolas,monospace}
+.s11w2-met span{display:block;color:var(--muted);font-size:10px;margin-top:1px;line-height:1.3}
+.s11w2-note{margin:8px 0 0;font-size:12.5px;color:var(--muted);line-height:1.45}
+.s11w2-note b{color:var(--ink)}
+.s11w2-foot{margin:10px 0 0;font-size:12.5px;color:var(--muted);line-height:1.5}
+.s11w2-foot b{color:var(--ink)}
+@media(max-width:940px){.s11w2-g{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s11w2-w">
+<div class="s11w2-k">ERA V5 Session 11 - Momentum</div>
+<h1>Momentum</h1>
+<p class="s11w2-say" id="s11w2-say"></p>
+<div class="s11w2-bar">
+<label class="s11w2-sl" for="s11w2-beta">&beta; <input id="s11w2-beta" type="range" min="0" max="95" step="5" value="90" aria-label="Beta, the fraction of the running average kept at each step, from 0 to 0.95"><b id="s11w2-betav">0.90</b></label>
+<span class="s11w2-st" id="s11w2-status" aria-live="polite"></span>
+</div>
+<section class="s11w2-g">
+<div class="s11w2-card">
+<h2 id="s11w2-lh"></h2>
+<div class="s11w2-row">
+<button type="button" class="s11w2-btn" id="s11w2-p0" aria-pressed="false" aria-label="Load the oscillating gradient sequence plus 1, minus 1, plus 1, minus 1, plus 1">oscillating +1 &minus;1 +1 &minus;1 +1</button>
+<button type="button" class="s11w2-btn" id="s11w2-p1" aria-pressed="false" aria-label="Load the steady gradient sequence of plus 0.2 five times">steady +0.2 five times</button>
+</div>
+<div class="s11w2-gin" id="s11w2-gin"><span>g</span></div>
+<table class="s11w2-t" id="s11w2-tab"></table>
+<div class="s11w2-met">
+<div><b id="s11w2-mo" style="color:var(--violet)"></b><span id="s11w2-mol"></span></div>
+<div><b id="s11w2-ms" style="color:var(--green)"></b><span id="s11w2-msl"></span></div>
+</div>
+<p class="s11w2-note" id="s11w2-lnote"></p>
+</div>
+<div class="s11w2-card">
+<h2>The same surface <i>L = 0.5(20u&sup2; + v&sup2;)</i>, with <i>&eta; = 0.010</i> fixed, 24 steps</h2>
+<svg id="s11w2-chart" viewBox="0 0 620 306" role="img" aria-label="Contour map of the loss surface with the momentum path drawn as connected dots over the grey beta equals zero path"></svg>
+<div class="s11w2-met">
+<div><b id="s11w2-dist" style="color:var(--amber)"></b><span>distance from the minimum of the loss after 24 steps</span></div>
+<div><b id="s11w2-fac" style="color:var(--cyan)"></b><span>the grey &beta; = 0 distance divided by this one</span></div>
+</div>
+<p class="s11w2-note" id="s11w2-cnote"></p>
+</div>
+</section>
+<p class="s11w2-foot" id="s11w2-foot"></p>
+</main>
+<script>
+(function(){
+'use strict';
+var OSC=[1,-1,1,-1,1],STD=[0.2,0.2,0.2,0.2,0.2],NG=5,
+    KU=20,KV=1,RAT=Math.sqrt(KU/KV),ETA=0.010,NS=24,U0=1,V0=1,
+    LFT=46,TOP=17,PW=560,PH=248,UMIN=-1.1,UMAX=1.25,VMIN=-0.5,VMAX=1.25,
+    US=PW/(UMAX-UMIN),VS=PH/(VMAX-VMIN),
+    CONT=[0.05,0.1,0.16,0.24,0.34,0.46,0.6,0.78,1.0],ins=[];
+function $(i){return document.getElementById('s11w2-'+i);}
+function px(u){return LFT+(u-UMIN)*US;}
+function py(v){return TOP+(VMAX-v)*VS;}
+function loss(u,v){return 0.5*(KU*u*u+KV*v*v);}
+function f4(x){return x.toFixed(4);}
+function tx(x,y,s,c,a,b,w){return '<text x="'+x+'" y="'+y+'" text-anchor="'+(a||'middle')+'" font-size="'+(b||9.5)+'" font-weight="'+(w||700)+'" fill="'+c+'">'+s+'</text>';}
+function ema(g,beta){var m=0,out=[],i;for(i=0;i<g.length;i++){m=beta*m+(1-beta)*g[i];out.push(m);}return out;}
+function same(a,b){var i;for(i=0;i<NG;i++)if(Math.abs(a[i]-b[i])>1e-9)return false;return true;}
+function gvals(){var i,v,o=[];for(i=0;i<NG;i++){v=parseFloat(ins[i].value);o.push(isFinite(v)?v:0);}return o;}
+function run(beta){
+  var u=U0,v=V0,mu=0,mv=0,p=[[u,v]],k;
+  for(k=0;k<NS;k++){
+    mu=beta*mu+(1-beta)*(KU*u);mv=beta*mv+(1-beta)*(KV*v);
+    u-=ETA*mu/(1-beta);v-=ETA*mv/(1-beta);
+    p.push([u,v]);
+  }
+  return p;
+}
+function dist(p){var q=p[p.length-1];return Math.sqrt(q[0]*q[0]+q[1]*q[1]);}
+function pts(p){var s='',i;for(i=0;i<p.length;i++)s+=px(p[i][0]).toFixed(1)+','+py(p[i][1]).toFixed(1)+' ';return s;}
+function chart(p,p0,beta){
+  var s='',i,a,aS=Math.sqrt(loss(U0,V0)/(0.5*KU)),last=p[p.length-1];
+  s+='<defs><clipPath id="s11w2-cp"><rect x="'+LFT+'" y="'+TOP+'" width="'+PW+'" height="'+PH+'"/></clipPath></defs>';
+  s+='<rect x="'+LFT+'" y="'+TOP+'" width="'+PW+'" height="'+PH+'" fill="#fbfdff" stroke="#e6edf6"/>';
+  s+='<g clip-path="url(#s11w2-cp)">';
+  for(i=0;i<CONT.length;i++){a=CONT[i];
+    s+='<ellipse cx="'+px(0).toFixed(1)+'" cy="'+py(0).toFixed(1)+'" rx="'+(a*US).toFixed(1)+'" ry="'+(RAT*a*VS).toFixed(1)+'" fill="none" stroke="#dbe4f0" stroke-width="1.4"/>';}
+  s+='<ellipse cx="'+px(0).toFixed(1)+'" cy="'+py(0).toFixed(1)+'" rx="'+(aS*US).toFixed(1)+'" ry="'+(RAT*aS*VS).toFixed(1)+'" fill="none" stroke="#a5f3fc" stroke-width="2" stroke-dasharray="5 4"/>';
+  s+='</g>';
+  s+='<line x1="'+LFT+'" y1="'+py(0).toFixed(1)+'" x2="'+(LFT+PW)+'" y2="'+py(0).toFixed(1)+'" stroke="#cbd5e1"/>';
+  s+='<line x1="'+px(0).toFixed(1)+'" y1="'+TOP+'" x2="'+px(0).toFixed(1)+'" y2="'+(TOP+PH)+'" stroke="#cbd5e1"/>';
+  for(i=-1;i<=1;i++)s+=tx(px(i),TOP+PH+13,String(i),'#8b9aad');
+  s+=tx(LFT-6,py(0)+3.5,'0','#8b9aad','end');
+  s+=tx(LFT-6,py(1)+3.5,'1','#8b9aad','end');
+  s+='<g clip-path="url(#s11w2-cp)">';
+  s+='<polyline points="'+pts(p0)+'" fill="none" stroke="#aebdd0" stroke-width="1.8" stroke-linejoin="round"/>';
+  s+='<polyline points="'+pts(p)+'" fill="none" stroke="#0891b2" stroke-width="2.1" stroke-linejoin="round"/>';
+  for(i=1;i<p.length-1;i++)s+='<circle cx="'+px(p[i][0]).toFixed(1)+'" cy="'+py(p[i][1]).toFixed(1)+'" r="2.8" fill="#0891b2"/>';
+  s+='</g>';
+  s+='<circle cx="'+px(0).toFixed(1)+'" cy="'+py(0).toFixed(1)+'" r="4" fill="#159447"/>';
+  s+=tx(px(0)+8,py(0)+14,'minimum of the loss, L = 0','#159447','start',10);
+  s+='<circle cx="'+px(U0).toFixed(1)+'" cy="'+py(V0).toFixed(1)+'" r="5.2" fill="#7c3aed"/>';
+  s+=tx(px(U0)-9,py(V0)+13,'start (1, 1)','#5b21b6','end',10.5,800);
+  s+='<circle cx="'+px(last[0]).toFixed(1)+'" cy="'+py(last[1]).toFixed(1)+'" r="5.2" fill="#d97706"/>';
+  s+=tx(LFT+8,TOP+15,'&beta; = '+beta.toFixed(2),'#0e7490','start',11,800);
+  s+=tx(LFT+PW-8,TOP+15,'grey path: &beta; = 0','#8b9aad','end',10.5,800);
+  s+=tx(LFT+8,TOP+31,'amber dot: step '+NS+', at ('+last[0].toFixed(3)+', '+last[1].toFixed(3)+')','#b45309','start',10.5,800);
+  s+=tx(LFT+PW/2,TOP+PH+27,'u, the steep direction','#8b9aad','middle',10.5);
+  s+='<text x="12" y="'+(TOP+PH/2)+'" transform="rotate(-90 12 '+(TOP+PH/2)+')" text-anchor="middle" font-size="10.5" font-weight="700" fill="#8b9aad">v, the shallow direction</text>';
+  $('chart').innerHTML=s;
+}
+function draw(){
+  var beta=+$('beta').value/100,g=gvals(),m=ema(g,beta),
+      mo=ema(OSC,beta)[NG-1],ms=ema(STD,beta)[NG-1],
+      gsc=Math.abs(OSC[0])/Math.abs(STD[0]),gap=Math.abs(mo/ms),
+      p=run(beta),p0=run(0),d=dist(p),d0=dist(p0),fac=d0/d,
+      rows='<tr><th>step</th><th>g</th><th>m</th></tr>',i;
+  rows+='<tr><td>0</td><td>&middot;</td><td>0.0000</td></tr>';
+  for(i=0;i<NG;i++)rows+='<tr'+(i===NG-1?' class="f"':'')+'><td>'+(i+1)+'</td><td>'+g[i].toFixed(2)+'</td><td>'+f4(m[i])+'</td></tr>';
+  $('tab').innerHTML=rows;
+  $('betav').textContent=beta.toFixed(2);
+  $('lh').innerHTML='<i>m &larr; &beta;m + (1 &minus; &beta;)g</i> over five gradients, at <i>&beta; = '+beta.toFixed(2)+'</i>';
+  $('mo').textContent=f4(mo);
+  $('ms').textContent=f4(ms);
+  $('mol').innerHTML='m after five of +1 &minus;1 +1 &minus;1 +1';
+  $('msl').innerHTML='m after five of +0.2';
+  $('say').innerHTML='One &beta; drives both panels. At <b>&beta; = '+beta.toFixed(2)+'</b> the average keeps <b>'+beta.toFixed(2)+'</b> of itself and each new gradient enters with weight <b>'+(1-beta).toFixed(2)+'</b>. After five steps the two averages are <b>'+f4(mo)+'</b> and <b>'+f4(ms)+'</b>, within <b>'+gap.toFixed(2)+'x</b> of each other, while the steady sequence used gradients <b>'+gsc.toFixed(0)+' times</b> smaller throughout.';
+  $('status').textContent='This one slider sets β in the average on the left and in the update on the right.';
+  $('dist').textContent=d.toFixed(5);
+  $('fac').textContent=fac.toFixed(1)+'x';
+  $('lnote').innerHTML='The two buttons load the gradient sequences the steep and the shallow direction produce. Any five values can be typed in.';
+  $('cnote').innerHTML='The average is (1 &minus; &beta;) times the size of the gradients it averages, so the step multiplies by &eta;/(1 &minus; &beta;) to keep it comparable with plain gradient descent.';
+  $('foot').innerHTML='Alternating gradients cancel inside the average and consistent gradients accumulate, so the movement across the steep direction shrinks while the path shifts further along the shallow direction. Past about <b>&beta; = 0.90</b> the improvement reverses, which is why &beta; and &eta; are chosen together.';
+  chart(p,p0,beta);
+}
+function syncPresets(){
+  var g=gvals();
+  $('p0').setAttribute('aria-pressed',same(g,OSC)?'true':'false');
+  $('p1').setAttribute('aria-pressed',same(g,STD)?'true':'false');
+}
+function load(arr){var i;for(i=0;i<NG;i++)ins[i].value=String(arr[i]);syncPresets();draw();}
+(function build(){
+  var box=$('gin'),i,el;
+  for(i=0;i<NG;i++){
+    el=document.createElement('input');
+    el.type='number';el.step='0.1';el.value=String(OSC[i]);
+    el.id='s11w2-g'+i;
+    el.setAttribute('aria-label','Gradient at step '+(i+1));
+    box.appendChild(el);ins.push(el);
+    el.addEventListener('input',function(){syncPresets();draw();});
+  }
+}());
+$('beta').addEventListener('input',draw);
+$('p0').addEventListener('click',function(){load(OSC);});
+$('p1').addEventListener('click',function(){load(STD);});
+syncPresets();
+draw();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

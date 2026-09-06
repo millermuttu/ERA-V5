@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 11 Widget 10 - Optimizer State Memory</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s11w10-w{max-width:1180px;margin:0 auto;padding:14px 22px 16px}
+.s11w10-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--green)}
+.s11w10-w h1{font-size:24px;line-height:1.12;margin:3px 0 8px}
+.s11w10-say{border:1px solid #a7f3d0;background:#f0fdf6;border-radius:10px;padding:9px 12px;color:#14532d;font-size:13.5px;line-height:1.5;margin:0 0 10px}
+.s11w10-say b{color:#166534;font-weight:800}
+.s11w10-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.s11w10-lb{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.s11w10-sl{display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700}
+.s11w10-sl input{width:170px;vertical-align:middle;accent-color:var(--green)}
+.s11w10-sl b{font:800 12.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--green);min-width:46px}
+.s11w10-bar button{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;padding:5px 12px;font:800 11.5px Inter,sans-serif;cursor:pointer}
+.s11w10-bar button.on{border-color:var(--green);color:#166534;background:#f0fdf6;box-shadow:inset 0 0 0 1px var(--green)}
+.s11w10-sep{width:1px;height:20px;background:var(--line);margin:0 3px}
+.s11w10-g{display:grid;grid-template-columns:1.25fr 1fr;gap:12px;align-items:start}
+.s11w10-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:11px 13px}
+.s11w10-card h2{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 7px;font-weight:800}
+.s11w10-card svg{display:block;width:100%;height:auto}
+.s11w10-strip{display:grid;grid-template-columns:repeat(16,1fr);gap:2px;margin-bottom:8px}
+.s11w10-strip i{display:block;height:22px;border-radius:3px;font-style:normal}
+.s11w10-t{width:100%;border-collapse:collapse;font-size:12px}
+.s11w10-t th{text-align:right;font-size:9px;text-transform:uppercase;color:var(--muted);padding:3px 4px;border-bottom:1px solid var(--line);font-weight:800}
+.s11w10-t td{padding:4px 4px;border-bottom:1px solid #eef2f7;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;text-align:right;font-weight:700}
+.s11w10-t th:first-child,.s11w10-t td:first-child{text-align:left;font-family:Inter,sans-serif}
+.s11w10-t td.n{display:flex;align-items:center;gap:6px}
+.s11w10-t td.n em{width:10px;height:10px;border-radius:3px;flex:none}
+.s11w10-t tr.tot td{font-weight:800;border-bottom:0;background:#f8fafc}
+.s11w10-met{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:9px}
+.s11w10-met div{border:1px solid var(--line);border-radius:8px;background:#fbfdff;padding:6px 8px}
+.s11w10-met b{display:block;font:800 15px ui-monospace,SFMono-Regular,Consolas,monospace}
+.s11w10-met span{display:block;color:var(--muted);font-size:10px;margin-top:1px}
+.s11w10-note{margin:9px 0 0;font-size:12.5px;color:var(--muted);line-height:1.45}
+.s11w10-note b{color:var(--ink)}
+@media(max-width:940px){.s11w10-g{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s11w10-w">
+<div class="s11w10-k">ERA V5 Session 11 · what the optimizer costs</div>
+<h1>Optimizer State Memory</h1>
+<p class="s11w10-say" id="s11w10-say"></p>
+<div class="s11w10-bar">
+<span class="s11w10-lb">optimizer</span>
+<button type="button" class="s11w10-o" data-v="0" aria-label="Gradient descent, no optimizer state">gradient descent</button>
+<button type="button" class="s11w10-o" data-v="1" aria-label="Gradient descent with momentum, four bytes of state">with momentum</button>
+<button type="button" class="s11w10-o" data-v="2" aria-label="AdamW, eight bytes of state">AdamW</button>
+<button type="button" class="s11w10-o" data-v="3" aria-label="8-bit AdamW, two bytes of state">8-bit AdamW</button>
+<span class="s11w10-sep" aria-hidden="true"></span>
+<label class="s11w10-sl" for="s11w10-n">model size <input id="s11w10-n" type="range" min="1" max="240" value="18" aria-label="Model size in billions of weights"><b id="s11w10-nv">9.0B</b></label>
+</div>
+<section class="s11w10-g">
+<div class="s11w10-card">
+<h2>Bytes held for one weight</h2>
+<div class="s11w10-strip" id="s11w10-strip" aria-hidden="true"></div>
+<table class="s11w10-t">
+<tr><th>what is held</th><th>bytes</th><th>share</th><th id="s11w10-hd">at 9.0B</th></tr>
+<tbody id="s11w10-rows"></tbody>
+<tr class="tot"><td>total per weight</td><td id="s11w10-tb">16</td><td id="s11w10-tp"></td><td id="s11w10-tot"></td></tr>
+</table>
+<p class="s11w10-note" id="s11w10-note"></p>
+</div>
+<div class="s11w10-card">
+<h2>Training state against model size, both axes log scale</h2>
+<svg id="s11w10-chart" viewBox="0 0 470 236" role="img" aria-label="Training state memory against model size for four optimizers, against the capacity of one 80 gigabyte card"></svg>
+<div class="s11w10-met">
+<div><b id="s11w10-mg" style="color:var(--green)">134.1</b><span>GiB needed</span></div>
+<div><b id="s11w10-mc" style="color:var(--amber)">2</b><span>80 GB cards</span></div>
+<div><b id="s11w10-mx" style="color:var(--cyan)">5.0B</b><span>fits on one card</span></div>
+</div>
+</div>
+</section>
+</main>
+<script>
+(function(){
+'use strict';
+var FIX=[['weight, bf16',2,'#0891b2'],['gradient, bf16',2,'#7c3aed'],['master copy, fp32',4,'#159447']],
+    OPT=[['gradient descent',0,'no extra state'],['momentum',4,'m in fp32'],['AdamW',8,'m and v in fp32'],['8-bit AdamW',2,'m and v in int8']],
+    SC='#d97706',GIB=1073741824,CARD=80e9,CARDG=CARD/GIB,sel=2;
+function $(i){return document.getElementById('s11w10-'+i);}
+function gib(n,b){return n*b/GIB;}
+function fm(v){return v>=100?v.toFixed(1):v.toFixed(2);}
+function bn(n){return (n/1e9).toFixed(1)+'B';}
+function lx(n){return 30+Math.log(n/5e8)/Math.log(240)*426;}
+function ly(g){return 214-Math.log(Math.max(2,g)/2)/Math.log(2048)*196;}
+function tx(x,y,s,c,a,b){return '<text x="'+x+'" y="'+y+'" text-anchor="'+(a||'middle')+'" font-size="'+(b||9.5)+'" font-weight="700" fill="'+c+'">'+s+'</text>';}
+function tot(i){return 8+OPT[i][1];}
+function chart(n){
+  var s='',i,ticks=[[5e8,'0.5B'],[2e9,'2B'],[9e9,'9B'],[20e9,'20B'],[120e9,'120B']],yt=[4,32,256,2048],t,fit,g,lg=[],le='';
+  for(i=0;i<yt.length;i++)s+='<line x1="30" y1="'+ly(yt[i])+'" x2="456" y2="'+ly(yt[i])+'" stroke="#eef3f9"/>'+tx(27,ly(yt[i])+3.5,yt[i],'#8b9aad','end',9);
+  for(i=0;i<ticks.length;i++)s+=tx(lx(ticks[i][0]),230,ticks[i][1],'#8b9aad');
+  s+='<rect x="30" y="'+ly(CARDG)+'" width="426" height="'+(214-ly(CARDG))+'" fill="rgba(21,148,71,.06)"/>';
+  s+='<line x1="30" y1="'+ly(CARDG)+'" x2="456" y2="'+ly(CARDG)+'" stroke="#159447" stroke-width="1.6" stroke-dasharray="6 4"/>';
+  s+=tx(454,ly(CARDG)-5,'one 80 GB card, '+CARDG.toFixed(1)+' GiB','#159447','end');
+  for(i=0;i<OPT.length;i++){
+    t=tot(i);
+    s+='<line x1="'+lx(5e8)+'" y1="'+ly(gib(5e8,t))+'" x2="'+lx(120e9)+'" y2="'+ly(gib(120e9,t))+'" stroke="'+(i===sel?SC:'#c8d4e2')+'" stroke-width="'+(i===sel?2.6:1.4)+'"/>';
+    lg.push([t,i]);
+  }
+  lg.sort(function(p,q){return p[0]-q[0];});
+  for(i=0;i<lg.length;i++)le+=(i?' <tspan fill="#c8d4e2">|</tspan> ':'')+'<tspan fill="'+(lg[i][1]===sel?'#b45309':'#9aa9bb')+'">'+lg[i][0]+'</tspan>';
+  s+='<text x="456" y="12" text-anchor="end" font-size="9.5" font-weight="700" fill="#9aa9bb">bytes per weight: '+le+'</text>';
+  t=tot(sel);fit=CARD/t;g=gib(n,t);
+  s+='<line x1="'+lx(fit)+'" y1="'+ly(CARDG)+'" x2="'+lx(fit)+'" y2="214" stroke="#0e7490" stroke-width="1.3" stroke-dasharray="3 3"/>';
+  s+='<circle cx="'+lx(fit)+'" cy="'+ly(CARDG)+'" r="4" fill="#0891b2"/>';
+  s+=tx(lx(fit)-8,ly(CARDG)+16,'one card is full at '+bn(fit),'#0e7490','end',10);
+  s+='<circle cx="'+lx(n)+'" cy="'+ly(g)+'" r="5.4" fill="'+SC+'" stroke="#fff" stroke-width="2"/>';
+  s+=tx(lx(n),ly(g)-11,bn(n)+' needs '+fm(g)+' GiB','#b45309',lx(n)>300?'end':'start',10.5);
+  s+=tx(30,12,'GiB of training state','#8b9aad','start');
+  $('chart').innerHTML=s;
+}
+function draw(){
+  var n=+$('n').value*5e8,t=tot(sel),g=gib(n,t),st=OPT[sel][1],i,k,r='',sp='',share=st/t*100,cards=Math.ceil(g/CARDG),fit=CARD/t;
+  $('nv').textContent=bn(n);$('hd').textContent='at '+bn(n);$('tb').textContent=t;$('tp').textContent=(t/t*100).toFixed(0)+'%';
+  for(i=0;i<FIX.length;i++)
+    r+='<tr><td class="n"><em style="background:'+FIX[i][2]+'"></em>'+FIX[i][0]+'</td><td>'+FIX[i][1]+'</td><td>'+(FIX[i][1]/t*100).toFixed(1)+'%</td><td>'+fm(gib(n,FIX[i][1]))+' GiB</td></tr>';
+  r+='<tr><td class="n"><em style="background:'+SC+'"></em>optimizer state, '+OPT[sel][2]+'</td><td>'+st+'</td><td>'+share.toFixed(1)+'%</td><td>'+fm(gib(n,st))+' GiB</td></tr>';
+  for(i=0;i<16;i++){
+    k=i<2?FIX[0][2]:i<4?FIX[1][2]:i<8?FIX[2][2]:SC;
+    sp+='<i style="background:'+(i<t?k:'#eef2f7')+'"></i>';
+  }
+  $('strip').innerHTML=sp;$('rows').innerHTML=r;$('tot').textContent=fm(g)+' GiB';
+  $('mg').textContent=fm(g);$('mc').textContent=cards;$('mx').textContent=bn(fit);
+  $('say').innerHTML='This run uses '+OPT[sel][0]+', which holds <b>'+st+' bytes</b> of state per weight on top of the 8 bytes every run pays, for <b>'+t+' bytes per weight</b>. A '+bn(n)+' model therefore needs '+bn(n)+' x '+t+' = <b>'+fm(g)+' GiB</b>, which is <b>'+cards+'</b> card'+(cards===1?'':'s')+' of 80 GB before a single activation is stored.';
+  $('note').innerHTML='The optimizer state is <b>'+share.toFixed(1)+'%</b> of the bill here'+(st===8?', so half of the training memory belongs to AdamW alone.':'. AdamW at 8 bytes would make it 50.0%.');
+  chart(n);
+}
+Array.prototype.forEach.call(document.querySelectorAll('.s11w10-o'),function(b){
+  b.addEventListener('click',function(){
+    sel=+b.getAttribute('data-v');
+    Array.prototype.forEach.call(document.querySelectorAll('.s11w10-o'),function(o){o.classList.toggle('on',+o.getAttribute('data-v')===sel);});
+    draw();
+  });
+});
+$('n').addEventListener('input',draw);
+Array.prototype.forEach.call(document.querySelectorAll('.s11w10-o'),function(o){o.classList.toggle('on',+o.getAttribute('data-v')===sel);});
+draw();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

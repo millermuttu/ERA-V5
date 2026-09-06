@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 11 Widget 8 - Batch Size and Learning Rate</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s11w8-w{max-width:1180px;margin:0 auto;padding:12px 22px 14px}
+.s11w8-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--amber)}
+.s11w8-w h1{font-size:23px;line-height:1.12;margin:3px 0 8px}
+.s11w8-say{border:1px solid #fcd34d;background:#fffbeb;border-radius:10px;padding:7px 12px;color:#7c4a03;font-size:13px;line-height:1.42;margin:0 0 8px}
+.s11w8-say b{color:#92400e;font-weight:800}
+.s11w8-bar{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-bottom:9px}
+.s11w8-bar button{border:1px solid var(--amber);background:#fff;color:var(--amber);border-radius:8px;padding:6px 14px;font:800 12.5px Inter,sans-serif;cursor:pointer}
+.s11w8-sl{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700}
+.s11w8-rw{position:relative;display:inline-block;line-height:0}
+.s11w8-rw input{width:196px;vertical-align:middle;accent-color:var(--amber)}
+.s11w8-tick{position:absolute;left:37.5%;bottom:-2px;width:2px;height:8px;background:var(--amber);border-radius:1px}
+.s11w8-sl b{font:800 13px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--amber);min-width:38px;text-align:right}
+.s11w8-st{font-size:12px;font-weight:700;color:var(--muted)}
+.s11w8-g{display:grid;grid-template-columns:1.25fr 1fr;gap:12px;align-items:start}
+.s11w8-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:9px 13px 11px}
+.s11w8-card h2{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 5px;font-weight:800}
+.s11w8-card svg{display:block;width:100%;height:auto}
+.s11w8-met{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px}
+.s11w8-met div{border:1px solid var(--line);border-radius:8px;background:#fbfdff;padding:5px 8px}
+.s11w8-met b{display:block;font:800 17px/1.2 ui-monospace,SFMono-Regular,Consolas,monospace}
+.s11w8-met span{display:block;color:var(--muted);font-size:9.5px;margin-top:1px;line-height:1.3}
+.s11w8-t{width:100%;border-collapse:collapse;font-size:12px}
+.s11w8-t th{text-align:right;font-size:9.5px;text-transform:uppercase;color:var(--muted);padding:3px 4px;border-bottom:1px solid var(--line);font-weight:800;line-height:1.25}
+.s11w8-t th:first-child{text-align:left}
+.s11w8-t td{padding:6.5px 4px;border-bottom:1px solid #eef2f7;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;text-align:right;font-weight:700}
+.s11w8-t td:first-child{text-align:left;color:var(--muted)}
+.s11w8-t tr.s11w8-on td{background:#fffbeb;color:#b45309}
+.s11w8-t tr.s11w8-on td:first-child{color:#b45309}
+.s11w8-t tr.s11w8-v4 td:first-child{color:var(--violet)}
+.s11w8-strip{margin-top:9px;border-left:3px solid var(--amber);padding:1px 0 1px 9px;font-size:12.5px;line-height:1.42;font-weight:700;color:var(--ink)}
+.s11w8-strip b{font:800 13px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--amber)}
+.s11w8-note{margin:7px 0 0;font-size:12px;color:var(--muted);line-height:1.4}
+.s11w8-note b{color:var(--ink)}
+@media(max-width:940px){.s11w8-g{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s11w8-w">
+<div class="s11w8-k">ERA V5 Session 11 · batch size and learning rate</div>
+<h1>Batch Size and Learning Rate</h1>
+<p class="s11w8-say" id="s11w8-say"></p>
+<div class="s11w8-bar">
+<label class="s11w8-sl" for="s11w8-n">global batch
+<span class="s11w8-rw"><input id="s11w8-n" type="range" min="0" max="8" value="3" aria-label="Global batch size, stepping through 8, 16, 32, 56, 64, 128, 256, 512 and 1024 samples"><i class="s11w8-tick" aria-hidden="true"></i></span>
+<b id="s11w8-nv">56</b></label>
+<button id="s11w8-re" type="button" aria-label="Draw a new sample cloud from a new random seed">New sample cloud</button>
+<span class="s11w8-st" id="s11w8-status" aria-live="polite"></span>
+</div>
+<section class="s11w8-g">
+<div class="s11w8-card">
+<h2>Sample gradients from one batch, their mean, and the true gradient</h2>
+<svg id="s11w8-plot" viewBox="0 0 600 420" role="img" aria-label="Scatter of individual sample gradients around the true gradient, with the true gradient and the mean of the samples drawn as arrows from the origin"></svg>
+<div class="s11w8-met">
+<div><b id="s11w8-md" style="color:var(--red)"></b><span>distance from the mean to the true gradient</span></div>
+<div><b id="s11w8-mr" style="color:var(--amber)"></b><span>measured, relative to a batch of 8</span></div>
+<div><b id="s11w8-mp" style="color:var(--violet)"></b><span>predicted by the square-root law</span></div>
+</div>
+<p class="s11w8-note" id="s11w8-cnote"></p>
+</div>
+<div class="s11w8-card">
+<h2>Gradient noise and the two learning-rate rules</h2>
+<table class="s11w8-t" id="s11w8-tab"></table>
+<p class="s11w8-strip" id="s11w8-strip"></p>
+<p class="s11w8-note" id="s11w8-note"></p>
+</div>
+</section>
+</main>
+<script>
+(function(){
+'use strict';
+var NS=[8,16,32,56,64,128,256,512,1024],REF=8,MAXN=1024,
+    TX=1.7,TY=1.2,SIG=1.0,
+    X0=44,X1=414,Y0=12,Y1=382,XMIN=-1.4,YMIN=-1.9,SPAN=6,S=(X1-X0)/SPAN,
+    LX=428,seed=2473,pts=null,cum=null;
+function $(i){return document.getElementById('s11w8-'+i);}
+function px(x){return X0+(x-XMIN)*S;}
+function py(y){return Y1-(y-YMIN)*S;}
+function noise(n){return Math.sqrt(REF/n);}
+function lin(n){return n/REF;}
+function sq(n){return Math.sqrt(n/REF);}
+function rng(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296;};}
+function build(sd){
+  var r=rng(sd),i,u1,u2,m,a,sx=0,sy=0;
+  pts=[];cum=[];
+  for(i=0;i<MAXN;i++){
+    u1=r();if(u1<1e-12)u1=1e-12;u2=r();
+    m=Math.sqrt(-2*Math.log(u1));a=2*Math.PI*u2;
+    pts.push([TX+SIG*m*Math.cos(a),TY+SIG*m*Math.sin(a)]);
+    sx+=pts[i][0];sy+=pts[i][1];cum.push([sx,sy]);
+  }
+}
+function mean(n){return [cum[n-1][0]/n,cum[n-1][1]/n];}
+function dist(n){var m=mean(n),dx=m[0]-TX,dy=m[1]-TY;return Math.sqrt(dx*dx+dy*dy);}
+function tx(x,y,s,c,a,fs,fw){return '<text x="'+x+'" y="'+y+'" text-anchor="'+(a||'start')+'" font-size="'+(fs||10)+'" font-weight="'+(fw||700)+'" fill="'+c+'">'+s+'</text>';}
+function arrow(x1,y1,x2,y2,c,w,hl){
+  var dx=x2-x1,dy=y2-y1,L=Math.sqrt(dx*dx+dy*dy)||1,ux=dx/L,uy=dy/L,h=Math.min(hl,L*0.6),
+      bx=x2-ux*h,by=y2-uy*h,hw=h*0.46;
+  return '<line x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+bx.toFixed(1)+'" y2="'+by.toFixed(1)+'" stroke="'+c+'" stroke-width="'+w+'" stroke-linecap="round"/>'+
+         '<polygon points="'+x2.toFixed(1)+','+y2.toFixed(1)+' '+(bx-uy*hw).toFixed(1)+','+(by+ux*hw).toFixed(1)+' '+(bx+uy*hw).toFixed(1)+','+(by-ux*hw).toFixed(1)+'" fill="'+c+'"/>';
+}
+function legend(y,kind,c,l1,l2){
+  var s='';
+  if(kind==='dot')s+='<circle cx="'+(LX+9)+'" cy="'+(y-4)+'" r="3.2" fill="'+c+'" opacity=".7"/>';
+  else if(kind==='dash')s+='<line x1="'+LX+'" y1="'+(y-4)+'" x2="'+(LX+19)+'" y2="'+(y-4)+'" stroke="'+c+'" stroke-width="2" stroke-dasharray="4 3"/>';
+  else s+=arrow(LX,y-4,LX+19,y-4,c,c==='#6d28d9'?3.6:2.2,c==='#6d28d9'?9:7);
+  s+=tx(LX+27,y,l1,'#334155',null,10.5);
+  if(l2)s+=tx(LX+27,y+13,l2,'#334155',null,10.5);
+  return s;
+}
+function plot(n){
+  var s='',i,r,op,mn=mean(n),mx=px(mn[0]),my=py(mn[1]),tpx=px(TX),tpy=py(TY),ox=px(0),oy=py(0),v;
+  s+='<defs><clipPath id="s11w8-clip"><rect x="'+X0+'" y="'+Y0+'" width="'+(X1-X0)+'" height="'+(Y1-Y0)+'"/></clipPath></defs>';
+  s+='<rect x="'+X0+'" y="'+Y0+'" width="'+(X1-X0)+'" height="'+(Y1-Y0)+'" fill="#fbfdff" stroke="'+'#e2e8f0'+'"/>';
+  for(v=-1;v<=4;v++){
+    s+='<line x1="'+px(v).toFixed(1)+'" y1="'+Y0+'" x2="'+px(v).toFixed(1)+'" y2="'+Y1+'" stroke="#eef3f9"/>';
+    s+='<line x1="'+X0+'" y1="'+py(v).toFixed(1)+'" x2="'+X1+'" y2="'+py(v).toFixed(1)+'" stroke="#eef3f9"/>';
+  }
+  s+='<line x1="'+ox.toFixed(1)+'" y1="'+Y0+'" x2="'+ox.toFixed(1)+'" y2="'+Y1+'" stroke="#c3cede"/>';
+  s+='<line x1="'+X0+'" y1="'+oy.toFixed(1)+'" x2="'+X1+'" y2="'+oy.toFixed(1)+'" stroke="#c3cede"/>';
+  s+=tx(ox-5,oy+13,'0','#94a3b8','end',9.5);
+  r=n<=32?2.8:n<=128?2.3:1.8;op=n<=32?0.55:n<=128?0.4:0.26;
+  s+='<g clip-path="url(#s11w8-clip)" fill="#7f8ea3" opacity="'+op+'">';
+  for(i=0;i<n;i++)s+='<circle cx="'+px(pts[i][0]).toFixed(1)+'" cy="'+py(pts[i][1]).toFixed(1)+'" r="'+r+'"/>';
+  s+='</g>';
+  s+='<g clip-path="url(#s11w8-clip)">';
+  s+='<line x1="'+tpx.toFixed(1)+'" y1="'+tpy.toFixed(1)+'" x2="'+mx.toFixed(1)+'" y2="'+my.toFixed(1)+'" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="4 3"/>';
+  s+=arrow(ox,oy,tpx,tpy,'#6d28d9',5,16);
+  s+=arrow(ox,oy,mx,my,'#d97706',2.4,10);
+  s+='</g>';
+  s+=tx(172,212,'true gradient','#6d28d9','end',11);
+  s+=tx(Math.min(mx+11,X1-4),Math.min(my+18,Y1-6),'mean of '+n,'#b45309',mx>X1-70?'end':'start',11);
+  s+=tx(X0,404,'Both axes are components of the gradient. Every dot is one sample gradient.','#8b9aad',null,10.5);
+  s+=tx(LX,32,'Batch of '+n+' samples','#152033',null,12,800);
+  s+=legend(72,'arrow','#6d28d9','true gradient, the average','over the whole dataset');
+  s+=legend(128,'arrow','#d97706','mean of the '+n+' sample','gradients in this batch');
+  s+=legend(184,'dot','#7f8ea3','one sample gradient,','drawn with noise');
+  s+=legend(240,'dash','#dc2626','distance from the mean','to the true gradient');
+  s+=tx(LX,300,'Raise the batch and the amber','#475569',null,10.5);
+  s+=tx(LX,313,'arrow settles onto the violet one.','#475569',null,10.5);
+  s+=tx(LX,331,'Past a few hundred samples the','#475569',null,10.5);
+  s+=tx(LX,344,'change stops being visible.','#475569',null,10.5);
+  $('plot').innerHTML=s;
+}
+function draw(){
+  var n=NS[+$('n').value],i,r,h='',d=dist(n),d8=dist(REF),rel=d/d8;
+  $('nv').textContent=n;
+  $('md').textContent=d.toFixed(3);
+  $('mr').textContent=rel.toFixed(3)+'x';
+  $('mp').textContent=noise(n).toFixed(3)+'x';
+  h+='<tr><th>global batch</th><th>gradient noise, relative to 8</th><th>linear rule, gradient descent</th><th>square-root rule, Adam</th></tr>';
+  for(i=0;i<NS.length;i++){r=NS[i];
+    h+='<tr class="'+(r===n?'s11w8-on':r===56?'s11w8-v4':'')+'"><td>'+r+(r===56?' (V4)':'')+'</td><td>'+noise(r).toFixed(3)+'</td><td>'+lin(r).toFixed(2)+'x</td><td>'+sq(r).toFixed(2)+'x</td></tr>';
+  }
+  $('tab').innerHTML=h;
+  $('say').innerHTML=n===REF?'A batch of <b>8</b> averages 8 sample gradients. Their mean lands <b>'+d.toFixed(3)+'</b> from the true gradient. That distance is the reference every larger batch is measured against.':'A batch of <b>'+n+'</b> averages '+n+' sample gradients. Their mean lands <b>'+d.toFixed(3)+'</b> from the true gradient, which is <b>'+rel.toFixed(3)+'x</b> the distance a batch of 8 leaves. The square-root law predicts <b>'+noise(n).toFixed(3)+'x</b>.';
+  $('strip').innerHTML='At four times the batch, plain gradient descent takes <b>'+lin(4*REF).toFixed(2)+'x</b> the learning rate and Adam takes <b>'+sq(4*REF).toFixed(2)+'x</b>. Adam has already divided out the magnitude of the gradient, so only its consistency remains.';
+  $('note').innerHTML='Past a threshold called the <b>critical batch size</b> the extra samples buy almost nothing. Where that threshold sits has to be measured for a given model and dataset.';
+  $('cnote').innerHTML='A more accurate gradient can be trusted over a longer step. Going from 8 to 32 pulls the mean a long way onto the truth. Going from 256 to 1024 moves it very little, because the distance falls as one over the square root of the batch.';
+  $('status').textContent='56 is V4’s global batch, marked on the slider and in the table.';
+  plot(n);
+}
+build(seed);
+$('n').addEventListener('input',draw);
+$('re').addEventListener('click',function(){seed=(seed*1664525+1013904223)>>>0;build(seed);draw();});
+draw();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

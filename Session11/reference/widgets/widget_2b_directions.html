@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 11 Widget 2b - Two Directions, Two Gradient Sequences</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s11w2b-w{max-width:1180px;margin:0 auto;padding:12px 22px}
+.s11w2b-bar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:0 0 10px}
+.s11w2b-sl{display:flex;align-items:center;gap:10px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:4px 12px;font-size:12px;font-weight:700}
+.s11w2b-tr{position:relative;display:block;width:240px;height:28px}
+.s11w2b-tr input{position:absolute;left:0;top:3px;width:240px;margin:0;accent-color:var(--violet)}
+.s11w2b-tk{position:absolute;top:18px;left:calc(8px + 0.8*(100% - 16px));width:2px;height:8px;background:var(--amber);border-radius:1px;transform:translateX(-1px)}
+.s11w2b-tl{position:absolute;top:16px;left:calc(8px + 0.8*(100% - 16px));margin-left:6px;font:800 9.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--amber);white-space:nowrap}
+.s11w2b-sl b{font:800 13px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--violet);min-width:46px}
+.s11w2b-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:10px 13px}
+.s11w2b-card svg{display:block;width:100%;height:auto}
+.s11w2b-card svg+svg{margin-top:6px;border-top:1px solid #eef2f7;padding-top:4px}
+.s11w2b-cap{margin:8px 0 0;font-size:13.5px;line-height:1.5;color:var(--muted)}
+.s11w2b-cap b{color:var(--ink);font-weight:800}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s11w2b-w">
+<div class="s11w2b-bar">
+<label class="s11w2b-sl" for="s11w2b-eta">learning rate &eta;
+<span class="s11w2b-tr"><input id="s11w2b-eta" type="range" min="2" max="12" step="1" value="9" aria-label="Learning rate eta, from 0.02 to 0.12 in steps of 0.01"><span class="s11w2b-tk" aria-hidden="true"></span><span class="s11w2b-tl" aria-hidden="true">0.10</span></span>
+<b id="s11w2b-etav">0.090</b></label>
+</div>
+<section class="s11w2b-card">
+<svg id="s11w2b-su" viewBox="0 0 1140 130" role="img" aria-label="Steep direction u: a number line showing the position at each of five steps, and beside it a bar chart of the signed gradient collected at each of those positions."></svg>
+<svg id="s11w2b-sv" viewBox="0 0 1140 112" role="img" aria-label="Shallow direction v: a number line showing the position at each of five steps, and beside it a bar chart of the signed gradient collected at each of those positions."></svg>
+<p class="s11w2b-cap" id="s11w2b-cap" aria-live="polite"></p>
+</section>
+</main>
+<script>
+(function(){
+'use strict';
+var STEPS=5,KU=20,
+    LX0=118,LX1=700,LCX=409,LHW=291,
+    RX0=792,RW=338,SLOT=338/5,BW=26,BMAX=30,
+    VIOLET='#7c3aed',CYAN='#0891b2',AMBER='#d97706';
+function $(i){return document.getElementById('s11w2b-'+i);}
+function sg(x){ if(Math.abs(x)<1e-12) return '0.0000'; return (x<0?'−':'+')+Math.abs(x).toFixed(4); }
+function f2(x){ if(Math.abs(x)<1e-12) return '0.00'; return (x<0?'−':'+')+Math.abs(x).toFixed(2); }
+function tx(x,y,s,c,a,fs,fw){
+  return '<text x="'+x+'" y="'+y+'" text-anchor="'+(a||'middle')+'" font-size="'+fs+'" font-weight="'+(fw||700)+'" fill="'+c+'">'+s+'</text>';
+}
+function txm(x,y,s,c,fs,cls,key){
+  return '<text class="'+cls+'" data-r="'+key+'" x="'+x+'" y="'+y+'" text-anchor="middle" font-size="'+fs+'" font-weight="800" fill="'+c+'" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">'+s+'</text>';
+}
+function row(o,vals,U,col,title,sub,mtxt,key){
+  var s='',i,x,y,ly,g,h,cx,fill,pts='',gmax=1,hs,
+      NY=o+64,BY=o+36;
+  for(i=0;i<STEPS;i++){ if(Math.abs(vals[i])>gmax) gmax=Math.abs(vals[i]); }
+  hs=BMAX/gmax;
+  function X(v){ return LCX+(v/U)*LHW; }
+  s+=tx(6,o+16,title,'#152033','start',10.5,800);
+  s+=tx(6,o+31,sub,'#65758b','start',9.5,700);
+  s+='<text x="6" y="'+(o+49)+'" text-anchor="start" font-size="13" font-weight="800" fill="'+col+'" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">'+mtxt+'</text>';
+  s+='<line x1="'+X(0).toFixed(1)+'" y1="'+(o+2)+'" x2="'+X(0).toFixed(1)+'" y2="'+(NY-6)+'" stroke="#a7d8bb" stroke-width="1.2" stroke-dasharray="3 3"/>';
+  s+='<line x1="'+LX0+'" y1="'+NY+'" x2="'+LX1+'" y2="'+NY+'" stroke="#94a3b8" stroke-width="1.4"/>';
+  for(i=-4;i<=4;i++){
+    if(!i) continue;
+    if(Math.abs(i)>U) continue;
+    x=X(i);
+    if(x<LX0+4||x>LX1-4) continue;
+    s+='<line x1="'+x.toFixed(1)+'" y1="'+NY+'" x2="'+x.toFixed(1)+'" y2="'+(NY+5)+'" stroke="#94a3b8"/>';
+    s+=tx(x.toFixed(1),NY+16,(i<0?'−':'')+Math.abs(i),'#8b9aad','middle',9.5,700);
+  }
+  s+='<line x1="'+X(0).toFixed(1)+'" y1="'+(NY-6)+'" x2="'+X(0).toFixed(1)+'" y2="'+(NY+6)+'" stroke="#159447" stroke-width="2.2"/>';
+  s+=tx(X(0).toFixed(1),NY+30,'0, minimum of the loss','#159447','middle',10,700);
+  for(i=0;i<STEPS;i++){
+    ly=o+5+i*10; x=X(vals[i]); pts+=x.toFixed(1)+','+ly+' ';
+    s+='<line x1="'+x.toFixed(1)+'" y1="'+ly+'" x2="'+x.toFixed(1)+'" y2="'+(NY-2)+'" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="2 3"/>';
+    s+=tx(LX1+12,ly+3.4,'step '+i,'#8b9aad','start',9.5,700);
+  }
+  s+='<polyline points="'+pts+'" fill="none" stroke="'+col+'" stroke-width="1.8" stroke-linejoin="round" opacity=".5"/>';
+  for(i=0;i<STEPS;i++){
+    ly=o+5+i*10; x=X(vals[i]);
+    s+='<circle cx="'+x.toFixed(1)+'" cy="'+ly+'" r="'+(i?4:5)+'" fill="'+col+'" stroke="#ffffff" stroke-width="1.4"/>';
+  }
+  s+='<line x1="'+RX0+'" y1="'+BY+'" x2="'+(RX0+RW)+'" y2="'+BY+'" stroke="#94a3b8" stroke-width="1.2"/>';
+  s+=tx(RX0-9,BY+3.4,'0','#8b9aad','end',9.5,700);
+  s+=tx(RX0-9,o+93.4,'step','#8b9aad','end',9.5,700);
+  for(i=0;i<STEPS;i++){
+    g=vals[i]; cx=RX0+SLOT*(i+0.5); h=Math.abs(g)*hs; if(h<2) h=2;
+    fill=(g<0)?AMBER:col;
+    y=(g<0)?BY:BY-h;
+    s+='<rect x="'+(cx-BW/2).toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+BW+'" height="'+h.toFixed(1)+'" rx="2" fill="'+fill+'" opacity="'+(Math.abs(g)<1e-12?'.3':'.92')+'"/>';
+    s+=txm(cx.toFixed(1),((g<0)?BY+h+12:BY-h-5).toFixed(1),sg(g),(g<0)?'#b45309':'#334155',10,'s11w2b-gv',key);
+    s+=tx(cx.toFixed(1),o+90,String(i),'#8b9aad','middle',9.5,700);
+  }
+  return s;
+}
+function cap(eta,m){
+  var e='<b>'+eta.toFixed(3)+'</b>',am=Math.abs(m),
+      vs=' The v step always stops short of the minimum of the loss, so every v gradient stays positive.';
+  if(m>1e-12) return 'At η = '+e+' the factor (1 − 20η) is <b>+'+m.toFixed(2)+'</b>, so each step along u stops short of the minimum of the loss, u stays on its starting side, and every u gradient is positive. The v step is smaller still, so every v gradient is positive as well.';
+  if(am<1e-12) return 'At η = '+e+' the factor (1 − 20η) is <b>0.00</b>, so the first step along u lands exactly on the minimum of the loss and every later u gradient is 0.'+vs;
+  if(Math.abs(am-1)<1e-9) return 'At η = '+e+' the factor (1 − 20η) is exactly <b>−1.00</b>, so each step along u passes the minimum of the loss and lands the same distance beyond it: the u gradients are exactly +1, −1, +1, −1, +1, the sequence Section 4 uses.'+vs;
+  if(am<1) return 'At η = '+e+' the factor (1 − 20η) is <b>−'+am.toFixed(2)+'</b>, so each step along u passes the minimum of the loss and lands on the far side, which flips the sign of the u gradient every step while its size shrinks.'+vs;
+  return 'At η = '+e+' the factor (1 − 20η) is <b>−'+am.toFixed(2)+'</b>, so each step along u passes the minimum of the loss and lands farther out than it started, which flips the sign of the u gradient every step while its size grows.'+vs;
+}
+function draw(){
+  var eta=+$('eta').value/100,m=1-KU*eta,mv=1-eta,
+      u=[],v=[],a=1,b=1,i,U=1;
+  for(i=0;i<STEPS;i++){ u.push(a); v.push(b); a=a*m; b=b*mv; }
+  for(i=0;i<STEPS;i++){
+    if(Math.abs(u[i])>U) U=Math.abs(u[i]);
+    if(Math.abs(v[i])>U) U=Math.abs(v[i]);
+  }
+  U=U*1.18;
+  $('etav').textContent=eta.toFixed(3);
+  $('su').innerHTML=
+    tx(LCX,11,'position after each step','#8b9aad','middle',10.5,800)+
+    tx(RX0+RW/2,11,'gradient collected there, scaled by the first gradient','#8b9aad','middle',10.5,800)+
+    row(26,u,U,VIOLET,'steep direction u','1 − 20η',f2(m),'u');
+  $('sv').innerHTML=row(8,v,U,CYAN,'shallow direction v','1 − η',f2(mv),'v');
+  $('cap').innerHTML=cap(eta,m);
+}
+$('eta').addEventListener('input',draw);
+draw();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

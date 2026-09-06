@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 11 Widget 5 - L2 vs Decoupled Weight Decay</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s11w5-w{max-width:1180px;margin:0 auto;padding:14px 22px 16px}
+.s11w5-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--violet)}
+.s11w5-w h1{font-size:24px;line-height:1.12;margin:3px 0 5px}
+.s11w5-sub{color:var(--muted);margin:0 0 10px;font-size:13px;line-height:1.45;max-width:960px}
+.s11w5-sub b{color:var(--ink)}
+.s11w5-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.s11w5-sl{display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 10px;font-size:11.5px;font-weight:700;color:var(--muted)}
+.s11w5-sl input{vertical-align:middle;accent-color:var(--violet)}
+.s11w5-sl b{font:800 12.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--ink);min-width:52px}
+.s11w5-bar button{border:1px solid var(--violet);background:#fff;color:var(--violet);border-radius:8px;padding:7px 12px;font:800 12px Inter,sans-serif;cursor:pointer}
+.s11w5-st{font-size:11.5px;font-weight:700;color:var(--muted)}
+.s11w5-g{display:grid;grid-template-columns:1.62fr 1fr;gap:10px;align-items:start}
+.s11w5-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:11px 13px}
+.s11w5-card h2{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px;font-weight:800}
+.s11w5-card svg{display:block;width:100%;height:auto}
+.s11w5-t{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
+.s11w5-t th{text-align:right;font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);font-weight:800;padding:3px 5px;border-bottom:1px solid var(--line)}
+.s11w5-t td{padding:4px 5px;border-bottom:1px solid #eef3f9;font:700 12.5px ui-monospace,SFMono-Regular,Consolas,monospace;text-align:right;white-space:nowrap}
+.s11w5-t th:first-child,.s11w5-t td:first-child{text-align:left;font:800 12.5px Inter,sans-serif}
+.s11w5-t td.f{font:700 11.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--muted);text-align:left}
+.s11w5-t tr.l2 td{color:var(--red)}
+.s11w5-t tr.dc td{color:var(--green)}
+.s11w5-t tr.l2 td.f,.s11w5-t tr.dc td.f{color:var(--muted)}
+.s11w5-met{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:9px}
+.s11w5-met div{border:1px solid var(--line);border-radius:8px;background:#fbfdff;padding:6px 8px}
+.s11w5-met b{display:block;font:800 15px ui-monospace,SFMono-Regular,Consolas,monospace}
+.s11w5-met span{display:block;color:var(--muted);font-size:10px;margin-top:1px;line-height:1.25}
+.s11w5-say{margin:8px 0 0;border-radius:8px;padding:8px 10px;font-size:12.5px;line-height:1.5;border:1px solid #ddd6fe;background:#f5f3ff;color:#4c1d95}
+.s11w5-say b{font-weight:800}
+.s11w5-say.bad{border-color:#fecaca;background:#fff8f8;color:#991b1b}
+.s11w5-say.good{border-color:#bbf7d0;background:#f7fff9;color:#14532d}
+.s11w5-note{margin:8px 0 0;font-size:12px;color:var(--muted);line-height:1.5}
+.s11w5-note b{color:var(--ink)}
+@media(max-width:940px){.s11w5-g{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s11w5-w">
+<div class="s11w5-k">ERA V5 Session 11 &middot; weight decay under Adam</div>
+<h1>L2 against decoupled weight decay</h1>
+<p class="s11w5-sub">One weight at <b>w = 0.5</b>, with <b>&lambda; = 0.1</b> and <b>&eta; = 0.001</b>. The L2 penalty joins the gradient, so it is divided by &radic;v&#770; along with everything else. Decoupled decay is applied after the Adam step, where nothing divides it. Move the slider to change how large that weight&rsquo;s gradients have been.</p>
+
+<div class="s11w5-bar">
+<label class="s11w5-sl" for="s11w5-v">&radic;v&#770; for this weight <input id="s11w5-v" type="range" min="-2301" max="301" step="1" value="-2000" style="width:250px" aria-label="Square root of the bias-corrected second moment, from 0.005 to 2.0"><b id="s11w5-vv"></b></label>
+<button id="s11w5-qb" type="button" aria-label="Set the second moment to 1.00, a parameter with large gradients">Parameter A, &radic;v&#770; = 1.00</button>
+<button id="s11w5-qq" type="button" aria-label="Set the second moment to 0.01, a parameter with small gradients">Parameter B, &radic;v&#770; = 0.01</button>
+<span class="s11w5-st" id="s11w5-status" aria-live="polite"></span>
+</div>
+
+<section class="s11w5-g">
+<div class="s11w5-card">
+<h2>Shrink applied to this weight on one step, log scale</h2>
+<svg id="s11w5-bars" viewBox="0 0 620 176" role="img" aria-label="Log scale bar chart comparing the per step shrink from the L2 route and the decoupled route"></svg>
+<table class="s11w5-t">
+<thead><tr><th>route</th><th>expression</th><th>shrink per step</th><th>as a fraction of w</th><th>relative</th></tr></thead>
+<tbody>
+<tr class="l2"><td>L2 in the gradient</td><td class="f">&eta;&lambda;w / &radic;v&#770;</td><td id="s11w5-l2s"></td><td id="s11w5-l2f"></td><td id="s11w5-l2r"></td></tr>
+<tr class="dc"><td>decoupled, AdamW</td><td class="f">&eta;&lambda;w</td><td id="s11w5-dcs"></td><td id="s11w5-dcf"></td><td id="s11w5-dcr"></td></tr>
+</tbody>
+</table>
+<p class="s11w5-say" id="s11w5-say"></p>
+</div>
+<div class="s11w5-card">
+<h2>The same weight carried through 200 steps of decay</h2>
+<svg id="s11w5-curve" viewBox="0 0 320 196" role="img" aria-label="Two curves showing the weight decaying over two hundred steps under each route"></svg>
+<div class="s11w5-met">
+<div><b id="s11w5-mw1" style="color:var(--red)"></b><span>w after 200 steps, L2 route</span></div>
+<div><b id="s11w5-mw2" style="color:var(--green)"></b><span>w after 200 steps, decoupled</span></div>
+</div>
+<p class="s11w5-note" id="s11w5-note"></p>
+</div>
+</section>
+</main>
+
+<script>
+(function(){
+'use strict';
+var W0=0.5,LAM=0.1,ETA=1e-3,N=200;
+function $(i){return document.getElementById('s11w5-'+i);}
+function ex(x){return x.toExponential(1);}
+function sv(){return Math.pow(10,+$('v').value/1000);}
+function bx(x){return 74+(Math.log(x)/Math.LN10+5)/4*524;}
+function tx(x,y,s,c,a,b,w){return '<text x="'+x+'" y="'+y+'" text-anchor="'+(a||'middle')+'" font-size="'+(b||10)+'" font-weight="'+(w||700)+'" fill="'+c+'">'+s+'</text>';}
+function bars(l2,dc){
+  var s='',i,v,x,lo=Math.pow(10,-5),hi=Math.pow(10,-1);
+  for(i=-5;i<=-1;i++){v=Math.pow(10,i);x=bx(v);
+    s+='<line x1="'+x.toFixed(1)+'" y1="24" x2="'+x.toFixed(1)+'" y2="140" stroke="#eef3f9"/>';
+    s+=tx(x,156,'1e'+i,'#8b9aad','middle',10);}
+  s+='<line x1="74" y1="140" x2="598" y2="140" stroke="#e6edf6"/>';
+  s+=tx(70,60,'L2','#b91c1c','end',11,800)+tx(70,113,'decoupled','#166534','end',11,800);
+  var a=bx(Math.max(lo,Math.min(hi,l2))),b=bx(Math.max(lo,Math.min(hi,dc)));
+  s+='<rect x="74" y="40" width="'+(a-74).toFixed(1)+'" height="28" rx="5" fill="#fee2e2" stroke="#dc2626"/>';
+  s+='<rect x="74" y="93" width="'+(b-74).toFixed(1)+'" height="28" rx="5" fill="#dcfce7" stroke="#159447"/>';
+  s+=tx(a+7,59,ex(l2),'#b91c1c','start',11.5,800);
+  s+=tx(b+7,112,ex(dc),'#166534','start',11.5,800);
+  s+='<line x1="'+b.toFixed(1)+'" y1="34" x2="'+b.toFixed(1)+'" y2="130" stroke="#159447" stroke-width="1.2" stroke-dasharray="4 4"/>';
+  if(Math.abs(a-b)>3){
+    s+='<line x1="'+b.toFixed(1)+'" y1="78" x2="'+a.toFixed(1)+'" y2="78" stroke="#7c3aed" stroke-width="1.6" marker-end="url(#s11w5-ar)"/>';
+    s+=tx((a+b)/2,74,(l2>dc?'L2 is stronger by ':'L2 is weaker by ')+(l2>dc?(l2/dc).toFixed(1)+'x':(dc/l2).toFixed(1)+'x'),'#6d28d9','middle',10.5,800);
+  }else{
+    s+=tx((a+b)/2,74,'the two routes agree here','#6d28d9','middle',10.5,800);
+  }
+  s+=tx(74,17,'the decoupled bar holds still, because ηλw carries no division by √v','#8b9aad','start',10);
+  s+='<defs><marker id="s11w5-ar" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0 0 6 3 0 6z" fill="#7c3aed"/></marker></defs>';
+  $('bars').innerHTML=s;
+}
+function curve(f1,f2){
+  var s='',i,w1=W0,w2=W0,p1='',p2='',X=function(t){return 42+t/N*262;},Y=function(w){return 158-w/W0*126;};
+  for(i=0;i<=N;i++){p1+=X(i).toFixed(1)+','+Y(w1).toFixed(1)+' ';p2+=X(i).toFixed(1)+','+Y(w2).toFixed(1)+' ';w1*=f1;w2*=f2;}
+  for(i=0;i<=4;i++){var y=Y(W0*i/4);s+='<line x1="42" y1="'+y.toFixed(1)+'" x2="304" y2="'+y.toFixed(1)+'" stroke="#eef3f9"/>'+tx(38,y+3.5,(W0*i/4).toFixed(2),'#8b9aad','end',9.5);}
+  s+=tx(42,176,'0','#8b9aad','middle',9.5)+tx(173,176,'step','#8b9aad','middle',9.5)+tx(304,176,'200','#8b9aad','middle',9.5);
+  s+=tx(42,14,'weight value','#8b9aad','start',10);
+  s+='<polyline points="'+p2+'" fill="none" stroke="#159447" stroke-width="2.4" stroke-linejoin="round"/>';
+  s+='<polyline points="'+p1+'" fill="none" stroke="#dc2626" stroke-width="2.4" stroke-linejoin="round"/>';
+  s+='<circle cx="304" cy="'+Y(W0*Math.pow(f1,N)).toFixed(1)+'" r="3.4" fill="#dc2626"/>';
+  s+='<circle cx="304" cy="'+Y(W0*Math.pow(f2,N)).toFixed(1)+'" r="3.4" fill="#159447"/>';
+  s+=tx(300,Y(W0*Math.pow(f2,N))-8,'decoupled','#166534','end',10.5,800);
+  s+=tx(300,Y(W0*Math.pow(f1,N))+(Math.abs(W0*Math.pow(f1,N)-W0*Math.pow(f2,N))<0.04*W0?20:14),'L2','#b91c1c','end',10.5,800);
+  s+=tx(42,192,'decay only, with the loss gradient held out so the two routes are comparable','#8b9aad','start',9.5);
+  $('curve').innerHTML=s;
+}
+function draw(){
+  var v=sv(),dc=ETA*LAM*W0,l2=dc/v,rat=1/v,f1=1-ETA*LAM/v,f2=1-ETA*LAM,
+      e1=W0*Math.pow(f1,N),e2=W0*Math.pow(f2,N);
+  $('vv').textContent=v.toFixed(v<0.1?4:3);
+  $('l2s').textContent=ex(l2);$('dcs').textContent=ex(dc);
+  $('l2f').textContent=ex(l2/W0);$('dcf').textContent=ex(dc/W0);
+  $('l2r').textContent=rat.toFixed(1)+'x';$('dcr').textContent='1.0x';
+  $('mw1').textContent=e1.toFixed(4);$('mw2').textContent=e2.toFixed(4);
+  $('say').className='s11w5-say '+(rat>1.5?'bad':'good');
+  $('say').innerHTML='At &radic;v&#770; = <b>'+v.toFixed(v<0.1?4:3)+'</b> the L2 route removes <b>'+ex(l2)+'</b> from the weight each step and the decoupled route removes <b>'+ex(dc)+'</b>. That makes L2 <b>'+rat.toFixed(1)+'x</b> the decoupled strength on this one weight. '+
+    (rat>1.5?'Small gradients have made the regularization harsher, which is backwards.':rat<0.9?'Large gradients have made the regularization weaker than &lambda; asks for.':'The two routes agree only at this single value of &radic;v&#770;.');
+  $('status').textContent='ηλ = '+ex(ETA*LAM)+' is the decoupled per-step fraction, fixed for every weight in the model.';
+  $('note').innerHTML='After 200 steps the L2 route leaves <b>'+e1.toFixed(4)+'</b> and the decoupled route leaves <b>'+e2.toFixed(4)+'</b>, a gap of <b>'+(Math.abs(e2-e1)).toFixed(4)+'</b>. Under L2 the surviving fraction is (1 &minus; ηλ/&radic;v&#770;)<sup>200</sup> = <b>'+Math.pow(f1,N).toFixed(4)+'</b>, and under decoupled decay it is a flat <b>'+Math.pow(f2,N).toFixed(4)+'</b> for every weight.';
+  bars(l2,dc);curve(f1,f2);
+}
+$('v').addEventListener('input',draw);
+$('qb').addEventListener('click',function(){$('v').value=0;draw();});
+$('qq').addEventListener('click',function(){$('v').value=-2000;draw();});
+draw();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

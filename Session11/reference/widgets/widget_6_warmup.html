@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 11 Widget 6 - Learning Rate Warmup</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s11w6-w{max-width:1180px;margin:0 auto;padding:13px 22px 14px}
+.s11w6-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.s11w6-w h1{font-size:23px;line-height:1.12;margin:3px 0 5px}
+.s11w6-sub{color:var(--muted);margin:0 0 9px;font-size:12.5px;line-height:1.45;max-width:1000px}
+.s11w6-sub b{color:var(--ink)}
+.s11w6-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:9px}
+.s11w6-sl{display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 10px;font-size:11.5px;font-weight:700;color:var(--muted)}
+.s11w6-sl input{vertical-align:middle;accent-color:var(--cyan)}
+.s11w6-sl b{font:800 12.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--ink);min-width:70px}
+.s11w6-bar button{border:1px solid var(--cyan);background:#fff;color:var(--cyan);border-radius:8px;padding:7px 14px;font:800 12.5px Inter,sans-serif;cursor:pointer}
+.s11w6-bar button.on{background:var(--cyan);color:#fff}
+.s11w6-st{font-size:11.5px;font-weight:700;color:var(--muted)}
+.s11w6-pk{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px}
+.s11w6-pk div{border:1px solid var(--line);border-radius:11px;background:rgba(255,255,255,.96);box-shadow:0 10px 26px rgba(20,42,75,.07);padding:7px 12px 8px}
+.s11w6-pk span{display:block;font-size:9.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.s11w6-pk b{display:block;font:800 29px/1.06 ui-monospace,SFMono-Regular,Consolas,monospace;margin-top:2px}
+.s11w6-pk i{display:block;font-style:normal;font-size:11px;color:var(--muted);margin-top:2px;font-weight:700}
+.s11w6-pk .s11w6-a b{color:var(--red)}.s11w6-pk .s11w6-b b{color:var(--cyan)}.s11w6-pk .s11w6-c b{color:var(--violet)}
+.s11w6-g{display:grid;grid-template-columns:1.72fr 1fr;gap:10px;align-items:start}
+.s11w6-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:10px 13px 11px}
+.s11w6-card h2{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px;font-weight:800}
+.s11w6-card svg{display:block;width:100%;height:auto}
+.s11w6-met{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.s11w6-met div{border:1px solid var(--line);border-radius:8px;background:#fbfdff;padding:5px 8px}
+.s11w6-met b{display:block;font:800 14.5px ui-monospace,SFMono-Regular,Consolas,monospace}
+.s11w6-met span{display:block;color:var(--muted);font-size:10px;margin-top:1px;line-height:1.25}
+.s11w6-say{margin:7px 0 0;border-radius:8px;padding:7px 10px;font-size:12.5px;line-height:1.45;border:1px solid #bae6fd;background:#f0f9ff;color:#0c4a6e}
+.s11w6-say b{font-weight:800}
+.s11w6-say.bad{border-color:#fecaca;background:#fff8f8;color:#991b1b}
+.s11w6-note{margin:7px 0 0;font-size:11.5px;color:var(--muted);line-height:1.45}
+.s11w6-note b{color:var(--ink)}
+@media(max-width:940px){.s11w6-g{grid-template-columns:1fr}.s11w6-pk{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s11w6-w">
+<div class="s11w6-k">ERA V5 Session 11 &middot; Learning rate warmup</div>
+<h1>The largest update-to-weight ratio a run ever sees</h1>
+<p class="s11w6-sub">Weights are initialized at <b>1/&radic;4096 = 0.015625</b> and the peak learning rate is <b>3e-4</b>. Adam moves a weight by the full &eta; while gradients agree with each other, and by <b>0.281&eta;</b> once they disagree. The quantity plotted below is the size of the update divided by the size of the weight.</p>
+
+<div class="s11w6-bar">
+<button id="s11w6-tg" type="button" aria-label="Toggle learning rate warmup on or off">warmup: on</button>
+<label class="s11w6-sl" for="s11w6-len">warmup length <input id="s11w6-len" type="range" min="0" max="4000" step="50" value="2000" style="width:240px" aria-label="Number of steps over which the learning rate is ramped to its peak, from 0 to 4000"><b id="s11w6-lenv"></b></label>
+<span class="s11w6-st" id="s11w6-status" aria-live="polite"></span>
+</div>
+
+<section class="s11w6-pk">
+<div class="s11w6-a"><span>largest ratio in the run, warmup off</span><b id="s11w6-pa"></b><i id="s11w6-pai"></i></div>
+<div class="s11w6-b"><span>largest ratio in the run, warmup on</span><b id="s11w6-pb"></b><i id="s11w6-pbi"></i></div>
+<div class="s11w6-c"><span>warmup off peak divided by warmup on peak</span><b id="s11w6-pc"></b><i id="s11w6-pci"></i></div>
+</section>
+
+<section class="s11w6-g">
+<div class="s11w6-card">
+<h2>Update size divided by weight size, steps 1 to 10,000, both axes log scale</h2>
+<svg id="s11w6-chart" viewBox="0 0 620 336" role="img" aria-label="Log log plot of the update to weight ratio over ten thousand training steps, with warmup off and with warmup on, against a target band from zero point five to two in a thousand"></svg>
+<p class="s11w6-say" id="s11w6-say"></p>
+</div>
+<div class="s11w6-card">
+<h2>The three terms in the ratio</h2>
+<svg id="s11w6-side" viewBox="0 0 300 170" role="img" aria-label="Learning rate over peak, gradient consistency factor, and weight magnitude, plotted over the same ten thousand steps"></svg>
+<div class="s11w6-met">
+<div><b id="s11w6-m1"></b><span>ratio on step 1</span></div>
+<div><b id="s11w6-m2"></b><span>step at which the peak arrives</span></div>
+<div><b id="s11w6-m3"></b><span id="s11w6-m3s">ratio at step 10,000</span></div>
+<div><b id="s11w6-m4"></b><span>assumed weight magnitude at step 10,000</span></div>
+</div>
+<p class="s11w6-note" id="s11w6-note"></p>
+</div>
+</section>
+</main>
+
+<script>
+(function(){
+'use strict';
+var W0=1/Math.sqrt(4096),PEAK=3e-4,FLOOR=0.281,N=10000,TAU=1200,GROW=4.2,THALF=1500,
+    LO=5e-4,HI=2e-3,MID=1e-3,warm=true;
+function $(i){return document.getElementById('s11w6-'+i);}
+function cons(n){return FLOOR+(1-FLOOR)*Math.exp(-(n-1)/TAU);}
+function wmag(n){var t=n-1;return W0*(1+(GROW-1)*t/(t+THALF));}
+function lr(n,on,W){return (on&&W>0)?PEAK*Math.min(1,n/W):PEAK;}
+function ratio(n,on,W){return cons(n)*lr(n,on,W)/wmag(n);}
+function com(n){return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+function fmt(r){var v=r*1000;return v>=10?v.toFixed(1)+'e-3':v>=1?v.toFixed(2)+'e-3':v>=0.05?v.toFixed(3)+'e-3':r.toExponential(2);}
+function peak(on,W){var pk=0,pn=1,n;for(n=1;n<=N;n++){var r=ratio(n,on,W);if(r>pk){pk=r;pn=n;}}return {r:pk,n:pn};}
+function X(n){return 56+Math.log(Math.max(1,Math.min(N,n)))/Math.LN10/4*548;}
+function Y(r){return 292-(Math.log(Math.max(1e-6,Math.min(0.1,r)))/Math.LN10+6)/5*248;}
+function tx(x,y,s,c,a,b,w){return '<text x="'+x+'" y="'+y+'" text-anchor="'+(a||'middle')+'" font-size="'+(b||10)+'" font-weight="'+(w||700)+'" fill="'+c+'">'+s+'</text>';}
+function txh(x,y,s,c,a,b,w){return '<text x="'+x+'" y="'+y+'" text-anchor="'+(a||'middle')+'" font-size="'+(b||10)+'" font-weight="'+(w||700)+'" fill="'+c+'" stroke="#ffffff" stroke-width="3.4" stroke-linejoin="round" paint-order="stroke">'+s+'</text>';}
+function poly(p,c,w,d,o){return '<polyline points="'+p+'" fill="none" stroke="'+c+'" stroke-width="'+w+'"'+(d?' stroke-dasharray="'+d+'"':'')+(o?' opacity="'+o+'"':'')+' stroke-linejoin="round" stroke-linecap="round"/>';}
+function samples(){var a=[],i,n,p=0;for(i=0;i<=260;i++){n=Math.round(Math.pow(10,i/260*4));if(n<1)n=1;if(n!==p){a.push(n);p=n;}}if(a[a.length-1]!==N)a.push(N);return a;}
+var SAMP=samples();
+function chart(W,pOff,pOn){
+  var s='',i,p1='',p2='',n,y;
+  for(i=-6;i<=-1;i++){y=Y(Math.pow(10,i));
+    s+='<line x1="56" y1="'+y.toFixed(1)+'" x2="604" y2="'+y.toFixed(1)+'" stroke="#eef3f9"/>';
+    s+=tx(51,y+3.5,'1e'+i,'#8b9aad','end',9.5);}
+  s+='<rect x="56" y="'+Y(HI).toFixed(1)+'" width="548" height="'+(Y(LO)-Y(HI)).toFixed(1)+'" fill="rgba(21,148,71,.08)"/>';
+  s+='<line x1="56" y1="'+Y(MID).toFixed(1)+'" x2="604" y2="'+Y(MID).toFixed(1)+'" stroke="#159447" stroke-width="1.5" stroke-dasharray="6 4"/>';
+  if(warm&&W>0){s+='<rect x="56" y="44" width="'+(X(Math.max(1,W))-56).toFixed(1)+'" height="248" fill="rgba(8,145,178,.06)"/>';
+    s+='<line x1="'+X(Math.max(1,W)).toFixed(1)+'" y1="44" x2="'+X(Math.max(1,W)).toFixed(1)+'" y2="292" stroke="#0891b2" stroke-width="1.2" stroke-dasharray="4 4"/>';
+    s+=txh(X(Math.max(1,W))-6,289,'ramp ends at step '+com(W),'#0e7490','end',10,800);}
+  for(i=0;i<SAMP.length;i++){n=SAMP[i];
+    p1+=X(n).toFixed(1)+','+Y(ratio(n,false,W)).toFixed(1)+' ';
+    p2+=X(n).toFixed(1)+','+Y(ratio(n,true,W)).toFixed(1)+' ';}
+  s+='<line x1="56" y1="292" x2="604" y2="292" stroke="#e6edf6"/>';
+  for(i=0;i<=4;i++)s+=tx(56+i*137,306,com(Math.pow(10,i)),'#8b9aad','middle',9.5);
+  s+=tx(330,322,'training step','#8b9aad','middle',10);
+  s+=poly(p1,'#dc2626',warm?1.7:2.8,warm?'5 4':'',warm?0.45:1);
+  s+=poly(p2,'#0891b2',warm?2.8:1.7,warm?'':'5 4',warm?1:0.45);
+  var dx=X(pOn.n)-X(pOff.n),dy=Math.abs(Y(pOn.r)-Y(pOff.r)),below=(dx<380&&dy<34);
+  s+='<circle cx="'+X(pOff.n).toFixed(1)+'" cy="'+Y(pOff.r).toFixed(1)+'" r="4" fill="#dc2626" opacity="'+(warm?0.55:1)+'"/>';
+  s+=txh(X(pOff.n)+9,Y(pOff.r)-6,'warmup off peak '+fmt(pOff.r),'#b91c1c','start',10.5,800);
+  s+='<circle cx="'+X(pOn.n).toFixed(1)+'" cy="'+Y(pOn.r).toFixed(1)+'" r="4" fill="#0891b2" opacity="'+(warm?1:0.55)+'"/>';
+  if(below){s+='<line x1="'+X(pOn.n).toFixed(1)+'" y1="'+(Y(pOn.r)+8).toFixed(1)+'" x2="'+X(pOn.n).toFixed(1)+'" y2="243" stroke="#7dd3fc" stroke-width="1.1"/>';
+    s+=txh(X(pOn.n)+7,252,'warmup on peak '+fmt(pOn.r),'#0e7490','start',10.5,800);}
+  else s+=txh(X(pOn.n)-9,Y(pOn.r)-9,'warmup on peak '+fmt(pOn.r),'#0e7490','end',10.5,800);
+  s+=tx(56,14,'warmup off in red, warmup on in blue','#8b9aad','start',10);
+  s+=tx(604,14,'ratio = update size / weight size','#8b9aad','end',10);
+  s+='<line x1="56" y1="28" x2="78" y2="28" stroke="#159447" stroke-width="1.5" stroke-dasharray="6 4"/>';
+  s+=tx(84,31.5,'target band 0.5e-3 to 2.0e-3, center line 1.0e-3, which is a step of '+(MID*W0).toExponential(3),'#166534','start',10,800);
+  $('chart').innerHTML=s;
+}
+function side(W,on){
+  var s='',i,n,pe='',pc='',pw='',wEnd=wmag(N),
+      Xs=function(v){return 40+Math.log(Math.max(1,v))/Math.LN10/4*252;},
+      Ys=function(v){return 132-v*86;};
+  for(i=0;i<SAMP.length;i++){n=SAMP[i];
+    pe+=Xs(n).toFixed(1)+','+Ys(lr(n,on,W)/PEAK).toFixed(1)+' ';
+    pc+=Xs(n).toFixed(1)+','+Ys(cons(n)).toFixed(1)+' ';
+    pw+=Xs(n).toFixed(1)+','+Ys(wmag(n)/wEnd).toFixed(1)+' ';}
+  s+='<line x1="40" y1="'+Ys(1)+'" x2="292" y2="'+Ys(1)+'" stroke="#eef3f9"/>'+tx(36,Ys(1)+3.5,'1.00','#8b9aad','end',9);
+  s+='<line x1="40" y1="'+Ys(FLOOR)+'" x2="292" y2="'+Ys(FLOOR)+'" stroke="#fbbf24" stroke-width="1.1" stroke-dasharray="4 3"/>'+tx(36,Ys(FLOOR)+3.5,'0.281','#b45309','end',9);
+  s+='<line x1="40" y1="132" x2="292" y2="132" stroke="#e6edf6"/>'+tx(36,135,'0','#8b9aad','end',9);
+  s+=poly(pw,'#7c3aed',2.2)+poly(pc,'#d97706',2.2)+poly(pe,'#0891b2',2.2);
+  s+=tx(40,11,'learning rate over peak, in blue','#0e7490','start',9.5,800);
+  s+=tx(40,22,'gradient consistency factor, in amber','#b45309','start',9.5,800);
+  s+=tx(40,33,'weight magnitude over '+wEnd.toFixed(4)+', in violet','#6d28d9','start',9.5,800);
+  s+=tx(40,146,'1','#8b9aad','start',9)+tx(166,146,'100','#8b9aad','middle',9)+tx(292,146,'10,000','#8b9aad','end',9);
+  s+=tx(166,163,'training step','#8b9aad','middle',9.5);
+  $('side').innerHTML=s;
+}
+function draw(){
+  var W=+$('len').value,pOff=peak(false,W),pOn=peak(true,W),live=warm&&W>0,
+      cur=live?pOn:pOff,rEnd=ratio(N,warm,W),wEnd=wmag(N),r1=ratio(1,warm,W);
+  $('lenv').textContent=com(W)+' steps';
+  $('tg').textContent='warmup: '+(warm?'on':'off');
+  $('tg').className=warm?'on':'';
+  $('pa').textContent=fmt(pOff.r);
+  $('pai').textContent='on step '+com(pOff.n)+', which is '+(pOff.r/MID).toFixed(1)+'x the 1.0e-3 line';
+  $('pb').textContent=fmt(pOn.r);
+  $('pbi').textContent=W>0?'at step '+com(pOn.n)+', where the ramp ends':'ramp length is 0 steps, so this equals the warmup off peak';
+  $('pc').textContent=(pOff.r/pOn.r).toFixed(1)+'x';
+  $('pci').textContent=W>0?'lower peak, bought by ramping over '+com(W)+' steps':'no reduction while the ramp length is 0';
+  $('m1').textContent=fmt(r1);
+  $('m1').style.color=live?'var(--cyan)':'var(--red)';
+  $('m2').textContent=com(cur.n);
+  $('m2').style.color='var(--amber)';
+  $('m3').textContent=fmt(rEnd);
+  $('m3').style.color=(rEnd>=LO&&rEnd<=HI)?'var(--green)':'var(--red)';
+  $('m3s').textContent='ratio at step 10,000, '+((rEnd>=LO&&rEnd<=HI)?'inside':'outside')+' the target band';
+  $('m4').textContent=wEnd.toFixed(4);
+  $('m4').style.color='var(--violet)';
+  $('say').className='s11w6-say'+(live?'':' bad');
+  $('say').innerHTML=live
+    ? 'The ramp opens &eta; at <b>'+lr(1,true,W).toExponential(2)+'</b>, so the first update is <b>'+fmt(r1)+'</b> of the weight size. The largest ratio in the run is <b>'+fmt(pOn.r)+'</b>, at step '+com(pOn.n)+' where the ramp reaches its peak.'
+    : '&eta; is at its peak from step 1, so the largest ratio in the run is <b>'+fmt(pOff.r)+'</b>, on the very first step, taken in a direction chosen by a model that has seen nothing.';
+  $('status').textContent='Peak eta '+PEAK.toExponential(1)+'. Weights initialized at '+W0.toFixed(6)+'. A ratio of 1.0e-3 is a step of '+(MID*W0).toExponential(3)+'.';
+  $('note').innerHTML='Two terms pull the ratio down over the window. The consistency factor falls from <b>1.000</b> toward its noisy gradient floor of <b>0.281</b>, and the weight magnitude grows from <b>'+W0.toFixed(6)+'</b> to an assumed <b>'+wEnd.toFixed(4)+'</b> by step 10,000. This warmup ramps the learning rate itself. The data mixture warmup band of Sessions 5 and 6 is a separate mechanism.';
+  chart(W,pOff,pOn);side(W,warm);
+}
+$('len').addEventListener('input',draw);
+$('tg').addEventListener('click',function(){warm=!warm;draw();});
+draw();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

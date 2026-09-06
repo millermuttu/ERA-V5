@@ -1,0 +1,1168 @@
+=== widget_10_memory.html ===
+
+(function(){
+'use strict';
+var FIX=[['weight, bf16',2,'#0891b2'],['gradient, bf16',2,'#7c3aed'],['master copy, fp32',4,'#159447']],
+    OPT=[['gradient descent',0,'no extra state'],['momentum',4,'m in fp32'],['AdamW',8,'m and v in fp32'],['8-bit AdamW',2,'m and v in int8']],
+    SC='#d97706',GIB=1073741824,CARD=80e9,CARDG=CARD/GIB,sel=2;
+function $(i){return document.getElementById('s11w10-'+i);}
+function gib(n,b){return n*b/GIB;}
+function fm(v){return v>=100?v.toFixed(1):v.toFixed(2);}
+function bn(n){return (n/1e9).toFixed(1)+'B';}
+function lx(n){return 30+Math.log(n/5e8)/Math.log(240)*426;}
+function ly(g){return 214-Math.log(Math.max(2,g)/2)/Math.log(2048)*196;}
+function tx(x,y,s,c,a,b){return '<text x="'+x+'" y="'+y+'" text-anchor="'+(a||'middle')+'" font-size="'+(b||9.5)+'" font-weight="700" fill="'+c+'">'+s+'</text>';}
+function tot(i){return 8+OPT[i][1];}
+function chart(n){
+  var s='',i,ticks=[[5e8,'0.5B'],[2e9,'2B'],[9e9,'9B'],[20e9,'20B'],[120e9,'120B']],yt=[4,32,256,2048],t,fit,g,lg=[],le='';
+  for(i=0;i<yt.length;i++)s+='<line x1="30" y1="'+ly(yt[i])+'" x2="456" y2="'+ly(yt[i])+'" stroke="#eef3f9"/>'+tx(27,ly(yt[i])+3.5,yt[i],'#8b9aad','end',9);
+  for(i=0;i<ticks.length;i++)s+=tx(lx(ticks[i][0]),230,ticks[i][1],'#8b9aad');
+  s+='<rect x="30" y="'+ly(CARDG)+'" width="426" height="'+(214-ly(CARDG))+'" fill="rgba(21,148,71,.06)"/>';
+  s+='<line x1="30" y1="'+ly(CARDG)+'" x2="456" y2="'+ly(CARDG)+'" stroke="#159447" stroke-width="1.6" stroke-dasharray="6 4"/>';
+  s+=tx(454,ly(CARDG)-5,'one 80 GB card, '+CARDG.toFixed(1)+' GiB','#159447','end');
+  for(i=0;i<OPT.length;i++){
+    t=tot(i);
+    s+='<line x1="'+lx(5e8)+'" y1="'+ly(gib(5e8,t))+'" x2="'+lx(120e9)+'" y2="'+ly(gib(120e9,t))+'" stroke="'+(i===sel?SC:'#c8d4e2')+'" stroke-width="'+(i===sel?2.6:1.4)+'"/>';
+    lg.push([t,i]);
+  }
+  lg.sort(function(p,q){return p[0]-q[0];});
+  for(i=0;i<lg.length;i++)le+=(i?' <tspan fill="#c8d4e2">|</tspan> ':'')+'<tspan fill="'+(lg[i][1]===sel?'#b45309':'#9aa9bb')+'">'+lg[i][0]+'</tspan>';
+  s+='<text x="456" y="12" text-anchor="end" font-size="9.5" font-weight="700" fill="#9aa9bb">bytes per weight: '+le+'</text>';
+  t=tot(sel);fit=CARD/t;g=gib(n,t);
+  s+='<line x1="'+lx(fit)+'" y1="'+ly(CARDG)+'" x2="'+lx(fit)+'" y2="214" stroke="#0e7490" stroke-width="1.3" stroke-dasharray="3 3"/>';
+  s+='<circle cx="'+lx(fit)+'" cy="'+ly(CARDG)+'" r="4" fill="#0891b2"/>';
+  s+=tx(lx(fit)-8,ly(CARDG)+16,'one card is full at '+bn(fit),'#0e7490','end',10);
+  s+='<circle cx="'+lx(n)+'" cy="'+ly(g)+'" r="5.4" fill="'+SC+'" stroke="#fff" stroke-width="2"/>';
+  s+=tx(lx(n),ly(g)-11,bn(n)+' needs '+fm(g)+' GiB','#b45309',lx(n)>300?'end':'start',10.5);
+  s+=tx(30,12,'GiB of training state','#8b9aad','start');
+  $('chart').innerHTML=s;
+}
+function draw(){
+  var n=+$('n').value*5e8,t=tot(sel),g=gib(n,t),st=OPT[sel][1],i,k,r='',sp='',share=st/t*100,cards=Math.ceil(g/CARDG),fit=CARD/t;
+  $('nv').textContent=bn(n);$('hd').textContent='at '+bn(n);$('tb').textContent=t;$('tp').textContent=(t/t*100).toFixed(0)+'%';
+  for(i=0;i<FIX.length;i++)
+    r+='<tr><td class="n"><em style="background:'+FIX[i][2]+'"></em>'+FIX[i][0]+'</td><td>'+FIX[i][1]+'</td><td>'+(FIX[i][1]/t*100).toFixed(1)+'%</td><td>'+fm(gib(n,FIX[i][1]))+' GiB</td></tr>';
+  r+='<tr><td class="n"><em style="background:'+SC+'"></em>optimizer state, '+OPT[sel][2]+'</td><td>'+st+'</td><td>'+share.toFixed(1)+'%</td><td>'+fm(gib(n,st))+' GiB</td></tr>';
+  for(i=0;i<16;i++){
+    k=i<2?FIX[0][2]:i<4?FIX[1][2]:i<8?FIX[2][2]:SC;
+    sp+='<i style="background:'+(i<t?k:'#eef2f7')+'"></i>';
+  }
+  $('strip').innerHTML=sp;$('rows').innerHTML=r;$('tot').textContent=fm(g)+' GiB';
+  $('mg').textContent=fm(g);$('mc').textContent=cards;$('mx').textContent=bn(fit);
+  $('say').innerHTML='This run uses '+OPT[sel][0]+', which holds <b>'+st+' bytes</b> of state per weight on top of the 8 bytes every run pays, for <b>'+t+' bytes per weight</b>. A '+bn(n)+' model therefore needs '+bn(n)+' x '+t+' = <b>'+fm(g)+' GiB</b>, which is <b>'+cards+'</b> card'+(cards===1?'':'s')+' of 80 GB before a single activation is stored.';
+  $('note').innerHTML='The optimizer state is <b>'+share.toFixed(1)+'%</b> of the bill here'+(st===8?', so half of the training memory belongs to AdamW alone.':'. AdamW at 8 bytes would make it 50.0%.');
+  chart(n);
+}
+Array.prototype.forEach.call(document.querySelectorAll('.s11w10-o'),function(b){
+  b.addEventListener('click',function(){
+    sel=+b.getAttribute('data-v');
+    Array.prototype.forEach.call(document.querySelectorAll('.s11w10-o'),function(o){o.classList.toggle('on',+o.getAttribute('data-v')===sel);});
+    draw();
+  });
+});
+$('n').addEventListener('input',draw);
+Array.prototype.forEach.call(document.querySelectorAll('.s11w10-o'),function(o){o.classList.toggle('on',+o.getAttribute('data-v')===sel);});
+draw();
+}());
+
+
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+
+
+=== widget_1_descent.html ===
+
+(function(){
+'use strict';
+var STEPS=5,U0=1,V0=1,KU=20,KV=1,RAT=Math.sqrt(KU/KV),
+    LFT=48,TOP=20,PW=564,PH=282,UMIN=-2.8,UMAX=2.8,VMIN=-1.15,VMAX=1.3,
+    US=PW/(UMAX-UMIN),VS=PH/(VMAX-VMIN),
+    CONT=[0.14,0.28,0.45,0.65,0.88,1.15,1.5,1.95,2.5];
+function $(i){return document.getElementById('s11w1-'+i);}
+function px(u){return LFT+(u-UMIN)*US;}
+function py(v){return TOP+(VMAX-v)*VS;}
+function loss(u,v){return 0.5*(KU*u*u+KV*v*v);}
+function sgn2(x){return (x>0?'+':'')+x.toFixed(2);}
+function f4(x){return x.toFixed(4);}
+function inside(u,v){return u>=UMIN&&u<=UMAX&&v>=VMIN&&v<=VMAX;}
+function tx(x,y,s,c,a,b,w){return '<text x="'+x+'" y="'+y+'" text-anchor="'+(a||'middle')+'" font-size="'+(b||9.5)+'" font-weight="'+(w||700)+'" fill="'+c+'">'+s+'</text>';}
+function path(mu,mv){
+  var p=[[U0,V0]],i,u=U0,v=V0;
+  for(i=0;i<STEPS;i++){u=u*mu;v=v*mv;p.push([u,v]);}
+  return p;
+}
+function chart(p,off){
+  var s='',i,a,pts='',aS=Math.sqrt(loss(U0,V0)/(0.5*KU));
+  s+='<defs><clipPath id="s11w1-cp"><rect x="'+LFT+'" y="'+TOP+'" width="'+PW+'" height="'+PH+'"/></clipPath></defs>';
+  s+='<rect x="'+LFT+'" y="'+TOP+'" width="'+PW+'" height="'+PH+'" fill="#fbfdff" stroke="#e6edf6"/>';
+  s+='<g clip-path="url(#s11w1-cp)">';
+  for(i=0;i<CONT.length;i++){a=CONT[i];
+    s+='<ellipse cx="'+px(0).toFixed(1)+'" cy="'+py(0).toFixed(1)+'" rx="'+(a*US).toFixed(1)+'" ry="'+(RAT*a*VS).toFixed(1)+'" fill="none" stroke="#dbe4f0" stroke-width="1.4"/>';}
+  s+='<ellipse cx="'+px(0).toFixed(1)+'" cy="'+py(0).toFixed(1)+'" rx="'+(aS*US).toFixed(1)+'" ry="'+(RAT*aS*VS).toFixed(1)+'" fill="none" stroke="#c4b5fd" stroke-width="2" stroke-dasharray="5 4"/>';
+  s+='</g>';
+  s+='<line x1="'+LFT+'" y1="'+py(0).toFixed(1)+'" x2="'+(LFT+PW)+'" y2="'+py(0).toFixed(1)+'" stroke="#cbd5e1"/>';
+  s+='<line x1="'+px(0).toFixed(1)+'" y1="'+TOP+'" x2="'+px(0).toFixed(1)+'" y2="'+(TOP+PH)+'" stroke="#cbd5e1"/>';
+  for(i=-2;i<=2;i++)if(i)s+=tx(px(i),TOP+PH+13,String(i),'#8b9aad');
+  for(i=-1;i<=1;i++)if(i)s+=tx(LFT-6,py(i)+3.5,String(i),'#8b9aad','end');
+  s+=tx(LFT-6,py(0)+3.5,'0','#8b9aad','end');
+  s+='<circle cx="'+px(0).toFixed(1)+'" cy="'+py(0).toFixed(1)+'" r="4" fill="#159447"/>';
+  s+=tx(px(0)+8,py(0)+13,'minimum of the loss, L = 0','#159447','start',10);
+  for(i=0;i<p.length;i++)pts+=px(p[i][0]).toFixed(1)+','+py(p[i][1]).toFixed(1)+' ';
+  s+='<g clip-path="url(#s11w1-cp)"><polyline points="'+pts+'" fill="none" stroke="#7c3aed" stroke-width="2.2" stroke-linejoin="round"/></g>';
+  for(i=0;i<p.length;i++){if(!inside(p[i][0],p[i][1]))continue;
+    s+='<circle cx="'+px(p[i][0]).toFixed(1)+'" cy="'+py(p[i][1]).toFixed(1)+'" r="'+(i?3.9:5.2)+'" fill="'+(i?'#7c3aed':'#0891b2')+'"/>';
+    s+=tx(px(p[i][0]),py(p[i][1])+(i%2?15:-10),String(i),i?'#5b21b6':'#0e7490','middle',10,800);}
+  s+=tx(px(U0)+11,py(V0)-2,'start (1, 1)','#0e7490','start',10.5,800);
+  s+=tx(LFT+PW/2,TOP+PH+27,'u, the steep direction','#8b9aad','middle',10.5);
+  s+='<text x="13" y="'+(TOP+PH/2)+'" transform="rotate(-90 13 '+(TOP+PH/2)+')" text-anchor="middle" font-size="10.5" font-weight="700" fill="#8b9aad">v, the shallow direction</text>';
+  if(off.length)s+=tx(LFT+PW-6,TOP+14,'step '+off.join(' and ')+' left the chart','#dc2626','end',10.5,800);
+  $('chart').innerHTML=s;
+}
+function draw(){
+  var eta=+$('eta').value/1000,mu=1-KU*eta,mv=1-KV*eta,p=path(mu,mv),i,q,
+      off=[],rows='<tr><th>step</th><th>u</th><th>v</th><th>L</th></tr>';
+  for(i=0;i<p.length;i++){q=p[i];if(!inside(q[0],q[1]))off.push(i);
+    rows+='<tr'+(i===STEPS?' class="f"':'')+'><td>'+i+'</td><td>'+f4(q[0])+'</td><td>'+f4(q[1])+'</td><td>'+loss(q[0],q[1]).toFixed(4)+'</td></tr>';}
+  $('tab').innerHTML=rows;
+  $('etav').textContent=eta.toFixed(3);
+  $('mu').textContent=sgn2(mu);
+  $('mv').textContent=mv.toFixed(2);
+  $('u5').textContent=f4(p[STEPS][0]);
+  $('v5').textContent=f4(p[STEPS][1]);
+  $('say').innerHTML='Every step multiplies u by (1 &minus; 20&eta;) = <b>'+sgn2(mu)+'</b> and v by (1 &minus; &eta;) = <b>'+mv.toFixed(2)+'</b>. Starting from (1, 1), after five steps u is <b>'+f4(p[STEPS][0])+'</b> and v is <b>'+f4(p[STEPS][1])+'</b>.';
+  var am=Math.abs(mu),st;
+  if(am<1e-9)st='u lands exactly on the bottom in a single step, then stays there.';
+  else if(mu>0)st='u keeps its sign and shrinks by a factor of '+am.toFixed(2)+' each step. This is the crawling regime.';
+  else if(am<1)st='u flips sign every step and shrinks by a factor of '+am.toFixed(2)+'. Oscillating and still converging.';
+  else if(Math.abs(am-1)<1e-9)st='u flips sign every step and holds the same size forever.';
+  else st='u flips sign every step and grows by a factor of '+am.toFixed(2)+'. Diverging.';
+  $('status').textContent=st;
+  $('cnote').innerHTML='Each dot is the position after one step, joined in order. The dashed violet ellipse is the contour through the start, so a dot inside it has a lower loss than the start had.';
+  $('tnote').innerHTML='Both coordinates use the same &eta;. The u column reacts twenty times harder to it because the curvature along u is twenty times larger.';
+  var need=Math.ceil(Math.log(0.1)/Math.log(mv));
+  $('foot').innerHTML='u sets the ceiling on the learning rate: past <b>&eta; = 0.100</b> the factor (1 &minus; 20&eta;) drops below &minus;1 and u grows without limit. v sets the floor: at the current &eta; it gives up only <b>'+(eta*100).toFixed(1)+'%</b> of its distance per step, so it needs <b>'+need+'</b> steps to fall below 0.100. No single value serves both columns.';
+  chart(p,off);
+}
+$('eta').addEventListener('input',draw);
+draw();
+}());
+
+
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+
+
+=== widget_1b_surface.html ===
+
+(function(){
+'use strict';
+var LFT=44,TOP=12,PW=560,PH=212,S=100,
+    AV=[0.2,0.4,0.6,0.8,1.0],
+    COL=['#ede9fe','#ddd6fe','#c4b5fd','#a78bfa','#8b5cf6'];
+function $(i){return document.getElementById('s11w1b-'+i);}
+function px(u){return LFT+PW/2+u*S;}
+function py(v){return TOP+PH/2-v*S;}
+function tx(x,y,s,c,a,fs,w){return '<text x="'+x+'" y="'+y+'" text-anchor="'+(a||'middle')+'" font-size="'+(fs||10)+'" font-weight="'+(w||700)+'" fill="'+c+'">'+s+'</text>';}
+function steps(m){
+  if(m===0)return 1;
+  if(Math.abs(m)>=1)return null;
+  return Math.ceil(Math.log(0.1)/Math.log(Math.abs(m)));
+}
+function chart(r){
+  var s='',i,a,cx=px(0),cy=py(0),sq=Math.sqrt(r);
+  s+='<rect x="'+LFT+'" y="'+TOP+'" width="'+PW+'" height="'+PH+'" fill="#fbfdff" stroke="#e6edf6"/>';
+  for(i=AV.length-1;i>=0;i--){a=AV[i];
+    s+='<ellipse cx="'+cx+'" cy="'+cy+'" rx="'+(a/sq*S).toFixed(2)+'" ry="'+(a*S).toFixed(2)+'" fill="none" stroke="'+COL[i]+'" stroke-width="'+(1.5+i*0.25).toFixed(2)+'"/>';}
+  s+='<line x1="'+LFT+'" y1="'+cy+'" x2="'+(LFT+PW)+'" y2="'+cy+'" stroke="#cbd5e1"/>';
+  s+='<line x1="'+cx+'" y1="'+TOP+'" x2="'+cx+'" y2="'+(TOP+PH)+'" stroke="#cbd5e1"/>';
+  for(i=-2;i<=2;i++)if(i)s+=tx(px(i),TOP+PH+15,String(i),'#8b9aad','middle',9.5);
+  for(i=-1;i<=1;i++)if(i)s+=tx(LFT-7,py(i)+3.5,String(i),'#8b9aad','end',9.5);
+  s+=tx(LFT-7,cy+3.5,'0','#8b9aad','end',9.5);
+  s+='<path d="M '+(cx+7)+' '+(cy+3)+' L '+(cx+104)+' '+(cy+12)+'" fill="none" stroke="#159447" stroke-width="1.1" opacity=".5"/>';
+  s+='<circle cx="'+cx+'" cy="'+cy+'" r="4" fill="#159447"/>';
+  s+=tx(cx+110,cy+16,'minimum of the loss','#159447','start',10);
+  s+=tx(LFT+PW-8,cy-9,'u, the steep direction','#8b9aad','end',10);
+  s+='<text x="15" y="'+(TOP+PH/2)+'" transform="rotate(-90 15 '+(TOP+PH/2)+')" text-anchor="middle" font-size="10" font-weight="700" fill="#8b9aad">v, the shallow direction</text>';
+  s+='<text x="'+(LFT+10)+'" y="'+(TOP+PH-12)+'" font-size="15" font-weight="800" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" fill="#4c1d95">L = &#189;('+(r===1?'':r)+'u&#178; + v&#178;)</text>';
+  $('chart').innerHTML=s;
+}
+function draw(){
+  var r=+$('r').value,cap=2/r,m=1-cap,n=steps(m);
+  $('rv').textContent=String(r);
+  $('cap').textContent=cap.toFixed(4);
+  $('steps').textContent=n===null?'never':String(n);
+  if(r===1){
+    $('say').innerHTML='At r = 1 the contours are circles. Both directions bend equally, one learning rate serves both, and there is no problem to solve.';
+  }else{
+    $('say').innerHTML='The steep direction caps the learning rate at <b>'+cap.toFixed(4)+'</b>, and at that cap the shallow direction needs <b>'+n+'</b> step'+(n===1?'':'s')+' to close 90 percent of its distance.'+(r===20?' Section 3 uses r = 20 for exactly this gap.':'');
+  }
+  $('chart').setAttribute('aria-label','Contour map of L = one half times ('+r+' u squared plus v squared), drawn as nested ellipses around the minimum. The contours are '+Math.sqrt(r).toFixed(2)+' times narrower along u than along v.');
+  chart(r);
+}
+$('r').addEventListener('input',draw);
+draw();
+}());
+
+
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+
+
+=== widget_2_momentum.html ===
+
+(function(){
+'use strict';
+var OSC=[1,-1,1,-1,1],STD=[0.2,0.2,0.2,0.2,0.2],NG=5,
+    KU=20,KV=1,RAT=Math.sqrt(KU/KV),ETA=0.010,NS=24,U0=1,V0=1,
+    LFT=46,TOP=17,PW=560,PH=248,UMIN=-1.1,UMAX=1.25,VMIN=-0.5,VMAX=1.25,
+    US=PW/(UMAX-UMIN),VS=PH/(VMAX-VMIN),
+    CONT=[0.05,0.1,0.16,0.24,0.34,0.46,0.6,0.78,1.0],ins=[];
+function $(i){return document.getElementById('s11w2-'+i);}
+function px(u){return LFT+(u-UMIN)*US;}
+function py(v){return TOP+(VMAX-v)*VS;}
+function loss(u,v){return 0.5*(KU*u*u+KV*v*v);}
+function f4(x){return x.toFixed(4);}
+function tx(x,y,s,c,a,b,w){return '<text x="'+x+'" y="'+y+'" text-anchor="'+(a||'middle')+'" font-size="'+(b||9.5)+'" font-weight="'+(w||700)+'" fill="'+c+'">'+s+'</text>';}
+function ema(g,beta){var m=0,out=[],i;for(i=0;i<g.length;i++){m=beta*m+(1-beta)*g[i];out.push(m);}return out;}
+function same(a,b){var i;for(i=0;i<NG;i++)if(Math.abs(a[i]-b[i])>1e-9)return false;return true;}
+function gvals(){var i,v,o=[];for(i=0;i<NG;i++){v=parseFloat(ins[i].value);o.push(isFinite(v)?v:0);}return o;}
+function run(beta){
+  var u=U0,v=V0,mu=0,mv=0,p=[[u,v]],k;
+  for(k=0;k<NS;k++){
+    mu=beta*mu+(1-beta)*(KU*u);mv=beta*mv+(1-beta)*(KV*v);
+    u-=ETA*mu/(1-beta);v-=ETA*mv/(1-beta);
+    p.push([u,v]);
+  }
+  return p;
+}
+function dist(p){var q=p[p.length-1];return Math.sqrt(q[0]*q[0]+q[1]*q[1]);}
+function pts(p){var s='',i;for(i=0;i<p.length;i++)s+=px(p[i][0]).toFixed(1)+','+py(p[i][1]).toFixed(1)+' ';return s;}
+function chart(p,p0,beta){
+  var s='',i,a,aS=Math.sqrt(loss(U0,V0)/(0.5*KU)),last=p[p.length-1];
+  s+='<defs><clipPath id="s11w2-cp"><rect x="'+LFT+'" y="'+TOP+'" width="'+PW+'" height="'+PH+'"/></clipPath></defs>';
+  s+='<rect x="'+LFT+'" y="'+TOP+'" width="'+PW+'" height="'+PH+'" fill="#fbfdff" stroke="#e6edf6"/>';
+  s+='<g clip-path="url(#s11w2-cp)">';
+  for(i=0;i<CONT.length;i++){a=CONT[i];
+    s+='<ellipse cx="'+px(0).toFixed(1)+'" cy="'+py(0).toFixed(1)+'" rx="'+(a*US).toFixed(1)+'" ry="'+(RAT*a*VS).toFixed(1)+'" fill="none" stroke="#dbe4f0" stroke-width="1.4"/>';}
+  s+='<ellipse cx="'+px(0).toFixed(1)+'" cy="'+py(0).toFixed(1)+'" rx="'+(aS*US).toFixed(1)+'" ry="'+(RAT*aS*VS).toFixed(1)+'" fill="none" stroke="#a5f3fc" stroke-width="2" stroke-dasharray="5 4"/>';
+  s+='</g>';
+  s+='<line x1="'+LFT+'" y1="'+py(0).toFixed(1)+'" x2="'+(LFT+PW)+'" y2="'+py(0).toFixed(1)+'" stroke="#cbd5e1"/>';
+  s+='<line x1="'+px(0).toFixed(1)+'" y1="'+TOP+'" x2="'+px(0).toFixed(1)+'" y2="'+(TOP+PH)+'" stroke="#cbd5e1"/>';
+  for(i=-1;i<=1;i++)s+=tx(px(i),TOP+PH+13,String(i),'#8b9aad');
+  s+=tx(LFT-6,py(0)+3.5,'0','#8b9aad','end');
+  s+=tx(LFT-6,py(1)+3.5,'1','#8b9aad','end');
+  s+='<g clip-path="url(#s11w2-cp)">';
+  s+='<polyline points="'+pts(p0)+'" fill="none" stroke="#aebdd0" stroke-width="1.8" stroke-linejoin="round"/>';
+  s+='<polyline points="'+pts(p)+'" fill="none" stroke="#0891b2" stroke-width="2.1" stroke-linejoin="round"/>';
+  for(i=1;i<p.length-1;i++)s+='<circle cx="'+px(p[i][0]).toFixed(1)+'" cy="'+py(p[i][1]).toFixed(1)+'" r="2.8" fill="#0891b2"/>';
+  s+='</g>';
+  s+='<circle cx="'+px(0).toFixed(1)+'" cy="'+py(0).toFixed(1)+'" r="4" fill="#159447"/>';
+  s+=tx(px(0)+8,py(0)+14,'minimum of the loss, L = 0','#159447','start',10);
+  s+='<circle cx="'+px(U0).toFixed(1)+'" cy="'+py(V0).toFixed(1)+'" r="5.2" fill="#7c3aed"/>';
+  s+=tx(px(U0)-9,py(V0)+13,'start (1, 1)','#5b21b6','end',10.5,800);
+  s+='<circle cx="'+px(last[0]).toFixed(1)+'" cy="'+py(last[1]).toFixed(1)+'" r="5.2" fill="#d97706"/>';
+  s+=tx(LFT+8,TOP+15,'&beta; = '+beta.toFixed(2),'#0e7490','start',11,800);
+  s+=tx(LFT+PW-8,TOP+15,'grey path: &beta; = 0','#8b9aad','end',10.5,800);
+  s+=tx(LFT+8,TOP+31,'amber dot: step '+NS+', at ('+last[0].toFixed(3)+', '+last[1].toFixed(3)+')','#b45309','start',10.5,800);
+  s+=tx(LFT+PW/2,TOP+PH+27,'u, the steep direction','#8b9aad','middle',10.5);
+  s+='<text x="12" y="'+(TOP+PH/2)+'" transform="rotate(-90 12 '+(TOP+PH/2)+')" text-anchor="middle" font-size="10.5" font-weight="700" fill="#8b9aad">v, the shallow direction</text>';
+  $('chart').innerHTML=s;
+}
+function draw(){
+  var beta=+$('beta').value/100,g=gvals(),m=ema(g,beta),
+      mo=ema(OSC,beta)[NG-1],ms=ema(STD,beta)[NG-1],
+      gsc=Math.abs(OSC[0])/Math.abs(STD[0]),gap=Math.abs(mo/ms),
+      p=run(beta),p0=run(0),d=dist(p),d0=dist(p0),fac=d0/d,
+      rows='<tr><th>step</th><th>g</th><th>m</th></tr>',i;
+  rows+='<tr><td>0</td><td>&middot;</td><td>0.0000</td></tr>';
+  for(i=0;i<NG;i++)rows+='<tr'+(i===NG-1?' class="f"':'')+'><td>'+(i+1)+'</td><td>'+g[i].toFixed(2)+'</td><td>'+f4(m[i])+'</td></tr>';
+  $('tab').innerHTML=rows;
+  $('betav').textContent=beta.toFixed(2);
+  $('lh').innerHTML='<i>m &larr; &beta;m + (1 &minus; &beta;)g</i> over five gradients, at <i>&beta; = '+beta.toFixed(2)+'</i>';
+  $('mo').textContent=f4(mo);
+  $('ms').textContent=f4(ms);
+  $('mol').innerHTML='m after five of +1 &minus;1 +1 &minus;1 +1';
+  $('msl').innerHTML='m after five of +0.2';
+  $('say').innerHTML='One &beta; drives both panels. At <b>&beta; = '+beta.toFixed(2)+'</b> the average keeps <b>'+beta.toFixed(2)+'</b> of itself and each new gradient enters with weight <b>'+(1-beta).toFixed(2)+'</b>. After five steps the two averages are <b>'+f4(mo)+'</b> and <b>'+f4(ms)+'</b>, within <b>'+gap.toFixed(2)+'x</b> of each other, while the steady sequence used gradients <b>'+gsc.toFixed(0)+' times</b> smaller throughout.';
+  $('status').textContent='This one slider sets β in the average on the left and in the update on the right.';
+  $('dist').textContent=d.toFixed(5);
+  $('fac').textContent=fac.toFixed(1)+'x';
+  $('lnote').innerHTML='The two buttons load the gradient sequences the steep and the shallow direction produce. Any five values can be typed in.';
+  $('cnote').innerHTML='The average is (1 &minus; &beta;) times the size of the gradients it averages, so the step multiplies by &eta;/(1 &minus; &beta;) to keep it comparable with plain gradient descent.';
+  $('foot').innerHTML='Alternating gradients cancel inside the average and consistent gradients accumulate, so the movement across the steep direction shrinks while the path shifts further along the shallow direction. Past about <b>&beta; = 0.90</b> the improvement reverses, which is why &beta; and &eta; are chosen together.';
+  chart(p,p0,beta);
+}
+function syncPresets(){
+  var g=gvals();
+  $('p0').setAttribute('aria-pressed',same(g,OSC)?'true':'false');
+  $('p1').setAttribute('aria-pressed',same(g,STD)?'true':'false');
+}
+function load(arr){var i;for(i=0;i<NG;i++)ins[i].value=String(arr[i]);syncPresets();draw();}
+(function build(){
+  var box=$('gin'),i,el;
+  for(i=0;i<NG;i++){
+    el=document.createElement('input');
+    el.type='number';el.step='0.1';el.value=String(OSC[i]);
+    el.id='s11w2-g'+i;
+    el.setAttribute('aria-label','Gradient at step '+(i+1));
+    box.appendChild(el);ins.push(el);
+    el.addEventListener('input',function(){syncPresets();draw();});
+  }
+}());
+$('beta').addEventListener('input',draw);
+$('p0').addEventListener('click',function(){load(OSC);});
+$('p1').addEventListener('click',function(){load(STD);});
+syncPresets();
+draw();
+}());
+
+
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+
+
+=== widget_2b_directions.html ===
+
+(function(){
+'use strict';
+var STEPS=5,KU=20,
+    LX0=118,LX1=700,LCX=409,LHW=291,
+    RX0=792,RW=338,SLOT=338/5,BW=26,BMAX=30,
+    VIOLET='#7c3aed',CYAN='#0891b2',AMBER='#d97706';
+function $(i){return document.getElementById('s11w2b-'+i);}
+function sg(x){ if(Math.abs(x)<1e-12) return '0.0000'; return (x<0?'−':'+')+Math.abs(x).toFixed(4); }
+function f2(x){ if(Math.abs(x)<1e-12) return '0.00'; return (x<0?'−':'+')+Math.abs(x).toFixed(2); }
+function tx(x,y,s,c,a,fs,fw){
+  return '<text x="'+x+'" y="'+y+'" text-anchor="'+(a||'middle')+'" font-size="'+fs+'" font-weight="'+(fw||700)+'" fill="'+c+'">'+s+'</text>';
+}
+function txm(x,y,s,c,fs,cls,key){
+  return '<text class="'+cls+'" data-r="'+key+'" x="'+x+'" y="'+y+'" text-anchor="middle" font-size="'+fs+'" font-weight="800" fill="'+c+'" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">'+s+'</text>';
+}
+function row(o,vals,U,col,title,sub,mtxt,key){
+  var s='',i,x,y,ly,g,h,cx,fill,pts='',gmax=1,hs,
+      NY=o+64,BY=o+36;
+  for(i=0;i<STEPS;i++){ if(Math.abs(vals[i])>gmax) gmax=Math.abs(vals[i]); }
+  hs=BMAX/gmax;
+  function X(v){ return LCX+(v/U)*LHW; }
+  s+=tx(6,o+16,title,'#152033','start',10.5,800);
+  s+=tx(6,o+31,sub,'#65758b','start',9.5,700);
+  s+='<text x="6" y="'+(o+49)+'" text-anchor="start" font-size="13" font-weight="800" fill="'+col+'" font-family="ui-monospace,SFMono-Regular,Consolas,monospace">'+mtxt+'</text>';
+  s+='<line x1="'+X(0).toFixed(1)+'" y1="'+(o+2)+'" x2="'+X(0).toFixed(1)+'" y2="'+(NY-6)+'" stroke="#a7d8bb" stroke-width="1.2" stroke-dasharray="3 3"/>';
+  s+='<line x1="'+LX0+'" y1="'+NY+'" x2="'+LX1+'" y2="'+NY+'" stroke="#94a3b8" stroke-width="1.4"/>';
+  for(i=-4;i<=4;i++){
+    if(!i) continue;
+    if(Math.abs(i)>U) continue;
+    x=X(i);
+    if(x<LX0+4||x>LX1-4) continue;
+    s+='<line x1="'+x.toFixed(1)+'" y1="'+NY+'" x2="'+x.toFixed(1)+'" y2="'+(NY+5)+'" stroke="#94a3b8"/>';
+    s+=tx(x.toFixed(1),NY+16,(i<0?'−':'')+Math.abs(i),'#8b9aad','middle',9.5,700);
+  }
+  s+='<line x1="'+X(0).toFixed(1)+'" y1="'+(NY-6)+'" x2="'+X(0).toFixed(1)+'" y2="'+(NY+6)+'" stroke="#159447" stroke-width="2.2"/>';
+  s+=tx(X(0).toFixed(1),NY+30,'0, minimum of the loss','#159447','middle',10,700);
+  for(i=0;i<STEPS;i++){
+    ly=o+5+i*10; x=X(vals[i]); pts+=x.toFixed(1)+','+ly+' ';
+    s+='<line x1="'+x.toFixed(1)+'" y1="'+ly+'" x2="'+x.toFixed(1)+'" y2="'+(NY-2)+'" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="2 3"/>';
+    s+=tx(LX1+12,ly+3.4,'step '+i,'#8b9aad','start',9.5,700);
+  }
+  s+='<polyline points="'+pts+'" fill="none" stroke="'+col+'" stroke-width="1.8" stroke-linejoin="round" opacity=".5"/>';
+  for(i=0;i<STEPS;i++){
+    ly=o+5+i*10; x=X(vals[i]);
+    s+='<circle cx="'+x.toFixed(1)+'" cy="'+ly+'" r="'+(i?4:5)+'" fill="'+col+'" stroke="#ffffff" stroke-width="1.4"/>';
+  }
+  s+='<line x1="'+RX0+'" y1="'+BY+'" x2="'+(RX0+RW)+'" y2="'+BY+'" stroke="#94a3b8" stroke-width="1.2"/>';
+  s+=tx(RX0-9,BY+3.4,'0','#8b9aad','end',9.5,700);
+  s+=tx(RX0-9,o+93.4,'step','#8b9aad','end',9.5,700);
+  for(i=0;i<STEPS;i++){
+    g=vals[i]; cx=RX0+SLOT*(i+0.5); h=Math.abs(g)*hs; if(h<2) h=2;
+    fill=(g<0)?AMBER:col;
+    y=(g<0)?BY:BY-h;
+    s+='<rect x="'+(cx-BW/2).toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+BW+'" height="'+h.toFixed(1)+'" rx="2" fill="'+fill+'" opacity="'+(Math.abs(g)<1e-12?'.3':'.92')+'"/>';
+    s+=txm(cx.toFixed(1),((g<0)?BY+h+12:BY-h-5).toFixed(1),sg(g),(g<0)?'#b45309':'#334155',10,'s11w2b-gv',key);
+    s+=tx(cx.toFixed(1),o+90,String(i),'#8b9aad','middle',9.5,700);
+  }
+  return s;
+}
+function cap(eta,m){
+  var e='<b>'+eta.toFixed(3)+'</b>',am=Math.abs(m),
+      vs=' The v step always stops short of the minimum of the loss, so every v gradient stays positive.';
+  if(m>1e-12) return 'At η = '+e+' the factor (1 − 20η) is <b>+'+m.toFixed(2)+'</b>, so each step along u stops short of the minimum of the loss, u stays on its starting side, and every u gradient is positive. The v step is smaller still, so every v gradient is positive as well.';
+  if(am<1e-12) return 'At η = '+e+' the factor (1 − 20η) is <b>0.00</b>, so the first step along u lands exactly on the minimum of the loss and every later u gradient is 0.'+vs;
+  if(Math.abs(am-1)<1e-9) return 'At η = '+e+' the factor (1 − 20η) is exactly <b>−1.00</b>, so each step along u passes the minimum of the loss and lands the same distance beyond it: the u gradients are exactly +1, −1, +1, −1, +1, the sequence Section 4 uses.'+vs;
+  if(am<1) return 'At η = '+e+' the factor (1 − 20η) is <b>−'+am.toFixed(2)+'</b>, so each step along u passes the minimum of the loss and lands on the far side, which flips the sign of the u gradient every step while its size shrinks.'+vs;
+  return 'At η = '+e+' the factor (1 − 20η) is <b>−'+am.toFixed(2)+'</b>, so each step along u passes the minimum of the loss and lands farther out than it started, which flips the sign of the u gradient every step while its size grows.'+vs;
+}
+function draw(){
+  var eta=+$('eta').value/100,m=1-KU*eta,mv=1-eta,
+      u=[],v=[],a=1,b=1,i,U=1;
+  for(i=0;i<STEPS;i++){ u.push(a); v.push(b); a=a*m; b=b*mv; }
+  for(i=0;i<STEPS;i++){
+    if(Math.abs(u[i])>U) U=Math.abs(u[i]);
+    if(Math.abs(v[i])>U) U=Math.abs(v[i]);
+  }
+  U=U*1.18;
+  $('etav').textContent=eta.toFixed(3);
+  $('su').innerHTML=
+    tx(LCX,11,'position after each step','#8b9aad','middle',10.5,800)+
+    tx(RX0+RW/2,11,'gradient collected there, scaled by the first gradient','#8b9aad','middle',10.5,800)+
+    row(26,u,U,VIOLET,'steep direction u','1 − 20η',f2(m),'u');
+  $('sv').innerHTML=row(8,v,U,CYAN,'shallow direction v','1 − η',f2(mv),'v');
+  $('cap').innerHTML=cap(eta,m);
+}
+$('eta').addEventListener('input',draw);
+draw();
+}());
+
+
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+
+
+=== widget_3_per_parameter.html ===
+
+(function(){
+var $=function(i){return document.getElementById('s11w3-'+i)};
+var GA=1.0, B2=0.999, T=200, ETA=1;
+function f4(x){ if(x===0)return '0.0000';
+  var a=Math.abs(x);
+  if(a>=1000||a<0.001) return x.toExponential(2);
+  return x.toFixed(4); }
+function lr(x){ var a=Math.abs(x); if(a>=100) return x.toFixed(2); if(a>=10) return x.toFixed(3); return x.toFixed(4); }
+function vrun(g){ return (1-Math.pow(B2,T))*g*g; }
+function vhat(g){ return vrun(g)/(1-Math.pow(B2,T)); }
+
+function bars(id,rows,logmin,logmax,fmt,title){
+  var W=460,LFT=104,RGT=16,IW=W-LFT-RGT,H=(id==='lr')?132:96,TOP=18,BH=26,GAP=16;
+  var s='';
+  var ticks=[]; for(var e=logmin;e<=logmax;e++)ticks.push(e);
+  ticks.forEach(function(e){
+    var x=LFT+IW*(e-logmin)/(logmax-logmin);
+    s+='<line x1="'+x+'" y1="'+(TOP-6)+'" x2="'+x+'" y2="'+(TOP+rows.length*(BH+GAP)-GAP+2)+'" stroke="#eef2f7" stroke-width="1"/>';
+    var lab=(e<0? Math.pow(10,e).toFixed(-e) : String(Math.pow(10,e)));
+    s+='<text x="'+x+'" y="'+(TOP+rows.length*(BH+GAP)-GAP+14)+'" text-anchor="middle" class="s11w3-ax">'+lab+'</text>';
+  });
+  rows.forEach(function(r,i){
+    var y=TOP+i*(BH+GAP);
+    var lg=Math.log(Math.max(r.v,Math.pow(10,logmin)))/Math.LN10;
+    var frac=Math.max(0,Math.min(1,(lg-logmin)/(logmax-logmin)));
+    var w=Math.max(2,IW*frac);
+    s+='<text x="'+(LFT-8)+'" y="'+(y+17)+'" text-anchor="end" class="s11w3-pl" fill="'+r.c+'">'+r.n+'</text>';
+    s+='<rect x="'+LFT+'" y="'+y+'" width="'+w+'" height="'+BH+'" rx="4" fill="'+r.c+'" opacity="'+(r.dim?0.35:0.9)+'"/>';
+    var tx=LFT+w+7, anc='start', fill=r.c;
+    if(tx>W-56){ tx=LFT+w-7; anc='end'; fill='#ffffff'; }
+    s+='<text x="'+tx+'" y="'+(y+18)+'" text-anchor="'+anc+'" class="s11w3-pl" fill="'+fill+'">'+fmt(r.v)+'</text>';
+  });
+  s+='<text x="'+(LFT+IW/2)+'" y="'+(H-2)+'" text-anchor="middle" class="s11w3-ax">'+title+'</text>';
+  $(id).innerHTML=s;
+}
+
+function draw(){
+  var GB=Math.pow(10,parseFloat($('gb').value));
+  var dv=$('div').checked;
+  $('gbv').textContent=f4(GB);
+  $('divl').className='s11w3-sl'+(dv?' on':'');
+  var sa=Math.sqrt(vhat(GA)), sb=Math.sqrt(vhat(GB));
+  var la=dv?ETA/sa:ETA, lb=dv?ETA/sb:ETA;
+  var pa=la*GA, pb=lb*GB;
+
+  $('ga').textContent=f4(GA);      $('gb2').textContent=f4(GB);
+  $('va').textContent=vrun(GA).toExponential(3); $('vb').textContent=vrun(GB).toExponential(3);
+  $('sa').textContent=f4(sa);      $('sb').textContent=f4(sb);
+  $('la').textContent=lr(la)+' eta'; $('lb').textContent=lr(lb)+' eta';
+  $('pa').textContent=f4(pa)+' eta'; $('pb').textContent=f4(pb)+' eta';
+
+  bars('lr',[{n:'Parameter A',v:la,c:'#0891b2'},{n:'Parameter B',v:lb,c:'#7c3aed'}],
+       -1,3,function(x){return lr(x)+' eta'},'learning rate, in multiples of eta, log axis');
+  bars('st2',[{n:'Parameter A',v:pa,c:'#0891b2'},{n:'Parameter B',v:pb,c:'#7c3aed',dim:!dv}],
+       -3,1,function(x){return f4(x)+' eta'},'distance moved in one step, log axis');
+
+  $('say').innerHTML='Parameter A receives a gradient of <b>'+f4(GA)+'</b> on every step and Parameter B receives <b>'+f4(GB)+'</b>. Both build <b>v = 0.999 v + 0.001 g<sup>2</sup></b> over '+T+' steps and both are bias corrected, so <b>sqrt(v-hat)</b> settles on each parameter&rsquo;s own gradient size.';
+
+  $('eq').innerHTML = dv
+    ? 'A   eta / <i>'+f4(sa)+'</i> = <u>'+lr(la)+'</u> eta   ->  step <u>'+f4(pa)+'</u> eta\nB   eta / <i>'+f4(sb)+'</i> = <u>'+lr(lb)+'</u> eta   ->  step <u>'+f4(pb)+'</u> eta'
+    : 'A   eta                 = <u>'+lr(la)+'</u> eta   ->  step <u>'+f4(pa)+'</u> eta\nB   eta                 = <u>'+lr(lb)+'</u> eta   ->  step <u>'+f4(pb)+'</u> eta';
+
+  var ratio=lb/la, gap=pa/pb;
+  $('sign').innerHTML = dv
+    ? 'Parameter B is given a learning rate <b>'+lr(ratio)+' times</b> larger than Parameter A&rsquo;s, and the two then move by the same <b>'+f4(pa)+' eta</b>. The quantity <b>eta / sqrt(v-hat)</b> is the learning rate of one parameter alone, which is what per-parameter means.'
+    : 'Both parameters share the single learning rate <b>eta</b>, so Parameter B moves <b>'+(gap>=1000?gap.toExponential(1):Math.round(gap))+' times</b> less per step than Parameter A and would need that many times as long to travel the same distance.';
+
+  $('status').textContent = dv ? 'divide on: two learning rates, one step size'
+                               : 'divide off: one learning rate, two step sizes';
+  $('cnote').innerHTML = dv
+    ? 'The upper axis shows two very different learning rates. The lower axis shows the two steps landing on the same value.'
+    : 'One learning rate for both, so the lower axis shows Parameter B pinned near the floor.';
+  $('foot').innerHTML='Session 7 held one embedding row per token. A common word&rsquo;s row is touched in almost every batch, so its gradients look like Parameter A. A rare word&rsquo;s row may wait a thousand batches for one gradient, so it looks like Parameter B. Dividing by <b>sqrt(v-hat)</b> gives that rare row a learning rate of <b>'+lr(lb)+' eta</b>, and it therefore takes a full-sized step of <b>'+f4(pb)+' eta</b> the moment its gradient finally arrives.';
+}
+$('gb').addEventListener('input',draw);
+$('div').addEventListener('change',draw);
+draw();
+})();
+
+
+(function(){var fe;try{fe=window.frameElement;}catch(e){return;}if(!fe)return;var last=0;
+function fit(){var h=Math.ceil(document.body.scrollHeight)+8;if(Math.abs(h-last)>2){last=h;fe.style.height=h+'px';}}
+if(window.ResizeObserver)new ResizeObserver(fit).observe(document.body);
+window.addEventListener('load',fit);
+document.addEventListener('click',function(){setTimeout(fit,60);setTimeout(fit,300);},true);
+document.addEventListener('input',function(){setTimeout(fit,60);},true);
+[0,120,400,900].forEach(function(t){setTimeout(fit,t);});})();
+
+
+=== widget_4_adam.html ===
+
+(function(){
+'use strict';
+var ETA=1e-3,B1=0.9,B2=0.999,EPS=1e-8,W0=1.0,N=5,
+    PRE=[[0.50,0.40,0.60,0.45,0.55],[0.0050,0.0040,0.0060,0.0045,0.0055],[0.50,-0.40,0.60,-0.45,0.55]],
+    done=0;
+function $(i){return document.getElementById('s11w4-'+i);}
+function fx(v,d){return v.toFixed(d);}
+function fm(x){return Math.abs(x)<1e-4?x.toExponential(3):x.toFixed(4);}
+function fv(x){return Math.abs(x)<1e-5?x.toExponential(3):x.toFixed(6);}
+function fh(x){var a=Math.abs(x);return a<1e-5?x.toExponential(3):a<0.01?x.toFixed(6):x.toFixed(4);}
+function run(gs,bc){
+  var m=0,v=0,w=W0,out=[],t,g,mh,vh,st;
+  for(t=1;t<=N;t++){
+    g=gs[t-1];
+    m=B1*m+(1-B1)*g;
+    v=B2*v+(1-B2)*g*g;
+    mh=bc?m/(1-Math.pow(B1,t)):m;
+    vh=bc?v/(1-Math.pow(B2,t)):v;
+    st=-ETA*mh/(Math.sqrt(vh)+EPS);
+    w+=st;
+    out.push({t:t,g:g,m:m,v:v,mh:mh,vh:vh,st:st,w:w,r:st/ETA});
+  }
+  return out;
+}
+function chart(rows){
+  var L=34,R=10,TP=22,B=26,iw=400-L-R,ih=170-TP-B,i,mx=1,hi,s='',x,bw,y,z,r,
+      NICE=[1.2,1.6,2,3,4,6,8,12,20];
+  for(i=0;i<done;i++)mx=Math.max(mx,Math.abs(rows[i].r));
+  hi=NICE[NICE.length-1];
+  for(i=0;i<NICE.length;i++){if(NICE[i]>=mx*1.12){hi=NICE[i];break;}}
+  function py(v){return TP+ih-v/hi*ih;}
+  z=py(0);bw=iw/N*0.52;
+  for(i=0;i<=4;i++){y=TP+ih-i/4*ih;s+='<line x1="'+L+'" y1="'+y.toFixed(1)+'" x2="'+(400-R)+'" y2="'+y.toFixed(1)+'" stroke="#eef3f9"/><text x="'+(L-5)+'" y="'+(y+3.5).toFixed(1)+'" text-anchor="end" class="s11w4-ax">'+(hi*i/4).toFixed(hi>=4?1:2)+'</text>';}
+  for(i=0;i<N;i++){
+    x=L+(i+0.5)/N*iw;r=i<done?Math.abs(rows[i].r):0;y=i<done?py(r):z-3;
+    s+='<rect x="'+(x-bw/2).toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+Math.max(2,z-y).toFixed(1)+'" rx="2" fill="'+(i<done?(Math.abs(r-1)<0.02?'#0891b2':'#d97706'):'#e2e8f0')+'"/>';
+    if(i<done)s+='<text x="'+x.toFixed(1)+'" y="'+(y-4).toFixed(1)+'" text-anchor="middle" class="s11w4-pl" fill="'+(Math.abs(r-1)<0.02?'#0891b2':'#b45309')+'">'+r.toFixed(4)+'</text>';
+    s+='<text x="'+x.toFixed(1)+'" y="'+(z+13)+'" text-anchor="middle" class="s11w4-ax">t='+(i+1)+'</text>';
+  }
+  s+='<line x1="'+L+'" y1="'+z+'" x2="'+(400-R)+'" y2="'+z+'" stroke="#c3cede"/>';
+  s+='<line x1="'+L+'" y1="'+py(1).toFixed(1)+'" x2="'+(400-R)+'" y2="'+py(1).toFixed(1)+'" stroke="#159447" stroke-width="2" stroke-dasharray="5 4"/>';
+  s+='<text x="'+L+'" y="'+(TP-8)+'" class="s11w4-ax" fill="#159447">green dashes mark one learning rate</text>';
+  $('chart').innerHTML=s;
+}
+function draw(){
+  var bc=$('bc').checked,gs=PRE[+$('pre').value],rows=run(gs,bc),i,r,h='',cls,worst=0,k;
+  for(i=0;i<N;i++){
+    r=rows[i];cls=i<done?(i===done-1?'now':''):'off';
+    h+='<tr class="'+cls+'"><td>'+r.t+'</td>'+(i<done
+      ?'<td class="g">'+fx(r.g,4)+'</td><td>'+fm(r.m)+'</td><td>'+fv(r.v)+'</td><td>'+fh(r.mh)+'</td><td>'+fh(r.vh)+'</td><td class="s">'+fx(r.st,6)+'</td><td class="w">'+fx(r.w,6)+'</td>'
+      :'<td class="g">'+fx(r.g,4)+'</td><td>.</td><td>.</td><td>.</td><td>.</td><td class="s">.</td><td>.</td>')+'</tr>';
+  }
+  $('rows').innerHTML=h;
+  for(i=0;i<done;i++)worst=Math.max(worst,Math.abs(Math.abs(rows[i].r)-1));
+  $('bcl').className='s11w4-sl'+(bc?' on':'');
+  $('next').disabled=done>=N;
+  $('status').textContent=done===0?'The weight sits at '+W0.toFixed(6)+'. No step taken yet.':done+' of '+N+' steps taken. w = '+fx(rows[done-1].w,6)+'.';
+  k=done?rows[done-1]:null;
+  $('say').innerHTML=done===0
+    ?'One weight starts at <b>'+W0.toFixed(1)+'</b>. Adam keeps a moving average of the gradient in <b>m</b> and of the squared gradient in <b>v</b>, divides one by the square root of the other, and multiplies by eta. Take a step to fill the first row.'
+    :'At step <b>'+k.t+'</b> the gradient was <b>'+fx(k.g,4)+'</b>. That gave m = <b>'+fm(k.m)+'</b> and v = <b>'+fv(k.v)+'</b>, so the weight moved by <b>'+fx(k.st,6)+'</b>, which is <b>'+Math.abs(k.r).toFixed(4)+'</b> times eta.';
+  $('eq').innerHTML=done===0
+    ?'m ← <i>0.9</i> m + <i>0.1</i> g\nv ← <i>0.999</i> v + <i>0.001</i> g²\nstep = −eta · m-hat ÷ (√v-hat + eps)'
+    :'m-hat  <i>'+fh(k.mh)+'</i>\n√v-hat <i>'+fh(Math.sqrt(k.vh))+'</i>\nratio  <u>'+(k.mh/(Math.sqrt(k.vh)+EPS)).toFixed(4)+'</u>\nstep   <u>'+fx(k.st,6)+'</u> = '+Math.abs(k.r).toFixed(4)+' eta';
+  $('sign').textContent=done===0
+    ?(bc?'Bias correction is on. Both averages are divided by 1 − beta^t, which repairs the pull towards zero that a start at zero creates.':'Bias correction is off. m and v are both still close to zero at step 1, and v is pulled down far harder than m, so the first step comes out much too large.')
+    :(bc?'With bias correction the largest deviation from one learning rate across the '+done+' step'+(done===1?'':'s')+' taken is '+(worst*100).toFixed(2)+' percent.':'Without bias correction the first step came out '+Math.abs(rows[0].r).toFixed(4)+' times eta. The largest deviation so far is '+(worst*100).toFixed(1)+' percent.');
+  var lo=1e9,hi2=0;
+  for(i=0;i<done;i++){lo=Math.min(lo,Math.abs(rows[i].r));hi2=Math.max(hi2,Math.abs(rows[i].r));}
+  $('tnote').innerHTML=done===0
+    ?'The <b>step</b> column is the one to watch. The gradients queued up range from '+fx(Math.min.apply(null,gs),4)+' to '+fx(Math.max.apply(null,gs),4)+'.'
+    :'The <b>step</b> column is the one to watch. Gradients from '+fx(Math.min.apply(null,gs),4)+' to '+fx(Math.max.apply(null,gs),4)+' have produced steps between <b>'+lo.toFixed(4)+'</b> and <b>'+hi2.toFixed(4)+'</b> times eta.';
+  $('foot').innerHTML=bc
+    ?'The gradient chooses the direction and eta chooses the distance. Bias correction divides m by 1 − 0.9<sup>t</sup> and v by 1 − 0.999<sup>t</sup>, so at t = 1 the ratio is exactly <b>'+Math.abs(run(gs,true)[0].r).toFixed(4)+'</b> times eta whatever the first gradient happens to be. '+(+$('pre').value===1?'These gradients are a hundred times smaller than the first preset and the step column is identical to the digit.':'Switch the preset to gradients a hundred times smaller and the step column comes out identical to the digit.')
+    :'At t = 1 both averages hold a single observation. m is g × 0.1 and v is g² × 0.001, so m ÷ √v comes to √(0.1²/0.001) = <b>'+Math.abs(run(gs,false)[0].r).toFixed(4)+'</b> whatever g was. Turn bias correction on and that first step drops to exactly one eta.';
+  chart(rows);
+}
+$('next').addEventListener('click',function(){if(done<N){done++;draw();}});
+$('reset').addEventListener('click',function(){done=0;draw();});
+$('bc').addEventListener('change',draw);
+$('pre').addEventListener('change',function(){done=0;draw();});
+draw();
+}());
+
+
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+
+
+=== widget_5_decay.html ===
+
+(function(){
+'use strict';
+var W0=0.5,LAM=0.1,ETA=1e-3,N=200;
+function $(i){return document.getElementById('s11w5-'+i);}
+function ex(x){return x.toExponential(1);}
+function sv(){return Math.pow(10,+$('v').value/1000);}
+function bx(x){return 74+(Math.log(x)/Math.LN10+5)/4*524;}
+function tx(x,y,s,c,a,b,w){return '<text x="'+x+'" y="'+y+'" text-anchor="'+(a||'middle')+'" font-size="'+(b||10)+'" font-weight="'+(w||700)+'" fill="'+c+'">'+s+'</text>';}
+function bars(l2,dc){
+  var s='',i,v,x,lo=Math.pow(10,-5),hi=Math.pow(10,-1);
+  for(i=-5;i<=-1;i++){v=Math.pow(10,i);x=bx(v);
+    s+='<line x1="'+x.toFixed(1)+'" y1="24" x2="'+x.toFixed(1)+'" y2="140" stroke="#eef3f9"/>';
+    s+=tx(x,156,'1e'+i,'#8b9aad','middle',10);}
+  s+='<line x1="74" y1="140" x2="598" y2="140" stroke="#e6edf6"/>';
+  s+=tx(70,60,'L2','#b91c1c','end',11,800)+tx(70,113,'decoupled','#166534','end',11,800);
+  var a=bx(Math.max(lo,Math.min(hi,l2))),b=bx(Math.max(lo,Math.min(hi,dc)));
+  s+='<rect x="74" y="40" width="'+(a-74).toFixed(1)+'" height="28" rx="5" fill="#fee2e2" stroke="#dc2626"/>';
+  s+='<rect x="74" y="93" width="'+(b-74).toFixed(1)+'" height="28" rx="5" fill="#dcfce7" stroke="#159447"/>';
+  s+=tx(a+7,59,ex(l2),'#b91c1c','start',11.5,800);
+  s+=tx(b+7,112,ex(dc),'#166534','start',11.5,800);
+  s+='<line x1="'+b.toFixed(1)+'" y1="34" x2="'+b.toFixed(1)+'" y2="130" stroke="#159447" stroke-width="1.2" stroke-dasharray="4 4"/>';
+  if(Math.abs(a-b)>3){
+    s+='<line x1="'+b.toFixed(1)+'" y1="78" x2="'+a.toFixed(1)+'" y2="78" stroke="#7c3aed" stroke-width="1.6" marker-end="url(#s11w5-ar)"/>';
+    s+=tx((a+b)/2,74,(l2>dc?'L2 is stronger by ':'L2 is weaker by ')+(l2>dc?(l2/dc).toFixed(1)+'x':(dc/l2).toFixed(1)+'x'),'#6d28d9','middle',10.5,800);
+  }else{
+    s+=tx((a+b)/2,74,'the two routes agree here','#6d28d9','middle',10.5,800);
+  }
+  s+=tx(74,17,'the decoupled bar holds still, because ηλw carries no division by √v','#8b9aad','start',10);
+  s+='<defs><marker id="s11w5-ar" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0 0 6 3 0 6z" fill="#7c3aed"/></marker></defs>';
+  $('bars').innerHTML=s;
+}
+function curve(f1,f2){
+  var s='',i,w1=W0,w2=W0,p1='',p2='',X=function(t){return 42+t/N*262;},Y=function(w){return 158-w/W0*126;};
+  for(i=0;i<=N;i++){p1+=X(i).toFixed(1)+','+Y(w1).toFixed(1)+' ';p2+=X(i).toFixed(1)+','+Y(w2).toFixed(1)+' ';w1*=f1;w2*=f2;}
+  for(i=0;i<=4;i++){var y=Y(W0*i/4);s+='<line x1="42" y1="'+y.toFixed(1)+'" x2="304" y2="'+y.toFixed(1)+'" stroke="#eef3f9"/>'+tx(38,y+3.5,(W0*i/4).toFixed(2),'#8b9aad','end',9.5);}
+  s+=tx(42,176,'0','#8b9aad','middle',9.5)+tx(173,176,'step','#8b9aad','middle',9.5)+tx(304,176,'200','#8b9aad','middle',9.5);
+  s+=tx(42,14,'weight value','#8b9aad','start',10);
+  s+='<polyline points="'+p2+'" fill="none" stroke="#159447" stroke-width="2.4" stroke-linejoin="round"/>';
+  s+='<polyline points="'+p1+'" fill="none" stroke="#dc2626" stroke-width="2.4" stroke-linejoin="round"/>';
+  s+='<circle cx="304" cy="'+Y(W0*Math.pow(f1,N)).toFixed(1)+'" r="3.4" fill="#dc2626"/>';
+  s+='<circle cx="304" cy="'+Y(W0*Math.pow(f2,N)).toFixed(1)+'" r="3.4" fill="#159447"/>';
+  s+=tx(300,Y(W0*Math.pow(f2,N))-8,'decoupled','#166534','end',10.5,800);
+  s+=tx(300,Y(W0*Math.pow(f1,N))+(Math.abs(W0*Math.pow(f1,N)-W0*Math.pow(f2,N))<0.04*W0?20:14),'L2','#b91c1c','end',10.5,800);
+  s+=tx(42,192,'decay only, with the loss gradient held out so the two routes are comparable','#8b9aad','start',9.5);
+  $('curve').innerHTML=s;
+}
+function draw(){
+  var v=sv(),dc=ETA*LAM*W0,l2=dc/v,rat=1/v,f1=1-ETA*LAM/v,f2=1-ETA*LAM,
+      e1=W0*Math.pow(f1,N),e2=W0*Math.pow(f2,N);
+  $('vv').textContent=v.toFixed(v<0.1?4:3);
+  $('l2s').textContent=ex(l2);$('dcs').textContent=ex(dc);
+  $('l2f').textContent=ex(l2/W0);$('dcf').textContent=ex(dc/W0);
+  $('l2r').textContent=rat.toFixed(1)+'x';$('dcr').textContent='1.0x';
+  $('mw1').textContent=e1.toFixed(4);$('mw2').textContent=e2.toFixed(4);
+  $('say').className='s11w5-say '+(rat>1.5?'bad':'good');
+  $('say').innerHTML='At &radic;v&#770; = <b>'+v.toFixed(v<0.1?4:3)+'</b> the L2 route removes <b>'+ex(l2)+'</b> from the weight each step and the decoupled route removes <b>'+ex(dc)+'</b>. That makes L2 <b>'+rat.toFixed(1)+'x</b> the decoupled strength on this one weight. '+
+    (rat>1.5?'Small gradients have made the regularization harsher, which is backwards.':rat<0.9?'Large gradients have made the regularization weaker than &lambda; asks for.':'The two routes agree only at this single value of &radic;v&#770;.');
+  $('status').textContent='ηλ = '+ex(ETA*LAM)+' is the decoupled per-step fraction, fixed for every weight in the model.';
+  $('note').innerHTML='After 200 steps the L2 route leaves <b>'+e1.toFixed(4)+'</b> and the decoupled route leaves <b>'+e2.toFixed(4)+'</b>, a gap of <b>'+(Math.abs(e2-e1)).toFixed(4)+'</b>. Under L2 the surviving fraction is (1 &minus; ηλ/&radic;v&#770;)<sup>200</sup> = <b>'+Math.pow(f1,N).toFixed(4)+'</b>, and under decoupled decay it is a flat <b>'+Math.pow(f2,N).toFixed(4)+'</b> for every weight.';
+  bars(l2,dc);curve(f1,f2);
+}
+$('v').addEventListener('input',draw);
+$('qb').addEventListener('click',function(){$('v').value=0;draw();});
+$('qq').addEventListener('click',function(){$('v').value=-2000;draw();});
+draw();
+}());
+
+
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+
+
+=== widget_6_warmup.html ===
+
+(function(){
+'use strict';
+var W0=1/Math.sqrt(4096),PEAK=3e-4,FLOOR=0.281,N=10000,TAU=1200,GROW=4.2,THALF=1500,
+    LO=5e-4,HI=2e-3,MID=1e-3,warm=true;
+function $(i){return document.getElementById('s11w6-'+i);}
+function cons(n){return FLOOR+(1-FLOOR)*Math.exp(-(n-1)/TAU);}
+function wmag(n){var t=n-1;return W0*(1+(GROW-1)*t/(t+THALF));}
+function lr(n,on,W){return (on&&W>0)?PEAK*Math.min(1,n/W):PEAK;}
+function ratio(n,on,W){return cons(n)*lr(n,on,W)/wmag(n);}
+function com(n){return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+function fmt(r){var v=r*1000;return v>=10?v.toFixed(1)+'e-3':v>=1?v.toFixed(2)+'e-3':v>=0.05?v.toFixed(3)+'e-3':r.toExponential(2);}
+function peak(on,W){var pk=0,pn=1,n;for(n=1;n<=N;n++){var r=ratio(n,on,W);if(r>pk){pk=r;pn=n;}}return {r:pk,n:pn};}
+function X(n){return 56+Math.log(Math.max(1,Math.min(N,n)))/Math.LN10/4*548;}
+function Y(r){return 292-(Math.log(Math.max(1e-6,Math.min(0.1,r)))/Math.LN10+6)/5*248;}
+function tx(x,y,s,c,a,b,w){return '<text x="'+x+'" y="'+y+'" text-anchor="'+(a||'middle')+'" font-size="'+(b||10)+'" font-weight="'+(w||700)+'" fill="'+c+'">'+s+'</text>';}
+function txh(x,y,s,c,a,b,w){return '<text x="'+x+'" y="'+y+'" text-anchor="'+(a||'middle')+'" font-size="'+(b||10)+'" font-weight="'+(w||700)+'" fill="'+c+'" stroke="#ffffff" stroke-width="3.4" stroke-linejoin="round" paint-order="stroke">'+s+'</text>';}
+function poly(p,c,w,d,o){return '<polyline points="'+p+'" fill="none" stroke="'+c+'" stroke-width="'+w+'"'+(d?' stroke-dasharray="'+d+'"':'')+(o?' opacity="'+o+'"':'')+' stroke-linejoin="round" stroke-linecap="round"/>';}
+function samples(){var a=[],i,n,p=0;for(i=0;i<=260;i++){n=Math.round(Math.pow(10,i/260*4));if(n<1)n=1;if(n!==p){a.push(n);p=n;}}if(a[a.length-1]!==N)a.push(N);return a;}
+var SAMP=samples();
+function chart(W,pOff,pOn){
+  var s='',i,p1='',p2='',n,y;
+  for(i=-6;i<=-1;i++){y=Y(Math.pow(10,i));
+    s+='<line x1="56" y1="'+y.toFixed(1)+'" x2="604" y2="'+y.toFixed(1)+'" stroke="#eef3f9"/>';
+    s+=tx(51,y+3.5,'1e'+i,'#8b9aad','end',9.5);}
+  s+='<rect x="56" y="'+Y(HI).toFixed(1)+'" width="548" height="'+(Y(LO)-Y(HI)).toFixed(1)+'" fill="rgba(21,148,71,.08)"/>';
+  s+='<line x1="56" y1="'+Y(MID).toFixed(1)+'" x2="604" y2="'+Y(MID).toFixed(1)+'" stroke="#159447" stroke-width="1.5" stroke-dasharray="6 4"/>';
+  if(warm&&W>0){s+='<rect x="56" y="44" width="'+(X(Math.max(1,W))-56).toFixed(1)+'" height="248" fill="rgba(8,145,178,.06)"/>';
+    s+='<line x1="'+X(Math.max(1,W)).toFixed(1)+'" y1="44" x2="'+X(Math.max(1,W)).toFixed(1)+'" y2="292" stroke="#0891b2" stroke-width="1.2" stroke-dasharray="4 4"/>';
+    s+=txh(X(Math.max(1,W))-6,289,'ramp ends at step '+com(W),'#0e7490','end',10,800);}
+  for(i=0;i<SAMP.length;i++){n=SAMP[i];
+    p1+=X(n).toFixed(1)+','+Y(ratio(n,false,W)).toFixed(1)+' ';
+    p2+=X(n).toFixed(1)+','+Y(ratio(n,true,W)).toFixed(1)+' ';}
+  s+='<line x1="56" y1="292" x2="604" y2="292" stroke="#e6edf6"/>';
+  for(i=0;i<=4;i++)s+=tx(56+i*137,306,com(Math.pow(10,i)),'#8b9aad','middle',9.5);
+  s+=tx(330,322,'training step','#8b9aad','middle',10);
+  s+=poly(p1,'#dc2626',warm?1.7:2.8,warm?'5 4':'',warm?0.45:1);
+  s+=poly(p2,'#0891b2',warm?2.8:1.7,warm?'':'5 4',warm?1:0.45);
+  var dx=X(pOn.n)-X(pOff.n),dy=Math.abs(Y(pOn.r)-Y(pOff.r)),below=(dx<380&&dy<34);
+  s+='<circle cx="'+X(pOff.n).toFixed(1)+'" cy="'+Y(pOff.r).toFixed(1)+'" r="4" fill="#dc2626" opacity="'+(warm?0.55:1)+'"/>';
+  s+=txh(X(pOff.n)+9,Y(pOff.r)-6,'warmup off peak '+fmt(pOff.r),'#b91c1c','start',10.5,800);
+  s+='<circle cx="'+X(pOn.n).toFixed(1)+'" cy="'+Y(pOn.r).toFixed(1)+'" r="4" fill="#0891b2" opacity="'+(warm?1:0.55)+'"/>';
+  if(below){s+='<line x1="'+X(pOn.n).toFixed(1)+'" y1="'+(Y(pOn.r)+8).toFixed(1)+'" x2="'+X(pOn.n).toFixed(1)+'" y2="243" stroke="#7dd3fc" stroke-width="1.1"/>';
+    s+=txh(X(pOn.n)+7,252,'warmup on peak '+fmt(pOn.r),'#0e7490','start',10.5,800);}
+  else s+=txh(X(pOn.n)-9,Y(pOn.r)-9,'warmup on peak '+fmt(pOn.r),'#0e7490','end',10.5,800);
+  s+=tx(56,14,'warmup off in red, warmup on in blue','#8b9aad','start',10);
+  s+=tx(604,14,'ratio = update size / weight size','#8b9aad','end',10);
+  s+='<line x1="56" y1="28" x2="78" y2="28" stroke="#159447" stroke-width="1.5" stroke-dasharray="6 4"/>';
+  s+=tx(84,31.5,'target band 0.5e-3 to 2.0e-3, center line 1.0e-3, which is a step of '+(MID*W0).toExponential(3),'#166534','start',10,800);
+  $('chart').innerHTML=s;
+}
+function side(W,on){
+  var s='',i,n,pe='',pc='',pw='',wEnd=wmag(N),
+      Xs=function(v){return 40+Math.log(Math.max(1,v))/Math.LN10/4*252;},
+      Ys=function(v){return 132-v*86;};
+  for(i=0;i<SAMP.length;i++){n=SAMP[i];
+    pe+=Xs(n).toFixed(1)+','+Ys(lr(n,on,W)/PEAK).toFixed(1)+' ';
+    pc+=Xs(n).toFixed(1)+','+Ys(cons(n)).toFixed(1)+' ';
+    pw+=Xs(n).toFixed(1)+','+Ys(wmag(n)/wEnd).toFixed(1)+' ';}
+  s+='<line x1="40" y1="'+Ys(1)+'" x2="292" y2="'+Ys(1)+'" stroke="#eef3f9"/>'+tx(36,Ys(1)+3.5,'1.00','#8b9aad','end',9);
+  s+='<line x1="40" y1="'+Ys(FLOOR)+'" x2="292" y2="'+Ys(FLOOR)+'" stroke="#fbbf24" stroke-width="1.1" stroke-dasharray="4 3"/>'+tx(36,Ys(FLOOR)+3.5,'0.281','#b45309','end',9);
+  s+='<line x1="40" y1="132" x2="292" y2="132" stroke="#e6edf6"/>'+tx(36,135,'0','#8b9aad','end',9);
+  s+=poly(pw,'#7c3aed',2.2)+poly(pc,'#d97706',2.2)+poly(pe,'#0891b2',2.2);
+  s+=tx(40,11,'learning rate over peak, in blue','#0e7490','start',9.5,800);
+  s+=tx(40,22,'gradient consistency factor, in amber','#b45309','start',9.5,800);
+  s+=tx(40,33,'weight magnitude over '+wEnd.toFixed(4)+', in violet','#6d28d9','start',9.5,800);
+  s+=tx(40,146,'1','#8b9aad','start',9)+tx(166,146,'100','#8b9aad','middle',9)+tx(292,146,'10,000','#8b9aad','end',9);
+  s+=tx(166,163,'training step','#8b9aad','middle',9.5);
+  $('side').innerHTML=s;
+}
+function draw(){
+  var W=+$('len').value,pOff=peak(false,W),pOn=peak(true,W),live=warm&&W>0,
+      cur=live?pOn:pOff,rEnd=ratio(N,warm,W),wEnd=wmag(N),r1=ratio(1,warm,W);
+  $('lenv').textContent=com(W)+' steps';
+  $('tg').textContent='warmup: '+(warm?'on':'off');
+  $('tg').className=warm?'on':'';
+  $('pa').textContent=fmt(pOff.r);
+  $('pai').textContent='on step '+com(pOff.n)+', which is '+(pOff.r/MID).toFixed(1)+'x the 1.0e-3 line';
+  $('pb').textContent=fmt(pOn.r);
+  $('pbi').textContent=W>0?'at step '+com(pOn.n)+', where the ramp ends':'ramp length is 0 steps, so this equals the warmup off peak';
+  $('pc').textContent=(pOff.r/pOn.r).toFixed(1)+'x';
+  $('pci').textContent=W>0?'lower peak, bought by ramping over '+com(W)+' steps':'no reduction while the ramp length is 0';
+  $('m1').textContent=fmt(r1);
+  $('m1').style.color=live?'var(--cyan)':'var(--red)';
+  $('m2').textContent=com(cur.n);
+  $('m2').style.color='var(--amber)';
+  $('m3').textContent=fmt(rEnd);
+  $('m3').style.color=(rEnd>=LO&&rEnd<=HI)?'var(--green)':'var(--red)';
+  $('m3s').textContent='ratio at step 10,000, '+((rEnd>=LO&&rEnd<=HI)?'inside':'outside')+' the target band';
+  $('m4').textContent=wEnd.toFixed(4);
+  $('m4').style.color='var(--violet)';
+  $('say').className='s11w6-say'+(live?'':' bad');
+  $('say').innerHTML=live
+    ? 'The ramp opens &eta; at <b>'+lr(1,true,W).toExponential(2)+'</b>, so the first update is <b>'+fmt(r1)+'</b> of the weight size. The largest ratio in the run is <b>'+fmt(pOn.r)+'</b>, at step '+com(pOn.n)+' where the ramp reaches its peak.'
+    : '&eta; is at its peak from step 1, so the largest ratio in the run is <b>'+fmt(pOff.r)+'</b>, on the very first step, taken in a direction chosen by a model that has seen nothing.';
+  $('status').textContent='Peak eta '+PEAK.toExponential(1)+'. Weights initialized at '+W0.toFixed(6)+'. A ratio of 1.0e-3 is a step of '+(MID*W0).toExponential(3)+'.';
+  $('note').innerHTML='Two terms pull the ratio down over the window. The consistency factor falls from <b>1.000</b> toward its noisy gradient floor of <b>0.281</b>, and the weight magnitude grows from <b>'+W0.toFixed(6)+'</b> to an assumed <b>'+wEnd.toFixed(4)+'</b> by step 10,000. This warmup ramps the learning rate itself. The data mixture warmup band of Sessions 5 and 6 is a separate mechanism.';
+  chart(W,pOff,pOn);side(W,warm);
+}
+$('len').addEventListener('input',draw);
+$('tg').addEventListener('click',function(){warm=!warm;draw();});
+draw();
+}());
+
+
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+
+
+=== widget_7_schedules.html ===
+
+(function(){
+'use strict';
+var PEAK=3e-4,AX=100000,L=54,R=632,TP=24,BT=250,YM=PEAK*1.1,NS=140,drag=false;
+function $(i){return document.getElementById('s11w7-'+i);}
+function nf(n){return Math.round(n).toLocaleString('en-US');}
+function ev(v){return v<=0?'0':v.toExponential(2);}
+function X(t){return L+t/AX*(R-L);}
+function Y(v){return BT-v/YM*(BT-TP);}
+function cosine(t,T){return t>T?0:PEAK*0.5*(1+Math.cos(Math.PI*t/T));}
+function wsd(t,T){var W=0.02*T,D=0.9*T;return t>T?0:t<W?PEAK*t/W:t<D?PEAK:PEAK*(T-t)/(0.1*T);}
+function tx(x,y,s,c,a,b){return '<text x="'+x+'" y="'+y+'" text-anchor="'+(a||'middle')+'" font-size="'+(b||9.5)+'" font-weight="700" fill="'+c+'">'+s+'</text>';}
+function poly(p,c,w,d){return '<polyline points="'+p+'" fill="none" stroke="'+c+'" stroke-width="'+w+'"'+(d?' stroke-dasharray="'+d+'"':'')+' stroke-linejoin="round" stroke-linecap="round"/>';}
+function seq(f,T,n){var p='',i,t;for(i=0;i<=n;i++){t=T*i/n;p+=X(t).toFixed(1)+','+Y(f(t,T)).toFixed(1)+' ';}return p;}
+function noise(i){var x=Math.sin(i*12.9898+4.1)*43758.5453;return (x-Math.floor(x))*2-1;}
+function chart(s,T,lc,lw,win){
+  var g='',i,t,pk;
+  for(i=0;i<=4;i++){t=AX*i/4;g+='<line x1="'+X(t)+'" y1="'+TP+'" x2="'+X(t)+'" y2="'+BT+'" stroke="#eef3f9"/>'+tx(X(t),BT+15,nf(t),'#8b9aad',i===0?'start':i===4?'end':'middle');}
+  for(i=0;i<=2;i++){pk=PEAK*i/2;g+='<line x1="'+L+'" y1="'+Y(pk)+'" x2="'+R+'" y2="'+Y(pk)+'" stroke="#e9eff7"/>'+tx(L-6,Y(pk)+3.5,i===0?'0':ev(pk),'#8b9aad','end');}
+  var sd=X(s)<L+160?1:-1,an=sd>0?'start':'end',lx=X(s)+sd*8;
+  g+=sd>0?tx(R,15,'learning rate','#8b9aad','end',10):tx(L,15,'learning rate','#8b9aad','start',10);
+  g+='<rect x="'+X(Math.max(0,s-win)).toFixed(1)+'" y="'+TP+'" width="'+(X(s)-X(Math.max(0,s-win))).toFixed(1)+'" height="'+(BT-TP)+'" fill="rgba(21,148,71,.07)"/>';
+  g+='<line x1="'+X(0)+'" y1="'+Y(PEAK)+'" x2="'+X(AX)+'" y2="'+Y(PEAK)+'" stroke="#159447" stroke-width="9" stroke-opacity=".28" stroke-linecap="round"/>';
+  g+=poly(X(0)+','+Y(PEAK)+' '+X(AX)+','+Y(PEAK),'#159447',2);
+  g+=poly(seq(wsd,T,220),'#0891b2',2.6);
+  g+=poly(seq(cosine,T,220),'#7c3aed',2.6);
+  if(T<AX){g+='<line x1="'+X(T)+'" y1="'+TP+'" x2="'+X(T)+'" y2="'+BT+'" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="2 3"/>'+'<text x="'+(X(T)+10)+'" y="'+(BT-8)+'" transform="rotate(-90 '+(X(T)+10)+' '+(BT-8)+')" text-anchor="start" font-size="9.5" font-weight="700" fill="#94a3b8">plan ends at '+nf(T)+'</text>';}
+  if(s<0.9*T){var e=Math.min(AX,s+0.1*T),a2=X(e)>L+300?'end':'start';
+    g+=poly(X(s).toFixed(1)+','+Y(lw).toFixed(1)+' '+X(e).toFixed(1)+','+Y(0).toFixed(1),'#0e7490',2.2,'5 4');
+    g+=tx(X(e)+(a2==='end'?-5:5),Y(0)-7,'decay from the checkpoint','#0e7490',a2);}
+  g+='<line x1="'+X(s)+'" y1="'+(TP-4)+'" x2="'+X(s)+'" y2="'+(BT+4)+'" stroke="#d97706" stroke-width="2"/>';
+  g+='<rect x="'+(X(s)-5)+'" y="'+(TP-14)+'" width="10" height="10" rx="2" fill="#d97706"/>';
+  g+=tx(X(s),BT+29,'stop at step '+nf(s),'#b45309',X(s)>R-70?'end':X(s)<L+70?'start':'middle',10.5);
+  g+='<circle cx="'+X(s)+'" cy="'+Y(PEAK)+'" r="4" fill="#159447"/>';
+  g+='<circle cx="'+X(s)+'" cy="'+Y(lw)+'" r="4" fill="#0891b2"/>';
+  g+='<circle cx="'+X(s)+'" cy="'+Y(lc)+'" r="4" fill="#7c3aed"/>';
+  var flat=Math.abs(lw-PEAK)<=PEAK*0.03,yk=Y(PEAK)-9,
+      yw=flat?Y(PEAK)+14:Math.min(Y(lw)+13,BT-5),yc=Math.min(Y(lc)-8,BT-5);
+  if(Math.abs(yc-yw)<15)yc=yc<=BT-22?yw+16:yw-16;
+  if(Math.abs(yc-yk)<15)yc=yk+16;
+  g+=tx(lx,yk,'constant '+ev(PEAK),'#166534',an,10);
+  g+=tx(lx,yw,flat?'WSD equals the constant rate here':'WSD '+ev(lw),'#0e7490',an,10);
+  g+=tx(lx,yc,'cosine '+ev(lc),'#5b21b6',an,10);
+  $('chart').innerHTML=g;
+}
+function ema(s,T){
+  var raw=[],av=[],a=2/(13),i,d,dr=0,de=0,base,g='',pr='',pa='',k=Math.max(0,Math.min(NS-1,Math.round(s/T*(NS-1))));
+  for(i=0;i<NS;i++){base=0.62-0.30*Math.exp(-i/46);raw.push(base+0.085*noise(i)+0.045*noise(i*3+7));
+    av.push(i===0?raw[0]:av[i-1]+a*(raw[i]-av[i-1]));
+    if(i>=NS/2){d=raw[i]-(0.62-0.30*Math.exp(-i/46));dr+=d*d;d=av[i]-(0.62-0.30*Math.exp(-i/46));de+=d*d;}}
+  function ex(i){return 8+i/(NS-1)*284;}
+  function ey(v){return 96-(v-0.24)/0.52*84;}
+  for(i=0;i<NS;i++){pr+=ex(i).toFixed(1)+','+ey(raw[i]).toFixed(1)+' ';pa+=ex(i).toFixed(1)+','+ey(av[i]).toFixed(1)+' ';}
+  g+=poly(pr,'#cbd5e1',1.6)+poly(pa,'#159447',2.2);
+  g+='<line x1="'+ex(k).toFixed(1)+'" y1="4" x2="'+ex(k).toFixed(1)+'" y2="98" stroke="#d97706" stroke-width="1.4"/>';
+  g+='<circle cx="'+ex(k).toFixed(1)+'" cy="'+ey(raw[k]).toFixed(1)+'" r="3" fill="#94a3b8"/>';
+  g+='<circle cx="'+ex(k).toFixed(1)+'" cy="'+ey(av[k]).toFixed(1)+'" r="3.4" fill="#159447"/>';
+  g+=tx(8,11,'one weight, in grey','#94a3b8','start',9.5);
+  g+=tx(292,11,'its moving average, in green','#159447','end',9.5);
+  $('ema').innerHTML=g;
+  return Math.sqrt(dr/de);
+}
+function draw(){
+  var T=+$('total').value*1000,mx=Math.round(T/1000),st=$('stop');
+  if(+st.max!==mx)st.max=mx;
+  if(+st.value>mx)st.value=mx;
+  var s=+st.value*1000,lc=cosine(s,T),lw=wsd(s,T),win=Math.round(0.1*T),sh=lc/PEAK,
+      rest=Math.min(AX,s+win)-s,avg=ema(s,T);
+  $('stopv').textContent=nf(s);$('totalv').textContent=nf(T);
+  $('vc').textContent=ev(lc);$('vw').textContent=ev(lw);$('vk').textContent=ev(PEAK);
+  $('say').innerHTML='The cosine curve is drawn from the planned length <b>T = '+nf(T)+'</b> steps. Stopping at step <b>'+nf(s)+'</b> leaves it at <b>'+(sh*100).toFixed(1)+'%</b> of the peak rate, while WSD is at '+(lw/PEAK*100).toFixed(1)+'% and the constant schedule is at 100%.';
+  $('pc').innerHTML=sh>0.02
+    ?'Still <i>'+(sh*100).toFixed(1)+'%</i> of peak. The model here is worse than a run planned for '+nf(s)+' steps.'
+    :'The rate reached <i>'+ev(lc)+'</i>. This model is finished for a budget of '+nf(s)+' steps only.';
+  $('pw').innerHTML=s<0.9*T
+    ?'Checkpoint here and decay over <i>'+nf(rest)+'</i> more steps to finish a budget of '+nf(s+rest)+' steps.'
+    :'Inside the planned decay phase, <i>'+nf(T-s)+'</i> steps from zero.';
+  $('pk').innerHTML='Usable at every step. Averaging the last <i>'+nf(win)+'</i> steps removes '+((1-1/avg)*100).toFixed(0)+'% of the noise in the weights.';
+  $('note').innerHTML='The green band is the averaging window ending at the marker. Averaging and decay both suppress late noise.';
+  $('status').textContent='Cosine reaches zero only at step '+nf(T)+'. WSD and the constant schedule give a model at step '+nf(s)+'.';
+  chart(s,T,lc,lw,win);
+}
+function setStop(t){
+  var st=$('stop'),k=Math.round(t/1000);
+  if(k<+st.min)k=+st.min;if(k>+st.max)k=+st.max;
+  if(k!==+st.value){st.value=k;draw();}
+}
+function fromEvent(e){
+  var sv=$('chart'),r=sv.getBoundingClientRect();
+  return ((e.clientX-r.left)/r.width*640-L)/(R-L)*AX;
+}
+$('chart').addEventListener('pointerdown',function(e){drag=true;try{$('chart').setPointerCapture(e.pointerId);}catch(err){}setStop(fromEvent(e));e.preventDefault();});
+$('chart').addEventListener('pointermove',function(e){if(drag)setStop(fromEvent(e));});
+$('chart').addEventListener('pointerup',function(){drag=false;});
+$('chart').addEventListener('pointercancel',function(){drag=false;});
+$('stop').addEventListener('input',draw);
+$('total').addEventListener('input',draw);
+draw();
+}());
+
+
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+
+
+=== widget_8_batch.html ===
+
+(function(){
+'use strict';
+var NS=[8,16,32,56,64,128,256,512,1024],REF=8,MAXN=1024,
+    TX=1.7,TY=1.2,SIG=1.0,
+    X0=44,X1=414,Y0=12,Y1=382,XMIN=-1.4,YMIN=-1.9,SPAN=6,S=(X1-X0)/SPAN,
+    LX=428,seed=2473,pts=null,cum=null;
+function $(i){return document.getElementById('s11w8-'+i);}
+function px(x){return X0+(x-XMIN)*S;}
+function py(y){return Y1-(y-YMIN)*S;}
+function noise(n){return Math.sqrt(REF/n);}
+function lin(n){return n/REF;}
+function sq(n){return Math.sqrt(n/REF);}
+function rng(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296;};}
+function build(sd){
+  var r=rng(sd),i,u1,u2,m,a,sx=0,sy=0;
+  pts=[];cum=[];
+  for(i=0;i<MAXN;i++){
+    u1=r();if(u1<1e-12)u1=1e-12;u2=r();
+    m=Math.sqrt(-2*Math.log(u1));a=2*Math.PI*u2;
+    pts.push([TX+SIG*m*Math.cos(a),TY+SIG*m*Math.sin(a)]);
+    sx+=pts[i][0];sy+=pts[i][1];cum.push([sx,sy]);
+  }
+}
+function mean(n){return [cum[n-1][0]/n,cum[n-1][1]/n];}
+function dist(n){var m=mean(n),dx=m[0]-TX,dy=m[1]-TY;return Math.sqrt(dx*dx+dy*dy);}
+function tx(x,y,s,c,a,fs,fw){return '<text x="'+x+'" y="'+y+'" text-anchor="'+(a||'start')+'" font-size="'+(fs||10)+'" font-weight="'+(fw||700)+'" fill="'+c+'">'+s+'</text>';}
+function arrow(x1,y1,x2,y2,c,w,hl){
+  var dx=x2-x1,dy=y2-y1,L=Math.sqrt(dx*dx+dy*dy)||1,ux=dx/L,uy=dy/L,h=Math.min(hl,L*0.6),
+      bx=x2-ux*h,by=y2-uy*h,hw=h*0.46;
+  return '<line x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+bx.toFixed(1)+'" y2="'+by.toFixed(1)+'" stroke="'+c+'" stroke-width="'+w+'" stroke-linecap="round"/>'+
+         '<polygon points="'+x2.toFixed(1)+','+y2.toFixed(1)+' '+(bx-uy*hw).toFixed(1)+','+(by+ux*hw).toFixed(1)+' '+(bx+uy*hw).toFixed(1)+','+(by-ux*hw).toFixed(1)+'" fill="'+c+'"/>';
+}
+function legend(y,kind,c,l1,l2){
+  var s='';
+  if(kind==='dot')s+='<circle cx="'+(LX+9)+'" cy="'+(y-4)+'" r="3.2" fill="'+c+'" opacity=".7"/>';
+  else if(kind==='dash')s+='<line x1="'+LX+'" y1="'+(y-4)+'" x2="'+(LX+19)+'" y2="'+(y-4)+'" stroke="'+c+'" stroke-width="2" stroke-dasharray="4 3"/>';
+  else s+=arrow(LX,y-4,LX+19,y-4,c,c==='#6d28d9'?3.6:2.2,c==='#6d28d9'?9:7);
+  s+=tx(LX+27,y,l1,'#334155',null,10.5);
+  if(l2)s+=tx(LX+27,y+13,l2,'#334155',null,10.5);
+  return s;
+}
+function plot(n){
+  var s='',i,r,op,mn=mean(n),mx=px(mn[0]),my=py(mn[1]),tpx=px(TX),tpy=py(TY),ox=px(0),oy=py(0),v;
+  s+='<defs><clipPath id="s11w8-clip"><rect x="'+X0+'" y="'+Y0+'" width="'+(X1-X0)+'" height="'+(Y1-Y0)+'"/></clipPath></defs>';
+  s+='<rect x="'+X0+'" y="'+Y0+'" width="'+(X1-X0)+'" height="'+(Y1-Y0)+'" fill="#fbfdff" stroke="'+'#e2e8f0'+'"/>';
+  for(v=-1;v<=4;v++){
+    s+='<line x1="'+px(v).toFixed(1)+'" y1="'+Y0+'" x2="'+px(v).toFixed(1)+'" y2="'+Y1+'" stroke="#eef3f9"/>';
+    s+='<line x1="'+X0+'" y1="'+py(v).toFixed(1)+'" x2="'+X1+'" y2="'+py(v).toFixed(1)+'" stroke="#eef3f9"/>';
+  }
+  s+='<line x1="'+ox.toFixed(1)+'" y1="'+Y0+'" x2="'+ox.toFixed(1)+'" y2="'+Y1+'" stroke="#c3cede"/>';
+  s+='<line x1="'+X0+'" y1="'+oy.toFixed(1)+'" x2="'+X1+'" y2="'+oy.toFixed(1)+'" stroke="#c3cede"/>';
+  s+=tx(ox-5,oy+13,'0','#94a3b8','end',9.5);
+  r=n<=32?2.8:n<=128?2.3:1.8;op=n<=32?0.55:n<=128?0.4:0.26;
+  s+='<g clip-path="url(#s11w8-clip)" fill="#7f8ea3" opacity="'+op+'">';
+  for(i=0;i<n;i++)s+='<circle cx="'+px(pts[i][0]).toFixed(1)+'" cy="'+py(pts[i][1]).toFixed(1)+'" r="'+r+'"/>';
+  s+='</g>';
+  s+='<g clip-path="url(#s11w8-clip)">';
+  s+='<line x1="'+tpx.toFixed(1)+'" y1="'+tpy.toFixed(1)+'" x2="'+mx.toFixed(1)+'" y2="'+my.toFixed(1)+'" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="4 3"/>';
+  s+=arrow(ox,oy,tpx,tpy,'#6d28d9',5,16);
+  s+=arrow(ox,oy,mx,my,'#d97706',2.4,10);
+  s+='</g>';
+  s+=tx(172,212,'true gradient','#6d28d9','end',11);
+  s+=tx(Math.min(mx+11,X1-4),Math.min(my+18,Y1-6),'mean of '+n,'#b45309',mx>X1-70?'end':'start',11);
+  s+=tx(X0,404,'Both axes are components of the gradient. Every dot is one sample gradient.','#8b9aad',null,10.5);
+  s+=tx(LX,32,'Batch of '+n+' samples','#152033',null,12,800);
+  s+=legend(72,'arrow','#6d28d9','true gradient, the average','over the whole dataset');
+  s+=legend(128,'arrow','#d97706','mean of the '+n+' sample','gradients in this batch');
+  s+=legend(184,'dot','#7f8ea3','one sample gradient,','drawn with noise');
+  s+=legend(240,'dash','#dc2626','distance from the mean','to the true gradient');
+  s+=tx(LX,300,'Raise the batch and the amber','#475569',null,10.5);
+  s+=tx(LX,313,'arrow settles onto the violet one.','#475569',null,10.5);
+  s+=tx(LX,331,'Past a few hundred samples the','#475569',null,10.5);
+  s+=tx(LX,344,'change stops being visible.','#475569',null,10.5);
+  $('plot').innerHTML=s;
+}
+function draw(){
+  var n=NS[+$('n').value],i,r,h='',d=dist(n),d8=dist(REF),rel=d/d8;
+  $('nv').textContent=n;
+  $('md').textContent=d.toFixed(3);
+  $('mr').textContent=rel.toFixed(3)+'x';
+  $('mp').textContent=noise(n).toFixed(3)+'x';
+  h+='<tr><th>global batch</th><th>gradient noise, relative to 8</th><th>linear rule, gradient descent</th><th>square-root rule, Adam</th></tr>';
+  for(i=0;i<NS.length;i++){r=NS[i];
+    h+='<tr class="'+(r===n?'s11w8-on':r===56?'s11w8-v4':'')+'"><td>'+r+(r===56?' (V4)':'')+'</td><td>'+noise(r).toFixed(3)+'</td><td>'+lin(r).toFixed(2)+'x</td><td>'+sq(r).toFixed(2)+'x</td></tr>';
+  }
+  $('tab').innerHTML=h;
+  $('say').innerHTML=n===REF?'A batch of <b>8</b> averages 8 sample gradients. Their mean lands <b>'+d.toFixed(3)+'</b> from the true gradient. That distance is the reference every larger batch is measured against.':'A batch of <b>'+n+'</b> averages '+n+' sample gradients. Their mean lands <b>'+d.toFixed(3)+'</b> from the true gradient, which is <b>'+rel.toFixed(3)+'x</b> the distance a batch of 8 leaves. The square-root law predicts <b>'+noise(n).toFixed(3)+'x</b>.';
+  $('strip').innerHTML='At four times the batch, plain gradient descent takes <b>'+lin(4*REF).toFixed(2)+'x</b> the learning rate and Adam takes <b>'+sq(4*REF).toFixed(2)+'x</b>. Adam has already divided out the magnitude of the gradient, so only its consistency remains.';
+  $('note').innerHTML='Past a threshold called the <b>critical batch size</b> the extra samples buy almost nothing. Where that threshold sits has to be measured for a given model and dataset.';
+  $('cnote').innerHTML='A more accurate gradient can be trusted over a longer step. Going from 8 to 32 pulls the mean a long way onto the truth. Going from 256 to 1024 moves it very little, because the distance falls as one over the square root of the batch.';
+  $('status').textContent='56 is V4’s global batch, marked on the slider and in the table.';
+  plot(n);
+}
+build(seed);
+$('n').addEventListener('input',draw);
+$('re').addEventListener('click',function(){seed=(seed*1664525+1013904223)>>>0;build(seed);draw();});
+draw();
+}());
+
+
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+
+
+=== widget_9_transfer.html ===
+
+(function(){
+'use strict';
+var W=[256,512,1024,2048],TARGET=4096,K=0.768,BASE=3.0e-3,
+    COL=['#0891b2','#7c3aed','#159447','#d97706'],
+    LO=1e-4,HI=1e-2,YLO=2.4,YHI=3.9,
+    mup=0,sweep=256;
+function $(i){return document.getElementById('s11w9-'+i);}
+function best(w){return mup?BASE:K/w;}
+function lmin(w){return 3.05-0.2*(Math.log(w/256)/Math.LN2);}
+function loss(w,e){var c=Math.log(e/best(w))/Math.LN10;return lmin(w)+(c<0?0.30*c*c:0.55*c*c);}
+function ef(v){var e=Math.floor(Math.log(v)/Math.LN10),m=v/Math.pow(10,e);if(m>=9.95){m/=10;e++;}return m.toFixed(1)+'e'+e;}
+function px(e){return 46+(Math.log(e/LO)/Math.LN10)/(Math.log(HI/LO)/Math.LN10)*548;}
+function py(l){return 252-(Math.min(YHI,Math.max(YLO,l))-YLO)/(YHI-YLO)*230;}
+function tx(x,y,s,c,a,b,h){return '<text x="'+x+'" y="'+y+'" text-anchor="'+(a||'middle')+'" font-size="'+(b||9.5)+'" font-weight="700" fill="'+c+'"'+(h?' stroke="#fff" stroke-width="3" paint-order="stroke"':'')+'>'+s+'</text>';}
+function chart(){
+  var s='',i,j,e,p,tk=[1e-4,3e-4,1e-3,3e-3,1e-2],b,x,y;
+  for(i=0;i<tk.length;i++)s+='<line x1="'+px(tk[i])+'" y1="22" x2="'+px(tk[i])+'" y2="252" stroke="#eef3f9"/>'+tx(px(tk[i]),268,ef(tk[i]),'#8b9aad');
+  s+='<line x1="46" y1="252" x2="594" y2="252" stroke="#e6edf6"/>';
+  s+=tx(320,286,'learning rate','#8b9aad','middle',10.5);
+  s+=tx(46,16,'training loss after a fixed budget','#8b9aad','start',10.5);
+  b=best(TARGET);
+  s+='<line x1="'+px(b)+'" y1="22" x2="'+px(b)+'" y2="252" stroke="#dc2626" stroke-width="1.4" stroke-dasharray="5 4"/>';
+  s+=tx(px(b)+5,34,'width 4096 optimum '+ef(b),'#b91c1c','start',10,1);
+  for(i=0;i<W.length;i++){
+    p='';
+    for(j=0;j<=72;j++){e=LO*Math.pow(HI/LO,j/72);p+=px(e).toFixed(1)+','+py(loss(W[i],e)).toFixed(1)+' ';}
+    s+='<polyline points="'+p+'" fill="none" stroke="'+COL[i]+'" stroke-width="'+(W[i]===sweep?3:2)+'" stroke-linejoin="round" opacity="'+(W[i]===sweep?1:0.75)+'"/>';
+  }
+  for(i=0;i<W.length;i++){
+    x=px(best(W[i]));y=py(lmin(W[i]));
+    s+='<line x1="'+x+'" y1="'+y+'" x2="'+x+'" y2="252" stroke="'+COL[i]+'" stroke-width="1" stroke-dasharray="2 3" opacity=".7"/>';
+    s+='<circle cx="'+x+'" cy="'+y+'" r="5" fill="'+COL[i]+'" stroke="#fff" stroke-width="2"/>';
+    s+=tx(mup?x+10:x,y-10,'width '+W[i]+', '+ef(best(W[i])),COL[i],mup?'start':'middle',10,1);
+  }
+  $('chart').innerHTML=s;
+}
+function draw(){
+  var r='',i,bs=best(sweep),bt=best(TARGET),ratio=bs/bt;
+  for(i=0;i<W.length;i++)
+    r+='<tr class="'+(W[i]===sweep?'sel':'')+'"><td class="n"><em style="background:'+COL[i]+'"></em>'+W[i]+'</td><td>'+ef(best(W[i]))+'</td><td>'+(best(W[i])/bt).toFixed(1)+'x</td></tr>';
+  r+='<tr class="ex"><td class="n"><em style="background:#dc2626"></em>4096</td><td>'+ef(bt)+'</td><td>1.0x</td></tr>';
+  $('rows').innerHTML=r;
+  $('ms').textContent=ef(bs);$('mt').textContent=ef(bt);$('mr').textContent=ratio.toFixed(1)+'x';
+  $('mr').style.color=ratio>1.05?'var(--amber)':'var(--green)';
+  $('say').innerHTML=mup
+    ? 'Under muP the four curves have their minimum at the same learning rate, <b>'+ef(BASE)+'</b>. A sweep at width '+sweep+' hands width 4096 a value that is <b>'+ratio.toFixed(1)+'x</b> its own optimum, so the small sweep answers the large question.'
+    : 'Under the standard parameterization the best learning rate falls in proportion to one over the width. The minima at widths 256 to 2048 sit at '+ef(best(256))+' down to '+ef(best(2048))+', and width 4096 extrapolates to <b>'+ef(bt)+'</b>. Carrying the width '+sweep+' answer across would be <b>'+ratio.toFixed(1)+'x</b> too large.';
+  $('note').innerHTML=mup
+    ? 'Every minimum lands on the same vertical line, and the curves stack in width order. <b>The sweep transfers.</b>'
+    : 'Doubling the width halves the best learning rate, so the minima shift leftwards. <b>Width 256 to 4096 is '+(best(256)/bt).toFixed(1)+'x.</b>';
+  chart();
+}
+function seg(cls,val){
+  Array.prototype.forEach.call(document.querySelectorAll('.s11w9-'+cls),function(b){
+    b.classList.toggle('on',+b.getAttribute('data-v')===val);
+  });
+}
+function sync(){seg('p',mup);seg('s',sweep);draw();}
+Array.prototype.forEach.call(document.querySelectorAll('.s11w9-p'),function(b){
+  b.addEventListener('click',function(){mup=+b.getAttribute('data-v');sync();});
+});
+Array.prototype.forEach.call(document.querySelectorAll('.s11w9-s'),function(b){
+  b.addEventListener('click',function(){sweep=+b.getAttribute('data-v');sync();});
+});
+sync();
+}());
+
+
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();

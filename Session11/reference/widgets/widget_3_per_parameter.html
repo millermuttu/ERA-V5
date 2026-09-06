@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 11 Widget 3 - Per-Parameter Learning Rates</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s11w3-w{max-width:1180px;margin:0 auto;padding:14px 22px 16px}
+.s11w3-k{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--violet)}
+.s11w3-w h1{font-size:24px;line-height:1.12;margin:4px 0 9px}
+.s11w3-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:12px 14px}
+.s11w3-card h2{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;font-weight:800}
+.s11w3-say{border:1px solid #ddd6fe;background:#f5f3ff;border-radius:10px;padding:10px 13px;color:#3b1e77;font-size:14.5px;line-height:1.5;margin:0 0 11px}
+.s11w3-say b{color:#5b21b6;font-weight:800}
+.s11w3-bar{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-bottom:11px}
+.s11w3-sl{display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer}
+.s11w3-sl input[type=range]{width:150px;vertical-align:middle;accent-color:var(--violet)}
+.s11w3-sl input[type=checkbox]{width:15px;height:15px;accent-color:var(--violet)}
+.s11w3-sl b{font:800 12.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--violet);min-width:26px}
+.s11w3-sl.on{border-color:var(--violet);background:#f5f3ff}
+.s11w3-st{font-size:12px;font-weight:700;color:var(--muted)}
+.s11w3-g{display:grid;grid-template-columns:1.2fr 1fr;gap:13px;align-items:start}
+.s11w3-g svg{display:block;width:100%;height:auto}
+.s11w3-t{width:100%;border-collapse:collapse;font-size:13px}
+.s11w3-t th{text-align:right;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:800;padding:2px 5px;border-bottom:1px solid var(--line)}
+.s11w3-t th.c{color:var(--cyan)}
+.s11w3-t th.v{color:var(--violet)}
+.s11w3-t td{padding:4px 5px;border-bottom:1px solid #eef2f7;font:800 14px ui-monospace,SFMono-Regular,Consolas,monospace;text-align:right}
+.s11w3-t th:first-child,.s11w3-t td:first-child{text-align:left;font:800 10.5px Inter,sans-serif;letter-spacing:.03em;text-transform:uppercase;color:var(--muted)}
+.s11w3-t tr.hot td{background:#fffbeb;color:#b45309;border-bottom:0}
+.s11w3-t tr.hot td:first-child{color:#b45309}
+.s11w3-eq{font:800 14px/1.7 ui-monospace,SFMono-Regular,Consolas,monospace;background:#0f172a;color:#dbeafe;border-radius:9px;padding:8px 11px;margin-top:9px;white-space:pre;overflow-x:auto}
+.s11w3-eq i{color:#7dd3fc;font-style:normal}
+.s11w3-eq u{color:#fbbf24;text-decoration:none}
+.s11w3-sign{margin:9px 0 0;font-size:12.5px;font-weight:700;color:var(--violet);border-left:3px solid var(--violet);padding-left:9px;line-height:1.45}
+.s11w3-note{margin:8px 0 0;font-size:12px;color:var(--muted);line-height:1.45}
+.s11w3-note b{color:var(--ink)}
+.s11w3-foot{margin-top:11px}
+.s11w3-foot p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.5}
+.s11w3-foot b{color:var(--ink)}
+.s11w3-ax{font:700 9.5px Inter,sans-serif;fill:#8b9aad}
+.s11w3-pl{font:800 11px ui-monospace,SFMono-Regular,Consolas,monospace}
+@media(max-width:940px){.s11w3-g{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s11w3-w">
+<div class="s11w3-k">ERA V5 Session 11 &middot; per-parameter learning rates</div>
+<h1>Per-Parameter Learning Rates</h1>
+<p class="s11w3-say" id="s11w3-say"></p>
+<div class="s11w3-bar">
+<label class="s11w3-sl" for="s11w3-gb">gradient of Parameter B <input id="s11w3-gb" type="range" min="-3" max="0" step="0.05" value="-2" aria-label="Gradient received by Parameter B on every step"><b id="s11w3-gbv">0.0100</b></label>
+<label class="s11w3-sl" id="s11w3-divl" for="s11w3-div"><input id="s11w3-div" type="checkbox" checked aria-label="Divide each step by the square root of the bias-corrected second moment"> divide the step by sqrt(v-hat)</label>
+<span class="s11w3-st" id="s11w3-status" aria-live="polite"></span>
+</div>
+<div class="s11w3-g">
+<div class="s11w3-card">
+<h2>Learning rate given to each parameter</h2>
+<svg id="s11w3-lr" viewBox="0 0 460 132" role="img" aria-label="Learning rate given to Parameter A and Parameter B, on a logarithmic axis"></svg>
+<h2 style="margin-top:6px">Distance each parameter moves in one step</h2>
+<svg id="s11w3-st2" viewBox="0 0 460 96" role="img" aria-label="Distance moved in one step by Parameter A and Parameter B"></svg>
+<p class="s11w3-note" id="s11w3-cnote"></p>
+</div>
+<div class="s11w3-card">
+<h2>Two parameters, one hundred times apart</h2>
+<table class="s11w3-t">
+<tr><th>quantity</th><th class="c">Parameter A</th><th class="v">Parameter B</th></tr>
+<tr><td>gradient g</td><td id="s11w3-ga"></td><td id="s11w3-gb2"></td></tr>
+<tr><td>running v</td><td id="s11w3-va"></td><td id="s11w3-vb"></td></tr>
+<tr><td>sqrt(v-hat)</td><td id="s11w3-sa"></td><td id="s11w3-sb"></td></tr>
+<tr class="hot"><td>its own learning rate</td><td id="s11w3-la"></td><td id="s11w3-lb"></td></tr>
+<tr><td>resulting step</td><td id="s11w3-pa"></td><td id="s11w3-pb"></td></tr>
+</table>
+<div class="s11w3-eq" id="s11w3-eq"></div>
+<p class="s11w3-sign" id="s11w3-sign"></p>
+</div>
+</div>
+<div class="s11w3-foot"><p id="s11w3-foot"></p></div>
+</main>
+<script>
+(function(){
+var $=function(i){return document.getElementById('s11w3-'+i)};
+var GA=1.0, B2=0.999, T=200, ETA=1;
+function f4(x){ if(x===0)return '0.0000';
+  var a=Math.abs(x);
+  if(a>=1000||a<0.001) return x.toExponential(2);
+  return x.toFixed(4); }
+function lr(x){ var a=Math.abs(x); if(a>=100) return x.toFixed(2); if(a>=10) return x.toFixed(3); return x.toFixed(4); }
+function vrun(g){ return (1-Math.pow(B2,T))*g*g; }
+function vhat(g){ return vrun(g)/(1-Math.pow(B2,T)); }
+
+function bars(id,rows,logmin,logmax,fmt,title){
+  var W=460,LFT=104,RGT=16,IW=W-LFT-RGT,H=(id==='lr')?132:96,TOP=18,BH=26,GAP=16;
+  var s='';
+  var ticks=[]; for(var e=logmin;e<=logmax;e++)ticks.push(e);
+  ticks.forEach(function(e){
+    var x=LFT+IW*(e-logmin)/(logmax-logmin);
+    s+='<line x1="'+x+'" y1="'+(TOP-6)+'" x2="'+x+'" y2="'+(TOP+rows.length*(BH+GAP)-GAP+2)+'" stroke="#eef2f7" stroke-width="1"/>';
+    var lab=(e<0? Math.pow(10,e).toFixed(-e) : String(Math.pow(10,e)));
+    s+='<text x="'+x+'" y="'+(TOP+rows.length*(BH+GAP)-GAP+14)+'" text-anchor="middle" class="s11w3-ax">'+lab+'</text>';
+  });
+  rows.forEach(function(r,i){
+    var y=TOP+i*(BH+GAP);
+    var lg=Math.log(Math.max(r.v,Math.pow(10,logmin)))/Math.LN10;
+    var frac=Math.max(0,Math.min(1,(lg-logmin)/(logmax-logmin)));
+    var w=Math.max(2,IW*frac);
+    s+='<text x="'+(LFT-8)+'" y="'+(y+17)+'" text-anchor="end" class="s11w3-pl" fill="'+r.c+'">'+r.n+'</text>';
+    s+='<rect x="'+LFT+'" y="'+y+'" width="'+w+'" height="'+BH+'" rx="4" fill="'+r.c+'" opacity="'+(r.dim?0.35:0.9)+'"/>';
+    var tx=LFT+w+7, anc='start', fill=r.c;
+    if(tx>W-56){ tx=LFT+w-7; anc='end'; fill='#ffffff'; }
+    s+='<text x="'+tx+'" y="'+(y+18)+'" text-anchor="'+anc+'" class="s11w3-pl" fill="'+fill+'">'+fmt(r.v)+'</text>';
+  });
+  s+='<text x="'+(LFT+IW/2)+'" y="'+(H-2)+'" text-anchor="middle" class="s11w3-ax">'+title+'</text>';
+  $(id).innerHTML=s;
+}
+
+function draw(){
+  var GB=Math.pow(10,parseFloat($('gb').value));
+  var dv=$('div').checked;
+  $('gbv').textContent=f4(GB);
+  $('divl').className='s11w3-sl'+(dv?' on':'');
+  var sa=Math.sqrt(vhat(GA)), sb=Math.sqrt(vhat(GB));
+  var la=dv?ETA/sa:ETA, lb=dv?ETA/sb:ETA;
+  var pa=la*GA, pb=lb*GB;
+
+  $('ga').textContent=f4(GA);      $('gb2').textContent=f4(GB);
+  $('va').textContent=vrun(GA).toExponential(3); $('vb').textContent=vrun(GB).toExponential(3);
+  $('sa').textContent=f4(sa);      $('sb').textContent=f4(sb);
+  $('la').textContent=lr(la)+' eta'; $('lb').textContent=lr(lb)+' eta';
+  $('pa').textContent=f4(pa)+' eta'; $('pb').textContent=f4(pb)+' eta';
+
+  bars('lr',[{n:'Parameter A',v:la,c:'#0891b2'},{n:'Parameter B',v:lb,c:'#7c3aed'}],
+       -1,3,function(x){return lr(x)+' eta'},'learning rate, in multiples of eta, log axis');
+  bars('st2',[{n:'Parameter A',v:pa,c:'#0891b2'},{n:'Parameter B',v:pb,c:'#7c3aed',dim:!dv}],
+       -3,1,function(x){return f4(x)+' eta'},'distance moved in one step, log axis');
+
+  $('say').innerHTML='Parameter A receives a gradient of <b>'+f4(GA)+'</b> on every step and Parameter B receives <b>'+f4(GB)+'</b>. Both build <b>v = 0.999 v + 0.001 g<sup>2</sup></b> over '+T+' steps and both are bias corrected, so <b>sqrt(v-hat)</b> settles on each parameter&rsquo;s own gradient size.';
+
+  $('eq').innerHTML = dv
+    ? 'A   eta / <i>'+f4(sa)+'</i> = <u>'+lr(la)+'</u> eta   ->  step <u>'+f4(pa)+'</u> eta\nB   eta / <i>'+f4(sb)+'</i> = <u>'+lr(lb)+'</u> eta   ->  step <u>'+f4(pb)+'</u> eta'
+    : 'A   eta                 = <u>'+lr(la)+'</u> eta   ->  step <u>'+f4(pa)+'</u> eta\nB   eta                 = <u>'+lr(lb)+'</u> eta   ->  step <u>'+f4(pb)+'</u> eta';
+
+  var ratio=lb/la, gap=pa/pb;
+  $('sign').innerHTML = dv
+    ? 'Parameter B is given a learning rate <b>'+lr(ratio)+' times</b> larger than Parameter A&rsquo;s, and the two then move by the same <b>'+f4(pa)+' eta</b>. The quantity <b>eta / sqrt(v-hat)</b> is the learning rate of one parameter alone, which is what per-parameter means.'
+    : 'Both parameters share the single learning rate <b>eta</b>, so Parameter B moves <b>'+(gap>=1000?gap.toExponential(1):Math.round(gap))+' times</b> less per step than Parameter A and would need that many times as long to travel the same distance.';
+
+  $('status').textContent = dv ? 'divide on: two learning rates, one step size'
+                               : 'divide off: one learning rate, two step sizes';
+  $('cnote').innerHTML = dv
+    ? 'The upper axis shows two very different learning rates. The lower axis shows the two steps landing on the same value.'
+    : 'One learning rate for both, so the lower axis shows Parameter B pinned near the floor.';
+  $('foot').innerHTML='Session 7 held one embedding row per token. A common word&rsquo;s row is touched in almost every batch, so its gradients look like Parameter A. A rare word&rsquo;s row may wait a thousand batches for one gradient, so it looks like Parameter B. Dividing by <b>sqrt(v-hat)</b> gives that rare row a learning rate of <b>'+lr(lb)+' eta</b>, and it therefore takes a full-sized step of <b>'+f4(pb)+' eta</b> the moment its gradient finally arrives.';
+}
+$('gb').addEventListener('input',draw);
+$('div').addEventListener('change',draw);
+draw();
+})();
+</script>
+<script>
+(function(){var fe;try{fe=window.frameElement;}catch(e){return;}if(!fe)return;var last=0;
+function fit(){var h=Math.ceil(document.body.scrollHeight)+8;if(Math.abs(h-last)>2){last=h;fe.style.height=h+'px';}}
+if(window.ResizeObserver)new ResizeObserver(fit).observe(document.body);
+window.addEventListener('load',fit);
+document.addEventListener('click',function(){setTimeout(fit,60);setTimeout(fit,300);},true);
+document.addEventListener('input',function(){setTimeout(fit,60);},true);
+[0,120,400,900].forEach(function(t){setTimeout(fit,t);});})();
+</script>
+</body>
+</html>

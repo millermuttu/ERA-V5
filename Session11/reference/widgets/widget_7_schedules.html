@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 11 Widget 7 - Learning Rate Schedules</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s11w7-w{max-width:1180px;margin:0 auto;padding:13px 22px 14px}
+.s11w7-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--amber)}
+.s11w7-w h1{font-size:23px;line-height:1.12;margin:3px 0 8px}
+.s11w7-say{border:1px solid #fcd34d;background:#fffbeb;border-radius:10px;padding:8px 12px;color:#7c4a03;font-size:13px;line-height:1.45;margin:0 0 9px}
+.s11w7-say b{color:#92400e;font-weight:800}
+.s11w7-bar{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-bottom:9px}
+.s11w7-sl{display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700}
+.s11w7-sl input{width:150px;vertical-align:middle;accent-color:var(--amber)}
+.s11w7-sl b{font:800 12.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--amber);min-width:52px;text-align:right}
+.s11w7-st{font-size:12px;font-weight:700;color:var(--muted)}
+.s11w7-g{display:grid;grid-template-columns:1.85fr 1fr;gap:12px;align-items:start}
+.s11w7-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:10px 13px}
+.s11w7-card h2{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px;font-weight:800}
+.s11w7-card svg{display:block;width:100%;height:auto}
+#s11w7-chart{cursor:ew-resize;touch-action:none}
+.s11w7-row{border:1px solid var(--line);border-left-width:4px;border-radius:9px;padding:6px 9px;margin-bottom:6px;background:#fbfdff}
+.s11w7-row .h{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.s11w7-row .h span{font:800 11px Inter,sans-serif;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.s11w7-row .h b{font:800 15px ui-monospace,SFMono-Regular,Consolas,monospace}
+.s11w7-row p{margin:2px 0 0;font-size:11.5px;color:var(--muted);line-height:1.38}
+.s11w7-row p i{font-style:normal;font-weight:800;color:var(--ink)}
+.s11w7-note{margin:7px 0 0;font-size:12px;color:var(--muted);line-height:1.42}
+.s11w7-note b{color:var(--ink)}
+.s11w7-ax{font:700 9.5px Inter,sans-serif;fill:#8b9aad}
+@media(max-width:940px){.s11w7-g{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s11w7-w">
+<div class="s11w7-k">ERA V5 Session 11 · schedules</div>
+<h1>Learning Rate Schedules</h1>
+<p class="s11w7-say" id="s11w7-say"></p>
+<div class="s11w7-bar">
+<label class="s11w7-sl" for="s11w7-stop">stop at step <input id="s11w7-stop" type="range" min="1" max="100" value="45" aria-label="Step at which training stops, in thousands of steps"><b id="s11w7-stopv">45,000</b></label>
+<label class="s11w7-sl" for="s11w7-total">planned run length T <input id="s11w7-total" type="range" min="20" max="100" step="5" value="100" aria-label="Total number of steps the cosine schedule was planned for, in thousands of steps"><b id="s11w7-totalv">100,000</b></label>
+<span class="s11w7-st" id="s11w7-status" aria-live="polite"></span>
+</div>
+<section class="s11w7-g">
+<div class="s11w7-card">
+<h2>Three schedules on one step axis. Drag the marker to choose where the run stops.</h2>
+<svg id="s11w7-chart" viewBox="0 0 640 300" role="img" aria-label="Cosine decay, WSD and constant learning rate plotted against training step, with a movable vertical stopping marker"></svg>
+</div>
+<div class="s11w7-card">
+<h2>At the stopping point</h2>
+<div class="s11w7-row" id="s11w7-rc" style="border-left-color:#7c3aed">
+<div class="h"><span>cosine decay</span><b id="s11w7-vc" style="color:#6d28d9"></b></div>
+<p id="s11w7-pc"></p>
+</div>
+<div class="s11w7-row" id="s11w7-rw" style="border-left-color:#0891b2">
+<div class="h"><span>WSD</span><b id="s11w7-vw" style="color:#0e7490"></b></div>
+<p id="s11w7-pw"></p>
+</div>
+<div class="s11w7-row" id="s11w7-rk" style="border-left-color:#159447">
+<div class="h"><span>constant plus weight EMA</span><b id="s11w7-vk" style="color:#15803d"></b></div>
+<p id="s11w7-pk"></p>
+</div>
+<svg id="s11w7-ema" viewBox="0 0 300 104" role="img" aria-label="A single weight under a constant learning rate, with its exponential moving average"></svg>
+<p class="s11w7-note" id="s11w7-note"></p>
+</div>
+</section>
+</main>
+<script>
+(function(){
+'use strict';
+var PEAK=3e-4,AX=100000,L=54,R=632,TP=24,BT=250,YM=PEAK*1.1,NS=140,drag=false;
+function $(i){return document.getElementById('s11w7-'+i);}
+function nf(n){return Math.round(n).toLocaleString('en-US');}
+function ev(v){return v<=0?'0':v.toExponential(2);}
+function X(t){return L+t/AX*(R-L);}
+function Y(v){return BT-v/YM*(BT-TP);}
+function cosine(t,T){return t>T?0:PEAK*0.5*(1+Math.cos(Math.PI*t/T));}
+function wsd(t,T){var W=0.02*T,D=0.9*T;return t>T?0:t<W?PEAK*t/W:t<D?PEAK:PEAK*(T-t)/(0.1*T);}
+function tx(x,y,s,c,a,b){return '<text x="'+x+'" y="'+y+'" text-anchor="'+(a||'middle')+'" font-size="'+(b||9.5)+'" font-weight="700" fill="'+c+'">'+s+'</text>';}
+function poly(p,c,w,d){return '<polyline points="'+p+'" fill="none" stroke="'+c+'" stroke-width="'+w+'"'+(d?' stroke-dasharray="'+d+'"':'')+' stroke-linejoin="round" stroke-linecap="round"/>';}
+function seq(f,T,n){var p='',i,t;for(i=0;i<=n;i++){t=T*i/n;p+=X(t).toFixed(1)+','+Y(f(t,T)).toFixed(1)+' ';}return p;}
+function noise(i){var x=Math.sin(i*12.9898+4.1)*43758.5453;return (x-Math.floor(x))*2-1;}
+function chart(s,T,lc,lw,win){
+  var g='',i,t,pk;
+  for(i=0;i<=4;i++){t=AX*i/4;g+='<line x1="'+X(t)+'" y1="'+TP+'" x2="'+X(t)+'" y2="'+BT+'" stroke="#eef3f9"/>'+tx(X(t),BT+15,nf(t),'#8b9aad',i===0?'start':i===4?'end':'middle');}
+  for(i=0;i<=2;i++){pk=PEAK*i/2;g+='<line x1="'+L+'" y1="'+Y(pk)+'" x2="'+R+'" y2="'+Y(pk)+'" stroke="#e9eff7"/>'+tx(L-6,Y(pk)+3.5,i===0?'0':ev(pk),'#8b9aad','end');}
+  var sd=X(s)<L+160?1:-1,an=sd>0?'start':'end',lx=X(s)+sd*8;
+  g+=sd>0?tx(R,15,'learning rate','#8b9aad','end',10):tx(L,15,'learning rate','#8b9aad','start',10);
+  g+='<rect x="'+X(Math.max(0,s-win)).toFixed(1)+'" y="'+TP+'" width="'+(X(s)-X(Math.max(0,s-win))).toFixed(1)+'" height="'+(BT-TP)+'" fill="rgba(21,148,71,.07)"/>';
+  g+='<line x1="'+X(0)+'" y1="'+Y(PEAK)+'" x2="'+X(AX)+'" y2="'+Y(PEAK)+'" stroke="#159447" stroke-width="9" stroke-opacity=".28" stroke-linecap="round"/>';
+  g+=poly(X(0)+','+Y(PEAK)+' '+X(AX)+','+Y(PEAK),'#159447',2);
+  g+=poly(seq(wsd,T,220),'#0891b2',2.6);
+  g+=poly(seq(cosine,T,220),'#7c3aed',2.6);
+  if(T<AX){g+='<line x1="'+X(T)+'" y1="'+TP+'" x2="'+X(T)+'" y2="'+BT+'" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="2 3"/>'+'<text x="'+(X(T)+10)+'" y="'+(BT-8)+'" transform="rotate(-90 '+(X(T)+10)+' '+(BT-8)+')" text-anchor="start" font-size="9.5" font-weight="700" fill="#94a3b8">plan ends at '+nf(T)+'</text>';}
+  if(s<0.9*T){var e=Math.min(AX,s+0.1*T),a2=X(e)>L+300?'end':'start';
+    g+=poly(X(s).toFixed(1)+','+Y(lw).toFixed(1)+' '+X(e).toFixed(1)+','+Y(0).toFixed(1),'#0e7490',2.2,'5 4');
+    g+=tx(X(e)+(a2==='end'?-5:5),Y(0)-7,'decay from the checkpoint','#0e7490',a2);}
+  g+='<line x1="'+X(s)+'" y1="'+(TP-4)+'" x2="'+X(s)+'" y2="'+(BT+4)+'" stroke="#d97706" stroke-width="2"/>';
+  g+='<rect x="'+(X(s)-5)+'" y="'+(TP-14)+'" width="10" height="10" rx="2" fill="#d97706"/>';
+  g+=tx(X(s),BT+29,'stop at step '+nf(s),'#b45309',X(s)>R-70?'end':X(s)<L+70?'start':'middle',10.5);
+  g+='<circle cx="'+X(s)+'" cy="'+Y(PEAK)+'" r="4" fill="#159447"/>';
+  g+='<circle cx="'+X(s)+'" cy="'+Y(lw)+'" r="4" fill="#0891b2"/>';
+  g+='<circle cx="'+X(s)+'" cy="'+Y(lc)+'" r="4" fill="#7c3aed"/>';
+  var flat=Math.abs(lw-PEAK)<=PEAK*0.03,yk=Y(PEAK)-9,
+      yw=flat?Y(PEAK)+14:Math.min(Y(lw)+13,BT-5),yc=Math.min(Y(lc)-8,BT-5);
+  if(Math.abs(yc-yw)<15)yc=yc<=BT-22?yw+16:yw-16;
+  if(Math.abs(yc-yk)<15)yc=yk+16;
+  g+=tx(lx,yk,'constant '+ev(PEAK),'#166534',an,10);
+  g+=tx(lx,yw,flat?'WSD equals the constant rate here':'WSD '+ev(lw),'#0e7490',an,10);
+  g+=tx(lx,yc,'cosine '+ev(lc),'#5b21b6',an,10);
+  $('chart').innerHTML=g;
+}
+function ema(s,T){
+  var raw=[],av=[],a=2/(13),i,d,dr=0,de=0,base,g='',pr='',pa='',k=Math.max(0,Math.min(NS-1,Math.round(s/T*(NS-1))));
+  for(i=0;i<NS;i++){base=0.62-0.30*Math.exp(-i/46);raw.push(base+0.085*noise(i)+0.045*noise(i*3+7));
+    av.push(i===0?raw[0]:av[i-1]+a*(raw[i]-av[i-1]));
+    if(i>=NS/2){d=raw[i]-(0.62-0.30*Math.exp(-i/46));dr+=d*d;d=av[i]-(0.62-0.30*Math.exp(-i/46));de+=d*d;}}
+  function ex(i){return 8+i/(NS-1)*284;}
+  function ey(v){return 96-(v-0.24)/0.52*84;}
+  for(i=0;i<NS;i++){pr+=ex(i).toFixed(1)+','+ey(raw[i]).toFixed(1)+' ';pa+=ex(i).toFixed(1)+','+ey(av[i]).toFixed(1)+' ';}
+  g+=poly(pr,'#cbd5e1',1.6)+poly(pa,'#159447',2.2);
+  g+='<line x1="'+ex(k).toFixed(1)+'" y1="4" x2="'+ex(k).toFixed(1)+'" y2="98" stroke="#d97706" stroke-width="1.4"/>';
+  g+='<circle cx="'+ex(k).toFixed(1)+'" cy="'+ey(raw[k]).toFixed(1)+'" r="3" fill="#94a3b8"/>';
+  g+='<circle cx="'+ex(k).toFixed(1)+'" cy="'+ey(av[k]).toFixed(1)+'" r="3.4" fill="#159447"/>';
+  g+=tx(8,11,'one weight, in grey','#94a3b8','start',9.5);
+  g+=tx(292,11,'its moving average, in green','#159447','end',9.5);
+  $('ema').innerHTML=g;
+  return Math.sqrt(dr/de);
+}
+function draw(){
+  var T=+$('total').value*1000,mx=Math.round(T/1000),st=$('stop');
+  if(+st.max!==mx)st.max=mx;
+  if(+st.value>mx)st.value=mx;
+  var s=+st.value*1000,lc=cosine(s,T),lw=wsd(s,T),win=Math.round(0.1*T),sh=lc/PEAK,
+      rest=Math.min(AX,s+win)-s,avg=ema(s,T);
+  $('stopv').textContent=nf(s);$('totalv').textContent=nf(T);
+  $('vc').textContent=ev(lc);$('vw').textContent=ev(lw);$('vk').textContent=ev(PEAK);
+  $('say').innerHTML='The cosine curve is drawn from the planned length <b>T = '+nf(T)+'</b> steps. Stopping at step <b>'+nf(s)+'</b> leaves it at <b>'+(sh*100).toFixed(1)+'%</b> of the peak rate, while WSD is at '+(lw/PEAK*100).toFixed(1)+'% and the constant schedule is at 100%.';
+  $('pc').innerHTML=sh>0.02
+    ?'Still <i>'+(sh*100).toFixed(1)+'%</i> of peak. The model here is worse than a run planned for '+nf(s)+' steps.'
+    :'The rate reached <i>'+ev(lc)+'</i>. This model is finished for a budget of '+nf(s)+' steps only.';
+  $('pw').innerHTML=s<0.9*T
+    ?'Checkpoint here and decay over <i>'+nf(rest)+'</i> more steps to finish a budget of '+nf(s+rest)+' steps.'
+    :'Inside the planned decay phase, <i>'+nf(T-s)+'</i> steps from zero.';
+  $('pk').innerHTML='Usable at every step. Averaging the last <i>'+nf(win)+'</i> steps removes '+((1-1/avg)*100).toFixed(0)+'% of the noise in the weights.';
+  $('note').innerHTML='The green band is the averaging window ending at the marker. Averaging and decay both suppress late noise.';
+  $('status').textContent='Cosine reaches zero only at step '+nf(T)+'. WSD and the constant schedule give a model at step '+nf(s)+'.';
+  chart(s,T,lc,lw,win);
+}
+function setStop(t){
+  var st=$('stop'),k=Math.round(t/1000);
+  if(k<+st.min)k=+st.min;if(k>+st.max)k=+st.max;
+  if(k!==+st.value){st.value=k;draw();}
+}
+function fromEvent(e){
+  var sv=$('chart'),r=sv.getBoundingClientRect();
+  return ((e.clientX-r.left)/r.width*640-L)/(R-L)*AX;
+}
+$('chart').addEventListener('pointerdown',function(e){drag=true;try{$('chart').setPointerCapture(e.pointerId);}catch(err){}setStop(fromEvent(e));e.preventDefault();});
+$('chart').addEventListener('pointermove',function(e){if(drag)setStop(fromEvent(e));});
+$('chart').addEventListener('pointerup',function(){drag=false;});
+$('chart').addEventListener('pointercancel',function(){drag=false;});
+$('stop').addEventListener('input',draw);
+$('total').addEventListener('input',draw);
+draw();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>
