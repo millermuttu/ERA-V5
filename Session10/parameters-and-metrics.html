@@ -1,0 +1,588 @@
+<title>nanoGPT Run Sheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+  :root {
+    --ground:#F6F7F9; --surface:#FFFFFF; --surface-2:#EDF1F5;
+    --ink:#17202B; --ink-2:#48586C; --muted:#7A8899;
+    --rule:#DBE2EA; --rule-strong:#C3CDD9;
+    --accent:#1F5FA8; --accent-deep:#164379; --accent-wash:#E7EFF8;
+    --good:#16703E; --warn:#8F5608; --crit:#A22218;
+    --good-wash:#E4F2E9; --warn-wash:#F8EEDC; --crit-wash:#F8E7E4;
+    --display:"Archivo","Helvetica Neue",Arial,sans-serif;
+    --body:"Source Serif 4",Georgia,"Times New Roman",serif;
+    --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+    --measure:66ch;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:#0F151C; --surface:#161E27; --surface-2:#1E2833;
+      --ink:#E7ECF3; --ink-2:#B2BFCE; --muted:#8395A8;
+      --rule:#28333F; --rule-strong:#3A4756;
+      --accent:#7CB0EC; --accent-deep:#A8CBF5; --accent-wash:#18283A;
+      --good:#5CC08D; --warn:#E0A94C; --crit:#F08278;
+      --good-wash:#132A20; --warn-wash:#2B2314; --crit-wash:#2E1A18;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground:#0F151C; --surface:#161E27; --surface-2:#1E2833;
+    --ink:#E7ECF3; --ink-2:#B2BFCE; --muted:#8395A8;
+    --rule:#28333F; --rule-strong:#3A4756;
+    --accent:#7CB0EC; --accent-deep:#A8CBF5; --accent-wash:#18283A;
+    --good:#5CC08D; --warn:#E0A94C; --crit:#F08278;
+    --good-wash:#132A20; --warn-wash:#2B2314; --crit-wash:#2E1A18;
+  }
+
+  body { background:var(--ground); color:var(--ink); font-family:var(--body);
+         font-size:16.5px; line-height:1.62; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:1060px; margin:0 auto; padding:0 28px 96px; }
+  p { max-width:var(--measure); }
+  a { color:var(--accent); text-decoration-thickness:1px; text-underline-offset:2px; }
+  a:focus-visible, summary:focus-visible { outline:2px solid var(--accent); outline-offset:3px; border-radius:2px; }
+
+  h1,h2,h3,.label,.eyebrow,th { font-family:var(--display); text-wrap:balance; }
+  h1 { font-size:clamp(2.1rem,4.4vw,3rem); font-weight:700; letter-spacing:-.022em;
+       line-height:1.05; margin:0; }
+  h2 { font-size:1.45rem; font-weight:700; letter-spacing:-.014em; margin:0; }
+  h3 { font-size:1.02rem; font-weight:600; letter-spacing:-.006em; margin:0; }
+  .eyebrow { font-size:.685rem; font-weight:600; letter-spacing:.15em; text-transform:uppercase;
+             color:var(--muted); margin:0; }
+  .lede { font-size:1.09rem; color:var(--ink-2); margin:18px 0 0; }
+  code, .mono, .num { font-family:var(--mono); font-variant-numeric:tabular-nums; }
+  code { font-size:.87em; background:var(--surface-2); padding:.1em .36em; border-radius:3px; }
+
+  /* ---- masthead ---- */
+  header.top { padding:64px 0 30px; border-bottom:2px solid var(--ink); }
+  .kicker { display:flex; gap:10px; align-items:baseline; flex-wrap:wrap; margin-bottom:20px; }
+  .spec { display:grid; grid-template-columns:repeat(auto-fit,minmax(148px,1fr));
+          gap:0; margin-top:34px; border-top:1px solid var(--rule); }
+  .spec div { padding:13px 16px 13px 0; border-right:1px solid var(--rule); }
+  .spec div:last-child { border-right:0; }
+  .spec dt { font-family:var(--display); font-size:.66rem; font-weight:600; letter-spacing:.13em;
+             text-transform:uppercase; color:var(--muted); }
+  .spec dd { margin:5px 0 0; font-family:var(--mono); font-size:.93rem; color:var(--ink); }
+
+  section { padding-top:58px; }
+  .sechead { display:flex; align-items:baseline; gap:14px; padding-bottom:8px;
+             border-bottom:1px solid var(--rule-strong); margin-bottom:26px; }
+  .sechead .n { font-family:var(--mono); font-size:.8rem; color:var(--accent); font-weight:600; }
+
+  /* ---- datasheet tables ---- */
+  .tw { overflow-x:auto; margin:22px 0; }
+  table { border-collapse:collapse; width:100%; font-size:.93rem; }
+  th { font-size:.66rem; font-weight:600; letter-spacing:.12em; text-transform:uppercase;
+       color:var(--muted); text-align:left; padding:0 14px 8px 0; border-bottom:1px solid var(--rule-strong);
+       white-space:nowrap; }
+  td { padding:9px 14px 9px 0; border-bottom:1px solid var(--rule); vertical-align:top; }
+  td.n, th.n { text-align:right; font-family:var(--mono); font-variant-numeric:tabular-nums;
+               padding-right:0; white-space:nowrap; }
+  tr.sum td { border-bottom:0; border-top:2px solid var(--ink); font-weight:600; }
+  .f { font-family:var(--mono); font-size:.84rem; color:var(--ink-2); white-space:nowrap; }
+
+  /* ---- parameter bars: one measure, one hue, every bar directly labelled ---- */
+  .bars { display:grid; gap:2px; margin:26px 0 8px; }
+  .bar { display:grid; grid-template-columns:minmax(140px,190px) 1fr minmax(150px,auto);
+         align-items:center; gap:14px; }
+  .bar .nm { font-family:var(--mono); font-size:.82rem; color:var(--ink-2); }
+  .bar .track { height:16px; background:var(--surface-2); border-radius:2px; }
+  .bar .fill { height:100%; background:var(--accent); border-radius:0 4px 4px 0; min-width:2px; }
+  .bar .v { font-family:var(--mono); font-size:.82rem; text-align:right;
+            font-variant-numeric:tabular-nums; color:var(--ink); }
+  .bar .v i { color:var(--muted); font-style:normal; }
+  figcaption { font-size:.85rem; color:var(--muted); max-width:var(--measure); margin-top:14px; }
+
+  /* ---- metric blocks ---- */
+  .metric { border-top:1px solid var(--rule-strong); padding:26px 0 6px; }
+  .metric:first-of-type { border-top:0; }
+  .mhead { display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; }
+  .part { font-family:var(--mono); font-size:.74rem; font-weight:600; color:var(--accent);
+          background:var(--accent-wash); padding:2px 7px; border-radius:3px; }
+  .grid2 { display:grid; grid-template-columns:1fr; gap:22px; margin-top:16px; }
+  @media (min-width:820px) { .grid2 { grid-template-columns:1.05fr .95fr; gap:34px; } }
+  .formula { font-family:var(--mono); font-size:.85rem; background:var(--surface);
+             border:1px solid var(--rule); border-left:3px solid var(--accent);
+             padding:12px 14px; border-radius:0 4px 4px 0; overflow-x:auto; color:var(--ink); }
+  .formula .c { color:var(--muted); }
+
+  .readout { background:var(--surface); border:1px solid var(--rule); border-radius:5px; padding:4px 16px; }
+  .readout dl { display:grid; grid-template-columns:1fr auto; gap:0 16px; margin:0; }
+  .readout dt { font-size:.88rem; color:var(--ink-2); padding:8px 0;
+                border-bottom:1px solid var(--rule); }
+  .readout dd { margin:0; padding:8px 0; font-family:var(--mono); font-size:.88rem;
+                text-align:right; font-variant-numeric:tabular-nums;
+                border-bottom:1px solid var(--rule); white-space:nowrap; }
+  .readout dt:last-of-type, .readout dd:last-of-type { border-bottom:0; }
+  .readout dd b { font-weight:600; }
+
+  .flag { display:inline-flex; align-items:center; gap:6px; font-family:var(--display);
+          font-size:.68rem; font-weight:600; letter-spacing:.09em; text-transform:uppercase;
+          padding:3px 8px; border-radius:3px; }
+  .flag.good { color:var(--good); background:var(--good-wash); }
+  .flag.warn { color:var(--warn); background:var(--warn-wash); }
+  .flag.crit { color:var(--crit); background:var(--crit-wash); }
+  .flag::before { content:""; width:6px; height:6px; border-radius:50%; background:currentColor; }
+
+  .note { border-left:2px solid var(--rule-strong); padding:2px 0 2px 16px;
+          margin:20px 0; color:var(--ink-2); font-size:.95rem; max-width:var(--measure); }
+  .note b { color:var(--ink); font-weight:600; }
+
+  .bits { font-family:var(--mono); font-size:.8rem; letter-spacing:.02em; white-space:nowrap; }
+  .bits .s { color:var(--muted); }
+  .bits .e { color:var(--accent); }
+  .bits .m { color:var(--ink); }
+
+  footer { margin-top:64px; padding-top:22px; border-top:1px solid var(--rule);
+           font-size:.86rem; color:var(--muted); }
+  ul.tight { max-width:var(--measure); padding-left:1.1em; }
+  ul.tight li { margin:7px 0; }
+  @media (prefers-reduced-motion: no-preference) {
+    .bar .fill { transition:width .3s ease; }
+  }
+</style>
+
+<div class="wrap">
+
+<header class="top">
+  <div class="kicker">
+    <p class="eyebrow">ERA V5 &middot; Session 10 &middot; The Training Loop</p>
+  </div>
+  <h1>Every number this run reports, and what it means</h1>
+  <p class="lede">The assignment asks a small model to tell the truth about itself. That produces two
+  kinds of number: the ones fixed before the run starts, which are the parameters, and the ones the
+  run has to be instrumented to discover, which are the metrics. This page defines each one, shows
+  how it is computed, and gives the value this run actually produced.</p>
+
+  <dl class="spec">
+    <div><dt>Model</dt><dd>nanoGPT</dd></div>
+    <div><dt>Config</dt><dd>shakespeare_char</dd></div>
+    <div><dt>Parameters</dt><dd>10,745,088</dd></div>
+    <div><dt>Device</dt><dd>GTX 1650 Ti</dd></div>
+    <div><dt>Precision</dt><dd>fp32</dd></div>
+    <div><dt>Seed</dt><dd>1337</dd></div>
+  </dl>
+</header>
+
+<!-- ============================ PARAMETERS ============================ -->
+<section>
+  <div class="sechead"><span class="n">A</span><h2>The parameters</h2></div>
+
+  <p>Seven numbers decide the shape of the model. Nothing in the training loop can change them, and
+  every memory and throughput figure further down follows from them arithmetically.</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr>
+      <th>Setting</th><th class="n">Value</th><th>What it controls</th><th>What it costs</th>
+    </tr></thead>
+    <tbody>
+      <tr>
+        <td><code>n_layer</code></td><td class="n">6</td>
+        <td>How many transformer blocks stack on the residual stream.</td>
+        <td>Parameters and time scale linearly. Each block is 1,770,240 weights.</td>
+      </tr>
+      <tr>
+        <td><code>n_embd</code> &nbsp;<span class="f">D</span></td><td class="n">384</td>
+        <td>The width of the residual stream &mdash; how many numbers each token carries.</td>
+        <td>Quadratic. Every weight matrix in a block is D&times;D or a multiple of it.</td>
+      </tr>
+      <tr>
+        <td><code>n_head</code></td><td class="n">6</td>
+        <td>How many attention heads split that width. Head width is D / n_head = 64.</td>
+        <td>Free. Splitting 384 into 6 heads of 64 costs exactly what one head of 384 costs.</td>
+      </tr>
+      <tr>
+        <td><code>block_size</code> &nbsp;<span class="f">T</span></td><td class="n">256</td>
+        <td>The longest context the model can attend over, and the length of one training row.</td>
+        <td>Attention work grows with T&sup2;. Also fixes the learned position table at T&times;D.</td>
+      </tr>
+      <tr>
+        <td><code>vocab_size</code> &nbsp;<span class="f">V</span></td><td class="n">65</td>
+        <td>How many distinct tokens exist. Here they are single characters, not BPE pieces.</td>
+        <td>Almost nothing, at 65. This is the number that dominates a real model.</td>
+      </tr>
+      <tr>
+        <td><code>dropout</code></td><td class="n">0.0</td>
+        <td>Fraction of activations randomly zeroed during training.</td>
+        <td>Must be zero here: the gradient check needs the forward pass to be repeatable.</td>
+      </tr>
+      <tr>
+        <td><code>bias</code></td><td class="n">False</td>
+        <td>Whether linear layers and norms carry an additive bias term.</td>
+        <td>Off, so every count below is pure matrix. Slightly faster and marginally better.</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3 style="margin-top:38px">Where the 10,745,088 weights actually live</h3>
+  <p>Each bar is one named tensor group, summed across all six blocks. The formula column is the
+  count derived from the settings above &mdash; not read off the model, but predicting it.</p>
+
+  <figure style="margin:0">
+    <div class="bars">
+      <div class="bar"><span class="nm">mlp.c_fc</span>
+        <span class="track"><span class="fill" style="width:100%"></span></span>
+        <span class="v">3,538,944 <i>32.94%</i></span></div>
+      <div class="bar"><span class="nm">mlp.c_proj</span>
+        <span class="track"><span class="fill" style="width:100%"></span></span>
+        <span class="v">3,538,944 <i>32.94%</i></span></div>
+      <div class="bar"><span class="nm">attn.c_attn</span>
+        <span class="track"><span class="fill" style="width:75%"></span></span>
+        <span class="v">2,654,208 <i>24.70%</i></span></div>
+      <div class="bar"><span class="nm">attn.c_proj</span>
+        <span class="track"><span class="fill" style="width:25%"></span></span>
+        <span class="v">884,736 <i>8.23%</i></span></div>
+      <div class="bar"><span class="nm">wpe</span>
+        <span class="track"><span class="fill" style="width:2.78%"></span></span>
+        <span class="v">98,304 <i>0.91%</i></span></div>
+      <div class="bar"><span class="nm">wte / lm_head</span>
+        <span class="track"><span class="fill" style="width:0.71%"></span></span>
+        <span class="v">24,960 <i>0.23%</i></span></div>
+      <div class="bar"><span class="nm">ln_1 + ln_2 + ln_f</span>
+        <span class="track"><span class="fill" style="width:0.14%"></span></span>
+        <span class="v">4,992 <i>0.05%</i></span></div>
+    </div>
+    <figcaption>Bar length is parameter count, on a shared scale. The two MLP tensors together are
+    65.9% of the model.</figcaption>
+  </figure>
+
+  <div class="tw">
+  <table>
+    <thead><tr>
+      <th>Tensor</th><th>Formula</th><th class="n">Per block</th><th class="n">All 6</th><th>What it does</th>
+    </tr></thead>
+    <tbody>
+      <tr><td><code>attn.c_attn</code></td><td class="f">3D &times; D</td><td class="n">442,368</td><td class="n">2,654,208</td>
+          <td>Produces query, key and value in one matrix &mdash; hence the 3.</td></tr>
+      <tr><td><code>attn.c_proj</code></td><td class="f">D &times; D</td><td class="n">147,456</td><td class="n">884,736</td>
+          <td>Mixes the heads back together before the residual add.</td></tr>
+      <tr><td><code>mlp.c_fc</code></td><td class="f">4D &times; D</td><td class="n">589,824</td><td class="n">3,538,944</td>
+          <td>Widens each token to 1,536 channels on its own, with no reference to other tokens.</td></tr>
+      <tr><td><code>mlp.c_proj</code></td><td class="f">D &times; 4D</td><td class="n">589,824</td><td class="n">3,538,944</td>
+          <td>Brings it back to 384 so it can be added to the stream.</td></tr>
+      <tr><td><code>ln_1</code>, <code>ln_2</code></td><td class="f">2 &times; D</td><td class="n">768</td><td class="n">4,608</td>
+          <td>One scale per channel, applied on the way <em>into</em> each sub-layer (pre-norm).</td></tr>
+      <tr><td><code>wpe</code></td><td class="f">T &times; D</td><td class="n">&mdash;</td><td class="n">98,304</td>
+          <td>A learned vector per position. This is what caps the context at 256.</td></tr>
+      <tr><td><code>wte</code> = <code>lm_head</code></td><td class="f">V &times; D</td><td class="n">&mdash;</td><td class="n">24,960</td>
+          <td>Read tokens in and score them out. One matrix, counted once &mdash; see below.</td></tr>
+      <tr><td><code>ln_f</code></td><td class="f">D</td><td class="n">&mdash;</td><td class="n">384</td>
+          <td>A final norm before the head.</td></tr>
+      <tr class="sum"><td>Total</td><td class="f"></td><td class="n">1,770,240</td><td class="n">10,745,088</td>
+          <td>Blocks are 98.85% of it.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note">
+    <b>Why nanoGPT prints 10.65M and this page says 10,745,088.</b> Its <code>get_num_params()</code>
+    subtracts the position table by default, giving 10,646,784. Both are correct; they answer
+    different questions. Every FLOP and memory figure on this page uses the full count, because the
+    optimiser holds state for the position table too.
+  </div>
+
+  <div class="note">
+    <b>Weight tying.</b> <code>lm_head.weight is transformer.wte.weight</code> returns
+    <code>True</code>. The matrix that reads a token in is the same object that scores it on the way
+    out, so V&times;D is charged once, not twice. At V = 65 that saves 24,960 weights, which is
+    nothing. At the course's V = 131,072 and D = 4,096 the same trick would save 536.9M &mdash; and
+    Session 9 &sect;8 is about why V5 cannot use it.
+  </div>
+
+  <h3 style="margin-top:38px">Three consequences worth reading off the parameters</h3>
+  <div class="tw">
+  <table>
+    <thead><tr><th>Quantity</th><th>Arithmetic</th><th class="n">Here</th><th class="n">At V5 scale</th></tr></thead>
+    <tbody>
+      <tr><td>Training state, at 16 bytes per weight</td><td class="f">N &times; 16</td>
+          <td class="n">163.96 MiB</td><td class="n">134.1 GiB at 9B</td></tr>
+      <tr><td>Logits tensor, one step, fp32</td><td class="f">B &middot; T &middot; V &middot; 4</td>
+          <td class="n">1.02 MiB</td><td class="n">16 GiB in bf16</td></tr>
+      <tr><td>Hidden states, same step</td><td class="f">B &middot; T &middot; D &middot; 4</td>
+          <td class="n">6.00 MiB</td><td class="n">0.5 GiB in bf16</td></tr>
+      <tr><td>Logits &divide; hidden states</td><td class="f">V / D</td>
+          <td class="n">0.17&times;</td><td class="n">32&times;</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>That last row inverts. Because the vocabulary is 65 characters and the width is 384, the logits
+  here are six times <em>smaller</em> than the hidden states that produced them. The bill Session 9
+  spends a whole section on simply does not exist at this scale, which is worth knowing before
+  drawing any conclusion from this run about output-head memory.</p>
+
+  <div class="note">
+    <b>This is a GPT-2 block, not the V5 block.</b> nanoGPT is pre-norm, like the course's design,
+    but it uses LayerNorm rather than RMSNorm, a learned position table rather than RoPE, and a
+    two-matrix GELU MLP at 4&times; width rather than a three-matrix SwiGLU. Read the parameter
+    table with that in mind: a SwiGLU block of the same budget would show three MLP tensors at a
+    narrower inner width.
+  </div>
+</section>
+
+<!-- ============================ METRICS ============================ -->
+<section>
+  <div class="sechead"><span class="n">B</span><h2>The metrics</h2></div>
+  <p>Six of them, one per part of the assignment. Each is something the loop does not report on its
+  own &mdash; every one had to be instrumented, and four of the six look healthy until they are
+  measured properly.</p>
+
+  <!-- 1 -->
+  <div class="metric">
+    <div class="mhead"><span class="part">PART 1</span><h3>Tensor shapes</h3></div>
+    <div class="grid2">
+      <div>
+        <p>Not a measurement so much as a statement of what the loop is holding at each moment. The
+        shape that matters is the last one: <code>logits</code> arrives as
+        <span class="mono">[B, T, V]</span> and is flattened to
+        <span class="mono">[B&middot;T, V]</span> before the loss.</p>
+        <p>B and T stop being separate there. 4 sequences of 256 positions become 1,024 independent
+        classification problems, and the loss is their mean. Which is exactly why the question
+        &ldquo;the mean over <em>what</em>?&rdquo; has a wrong answer available &mdash; that is Part 3.</p>
+      </div>
+      <div class="readout"><dl>
+        <dt>tokens x</dt><dd>(4, 256)</dd>
+        <dt>targets y</dt><dd>(4, 256)</dd>
+        <dt>token embeddings</dt><dd>(4, 256, 384)</dd>
+        <dt>logits</dt><dd>(4, 256, 65)</dd>
+        <dt>logits, flattened</dt><dd>(1024, 65)</dd>
+        <dt>targets, flattened</dt><dd>(1024,)</dd>
+        <dt>loss</dt><dd>( ) &mdash; scalar</dd>
+        <dt>lm_head.weight</dt><dd>(65, 384)</dd>
+      </dl></div>
+    </div>
+  </div>
+
+  <!-- 2 -->
+  <div class="metric">
+    <div class="mhead"><span class="part">PART 2</span><h3>Gradient agreement</h3>
+      <span class="flag good">7 significant figures</span></div>
+    <div class="grid2">
+      <div>
+        <p>A gradient is the answer to a nudge: move one weight a little, see how far the loss moves,
+        divide. <code>backward()</code> claims to produce that number for every weight at once. This
+        metric checks the claim on one weight, by doing the nudge.</p>
+        <div class="formula">
+          <span class="c">// analytic, what backward() reports</span><br>
+          g = w.grad[0,0]<br><br>
+          <span class="c">// forward difference &mdash; error is O(h)</span><br>
+          ( L(w+h) &minus; L(w) ) / h<br><br>
+          <span class="c">// central difference &mdash; error is O(h&sup2;)</span><br>
+          ( L(w+h) &minus; L(w&minus;h) ) / 2h
+        </div>
+        <p style="margin-top:16px">The two differences are not interchangeable. The forward version
+        is the one the lesson uses to explain what a gradient is, and it is three orders of
+        magnitude worse as a check. <b>Run this in float64.</b> bf16 carries 2.4 decimal digits, so
+        &ldquo;agree to several decimals&rdquo; is a bar it cannot clear.</p>
+      </div>
+      <div class="readout"><dl>
+        <dt>weight under test</dt><dd>h[0].mlp.c_fc[0,0]</dd>
+        <dt>step size h</dt><dd>1e-4</dd>
+        <dt>loss at w</dt><dd>4.128666675461</dd>
+        <dt>loss at w + h</dt><dd>4.128666691085</dd>
+        <dt>analytic</dt><dd><b>0.000156522943</b></dd>
+        <dt>forward difference</dt><dd>0.000156240860</dd>
+        <dt>&nbsp;&nbsp;relative error</dt><dd>1.8e-03</dd>
+        <dt>central difference</dt><dd>0.000156522972</dd>
+        <dt>&nbsp;&nbsp;relative error</dt><dd><b>1.9e-07</b></dd>
+      </dl></div>
+    </div>
+  </div>
+
+  <!-- 3 -->
+  <div class="metric">
+    <div class="mhead"><span class="part">PART 3</span><h3>Accumulation error</h3>
+      <span class="flag crit">gradient 25% wrong</span></div>
+    <div class="grid2">
+      <div>
+        <p>When a batch is too large to fit, it is run in pieces and the gradients pile up before one
+        optimiser step. The question is how to combine the pieces. Two answers, and they differ only
+        when the pieces hold different numbers of real tokens.</p>
+        <div class="formula">
+          <span class="c">// correct &mdash; every token gets one vote</span><br>
+          &Sigma;&#8202;n&#7522;L&#7522; / &Sigma;&#8202;n&#7522;<br><br>
+          <span class="c">// naive &mdash; every micro-batch gets one vote</span><br>
+          &Sigma;&#8202;L&#7522; / k &nbsp;&nbsp;<span class="c">(nanoGPT train.py:301)</span>
+        </div>
+        <p style="margin-top:16px">nanoGPT ships the naive form and is <em>correct</em> to, because
+        it packs fixed-length chunks: every micro-batch holds exactly B&middot;T valid tokens and the
+        two formulas agree to the last digit. Masking a per-micro-batch tail with
+        <code>ignore_index=-1</code> is what makes them disagree at all.</p>
+        <p><b>Read the gradient row, not the loss rows.</b> The loss curves for the two runs sit
+        almost on top of each other. The update does not: on the very first step it points 13&deg;
+        off and is a quarter too long.</p>
+      </div>
+      <div class="readout"><dl>
+        <dt>static case &mdash; correct</dt><dd>2.6000</dd>
+        <dt>static case &mdash; naive</dt><dd>3.0000</dd>
+        <dt>gap</dt><dd><b>15.4%</b></dd>
+        <dt>same losses, equal token counts</dt><dd>0.0%</dd>
+        <dt>worst step in the real run</dt><dd>+18.5%</dd>
+        <dt>mean |gap| over 60 steps</dt><dd>2.25%</dd>
+        <dt>gradient cosine similarity</dt><dd>0.9725</dd>
+        <dt>‖naive‖ / ‖correct‖</dt><dd>1.0735</dd>
+        <dt>relative difference</dt><dd><b>0.2539</b></dd>
+      </dl></div>
+    </div>
+  </div>
+
+  <!-- 4 -->
+  <div class="metric">
+    <div class="mhead"><span class="part">PART 4</span><h3>Gradient norm</h3>
+      <span class="flag warn">warns 14 steps early</span></div>
+    <div class="grid2">
+      <div>
+        <p>The combined length of every gradient in the model, measured <em>before</em> the update.
+        Clipping shrinks everything by one factor when it exceeds a cap, leaving the direction alone
+        and changing only the length.</p>
+        <div class="formula">
+          norm = ‖ &nabla;&#8202;all params ‖&#8322;<br>
+          if norm &gt; cap: g &larr; g &times; cap / norm<br><br>
+          <span class="c">// clip_grad_norm_ returns the pre-clip norm.</span><br>
+          <span class="c">// train.py:309 calls it and discards it.</span>
+        </div>
+        <p style="margin-top:16px">Logging that discarded return value costs one variable and is the
+        most useful trace on the dashboard, because it moves before the loss does.</p>
+        <p><b>What counts as the loss reacting.</b> A first attempt called any upward move a
+        reaction and found leads whose loss rise was 0.0006 &mdash; noise dressed as a finding.
+        Requiring the rise to clear 2&sigma; of the run's own step-to-step noise cut ten findings to
+        two. These runs are also not bit-reproducible despite fixed seeds, so the step indices move
+        between reruns; the lead survives, the numbers 498 and 512 do not.</p>
+      </div>
+      <div class="readout"><dl>
+        <dt>steps &middot; learning rate</dt><dd>600 &middot; 6e-3</dd>
+        <dt>cap</dt><dd>1.0</dd>
+        <dt>median norm</dt><dd>0.5095</dd>
+        <dt>max norm</dt><dd>17.57</dd>
+        <dt>steps clipped</dt><dd>52 / 600</dd>
+        <dt>spike</dt><dd>4.530 at step 498</dd>
+        <dt>&nbsp;&nbsp;against trailing median</dt><dd>8.5&times;</dd>
+        <dt>loss cleared 2&sigma; at</dt><dd>step 512</dd>
+        <dt>lead</dt><dd><b>14 steps</b></dd>
+      </dl></div>
+    </div>
+  </div>
+
+  <!-- 5 -->
+  <div class="metric">
+    <div class="mhead"><span class="part">PART 5</span><h3>Model FLOPs Utilisation</h3>
+      <span class="flag warn">30.0% of peak</span></div>
+    <div class="grid2">
+      <div>
+        <p>What fraction of the machine the run is genuinely using. A forward and backward pass costs
+        roughly 6N operations per token for a model of N weights, so the numerator is arithmetic. The
+        denominator is where the judgement is.</p>
+        <div class="formula">
+          MFU = 6 &middot; N &middot; tokens/s &divide; peak<br><br>
+          <span class="c">// 6 &times; 10,745,088 = 64.5 MFLOP per token</span><br>
+          <span class="c">// peak = 16 SM &times; 64 &times; 2 &times; 2100 MHz</span>
+        </div>
+        <p style="margin-top:16px"><b>Three denominators, and only one is about this machine.</b>
+        nanoGPT's own <code>estimate_mfu</code> hardcodes an A100's 312 TFLOP/s, which is 73&times;
+        too large here and reports 0.46%. The theoretical peak above is derived from the device's own
+        SM count and clock, not a datasheet. And a plain 4096&sup3; matmul reaches only 1.47 TFLOP/s
+        on this card &mdash; 34% of theoretical &mdash; so 34% is the practical ceiling for any fp32
+        work on it.</p>
+        <p><b>What costs the distance to 40%: nothing in the loop.</b> Against what is actually
+        reachable the run sits at 87.6%. Getting further needs different hardware, not better code
+        &mdash; and fp16 here measured <em>slower</em> than fp32, so that road is closed too.</p>
+      </div>
+      <div class="readout"><dl>
+        <dt>step time</dt><dd>204.5 ms</dd>
+        <dt>throughput</dt><dd>20,034 tokens/s</dd>
+        <dt>6N per token</dt><dd>64.5 MFLOP</dd>
+        <dt>achieved</dt><dd>1.2916 TFLOP/s</dd>
+        <dt>theoretical fp32 peak</dt><dd>4.30 TFLOP/s</dd>
+        <dt>MFU</dt><dd><b>30.03%</b></dd>
+        <dt>measured matmul ceiling</dt><dd>1.47 TFLOP/s</dd>
+        <dt>&nbsp;&nbsp;fp16 ceiling</dt><dd>0.38 TFLOP/s</dd>
+        <dt>fraction of that ceiling</dt><dd><b>87.63%</b></dd>
+        <dt>nanoGPT estimate_mfu</dt><dd>0.46%</dd>
+      </dl></div>
+    </div>
+  </div>
+
+  <!-- 6 -->
+  <div class="metric">
+    <div class="mhead"><span class="part">PART 6</span><h3>Precision, and what 0.1 costs</h3>
+      <span class="flag good">bit-exact against torch</span></div>
+    <div class="grid2">
+      <div>
+        <p>A float divides its bits between three jobs: one sign bit, a few exponent bits that say
+        how big the number is, and the mantissa bits that say which number it is. Exponent bits buy
+        range; mantissa bits buy detail; there is no third source of bits.</p>
+        <div class="formula">
+          value = (1 + M / 2<sup>mbits</sup>) &times; 2<sup>(E &minus; bias)</sup><br>
+          bias = 2<sup>(ebits&minus;1)</sup> &minus; 1
+        </div>
+        <p style="margin-top:16px">Encoded here by hand &mdash; round-half-to-even, subnormals
+        handled &mdash; then checked against <code>struct</code> and against torch's own
+        <code>bfloat16</code> and <code>float8_e4m3fn</code> casts. All three match exactly.</p>
+        <p><b>All three keep the same exponent, &minus;4.</b> 0.1 sits nowhere near any format's
+        range limit, so range buys nothing and every bit lost is precision lost. Which is exactly why
+        0.1 is the wrong number to choose a format with: the failure fp16 has at 10&#8315;&#8312;
+        never shows up here.</p>
+      </div>
+      <div class="readout"><dl>
+        <dt>fp32 &nbsp;<span class="mono" style="color:var(--muted)">1+8+23</span></dt>
+        <dd class="bits"><span class="s">0</span> <span class="e">01111011</span> <span class="m">10011001100110011001101</span></dd>
+        <dt>&nbsp;&nbsp;reads back</dt><dd>0.10000000149011612</dd>
+        <dt>&nbsp;&nbsp;error</dt><dd>0.0000%</dd>
+        <dt>bf16 &nbsp;<span class="mono" style="color:var(--muted)">1+8+7</span></dt>
+        <dd class="bits"><span class="s">0</span> <span class="e">01111011</span> <span class="m">1001101</span></dd>
+        <dt>&nbsp;&nbsp;reads back</dt><dd>0.10009765625</dd>
+        <dt>&nbsp;&nbsp;error</dt><dd>0.0977%</dd>
+        <dt>fp8 E4M3 &nbsp;<span class="mono" style="color:var(--muted)">1+4+3</span></dt>
+        <dd class="bits"><span class="s">0</span> <span class="e">0011</span> <span class="m">101</span></dd>
+        <dt>&nbsp;&nbsp;reads back</dt><dd>0.1015625</dd>
+        <dt>&nbsp;&nbsp;error</dt><dd>1.5625%</dd>
+      </dl></div>
+    </div>
+    <div class="note">
+      <b>Which to train in: bf16 &mdash; and not because of anything in that table.</b> On this value
+      alone the table argues for fp32. The row that decides it is the one 0.1 cannot show: bf16 keeps
+      all eight of fp32's exponent bits and reaches down to 9.18e-41, so late-run gradients near
+      10&#8315;&#8312; survive with no loss-scaling apparatus, while fp16 &mdash; more precise at 0.1
+      &mdash; flushes them to zero. Not on this card, though: compute capability 7.5 has no bf16
+      tensor-core path, which is why every number on this page was produced in fp32.
+    </div>
+  </div>
+</section>
+
+<!-- ============================ READING ============================ -->
+<section>
+  <div class="sechead"><span class="n">C</span><h2>Reading the loss</h2></div>
+  <p>Every loss on this page is cross-entropy in nats. On its own that number means little, so it is
+  worth carrying two anchors for a 65-token vocabulary.</p>
+  <div class="tw">
+  <table>
+    <thead><tr><th>Loss</th><th class="n">Perplexity</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td>4.1744 &nbsp;<span class="f">= ln 65</span></td><td class="n">65.0</td>
+          <td>An untrained model. Guessing uniformly from the whole vocabulary. If a run does not
+              start near here, the targets are misaligned &mdash; check before trusting anything else.</td></tr>
+      <tr><td>2.6008</td><td class="n">13.5</td>
+          <td>Where the 600-step run in Part 4 ends. Effectively choosing between 13 characters.</td></tr>
+      <tr><td>2.5025</td><td class="n">12.2</td>
+          <td>Where the correctly-normalised run in Part 3 ends.</td></tr>
+      <tr><td>0.0000</td><td class="n">1.0</td>
+          <td>Certainty. Not a target &mdash; on real text it means the answer leaked into the input.</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p><b>Perplexity does not travel between tokenizers.</b> These figures are per character. A model
+  on BPE tokens covers more meaning per step and is being asked a harder question, so its perplexity
+  is not comparable with anything here.</p>
+</section>
+
+<footer>
+  <p style="max-width:var(--measure)">Every figure on this page is read from
+  <code>Session10/assignment/results.json</code>, produced by <code>assignment.py all</code> on a
+  single GTX 1650 Ti in fp32. The model is
+  <a href="https://github.com/karpathy/nanoGPT">karpathy/nanoGPT</a> at its
+  <code>shakespeare_char</code> size, imported rather than forked: the training loop that produced
+  these metrics is instrumented separately, which is what the accumulation, grad-norm and MFU parts
+  required.</p>
+</footer>
+
+</div>
