@@ -1,0 +1,357 @@
+<title>Distance Sheet</title>
+<style>
+  :root {
+    --ground:#F6F7F9; --surface:#FFFFFF; --surface-2:#EDF1F5;
+    --ink:#17202B; --ink-2:#48586C; --muted:#7A8899;
+    --rule:#DBE2EA; --rule-strong:#C3CDD9;
+    --accent:#1F5FA8; --accent-wash:#E7EFF8;
+    --good:#16703E; --warn:#8F5608; --crit:#A22218;
+    --good-wash:#E4F2E9; --warn-wash:#F8EEDC; --crit-wash:#F8E7E4;
+    --display:"Archivo","Helvetica Neue",Arial,sans-serif;
+    --body:Georgia,"Times New Roman",serif;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --measure:70ch;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:#0F151C; --surface:#161E27; --surface-2:#1E2833;
+      --ink:#E7ECF3; --ink-2:#B2BFCE; --muted:#8395A8;
+      --rule:#28333F; --rule-strong:#3A4756;
+      --accent:#7CB0EC; --accent-wash:#18283A;
+      --good:#5CC08D; --warn:#E0A94C; --crit:#F08278;
+      --good-wash:#132A20; --warn-wash:#2B2314; --crit-wash:#2E1A18;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground:#0F151C; --surface:#161E27; --surface-2:#1E2833;
+    --ink:#E7ECF3; --ink-2:#B2BFCE; --muted:#8395A8;
+    --rule:#28333F; --rule-strong:#3A4756;
+    --accent:#7CB0EC; --accent-wash:#18283A;
+    --good:#5CC08D; --warn:#E0A94C; --crit:#F08278;
+    --good-wash:#132A20; --warn-wash:#2B2314; --crit-wash:#2E1A18;
+  }
+
+  body { background:var(--ground); color:var(--ink); font-family:var(--body);
+         font-size:16.5px; line-height:1.62; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:1040px; margin:0 auto; padding:0 26px 90px; }
+  p { max-width:var(--measure); }
+  h1,h2,h3,.eyebrow,th { font-family:var(--display); text-wrap:balance; }
+  h1 { font-size:clamp(2rem,4.2vw,2.9rem); font-weight:700; letter-spacing:-.022em;
+       line-height:1.06; margin:0; }
+  h2 { font-size:1.4rem; font-weight:700; letter-spacing:-.014em; margin:0 0 6px; }
+  h3 { font-size:1rem; font-weight:600; margin:26px 0 8px; }
+  .eyebrow { font-size:.68rem; font-weight:600; letter-spacing:.15em; text-transform:uppercase;
+             color:var(--muted); margin:0 0 10px; }
+  .lede { font-size:1.08rem; color:var(--ink-2); margin:16px 0 0; }
+  code, .mono, .num { font-family:var(--mono); font-variant-numeric:tabular-nums; }
+  code { font-size:.86em; background:var(--surface-2); padding:.1em .36em; border-radius:3px; }
+
+  header.top { padding:56px 0 26px; border-bottom:2px solid var(--ink); }
+  .spec { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+          margin-top:30px; border-top:1px solid var(--rule); }
+  .spec div { padding:12px 16px 12px 0; border-right:1px solid var(--rule); }
+  .spec div:last-child { border-right:0; }
+  .spec dt { font-family:var(--display); font-size:.66rem; letter-spacing:.13em;
+             text-transform:uppercase; color:var(--muted); margin:0 0 3px; }
+  .spec dd { margin:0; font-family:var(--mono); font-size:.94rem; }
+
+  section { padding:44px 0 8px; border-bottom:1px solid var(--rule); }
+  .sec-no { font-family:var(--mono); color:var(--accent); font-size:.9rem; }
+
+  table { border-collapse:collapse; width:100%; margin:18px 0 6px; font-size:.92rem;
+          background:var(--surface); }
+  th, td { text-align:left; padding:8px 12px; border-bottom:1px solid var(--rule); }
+  th { font-size:.72rem; letter-spacing:.07em; text-transform:uppercase; color:var(--muted);
+       border-bottom:1px solid var(--rule-strong); }
+  td.num, th.num { text-align:right; font-family:var(--mono); font-variant-numeric:tabular-nums; }
+  tbody tr:last-child td { border-bottom:0; }
+  .scroll { overflow-x:auto; }
+
+  .pull { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:14px;
+          margin:22px 0 6px; }
+  .card { background:var(--surface); border:1px solid var(--rule); border-left:3px solid var(--accent);
+          padding:13px 15px; }
+  .card .k { font-family:var(--mono); font-size:1.32rem; font-weight:600; display:block;
+             line-height:1.2; }
+  .card .l { font-size:.83rem; color:var(--ink-2); font-family:var(--display); }
+  .card.good { border-left-color:var(--good); } .card.good .k { color:var(--good); }
+  .card.warn { border-left-color:var(--warn); } .card.warn .k { color:var(--warn); }
+  .card.crit { border-left-color:var(--crit); } .card.crit .k { color:var(--crit); }
+
+  figure { margin:24px 0 8px; }
+  figure img { width:100%; border:1px solid var(--rule); background:#fff; display:block; }
+  figcaption { font-size:.84rem; color:var(--muted); margin-top:8px; max-width:var(--measure); }
+
+  .note { background:var(--accent-wash); border-left:3px solid var(--accent); padding:12px 16px;
+          margin:20px 0; font-size:.95rem; }
+  .note.warn { background:var(--warn-wash); border-left-color:var(--warn); }
+  .note b { font-family:var(--display); }
+  footer { padding:34px 0 0; color:var(--muted); font-size:.86rem; }
+</style>
+
+<div class="wrap">
+
+<header class="top">
+  <p class="eyebrow">ERA V5 &middot; Session 11 &middot; assignment</p>
+  <h1>The distance sheet</h1>
+  <p class="lede">A gradient gives a direction. Every rule in this session is a different answer to
+  how far. Five measurements on nanoGPT, and the four places the measurement disagreed with the
+  expectation.</p>
+  <dl class="spec">
+    <div><dt>model</dt><dd>nanoGPT, 10.65M</dd></div>
+    <div><dt>width</dt><dd>384, 6L / 6H</dd></div>
+    <div><dt>optimiser</dt><dd>AdamW, &lambda; 0.1</dd></div>
+    <div><dt>peak &eta;</dt><dd>3e-4</dd></div>
+    <div><dt>card</dt><dd>GTX 1650 Ti, 4 GiB</dd></div>
+    <div><dt>precision</dt><dd>fp32</dd></div>
+  </dl>
+</header>
+
+<section>
+  <p class="eyebrow"><span class="sec-no">01</span> &nbsp;Adam by hand</p>
+  <h2>Fourteen decimal places, then a wall at five</h2>
+  <p>The Section 6 widget's five gradients, &eta; = 1e-3, &beta; = (0.9, 0.999), &epsilon; = 1e-8,
+  computed by hand and again through <code>torch.optim.Adam</code>.</p>
+
+  <div class="scroll"><table>
+    <thead><tr><th>t</th><th class="num">g</th><th class="num">m</th><th class="num">v</th>
+      <th class="num">m&#770;</th><th class="num">v&#770;</th><th class="num">step</th>
+      <th class="num">w</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td class="num">0.50</td><td class="num">0.050000</td><td class="num">0.00025000</td><td class="num">0.5000</td><td class="num">0.250000</td><td class="num">&minus;0.001000000</td><td class="num">0.999000000</td></tr>
+      <tr><td>2</td><td class="num">0.40</td><td class="num">0.085000</td><td class="num">0.00040975</td><td class="num">0.4474</td><td class="num">0.204977</td><td class="num">&minus;0.000988126</td><td class="num">0.998011874</td></tr>
+      <tr><td>3</td><td class="num">0.60</td><td class="num">0.136500</td><td class="num">0.00076934</td><td class="num">0.5037</td><td class="num">0.256703</td><td class="num">&minus;0.000994140</td><td class="num">0.997017734</td></tr>
+      <tr><td>4</td><td class="num">0.45</td><td class="num">0.167850</td><td class="num">0.00097107</td><td class="num">0.4881</td><td class="num">0.243132</td><td class="num">&minus;0.000989847</td><td class="num">0.996027887</td></tr>
+      <tr><td>5</td><td class="num">0.55</td><td class="num">0.206065</td><td class="num">0.00127260</td><td class="num">0.5032</td><td class="num">0.255030</td><td class="num">&minus;0.000996425</td><td class="num">0.995031463</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="pull">
+    <div class="card good"><span class="k">4.8e-14</span><span class="l">worst relative gap against
+      torch, five steps, float64</span></div>
+    <div class="card"><span class="k">7.45e-09</span><span class="l">gap on a real weight tensor,
+      fp32, against a step of 1.0e-3</span></div>
+    <div class="card crit"><span class="k">3.14e-05</span><span class="l">gap between two
+      <em>identical</em> runs on this GPU</span></div>
+  </div>
+
+  <div class="note"><b>The rules are not the same expression.</b> The lesson writes
+  &eta;&middot;m&#770;/(&radic;v&#770; + &epsilon;). PyTorch computes
+  (&eta;/(1&minus;&beta;<sub>1</sub><sup>t</sup>))&middot;m / (&radic;v/&radic;(1&minus;&beta;<sub>2</sub><sup>t</sup>) + &epsilon;),
+  putting &epsilon; outside the second moment's correction. That form reproduces torch's output to
+  4.8e-17, so the whole difference is the epsilon term &mdash; invisible here, and growing as
+  &radic;v&#770; falls toward &epsilon;.</div>
+
+  <div class="note warn"><b>Non-determinism outruns the thing being measured.</b> Two separate runs
+  of the same script land 3.14e-05 apart on the same tensor after one step &mdash; thirty times the
+  step itself, from reduction order in the backward kernels. The check only means something when both
+  rules are handed one gradient tensor inside one run.</div>
+</section>
+
+<section>
+  <p class="eyebrow"><span class="sec-no">02</span> &nbsp;Bias correction</p>
+  <h2>Twenty steps is two orders of magnitude too short</h2>
+  <p>The ratio between the corrected and uncorrected step has the gradients cancel out of it:
+  <code>&radic;(1 &minus; &beta;<sub>2</sub><sup>t</sup>) / (1 &minus; &beta;<sub>1</sub><sup>t</sup>)</code>
+  &mdash; a property of the betas alone, matching the simulation to 1.9e-07.</p>
+
+  <div class="pull">
+    <div class="card"><span class="k">3.16&times;</span><span class="l">uncorrected step at t = 1</span></div>
+    <div class="card crit"><span class="k">6.24&times;</span><span class="l">uncorrected step at
+      t = 20 &mdash; it got worse</span></div>
+    <div class="card"><span class="k">3,916</span><span class="l">first step within 1%</span></div>
+    <div class="card"><span class="k">6,213</span><span class="l">first step within 0.1%</span></div>
+  </div>
+
+  <figure>
+    <img src="assignment/part2_bias_correction.png" alt="Step size over twenty steps with and without bias correction, and the correction ratio out to ten thousand steps">
+    <figcaption>Left: the window the assignment asks for. Right: the same ratio on a log axis, with
+    the twenty-step window shaded. &beta;<sub>2</sub> = 0.999 carries a thousand-step memory, so the
+    second moment's correction is still 16% short at step 20.</figcaption>
+  </figure>
+
+  <p>After twenty steps the two weights are <span class="mono">0.0991</span> apart, on a weight that
+  started at 1.0. The difference does not stop mattering inside the window &mdash; it grows through
+  it, and the answer to the question lives near step 4,000.</p>
+</section>
+
+<section>
+  <p class="eyebrow"><span class="sec-no">03</span> &nbsp;Update-to-weight ratio</p>
+  <h2>Warmup works, the band says the learning rate does not</h2>
+  <p>Two 1,500-step runs, same seed and data order, differing only in a 150-step warmup. Logged every
+  step for every parameter tensor: &Vert;&Delta;w&Vert; / &Vert;w&Vert;. nanoGPT ties the head to the
+  embedding, so this run unties them &mdash; otherwise Section 14's head-versus-body question has no
+  two tensors to ask about.</p>
+
+  <div class="pull">
+    <div class="card crit"><span class="k">21.3e-3</span><span class="l">peak without warmup, at
+      step 1 (widget predicts 19.2e-3)</span></div>
+    <div class="card good"><span class="k">4.27e-3</span><span class="l">peak with warmup, at step
+      298</span></div>
+    <div class="card warn"><span class="k">3.06e-3</span><span class="l">settled ratio &mdash; 3&times;
+      above the 1e-3 band</span></div>
+    <div class="card"><span class="k">41%</span><span class="l">head's rate as a fraction of the
+      body's</span></div>
+  </div>
+
+  <figure>
+    <img src="assignment/part3_update_ratio.png" alt="Update-to-weight ratio per step for runs with and without warmup, and the same ratio split by parameter group">
+    <figcaption>The no-warmup run spends its first step at 21.3e-3 and never revisits it. Below, the
+    warmup run split by group: attention and MLP ride highest, the norms sit two decades lower, and
+    the untied head settles below everything except the norms.</figcaption>
+  </figure>
+
+  <h3>When does warmup stop changing it?</h3>
+  <p>The learning rates are identical from step 150. The ratios are not, and the answer is a ladder
+  rather than a step:</p>
+  <div class="scroll"><table>
+    <thead><tr><th>the two runs stay within</th><th class="num">from step</th></tr></thead>
+    <tbody>
+      <tr><td>50%</td><td class="num">60</td></tr>
+      <tr><td>25%</td><td class="num">83</td></tr>
+      <tr><td>10%</td><td class="num">758</td></tr>
+      <tr><td>5%</td><td class="num">1,500 &mdash; the last logged step</td></tr>
+      <tr><td>1%</td><td class="num">never</td></tr>
+    </tbody>
+  </table></div>
+  <p>They never rejoin, because after step one they are different models. The warmup run took its
+  first hundred steps at a smaller rate and is at different weights forever; the two ratios converge
+  in distribution, not in value.</p>
+
+  <div class="scroll"><table>
+    <thead><tr><th>group, with warmup</th><th class="num">peak</th><th class="num">at step</th>
+      <th class="num">settled</th></tr></thead>
+    <tbody>
+      <tr><td>attention</td><td class="num">7.210e-3</td><td class="num">299</td><td class="num">4.664e-3</td></tr>
+      <tr><td>mlp</td><td class="num">6.277e-3</td><td class="num">375</td><td class="num">4.829e-3</td></tr>
+      <tr><td>head, untied</td><td class="num">3.683e-3</td><td class="num">149</td><td class="num">1.991e-3</td></tr>
+      <tr><td>embeddings</td><td class="num">3.490e-3</td><td class="num">294</td><td class="num">2.830e-3</td></tr>
+      <tr><td>norms</td><td class="num">0.071e-3</td><td class="num">1220</td><td class="num">0.062e-3</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section>
+  <p class="eyebrow"><span class="sec-no">04</span> &nbsp;Cosine against WSD</p>
+  <h2>Cosine wins the question as asked, and loses the decision</h2>
+  <p>Three seeds each, 300 planned steps, identical data order, held-out loss on a fixed 20-batch
+  slice of <code>val.bin</code>. WSD is the widget's shape: 2% warmup, flat to 90%, linear decay over
+  the last 10%.</p>
+
+  <div class="scroll"><table>
+    <thead><tr><th></th><th class="num">held-out loss at step 200</th>
+      <th class="num">at step 300</th></tr></thead>
+    <tbody>
+      <tr><td>cosine</td><td class="num">2.5081 &plusmn; 0.0039</td><td class="num">2.4862 &plusmn; 0.0078</td></tr>
+      <tr><td>WSD</td><td class="num">2.5158 &plusmn; 0.0069</td><td class="num">2.4602 &plusmn; 0.0033</td></tr>
+      <tr><td>WSD checkpoint at 200, decayed over 20 extra steps</td>
+          <td class="num">2.4871 &plusmn; 0.0030</td><td class="num">&mdash;</td></tr>
+    </tbody>
+  </table></div>
+
+  <figure>
+    <img src="assignment/part4_schedules.png" alt="Learning rate and loss for cosine and WSD, both stopped at step 200, with the WSD branch decay">
+    <figcaption>Cosine is already at a quarter of its peak by step 200; WSD is still flat out. The
+    amber branch takes WSD's step-200 weights and decays them over twenty more steps.</figcaption>
+  </figure>
+
+  <div class="note"><b>Which model would I keep?</b> Neither of the two on offer. Stopped cold at 200,
+  cosine leads by 0.0077 against a seed spread of 0.0069 &mdash; about one standard deviation, real
+  but small. WSD's step-200 checkpoint decayed over twenty more steps reaches 2.4871: better than
+  cosine-at-200 by three seed-spreads, for 10% more compute, and available at any step of the run
+  rather than only at a total fixed in advance. Cosine stopped early cannot be repaired.</div>
+</section>
+
+<section>
+  <p class="eyebrow"><span class="sec-no">05</span> &nbsp;Learning rate against width</p>
+  <h2>The extrapolation is the weak answer; the transfer is the strong one</h2>
+  <p>4 layers, <code>n_head = width/64</code>, B = 8, T = 256, 400 steps, seven learning rates
+  log-spaced 1e-4 to 3e-2 with each cell 2.59&times; the last. Two arms, 42 runs, about 45 minutes on
+  the card.</p>
+
+  <figure>
+    <img src="assignment/part5_sweep.png" alt="Held-out loss against learning rate at widths 256, 512 and 1024, under the standard parameterization and under minimal muP">
+    <figcaption>Left: the minimum walks left by exactly one grid cell per doubling of width. Right:
+    under muP all three widths pick the same cell, and the curves stack rather than shift.</figcaption>
+  </figure>
+
+  <div class="scroll"><table>
+    <thead><tr><th>standard</th><th class="num">1.00e-4</th><th class="num">2.59e-4</th>
+      <th class="num">6.69e-4</th><th class="num">1.73e-3</th><th class="num">4.48e-3</th>
+      <th class="num">1.16e-2</th><th class="num">3.00e-2</th></tr></thead>
+    <tbody>
+      <tr><td>width 256</td><td class="num">2.4561</td><td class="num">2.4239</td><td class="num">2.4014</td><td class="num"><b>2.3300</b></td><td class="num">2.5592</td><td class="num">2.7407</td><td class="num">2.8721</td></tr>
+      <tr><td>width 512</td><td class="num">2.3951</td><td class="num">2.3391</td><td class="num"><b>2.1585</b></td><td class="num">2.5297</td><td class="num">2.6177</td><td class="num">2.7479</td><td class="num">2.8955</td></tr>
+      <tr><td>width 1024</td><td class="num">2.3293</td><td class="num"><b>2.2645</b></td><td class="num">2.5008</td><td class="num">2.5812</td><td class="num">2.6550</td><td class="num">2.8327</td><td class="num">3.0451</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="scroll"><table>
+    <thead><tr><th>minimal muP</th><th class="num">1.00e-4</th><th class="num">2.59e-4</th>
+      <th class="num">6.69e-4</th><th class="num">1.73e-3</th><th class="num">4.48e-3</th>
+      <th class="num">1.16e-2</th><th class="num">3.00e-2</th></tr></thead>
+    <tbody>
+      <tr><td>width 256</td><td class="num">2.4558</td><td class="num">2.4230</td><td class="num">2.3980</td><td class="num"><b>2.2646</b></td><td class="num">2.5720</td><td class="num">2.6861</td><td class="num">2.9349</td></tr>
+      <tr><td>width 512</td><td class="num">2.4535</td><td class="num">2.4115</td><td class="num">2.3814</td><td class="num"><b>2.2114</b></td><td class="num">2.5521</td><td class="num">2.6646</td><td class="num">2.8253</td></tr>
+      <tr><td>width 1024</td><td class="num">2.4491</td><td class="num">2.4003</td><td class="num">2.3730</td><td class="num"><b>2.1683</b></td><td class="num">2.5345</td><td class="num">2.6230</td><td class="num">2.7057</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Are the minima real, or one seed's luck?</h3>
+  <p>Each cell is one seed. Re-running every width's best cell and its two neighbours on two more
+  seeds &mdash; <code>python assignment.py 5b</code> &mdash; keeps all three picks.</p>
+  <div class="scroll"><table>
+    <thead><tr><th>width</th><th class="num">single-seed pick</th><th class="num">3-seed mean pick</th>
+      <th class="num">worst per-cell spread</th></tr></thead>
+    <tbody>
+      <tr><td>256</td><td class="num">1.73e-3</td><td class="num">1.73e-3</td><td class="num">0.0451</td></tr>
+      <tr><td>512</td><td class="num">6.69e-4</td><td class="num">6.69e-4</td><td class="num">0.0098</td></tr>
+      <tr><td>1024</td><td class="num">2.59e-4</td><td class="num">2.59e-4</td><td class="num">0.0145</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="pull">
+    <div class="card warn"><span class="k">K = 0.343</span><span class="l">our fit of best &eta; =
+      K/width; the widget's is 0.768</span></div>
+    <div class="card warn"><span class="k">&minus;1.37</span><span class="l">measured log-log slope,
+      against the rule's &minus;1</span></div>
+    <div class="card"><span class="k">8.37e-5</span><span class="l">width 4,096 by extrapolation</span></div>
+    <div class="card good"><span class="k">1.73e-3</span><span class="l">width 4,096 by muP transfer
+      &mdash; the number to use</span></div>
+  </div>
+
+  <div class="note"><b>Confidence, in order.</b> High in the muP value: a measurement repeated at
+  three widths spanning 16&times; in parameter count, landing in the same cell every time, on a grid
+  whose resolution makes the claim &ldquo;within a factor of 2.6&rdquo;. Low in the extrapolation: a
+  three-point fit stretched two more octaves, whose slope (&minus;1.37) disagrees with the rule it is
+  meant to instantiate, and which lands 30% away from what the widget's &minus;1 would give from the
+  same width-256 point. Both arms are 4 layers, 400 steps, 65-token vocabulary; depth, run length and
+  vocabulary all move the optimum and none were varied.</div>
+</section>
+
+<section>
+  <p class="eyebrow">scorecard</p>
+  <h2>What the widgets got right</h2>
+  <div class="scroll"><table>
+    <thead><tr><th>widget's number</th><th>measured</th><th></th></tr></thead>
+    <tbody>
+      <tr><td>Adam moves every weight by about &eta;</td><td class="num">within 0.5% of &eta;, five steps</td><td>holds</td></tr>
+      <tr><td>first step 3.16 &eta; without correction</td><td class="num">3.16 at t=1, 6.24 at t=20</td><td>holds, then worsens</td></tr>
+      <tr><td>ratio 19.2e-3 without warmup</td><td class="num">21.26e-3</td><td>within 11%</td></tr>
+      <tr><td>ratio 2.83e-3 with warmup</td><td class="num">4.27e-3</td><td>same order</td></tr>
+      <tr><td>the ratio should sit near 1e-3</td><td class="num">3.06e-3</td><td>our &eta; is 3&times; too large</td></tr>
+      <tr><td>best &eta; = 0.768/width</td><td class="num">K = 0.343, slope &minus;1.37</td><td>shape right, constant not portable</td></tr>
+      <tr><td>muP aligns the minima</td><td class="num">1.73e-3 at all three widths</td><td>holds exactly</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+
+<footer>
+  <p>Every number on this page comes from <code>assignment/results.json</code>; the baselines they are
+  measured against were mined out of the course widgets into
+  <code>reference/mined-numbers.md</code>. Reproduce with <code>python assignment.py all</code>, then
+  <code>python plots.py</code>.</p>
+</footer>
+
+</div>
