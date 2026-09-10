@@ -13,6 +13,30 @@ pipeline behind an LLM, session by session.
 | [Session 6](Session6/) | Training data execution system — shards/manifests through checkpoint, crash, resume, replay, fork, audit | [`README.md`](Session6/README.md) | - |
 | [Session 7](Session7/) | Embeddings and model internals — the Kronecker byte codec, its collisions, and five open "V2" problems | [`README.md`](Session7/README.md) | - |
 | [Session 8](Session8/) | Modern attention variants — 26 mechanisms in launch order, each a reply to what the last one could not do | [`webapp/`](Session8/webapp/) | not deployed yet |
+| [Session 9](Session9/) | Loss functions & output heads — scraped lesson and mined baselines, no assignment shipped | [`reference/`](Session9/reference/) | - |
+| [Session 10](Session10/) | The training loop — six probes on nanoGPT, and the four numbers that looked healthy until measured | [`README.md`](Session10/README.md) · [`parameters-and-metrics.html`](Session10/parameters-and-metrics.html) | - |
+| [Session 11](Session11/) | Optimizers and learning-rate schedules — Adam by hand, warmup, cosine against WSD, and a 42-run width sweep | [`README.md`](Session11/README.md) · [`optimizers-and-schedules.html`](Session11/optimizers-and-schedules.html) | [Link](https://era-v5-session11-mallikarjun.netlify.app/) |
+
+## Session 11 — the distance a gradient does not specify
+
+Five measurements on nanoGPT, one per line of the assignment, and the four places the measurement
+disagreed with the course widget it was checked against.
+
+| | measured | against |
+|---|---|---|
+| Adam by hand vs `torch.optim.Adam` | agrees to **4.8e-14** in float64 | but two *identical* runs on this GPU land **3.1e-5** apart, thirty times the step — so both rules are fed one gradient inside one run |
+| bias correction, on and off | uncorrected step is 3.16x too large at t=1 and **6.24x** at t=20 | the window the assignment asks for is two orders of magnitude short: within 1% only at step **3,916** |
+| update-to-weight ratio, per layer | **21.3e-3** peak without warmup, **4.27e-3** with | widget predicts 19.2e-3 and 2.83e-3; the settled ratio is **3x above** the 1e-3 band, so η = 3e-4 is untuned for this width |
+| cosine vs WSD, both stopped at 200 of 300 | cosine ahead by 0.0077 against a seed spread of 0.0069 | but WSD's step-200 checkpoint, decayed over 20 extra steps, beats both — which is the entire argument for WSD |
+| learning rate at widths 256/512/1024 | standard minima walk one grid cell per doubling; **muP puts all three at 1.73e-3** | the fit gives K = **0.343** against the widget's 0.768, and a slope of −1.37 against the rule's −1 |
+
+The head-versus-body question Section 14 leaves open comes free from the same log: with `lm_head`
+untied from `wte`, the head moves at **41%** of the body's rate, which says a separate head learning
+rate is worth measuring rather than assuming.
+
+`python assignment.py selfcheck` runs the asserts with no GPU — the widget's five-step Adam table to
+1e-9, the bias-correction ratio formula against its own simulation, and both schedules at every
+breakpoint. Full write-up: [`Session11/README.md`](Session11/README.md).
 
 ## Session 8 — how attention got here
 
