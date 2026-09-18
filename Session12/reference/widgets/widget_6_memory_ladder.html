@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 12 Widget 6 - The Memory Wall</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s12w6-w{max-width:1180px;margin:0 auto;padding:14px 22px 16px}
+.s12w6-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--violet)}
+.s12w6-w h1{font-size:24px;line-height:1.12;margin:3px 0 8px}
+.s12w6-say{border:1px solid #ddd6fe;background:#f7f5ff;border-radius:10px;padding:9px 12px;color:#4c1d95;font-size:13.5px;line-height:1.5;margin:0 0 10px}
+.s12w6-say b{color:#5b21b6;font-weight:800}
+.s12w6-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.s12w6-lb{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.s12w6-sl{display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700}
+.s12w6-sl input{width:180px;vertical-align:middle;accent-color:var(--violet)}
+.s12w6-sl b{font:800 12.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--violet);min-width:48px}
+.s12w6-g{display:grid;grid-template-columns:1.6fr 1fr;gap:12px;align-items:start}
+.s12w6-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:11px 13px}
+.s12w6-card h2{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 7px;font-weight:800}
+.s12w6-card svg{display:block;width:100%;height:auto}
+.s12w6-ann{margin-top:8px;border:1px solid #fcd9a4;background:#fffbf2;border-radius:9px;padding:7px 10px;font-size:12.5px;line-height:1.45;color:#92400e}
+.s12w6-ann b{color:#b45309;font-weight:800}
+.s12w6-eq{margin-top:7px;border:1px solid var(--line);border-radius:9px;background:#fbfdff;padding:7px 10px}
+.s12w6-eq b{display:block;font:800 14px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--ink)}
+.s12w6-eq span{display:block;color:var(--muted);font-size:10.5px;margin-top:2px}
+.s12w6-t{width:100%;border-collapse:collapse;font-size:12px}
+.s12w6-t th{text-align:right;font-size:9px;text-transform:uppercase;color:var(--muted);padding:3px 4px;border-bottom:1px solid var(--line);font-weight:800}
+.s12w6-t td{padding:5px 4px;border-bottom:1px solid #eef2f7;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;text-align:right;font-weight:700}
+.s12w6-t th:first-child,.s12w6-t td:first-child{text-align:left;font-family:Inter,sans-serif}
+.s12w6-t th:last-child,.s12w6-t td:last-child{text-align:left}
+.s12w6-t td.n{display:flex;align-items:center;gap:6px}
+.s12w6-t td.n em{width:10px;height:10px;border-radius:3px;flex:none}
+.s12w6-t td.v{font-family:Inter,sans-serif;font-size:11.5px;font-weight:800}
+.s12w6-note{margin:9px 0 0;font-size:12.5px;color:var(--muted);line-height:1.45}
+.s12w6-note b{color:var(--ink)}
+@media(max-width:940px){.s12w6-g{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s12w6-w">
+<div class="s12w6-k">ERA V5 Session 12 · does it fit on the card</div>
+<h1>The Memory Wall</h1>
+<p class="s12w6-say" id="s12w6-say"></p>
+<div class="s12w6-bar">
+<label class="s12w6-sl" for="s12w6-p">model size <input id="s12w6-p" type="range" min="1" max="100" step="1" value="30" aria-label="Model size in billions of parameters"><b id="s12w6-pv">30B</b></label>
+<label class="s12w6-sl" for="s12w6-n">GPU count <input id="s12w6-n" type="range" min="0" max="10" step="1" value="3" aria-label="Number of GPUs, in powers of two from 1 to 1024"><b id="s12w6-nv">8</b></label>
+</div>
+<section class="s12w6-g">
+<div class="s12w6-card">
+<h2>GiB per GPU against GPU count, both axes log scale</h2>
+<svg id="s12w6-chart" viewBox="0 0 680 384" role="img" aria-label="Memory per GPU against GPU count for four arrangements, with the capacity of one 80 gigabyte card drawn as a horizontal rule"></svg>
+<p class="s12w6-ann" id="s12w6-ann"></p>
+<div class="s12w6-eq"><b>2 + 2 + 4 + 4 + 4 = 16 bytes per weight</b><span>weight, gradient, master copy, momentum, variance</span></div>
+</div>
+<div class="s12w6-card">
+<h2 id="s12w6-ph">At 8 GPUs</h2>
+<table class="s12w6-t">
+<tr><th>arrangement</th><th>bytes/weight</th><th>per GPU</th><th>verdict</th></tr>
+<tbody id="s12w6-rows"></tbody>
+</table>
+<p class="s12w6-note" id="s12w6-note"></p>
+</div>
+</section>
+</main>
+<script>
+(function(){
+'use strict';
+var NAME=['data parallel','ZeRO-1','ZeRO-2','ZeRO-3'],
+    COL=['#7c3aed','#d97706','#0891b2','#159447'],
+    GIB=1073741824,CARD=80e9/GIB,
+    X0=44,X1=636,Y0=24,Y1=342,YLO=0.3,YHI=600,KMAX=10,
+    LR=Math.log(YHI/YLO)/Math.LN10,
+    pB=30,kN=3;
+function $(i){return document.getElementById('s12w6-'+i);}
+function bytes(s,n){return s===0?16:s===1?4+12/n:s===2?2+14/n:16/n;}
+function P(){return pB*1e9;}
+function gib(b){return P()*b/GIB;}
+function px(k){return X0+k/KMAX*(X1-X0);}
+function ly(g){return Y1-(Math.log(g/YLO)/Math.LN10)/LR*(Y1-Y0);}
+function inr(g){return g>=YLO&&g<=YHI;}
+function fb(v){return v>=1?v.toFixed(2):v.toFixed(3);}
+function fg(v){return v>=10?v.toFixed(1):v.toFixed(2);}
+function tx(x,y,s,c,a,z,h){return '<text x="'+x+'" y="'+y+'" text-anchor="'+(a||'middle')+'" font-size="'+(z||9.5)+'" font-weight="700" fill="'+c+'"'+(h?' stroke="#fff" stroke-width="3.2" paint-order="stroke"':'')+'>'+s+'</text>';}
+function plu(n){return n+' GPU'+(n===1?'':'s');}
+function fits(n){return n?'first fits at <b>'+plu(n)+'</b>':'<b>never fits</b>';}
+function list(a){return a.length<3?a.join(' and '):a.slice(0,-1).join(', ')+' and '+a[a.length-1];}
+function firstFit(s){var k,n;for(k=0;k<=KMAX;k++){n=Math.pow(2,k);if(gib(bytes(s,n))<=CARD)return n;}return 0;}
+function chart(){
+  var s='',i,k,n,g,pts,seg,a,b,t,yr=ly(CARD),f1=gib(4),f2=gib(2),last,lx,lyy,off=[],
+      yt=[0.3,1,3,10,30,100,300],xt,lab='';
+  s+='<clipPath id="s12w6-clip"><rect x="'+X0+'" y="'+Y0+'" width="'+(X1-X0)+'" height="'+(Y1-Y0)+'"/></clipPath>';
+  for(i=0;i<yt.length;i++)s+='<line x1="'+X0+'" y1="'+ly(yt[i])+'" x2="'+X1+'" y2="'+ly(yt[i])+'" stroke="#eef3f9"/>'+tx(X0-5,ly(yt[i])+3.4,yt[i],'#8b9aad','end',9);
+  for(k=0;k<=KMAX;k++){xt=px(k);s+='<line x1="'+xt+'" y1="'+Y0+'" x2="'+xt+'" y2="'+Y1+'" stroke="#f3f7fb"/>'+tx(xt,Y1+15,Math.pow(2,k),'#8b9aad',null,9);}
+  s+='<rect x="'+X0+'" y="'+Y0+'" width="'+(X1-X0)+'" height="'+(yr-Y0)+'" fill="rgba(220,38,38,.045)"/>';
+  s+='<line x1="'+X0+'" y1="'+yr+'" x2="'+X1+'" y2="'+yr+'" stroke="#152033" stroke-width="1.6" stroke-dasharray="6 4"/>';
+  s+=tx(X0+3,yr-6,'one 80 GB card = '+fg(CARD)+' GiB','#152033','start',10.5,1);
+  s+='<g clip-path="url(#s12w6-clip)">';
+  s+='<line x1="'+X0+'" y1="'+ly(f1)+'" x2="'+X1+'" y2="'+ly(f1)+'" stroke="#d97706" stroke-width="1.2" stroke-dasharray="2 4" opacity=".85"/>';
+  s+='<line x1="'+X0+'" y1="'+ly(f2)+'" x2="'+X1+'" y2="'+ly(f2)+'" stroke="#0891b2" stroke-width="1.2" stroke-dasharray="2 4" opacity=".85"/>';
+  s+='</g>';
+  s+=tx(300,ly(f1)-7,'4 bytes per weight stay replicated','#b45309','start',10,1);
+  s+=tx(300,ly(f2)+14,'2 bytes per weight stay replicated','#0e7490','start',10,1);
+  s+='<g clip-path="url(#s12w6-clip)">';
+  for(i=0;i<4;i++){
+    pts=[];last=-1;
+    for(k=0;k<=KMAX;k++){n=Math.pow(2,k);g=gib(bytes(i,n));pts.push([px(k),ly(g),g]);if(inr(g))last=k;}
+    for(k=0;k<KMAX;k++){
+      a=pts[k];b=pts[k+1];
+      if((a[2]>CARD)===(b[2]>CARD)){
+        s+='<line x1="'+a[0]+'" y1="'+a[1]+'" x2="'+b[0]+'" y2="'+b[1]+'" stroke="'+COL[i]+'" stroke-width="'+(a[2]>CARD?2.1:3.2)+'" opacity="'+(a[2]>CARD?.5:1)+'"'+(a[2]>CARD?' stroke-dasharray="5 4"':'')+' stroke-linecap="round"/>';
+      }else{
+        t=(yr-a[1])/(b[1]-a[1]);seg=[a[0]+(b[0]-a[0])*t,yr];
+        s+='<line x1="'+a[0]+'" y1="'+a[1]+'" x2="'+seg[0]+'" y2="'+seg[1]+'" stroke="'+COL[i]+'" stroke-width="2.1" opacity=".5" stroke-dasharray="5 4" stroke-linecap="round"/>';
+        s+='<line x1="'+seg[0]+'" y1="'+seg[1]+'" x2="'+b[0]+'" y2="'+b[1]+'" stroke="'+COL[i]+'" stroke-width="3.2" opacity="1" stroke-linecap="round"/>';
+      }
+    }
+    if(last<0){off.push(i);}
+    else{
+      lx=pts[last][0];lyy=pts[last][1];
+      t=pts[last][2]<=CARD?lyy+15:lyy-8;
+      if(t>Y1-4)t=lyy-8;
+      if(t<Y0+9)t=Y0+9;
+      lab+=tx(lx-6,t,NAME[i],COL[i],'end',10.5,1);
+    }
+  }
+  s+='</g>'+lab;
+  for(i=0;i<off.length;i++)s+=tx(X0+4,Y0+12+i*13,NAME[off[i]]+' '+fg(gib(bytes(off[i],1)))+' GiB, above the axis',COL[off[i]],'start',10,1);
+  n=Math.pow(2,kN);
+  s+='<line x1="'+px(kN)+'" y1="'+Y0+'" x2="'+px(kN)+'" y2="'+Y1+'" stroke="#7c3aed" stroke-width="1.3" stroke-dasharray="3 3" opacity=".7"/>';
+  s+=tx(px(kN),Y1+29,n+' GPUs','#5b21b6',null,10.5);
+  s+='<g clip-path="url(#s12w6-clip)">';
+  for(i=0;i<4;i++){
+    g=gib(bytes(i,n));
+    if(inr(g))s+='<circle cx="'+px(kN)+'" cy="'+ly(g)+'" r="4.4" fill="'+COL[i]+'" stroke="#fff" stroke-width="1.8"/>';
+  }
+  s+='</g>';
+  s+=tx(X0,16,'GiB per GPU','#8b9aad','start',10.5);
+  $('chart').innerHTML=s;
+}
+function draw(){
+  var n=Math.pow(2,kN),i,r='',b,g,fit,f1=gib(4),ff=[],cnt=0,never;
+  $('pv').textContent=pB+'B';$('nv').textContent=n;
+  $('ph').textContent='At '+plu(n)+', '+pB+'B parameters';
+  for(i=0;i<4;i++){
+    b=bytes(i,n);g=gib(b);fit=g<=CARD;ff.push(firstFit(i));
+    if(fit)cnt++;
+    r+='<tr><td class="n"><em style="background:'+COL[i]+'"></em>'+NAME[i]+'</td><td>'+fb(b)+'</td><td>'+fg(g)+'</td><td class="v" style="color:'+(fit?'var(--green)':'var(--red)')+'">'+(fit?'fits':'does not fit')+'</td></tr>';
+  }
+  $('rows').innerHTML=r;
+  $('say').innerHTML='One card holds <b>'+fg(CARD)+' GiB</b>. At '+pB+'B parameters data parallelism asks for <b>'+fg(gib(16))+' GiB</b> on every card at every GPU count. ZeRO-1 bottoms out at <b>'+fg(f1)+' GiB</b>, and it '+fits(ff[1])+'. ZeRO-2 '+fits(ff[2])+'. ZeRO-3 '+fits(ff[3])+'.';
+  $('ann').innerHTML=ff[1]
+    ? '<b>ZeRO-1 floor: 4 bytes per weight never split. '+fg(f1)+' GiB.</b> At '+pB+'B that floor sits under the card limit.'
+    : '<b>ZeRO-1 floor: 4 bytes per weight never split. '+fg(f1)+' GiB. No GPU count helps.</b>';
+  never=[];
+  for(i=0;i<4;i++)if(!ff[i])never.push(NAME[i]);
+  $('note').innerHTML='The saturated part of a line is the part that fits on one card. '+(never.length
+    ? 'At any GPU count <b>'+list(never)+'</b> never reach'+(never.length>1?'':'es')+' it.'
+    : 'Every arrangement reaches it at some GPU count.')+' '+cnt+' of the 4 '+(cnt===1?'fits':'fit')+' at '+plu(n)+'.';
+  chart();
+}
+$('p').addEventListener('input',function(){pB=+$('p').value;draw();});
+$('n').addEventListener('input',function(){kN=+$('n').value;draw();});
+draw();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

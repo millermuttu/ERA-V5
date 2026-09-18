@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 12 Widget 5 - ZeRO Stages</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s12w5-w{max-width:1180px;margin:0 auto;padding:14px 22px 16px}
+.s12w5-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.s12w5-w h1{font-size:24px;line-height:1.12;margin:3px 0 8px}
+.s12w5-say{border:1px solid #a5f3fc;background:#ecfeff;border-radius:10px;padding:9px 12px;color:#164e63;font-size:13.5px;line-height:1.5;margin:0 0 10px}
+.s12w5-say b{color:#0e7490;font-weight:800}
+.s12w5-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.s12w5-lb{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.s12w5-bar button{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;padding:5px 12px;font:800 11.5px Inter,sans-serif;cursor:pointer}
+.s12w5-bar button.on{border-color:var(--cyan);color:#0e7490;background:#ecfeff;box-shadow:inset 0 0 0 1px var(--cyan)}
+.s12w5-g{display:grid;grid-template-columns:1.52fr 1fr;gap:12px;align-items:stretch;margin-top:12px}
+.s12w5-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:11px 13px}
+.s12w5-card h2{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 7px;font-weight:800}
+.s12w5-card svg{display:block;width:100%;height:auto}
+.s12w5-t{width:100%;border-collapse:collapse;font-size:12px}
+.s12w5-t th{text-align:right;font-size:9px;text-transform:uppercase;color:var(--muted);padding:3px 4px;border-bottom:1px solid var(--line);font-weight:800}
+.s12w5-t td{padding:4px 4px;border-bottom:1px solid #eef2f7;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;text-align:right;font-weight:700}
+.s12w5-t th:first-child,.s12w5-t td:first-child{text-align:left;font-family:Inter,sans-serif}
+.s12w5-t td.n{display:flex;align-items:center;gap:6px}
+.s12w5-t td.n em{width:10px;height:10px;border-radius:3px;flex:none}
+.s12w5-t td.sp{font-family:Inter,sans-serif;font-size:11px;font-weight:700}
+.s12w5-t tr.tot td{font-weight:800;border-bottom:0;background:#f8fafc}
+.s12w5-eq{margin-top:8px;border:1px solid var(--line);border-radius:9px;background:#fbfdff;padding:7px 10px}
+.s12w5-eq b{display:block;font:800 15px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--ink)}
+.s12w5-eq span{display:block;color:var(--muted);font-size:10.5px;margin-top:2px}
+.s12w5-hero{margin-top:9px;border:1px solid var(--line);border-radius:9px;background:#fbfdff;padding:8px 10px;display:flex;align-items:baseline;gap:10px}
+.s12w5-hero b{font:800 26px ui-monospace,SFMono-Regular,Consolas,monospace;line-height:1}
+.s12w5-hero span{color:var(--muted);font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;line-height:1.3}
+.s12w5-note{margin:8px 0 0;font-size:12.5px;color:var(--muted);line-height:1.45}
+.s12w5-note b{color:var(--ink)}
+@media(max-width:940px){.s12w5-g{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s12w5-w">
+<div class="s12w5-k">ERA V5 Session 12 · what each GPU keeps</div>
+<h1>ZeRO Stages</h1>
+<p class="s12w5-say" id="s12w5-say"></p>
+<div class="s12w5-bar">
+<span class="s12w5-lb">arrangement</span>
+<button type="button" class="s12w5-o" data-v="0" aria-label="Data parallel, every GPU stores all sixteen bytes for all eight weights">data parallel</button>
+<button type="button" class="s12w5-o" data-v="1" aria-label="ZeRO stage 1, the master copy and the optimizer averages are split across the GPUs">ZeRO-1</button>
+<button type="button" class="s12w5-o" data-v="2" aria-label="ZeRO stage 2, the gradient, the master copy and the optimizer averages are split across the GPUs">ZeRO-2</button>
+<button type="button" class="s12w5-o" data-v="3" aria-label="ZeRO stage 3, the weight, the gradient, the master copy and the optimizer averages are all split across the GPUs">ZeRO-3</button>
+</div>
+<div class="s12w5-card">
+<h2 id="s12w5-fh">Bytes held on each of 8 GPUs, for each of 8 weights</h2>
+<svg id="s12w5-boxes" viewBox="0 0 1108 205" role="img" aria-label="Eight GPU boxes side by side, each containing eight slim stacks of four coloured bands, one stack per weight"></svg>
+<p class="s12w5-note" id="s12w5-note"></p>
+</div>
+<section class="s12w5-g">
+<div class="s12w5-card">
+<h2>Memory one GPU needs against what one card holds</h2>
+<svg id="s12w5-cap" viewBox="0 0 650 56" role="img" aria-label="Capacity track showing the memory one GPU needs against the 74.5 gibibytes one card holds"></svg>
+<div class="s12w5-eq"><b id="s12w5-eq"></b><span id="s12w5-eqs"></span></div>
+<p class="s12w5-note" id="s12w5-note2"></p>
+</div>
+<div class="s12w5-card">
+<h2>Where each band lives</h2>
+<table class="s12w5-t">
+<tr><th>what is held</th><th>bytes</th><th>held on</th><th>per GPU</th></tr>
+<tbody id="s12w5-rows"></tbody>
+<tr class="tot"><td>total per weight</td><td id="s12w5-tb"></td><td class="sp"></td><td id="s12w5-tg"></td></tr>
+</table>
+<div class="s12w5-hero"><b id="s12w5-md">16</b><span>bytes per weight<br>still duplicated on all 8 GPUs</span></div>
+</div>
+</section>
+</main>
+<script>
+(function(){
+'use strict';
+var B=[['weight, bf16','the weight',2,'#0891b2'],
+       ['gradient, bf16','the gradient',2,'#d97706'],
+       ['master copy, fp32','the master copy',4,'#7c3aed'],
+       ['optimizer averages','the optimizer averages',8,'#159447']],
+    SHARD=[[],[2,3],[1,2,3],[0,1,2,3]],
+    NAME=['data parallel','ZeRO-1','ZeRO-2','ZeRO-3'],
+    N=8,P=30e9,GIB=1073741824,CARD=80e9/GIB,TOTB=16,
+    stage=0;
+function $(i){return document.getElementById('s12w5-'+i);}
+function shard(j){return SHARD[stage].indexOf(j)>=0;}
+function solid(g,w,j){return !shard(j)||w===g;}
+function boxBytes(g){var t=0,w,j;for(w=0;w<N;w++)for(j=0;j<B.length;j++)if(solid(g,w,j))t+=B[j][2];return t;}
+function perWeight(){return boxBytes(0)/N;}
+function bandPer(j){var t=0,w;for(w=0;w<N;w++)if(solid(0,w,j))t+=B[j][2];return t/N;}
+function dup(){var t=0,j,g,all;
+  for(j=0;j<B.length;j++){all=true;for(g=0;g<N;g++)if(!solid(g,0,j))all=false;if(all)t+=B[j][2];}
+  return t;}
+function everyWhere(){var t=0,j;for(j=0;j<B.length;j++)if(solid(0,1,j))t+=B[j][2];return t;}
+function ownOnly(){var t=0,j;for(j=0;j<B.length;j++)if(solid(0,0,j)&&!solid(0,1,j))t+=B[j][2];return t;}
+function gib(b){return P*b/GIB;}
+function f1(v){return v.toFixed(1);}
+function f2(v){return v.toFixed(2);}
+function list(a){return a.length<2?a[0]:a.length<3?a.join(' and '):a.slice(0,-1).join(', ')+' and '+a[a.length-1];}
+function tx(x,y,s,c,a,z,w){return '<text x="'+x+'" y="'+y+'" text-anchor="'+(a||'middle')+'" font-size="'+(z||9.5)+'" font-weight="'+(w||700)+'" fill="'+c+'">'+s+'</text>';}
+function figure(){
+  var W=1108,GAP=9,BW=(W-GAP*(N-1))/N,PADX=7,PIT=(BW-2*PADX)/N,BAR=PIT-1.8,
+      PXB=9.5,STK=TOTB*PXB,BY=2,SY=BY+8,BH=8+STK+11,
+      s='',i,w,j,x,cx,y,h;
+  for(i=0;i<N;i++){
+    x=i*(BW+GAP);
+    s+='<rect x="'+x.toFixed(2)+'" y="'+BY+'" width="'+BW.toFixed(2)+'" height="'+BH+'" rx="7" fill="#fff" stroke="#cbd8e6"/>';
+    for(w=0;w<N;w++){
+      cx=x+PADX+w*PIT;
+      if(w===i)s+='<rect x="'+(cx-1.2).toFixed(2)+'" y="'+(SY-3)+'" width="'+(BAR+2.4).toFixed(2)+'" height="'+(STK+6)+'" rx="3" fill="rgba(21,32,51,.055)"/>';
+      y=SY;
+      for(j=0;j<B.length;j++){
+        h=B[j][2]*PXB;
+        if(solid(i,w,j))
+          s+='<rect x="'+cx.toFixed(2)+'" y="'+y.toFixed(2)+'" width="'+BAR.toFixed(2)+'" height="'+h.toFixed(2)+'" rx="1" fill="'+B[j][3]+'"/>';
+        else
+          s+='<rect x="'+(cx+.5).toFixed(2)+'" y="'+(y+.5).toFixed(2)+'" width="'+(BAR-1).toFixed(2)+'" height="'+(h-1).toFixed(2)+'" rx="1.4" fill="#fff" stroke="'+B[j][3]+'" stroke-width="1" stroke-dasharray="2.6 2.4" opacity=".5"/>';
+        y+=h;
+      }
+      if(w===i)s+='<rect x="'+cx.toFixed(2)+'" y="'+(SY+STK+3.5).toFixed(2)+'" width="'+BAR.toFixed(2)+'" height="2.6" rx="1.3" fill="#152033"/>';
+    }
+    if(i===0)for(w=0;w<N;w++)s+=tx(x+PADX+w*PIT+BAR/2,BY+BH+12,w,'#8b9aad',null,8.5,800);
+    s+=tx(x+BW/2,BY+BH+26,'GPU '+i,'#64748b',null,10,800);
+  }
+  s+=tx(BW+GAP,BY+BH+12,'weight index','#8b9aad','start',9);
+  $('boxes').innerHTML=s;
+}
+function cap(){
+  var s='',max=gib(TOTB),W=636,X=6,i,w,cx=X+CARD/max*W,req=gib(perWeight()),rw=req/max*W,over=req-CARD;
+  s+='<defs><pattern id="s12w5-hx" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="7" height="7" fill="rgba(220,38,38,.26)"/><line x1="0" y1="0" x2="0" y2="7" stroke="#dc2626" stroke-width="2.6"/></pattern></defs>';
+  s+='<rect x="'+X+'" y="7" width="'+W+'" height="22" rx="5" fill="#f1f5f9"/>';
+  s+='<rect x="'+X+'" y="7" width="'+(cx-X)+'" height="22" rx="5" fill="rgba(21,148,71,.08)"/>';
+  w=X;
+  for(i=0;i<B.length;i++){
+    var sw=bandPer(i)/perWeight()*rw;
+    s+='<rect x="'+w+'" y="7" width="'+sw+'" height="22" fill="'+B[i][3]+'"/>';
+    w+=sw;
+  }
+  if(over>0)s+='<rect x="'+cx+'" y="7" width="'+(X+rw-cx)+'" height="22" fill="url(#s12w5-hx)" stroke="#dc2626" stroke-width="1.2"/>';
+  s+='<line x1="'+cx+'" y1="2" x2="'+cx+'" y2="34" stroke="#152033" stroke-width="1.6"/>';
+  s+=tx(cx+5,44,'one 80 GB card, '+f1(CARD)+' GiB','#152033','start',10,800);
+  s+=tx(644,44,f1(req)+' GiB needed, '+(over>0?f1(over)+' GiB over':f1(-over)+' GiB to spare'),over>0?'#b91c1c':'#15803d','end',10,800);
+  $('cap').innerHTML=s;
+}
+function draw(){
+  var t=perWeight(),d=dup(),g=gib(t),ev=everyWhere(),ow=ownOnly(),i,r='',sp,keep=[],hold=[];
+  for(i=0;i<B.length;i++){
+    sp=shard(i);
+    if(sp)keep.push(B[i][1]);else hold.push(B[i][1]);
+    r+='<tr><td class="n"><em style="background:'+B[i][3]+'"></em>'+B[i][0]+'</td><td>'+B[i][2]+'</td><td class="sp" style="color:'+(sp?'#0e7490':'#152033')+'">'+(sp?'split '+N+' ways':'all '+N+' GPUs')+'</td><td>'+f2(bandPer(i))+'</td></tr>';
+  }
+  $('rows').innerHTML=r;
+  $('tb').textContent=TOTB;$('tg').textContent=f2(t);
+  $('md').textContent=d;
+  $('md').style.color=d>0?'var(--red)':'var(--green)';
+  $('fh').textContent='Bytes held on each of '+N+' GPUs, for each of '+N+' weights, under '+NAME[stage];
+  $('eq').textContent='('+(ev&&ow?N+' × '+ev+' + '+ow:ev?N+' × '+ev:''+ow)+') / '+N+' = '+f2(t)+' bytes per weight';
+  $('eqs').textContent='solid bytes counted in one GPU box, divided across the '+N+' weights, giving '+f1(g)+' GiB per GPU';
+  $('say').innerHTML=(keep.length===0
+    ? 'Every GPU holds all four bands for all '+N+' weights, so the '+(N*N)+' stacks are identical. '
+    : 'Each GPU keeps '+list(keep)+' for the one weight it owns. '+(hold.length
+        ? 'It holds '+list(hold)+' for all '+N+' weights. '
+        : 'It holds nothing for the other '+(N-1)+' weights. '))
+    +'Each card is asked for <b>'+f2(t)+' bytes</b> per weight, which is <b>'+f1(g)+' GiB</b>. One card holds '+f1(CARD)+' GiB.';
+  $('note').innerHTML='A solid cell is state this GPU stores. A dashed cell is state another GPU stores for that weight. GPU k owns weight k, marked by the tick under its column.';
+  $('note2').innerHTML=d>0
+    ? 'Multiply '+d+' bytes by 30 billion weights and <b>'+f1(gib(d))+' GiB</b> sits on every card at any GPU count. That floor is what the next widget plots.'
+    : 'No band is stored twice, so the figure on each card falls as GPUs are added.';
+  figure();cap();
+}
+Array.prototype.forEach.call(document.querySelectorAll('.s12w5-o'),function(b){
+  b.addEventListener('click',function(){
+    stage=+b.getAttribute('data-v');
+    Array.prototype.forEach.call(document.querySelectorAll('.s12w5-o'),function(o){o.classList.toggle('on',+o.getAttribute('data-v')===stage);});
+    draw();
+  });
+});
+Array.prototype.forEach.call(document.querySelectorAll('.s12w5-o'),function(o){o.classList.toggle('on',+o.getAttribute('data-v')===stage);});
+draw();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

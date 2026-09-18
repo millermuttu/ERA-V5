@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 12 Widget 1 - Data Parallelism</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s12w1-w{max-width:1180px;margin:0 auto;padding:13px 22px 15px}
+.s12w1-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--violet)}
+.s12w1-w h1{font-size:24px;line-height:1.12;margin:3px 0 5px}
+.s12w1-sub{color:var(--muted);margin:0 0 9px;font-size:12.5px;line-height:1.45;max-width:1000px}
+.s12w1-sub b{color:var(--ink)}
+.s12w1-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:9px}
+.s12w1-bar button{border:1px solid var(--violet);background:#fff;color:var(--violet);border-radius:8px;padding:7px 14px;font:800 12px Inter,sans-serif;cursor:pointer}
+.s12w1-sl{display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 10px;font-size:11.5px;font-weight:700;color:var(--muted);cursor:pointer}
+.s12w1-sl input{width:15px;height:15px;vertical-align:middle;accent-color:var(--violet)}
+.s12w1-sl.on{border-color:var(--violet);background:#f5f3ff;color:#4c1d95}
+.s12w1-st{font:800 11.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--ink);border:1px solid var(--line);background:#fbfdff;border-radius:8px;padding:6px 10px}
+.s12w1-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:9px 11px}
+.s12w1-card svg{display:block;width:100%;height:auto}
+.s12w1-read{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-top:9px;border:1px solid var(--line);background:rgba(255,255,255,.96);border-radius:11px;padding:9px 14px}
+.s12w1-read span{font-size:12.5px;font-weight:800;letter-spacing:.02em;color:var(--muted)}
+.s12w1-read b{font:800 34px/1 ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--cyan)}
+.s12w1-read b.bad{color:var(--red)}
+.s12w1-read i{font-style:normal;font-size:12px;font-weight:700;color:var(--muted)}
+.s12w1-note{margin:8px 0 0;font-size:11.5px;color:var(--muted);line-height:1.45}
+.s12w1-note b{color:var(--ink);font:800 11.5px ui-monospace,SFMono-Regular,Consolas,monospace}
+.s12w1-sm{transition:transform .45s cubic-bezier(.4,0,.2,1)}
+.s12w1-fade{transition:opacity .3s linear}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s12w1-w">
+<div class="s12w1-k">ERA V5 Session 12 &middot; data parallelism</div>
+<h1>Data Parallelism</h1>
+<p class="s12w1-sub">Four GPUs hold one copy each of the same four weights, and the batch of eight samples is split two per GPU. The loss on a sample is <b>L = 0.5 &middot; ||w &minus; x||<sup>2</sup></b>, so that sample&rsquo;s gradient is <b>w &minus; x</b>, and a GPU&rsquo;s gradient is the mean over its two samples. The update is <b>w := w &minus; 0.1 g</b>.</p>
+
+<div class="s12w1-bar">
+<button id="s12w1-step" type="button" aria-label="Advance to the next stage of the training step">Step</button>
+<label class="s12w1-sl" id="s12w1-avgl" for="s12w1-avg"><input id="s12w1-avg" type="checkbox" checked aria-label="Average the four gradients before applying the update"> average gradients</label>
+<span class="s12w1-st" id="s12w1-status" aria-live="polite"></span>
+</div>
+
+<div class="s12w1-card">
+<svg id="s12w1-svg" viewBox="0 0 1140 358" role="img" aria-label="Four GPU cards holding weights, data and gradients, with an averaged gradient strip below feeding back into every weight strip"></svg>
+</div>
+
+<div class="s12w1-read">
+<span>largest difference between any two weight copies</span>
+<b id="s12w1-gap">0.000</b>
+<i id="s12w1-gapn"></i>
+</div>
+<p class="s12w1-note" id="s12w1-note"></p>
+</main>
+
+<script>
+(function(){
+'use strict';
+var W0=[3,5,2,4], LR=0.1, NB=3;
+var SAMPLES=[
+ [1,7,2,4],[3,5,4,6],[5,3,6,2],[1,7,2,6],[2,6,3,5],[6,2,7,1],[7,1,8,4],[3,5,4,0],
+ [2,4,1,8],[4,6,3,4],[6,2,5,3],[2,6,3,7],[3,5,4,6],[7,1,6,2],[8,4,9,1],[4,0,5,5],
+ [0,8,3,5],[2,6,5,3],[4,4,7,1],[0,8,3,5],[1,7,4,4],[5,3,8,0],[6,2,9,2],[2,6,7,0]
+];
+function $(i){return document.getElementById('s12w1-'+i);}
+var REDUCED=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function f3(x){return (Math.abs(x)<5e-4?0:x).toFixed(3);}
+function f2(x){return (Math.abs(x)<5e-3?0:x).toFixed(2);}
+
+var CY=88, CH=188, CW=244, CX=[32,308,584,860];
+var WCW=(CW-20-15)/4, WCX=function(k,c){return CX[k]+10+c*(WCW+5);};
+var SLW=(CW-20-6)/2, SLX=function(k,i){return CX[k]+10+i*(SLW+6);};
+var SMX=function(j){return 24+j*136;}, SMY=20, SMW=109, SMH=32;
+var WY=126, DY=178, GY=232, CELLH=32;
+var AVY=306, AVH=38, AVLX=218, AVW=(1092-AVLX-24)/4, AVX=function(k){return AVLX+k*(AVW+8);};
+var RAIL=function(k){return CX[k]-16;};
+
+function vec(a,fmt){return a.map(fmt).join('  ');}
+
+function build(){
+  var s='<defs><marker id="s12w1-aro" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0 0 6.5 3 0 6z" fill="#d97706"/></marker>'+
+        '<marker id="s12w1-arg" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0 0 6.5 3 0 6z" fill="#c9d5e4"/></marker></defs>';
+  s+='<text x="24" y="13" font-size="9.5" font-weight="800" letter-spacing="1" fill="#65758b">BATCH: 8 SAMPLES</text>';
+  var j,k,c;
+  s+='<path id="s12w1-bus" fill="none" stroke="#c9d5e4" stroke-width="1.6"/>';
+  for(k=0;k<4;k++){
+    s+='<path id="s12w1-c'+k+'" fill="none" stroke="#c9d5e4" stroke-width="1.6" marker-end="url(#s12w1-arg)"/>';
+  }
+  s+='<rect id="s12w1-avbg" x="32" y="'+AVY+'" width="1072" height="'+AVH+'" rx="9" fill="#fffaf0" stroke="#f2d3a0"/>';
+  s+='<text id="s12w1-avlab" x="46" y="'+(AVY+24)+'" font-size="9.5" font-weight="800" letter-spacing="1" fill="#d97706">AVERAGE OF 4 GRADIENTS</text>';
+  for(k=0;k<4;k++){
+    s+='<rect id="s12w1-avc'+k+'" x="'+AVX(k)+'" y="'+(AVY+6)+'" width="'+AVW+'" height="'+(AVH-12)+'" rx="6" fill="#fff" stroke="#f0dcbc"/>';
+    s+='<text id="s12w1-av'+k+'" class="s12w1-fade" x="'+(AVX(k)+AVW/2)+'" y="'+(AVY+24)+'" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="15" font-weight="800" fill="#b45309"></text>';
+  }
+  for(k=0;k<4;k++){
+    s+='<rect x="'+CX[k]+'" y="'+CY+'" width="'+CW+'" height="'+CH+'" rx="10" fill="#fff" stroke="#d9e2ef"/>';
+    s+='<text x="'+(CX[k]+12)+'" y="'+(CY+19)+'" font-size="12.5" font-weight="800" fill="#152033">GPU '+k+'</text>';
+    s+='<text x="'+(CX[k]+12)+'" y="'+(WY-6)+'" font-size="9" font-weight="800" letter-spacing="1" fill="#0891b2">WEIGHTS</text>';
+    s+='<text x="'+(CX[k]+12)+'" y="'+(DY-6)+'" font-size="9" font-weight="800" letter-spacing="1" fill="#65758b">DATA</text>';
+    s+='<text x="'+(CX[k]+12)+'" y="'+(GY-6)+'" font-size="9" font-weight="800" letter-spacing="1" fill="#d97706">GRADIENT</text>';
+    for(c=0;c<4;c++){
+      s+='<rect id="s12w1-wr'+k+c+'" x="'+WCX(k,c)+'" y="'+WY+'" width="'+WCW+'" height="'+CELLH+'" rx="6" fill="#ecfdff" stroke="#a5e5f2"/>';
+      s+='<text id="s12w1-wt'+k+c+'" x="'+(WCX(k,c)+WCW/2)+'" y="'+(WY+20)+'" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="12" font-weight="800" fill="#0e7490"></text>';
+      s+='<rect id="s12w1-gr'+k+c+'" x="'+WCX(k,c)+'" y="'+GY+'" width="'+WCW+'" height="'+CELLH+'" rx="6" fill="#fffbeb" stroke="#f2d3a0"/>';
+      s+='<text id="s12w1-gt'+k+c+'" class="s12w1-fade" x="'+(WCX(k,c)+WCW/2)+'" y="'+(GY+20)+'" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="12" font-weight="800" fill="#b45309"></text>';
+    }
+    for(c=0;c<2;c++) s+='<rect x="'+SLX(k,c)+'" y="'+DY+'" width="'+SLW+'" height="'+CELLH+'" rx="6" fill="#f7fafd" stroke="#e6edf6" stroke-dasharray="3 3"/>';
+  }
+  for(j=0;j<8;j++) s+='<rect x="'+SMX(j)+'" y="'+SMY+'" width="'+SMW+'" height="'+SMH+'" rx="6" fill="none" stroke="#dbe3ee" stroke-width="1.2" stroke-dasharray="4 4"/>';
+  for(j=0;j<8;j++){
+    s+='<g id="s12w1-sm'+j+'" class="s12w1-sm" transform="translate(0,0)">'+
+       '<rect x="'+SMX(j)+'" y="'+SMY+'" width="'+SMW+'" height="'+SMH+'" rx="6" fill="#f1f5fb" stroke="#cbd6e6"/>'+
+       '<text x="'+(SMX(j)+9)+'" y="'+(SMY+20)+'" font-size="9.5" font-weight="800" fill="#8b9aad">'+(j+1)+'</text>'+
+       '<text id="s12w1-smt'+j+'" x="'+(SMX(j)+SMW/2+7)+'" y="'+(SMY+21)+'" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-size="12" font-weight="700" fill="#3b4a60"></text>'+
+       '</g>';
+  }
+  $('svg').innerHTML=s;
+}
+
+var st={wb:null,batch:0,phase:4};
+function reset(){st.wb=[0,1,2,3].map(function(){return W0.slice();});st.batch=0;st.phase=4;}
+
+function derive(){
+  var b=st.batch%NB, k, c, xs=[], g=[], m=[0,0,0,0];
+  for(k=0;k<8;k++) xs.push(SAMPLES[b*8+k]);
+  for(k=0;k<4;k++){
+    var a=xs[2*k], d=xs[2*k+1], row=[];
+    for(c=0;c<4;c++) row.push(st.wb[k][c]-(a[c]+d[c])/2);
+    g.push(row);
+  }
+  for(c=0;c<4;c++){ for(k=0;k<4;k++) m[c]+=g[k][c]; m[c]/=4; }
+  var avg=$('avg').checked, wa=[];
+  for(k=0;k<4;k++){
+    var u=avg?m:g[k], row=[];
+    for(c=0;c<4;c++) row.push(st.wb[k][c]-LR*u[c]);
+    wa.push(row);
+  }
+  var one=[];
+  for(c=0;c<4;c++){ var t=0; for(k=0;k<8;k++) t+=st.wb[0][c]-xs[k][c]; one.push(t/8); }
+  return {xs:xs,g:g,m:m,wa:wa,one:one,avg:avg};
+}
+
+function spread(W){
+  var d=0,i,j,c;
+  for(i=0;i<4;i++) for(j=i+1;j<4;j++) for(c=0;c<4;c++) d=Math.max(d,Math.abs(W[i][c]-W[j][c]));
+  return d;
+}
+
+var PH=['batch drawn','split','compute gradients','average','update'];
+
+function render(lit){
+  var d=derive(), p=st.phase, k, c, j;
+  var W=(p>=4)?d.wa:st.wb;
+  for(j=0;j<8;j++){
+    var g=document.getElementById('s12w1-sm'+j);
+    document.getElementById('s12w1-smt'+j).textContent=vec(d.xs[j],String);
+    if(p>=1){
+      var kk=Math.floor(j/2), ii=j%2;
+      g.setAttribute('transform','translate('+(SLX(kk,ii)-SMX(j)).toFixed(1)+','+(DY-SMY)+')');
+    } else g.setAttribute('transform','translate(0,0)');
+  }
+  for(k=0;k<4;k++) for(c=0;c<4;c++){
+    document.getElementById('s12w1-wt'+k+c).textContent=f3(W[k][c]);
+    var gt=document.getElementById('s12w1-gt'+k+c);
+    gt.textContent=(p>=2)?f2(d.g[k][c]):'';
+    document.getElementById('s12w1-gr'+k+c).setAttribute('fill',(p>=2)?'#fffbeb':'#fbfdff');
+    document.getElementById('s12w1-gr'+k+c).setAttribute('stroke',(p>=2)?'#f2d3a0':'#e6edf6');
+  }
+  var showAv=d.avg&&p>=3;
+  for(k=0;k<4;k++) document.getElementById('s12w1-av'+k).textContent=showAv?f2(d.m[k]):'';
+  $('avlab').textContent=d.avg?'AVERAGE OF 4 GRADIENTS':'AVERAGING OFF';
+  $('avlab').setAttribute('fill',d.avg?'#d97706':'#8b9aad');
+  $('avbg').setAttribute('fill',d.avg?'#fffaf0':'#f7fafd');
+  $('avbg').setAttribute('stroke',d.avg?'#f2d3a0':'#e6edf6');
+  for(k=0;k<4;k++) document.getElementById('s12w1-avc'+k).setAttribute('stroke',d.avg?'#f0dcbc':'#e6edf6');
+
+  var on=(p>=4), wires=[], bus=$('bus');
+  if(d.avg){ bus.setAttribute('d','M'+((AVLX+1092)/2)+','+AVY+' V288 M'+RAIL(0)+',288 H'+RAIL(3)); bus.removeAttribute('hidden'); wires.push(bus); }
+  else bus.setAttribute('hidden','hidden');
+  for(k=0;k<4;k++){
+    var path=document.getElementById('s12w1-c'+k);
+    if(d.avg) path.setAttribute('d','M'+RAIL(k)+',288 V'+(WY+CELLH/2)+' H'+CX[k]);
+    else path.setAttribute('d','M'+CX[k]+','+(GY+CELLH/2)+' H'+RAIL(k)+' V'+(WY+CELLH/2)+' H'+CX[k]);
+    path.setAttribute('marker-end',on?'url(#s12w1-aro)':'url(#s12w1-arg)');
+    wires.push(path);
+  }
+  for(k=0;k<wires.length;k++){
+    wires[k].setAttribute('stroke',on?'#d97706':'#c9d5e4');
+    wires[k].setAttribute('stroke-width',on?'2.2':'1.6');
+    wires[k].style.strokeDasharray='';
+    if(on&&lit&&!REDUCED&&wires[k].animate){
+      var L=Math.ceil(wires[k].getTotalLength());
+      wires[k].style.strokeDasharray=L;
+      wires[k].animate([{strokeDashoffset:L},{strokeDashoffset:0}],{duration:700,easing:'linear'});
+      (function(el){setTimeout(function(){el.style.strokeDasharray='';},720);})(wires[k]);
+    }
+  }
+
+  var gap=spread(W);
+  $('gap').textContent=f3(gap);
+  $('gap').className=(gap<5e-4)?'':'bad';
+  $('gapn').textContent=(gap<5e-4)?'all four copies agree on every weight':'at least one weight differs between two of the copies';
+  $('status').textContent='batch '+(st.batch+1)+'  ·  '+PH[p];
+  $('avgl').className='s12w1-sl'+(d.avg?' on':'');
+  var od=0; for(c=0;c<4;c++) od=Math.max(od,Math.abs(d.m[c]-d.one[c]));
+  $('note').innerHTML = !d.avg
+    ? 'Averaging is off. Each GPU applies its own gradient to its own copy of the weights.'
+    : (p>=3
+      ? 'The averaged gradient is <b>'+vec(d.m,f2)+'</b>. One GPU running all eight samples on GPU&nbsp;0&rsquo;s weights gives <b>'+vec(d.one,f2)+'</b>, a difference of <b>'+od.toFixed(6)+'</b>.'
+      : 'The batch is drawn from a fixed list of 24 sample vectors, so this page shows the same numbers on every load.');
+}
+
+function step(){
+  if(st.phase<4){ st.phase++; render(st.phase===4); }
+  else { st.wb=derive().wa; st.batch++; st.phase=0; render(false); }
+}
+build(); reset(); render(false);
+$('step').addEventListener('click',step);
+$('avg').addEventListener('change',function(){ reset(); render(false); });
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

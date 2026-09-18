@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 12 Widget 4 - The Cost of Communication</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s12w4-w{max-width:1180px;margin:0 auto;padding:14px 22px 16px}
+.s12w4-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.s12w4-w h1{font-size:24px;line-height:1.12;margin:3px 0 5px}
+.s12w4-sub{color:var(--muted);margin:0 0 10px;font-size:13px;line-height:1.5;max-width:1010px}
+.s12w4-sub b{color:var(--ink)}
+.s12w4-bar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.s12w4-lb{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.s12w4-bar button{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;padding:6px 14px;font:800 11.5px Inter,sans-serif;cursor:pointer}
+.s12w4-bar button.g.on{border-color:var(--cyan);color:#0e7490;background:#effbfe;box-shadow:inset 0 0 0 1px var(--cyan)}
+.s12w4-bar button.l.on{border-color:var(--amber);color:#b45309;background:#fffaf2;box-shadow:inset 0 0 0 1px var(--amber)}
+.s12w4-sep{width:1px;height:20px;background:var(--line);margin:0 5px}
+.s12w4-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:11px 14px 12px}
+.s12w4-card h2{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 7px;font-weight:800}
+.s12w4-row{display:grid;grid-template-columns:104px 1fr;align-items:center;gap:10px}
+.s12w4-row+.s12w4-row{margin-top:12px}
+.s12w4-gut{font-size:12.5px;font-weight:800;color:var(--ink);text-align:right;line-height:1.25}
+.s12w4-gut small{display:block;font-size:9.5px;font-weight:700;color:var(--muted);letter-spacing:.03em}
+.s12w4-tk{position:relative;height:88px;border-radius:9px;background:#f4f7fb;border:1px solid #e4ebf4;overflow:visible;
+ background-image:repeating-linear-gradient(to right,#dde6f2 0,#dde6f2 1px,transparent 1px,transparent 10%)}
+.s12w4-gh{position:absolute;left:0;top:5px;bottom:5px;border:1.5px dashed #b9c6d6;border-radius:7px;background:transparent}
+.s12w4-gh span{position:absolute;right:7px;bottom:4px;font-size:9.5px;font-weight:800;color:#93a3b6;white-space:nowrap}
+.s12w4-fl{position:absolute;left:0;top:5px;bottom:5px;border-radius:7px;transition:width .4s ease-in-out}
+.s12w4-fl.cy{background:linear-gradient(180deg,#1fa7c6,#0891b2);box-shadow:0 3px 10px rgba(8,145,178,.28)}
+.s12w4-fl.am{background:linear-gradient(180deg,#eda23c,#d97706);box-shadow:0 3px 10px rgba(217,119,6,.28)}
+.s12w4-vl{position:absolute;top:50%;transform:translateY(-50%);font:800 21px ui-monospace,SFMono-Regular,Consolas,monospace;white-space:nowrap;transition:left .4s ease-in-out}
+.s12w4-vl.cy{color:#0e7490}.s12w4-vl.am{color:#b45309}
+.s12w4-vl small{display:block;font:700 10px Inter,sans-serif;color:var(--muted);margin-top:1px}
+.s12w4-ax{position:relative;height:16px;margin-bottom:2px}
+.s12w4-ax i{position:absolute;top:0;transform:translateX(-50%);font:700 10px ui-monospace,SFMono-Regular,Consolas,monospace;color:#93a3b6;font-style:normal}
+.s12w4-ax em{display:none}
+.s12w4-lead{margin:12px 0 0;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;border-top:1px solid #eef3f9;padding-top:9px}
+.s12w4-lead b{font:800 34px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--amber);line-height:1}
+.s12w4-lead span{font-size:13px;font-weight:700;color:var(--ink)}
+.s12w4-lead i{font-size:12px;font-weight:700;color:var(--muted);font-style:normal}
+.s12w4-met{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+.s12w4-met div{border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.9);padding:7px 10px}
+.s12w4-met b{display:block;font:800 17px ui-monospace,SFMono-Regular,Consolas,monospace}
+.s12w4-met span{display:block;color:var(--muted);font-size:10.5px;margin-top:2px;line-height:1.3}
+.s12w4-note{margin:10px 0 0;font-size:12.5px;color:var(--muted);line-height:1.55}
+.s12w4-note b{color:var(--ink);font-weight:800}
+@media(max-width:940px){.s12w4-met{grid-template-columns:repeat(2,1fr)}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s12w4-w">
+<div class="s12w4-k">ERA V5 Session 12 &middot; the cost of communication</div>
+<h1>The Cost of Communication</h1>
+<p class="s12w4-sub">One training step of a <b>30 billion</b> parameter model, one million tokens, on <b>64</b> GPUs. Data parallelism moves <b>120 GB</b> of gradients across the link for every GPU on every step. The axis below is pinned from 0 to 10 seconds, so one second is the same width whatever the controls say.</p>
+
+<div class="s12w4-bar">
+<span class="s12w4-lb">GPU</span>
+<button type="button" class="s12w4-g" data-v="0" aria-label="H100 card, 990 teraflops of bf16 at 40 percent utilisation">H100</button>
+<button type="button" class="s12w4-g" data-v="1" aria-label="B200 card, 2.28 times the bf16 throughput of an H100">B200</button>
+<span class="s12w4-sep" aria-hidden="true"></span>
+<span class="s12w4-lb">link</span>
+<button type="button" class="s12w4-l" data-v="0" aria-label="NVLink at 450 gigabytes per second, inside one node">NVLink 450 GB/s, inside one node</button>
+<button type="button" class="s12w4-l" data-v="1" aria-label="InfiniBand at 50 gigabytes per second, between nodes">InfiniBand 50 GB/s, between nodes</button>
+</div>
+
+<div class="s12w4-card">
+<h2>One training step, on a pinned axis from 0 to 10 seconds</h2>
+<div class="s12w4-row">
+  <span class="s12w4-gut" aria-hidden="true"><small>seconds</small></span>
+  <div class="s12w4-ax" id="s12w4-ax"></div>
+</div>
+<div class="s12w4-row">
+  <span class="s12w4-gut">compute<small>the arithmetic</small></span>
+  <div class="s12w4-tk">
+    <div class="s12w4-gh" id="s12w4-ghc"><span id="s12w4-ghct"></span></div>
+    <div class="s12w4-fl cy" id="s12w4-flc"></div>
+    <div class="s12w4-vl cy" id="s12w4-vlc"></div>
+  </div>
+</div>
+<div class="s12w4-row">
+  <span class="s12w4-gut">network<small>the gradients</small></span>
+  <div class="s12w4-tk">
+    <div class="s12w4-gh" id="s12w4-ghn"><span id="s12w4-ghnt"></span></div>
+    <div class="s12w4-fl am" id="s12w4-fln"></div>
+    <div class="s12w4-vl am" id="s12w4-vln"></div>
+  </div>
+</div>
+<p class="s12w4-lead"><b id="s12w4-pct">77%</b><span>communication time divided by compute time</span><i id="s12w4-div"></i></p>
+</div>
+
+<div class="s12w4-met">
+<div><b id="s12w4-m1" style="color:var(--amber)">120 GB</b><span>gradient traffic per GPU per step</span></div>
+<div><b id="s12w4-m2" style="color:var(--amber)">2.40 s</b><span id="s12w4-m2s">network time</span></div>
+<div><b id="s12w4-m3" style="color:var(--cyan)">3.12 s</b><span id="s12w4-m3s">compute time</span></div>
+<div><b id="s12w4-m4" style="color:var(--ink)">5.52 s</b><span>step time with no overlap</span></div>
+</div>
+
+<p class="s12w4-note" id="s12w4-note"></p>
+</main>
+
+<script>
+(function(){
+'use strict';
+var PAR=30e9,BPP=2,TOK=1e6,GPUS=64,MFU=0.40,AXMAX=10,
+    PEAK=[990e12,990e12*2.28],GNAME=['H100','B200'],
+    BWS=[450e9,50e9],LNAME=['NVLink','InfiniBand'],
+    gpu=1,link=1,
+    RM=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches),
+    raf=null,shown={c:0,n:0,r:0};
+function $(i){return document.getElementById('s12w4-'+i);}
+function volume(){return 2*PAR*BPP;}
+function tComm(l){return volume()/BWS[l];}
+function tComp(g){return 6*PAR*TOK/(GPUS*PEAK[g]*MFU);}
+function pc(v){return Math.min(100,v/AXMAX*100);}
+function f2(v){return v.toFixed(2);}
+function pf(v){return v>=10?String(Math.round(v)):v.toFixed(1);}
+function pf1(v){return v.toFixed(1);}
+function gb(b){return (b/1e9).toFixed(0)+' GB';}
+
+function axis(){
+  var s='',i;
+  for(i=0;i<=AXMAX;i++){s+='<i style="left:'+(i*10)+'%">'+i+'</i>';}
+  $('ax').innerHTML=s;
+}
+function paint(c,n,r){
+  $('flc').style.width=pc(c)+'%';
+  $('fln').style.width=pc(n)+'%';
+  $('vlc').style.left='calc('+pc(c)+'% + 12px)';
+  $('vln').style.left='calc('+pc(n)+'% + 12px)';
+  $('vlc').innerHTML=f2(c)+' s<small>'+GNAME[gpu]+', 64 cards</small>';
+  $('vln').innerHTML=f2(n)+' s<small>'+LNAME[link]+'</small>';
+  $('pct').textContent=pf(r*100)+'%';
+}
+function draw(){
+  var c=tComp(gpu),n=tComm(link),r=n/c,step=c+n,share=n/step,
+      ghc=tComp(0),ghn=tComm(1),from={c:shown.c,n:shown.n,r:shown.r};
+  $('ghc').style.width=pc(ghc)+'%';
+  $('ghn').style.width=pc(ghn)+'%';
+  $('ghct').textContent=GNAME[0]+', '+f2(ghc)+' s';
+  $('ghnt').textContent=LNAME[1]+', '+f2(ghn)+' s';
+  $('div').textContent=f2(n)+' s of network for every '+f2(c)+' s of compute';
+  $('m1').textContent=gb(volume());
+  $('m2').textContent=f2(n)+' s';
+  $('m2s').textContent=gb(volume())+' at '+(BWS[link]/1e9)+' GB/s';
+  $('m3').textContent=f2(c)+' s';
+  $('m3s').textContent='1M tokens on 64 '+GNAME[gpu]+', 40% utilisation';
+  $('m4').textContent=f2(step)+' s';
+  $('note').innerHTML=
+    'The traffic is 2 &times; 30e9 &times; 2 bytes = <b>'+gb(volume())+'</b> per GPU per step, and that volume holds still when the card changes. '+
+    'A step with no overlap costs '+f2(c)+' + '+f2(n)+' = <b>'+f2(step)+' s</b>. '+
+    'The headline figure divides communication by compute. Communication is <b>'+pf1(share*100)+'%</b> of the whole '+f2(step)+' second step, which is the share of step time. '+
+    'The ratio '+pf(r*100)+'% is below 100%, so a transfer that runs during the computation is fully hidden.';
+  if(RM){shown={c:c,n:n,r:r};paint(c,n,r);return;}
+  if(raf){cancelAnimationFrame(raf);raf=null;}
+  var t0=null,D=400;
+  function frame(ts){
+    if(t0===null){t0=ts;}
+    var u=Math.min(1,(ts-t0)/D),e=u<0.5?2*u*u:1-Math.pow(-2*u+2,2)/2;
+    paint(from.c+(c-from.c)*e,from.n+(n-from.n)*e,from.r+(r-from.r)*e);
+    if(u<1){raf=requestAnimationFrame(frame);}else{raf=null;shown={c:c,n:n,r:r};}
+  }
+  raf=requestAnimationFrame(frame);
+}
+function marks(){
+  Array.prototype.forEach.call(document.querySelectorAll('.s12w4-g'),function(b){b.classList.toggle('on',+b.getAttribute('data-v')===gpu);b.classList.add('g');});
+  Array.prototype.forEach.call(document.querySelectorAll('.s12w4-l'),function(b){b.classList.toggle('on',+b.getAttribute('data-v')===link);b.classList.add('l');});
+}
+Array.prototype.forEach.call(document.querySelectorAll('.s12w4-g'),function(b){
+  b.addEventListener('click',function(){gpu=+b.getAttribute('data-v');marks();draw();});
+});
+Array.prototype.forEach.call(document.querySelectorAll('.s12w4-l'),function(b){
+  b.addEventListener('click',function(){link=+b.getAttribute('data-v');marks();draw();});
+});
+axis();marks();
+shown={c:tComp(gpu),n:tComm(link),r:tComm(link)/tComp(gpu)};
+draw();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

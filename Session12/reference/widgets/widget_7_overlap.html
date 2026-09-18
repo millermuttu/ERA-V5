@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 12 Widget 7 - Overlapping Communication with Compute</title>
+<!-- Claim: a gradient transfer that runs while the GPU is still computing costs nothing, and the bucket size decides how much of it runs there. -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s12w7-w{max-width:1180px;margin:0 auto;padding:14px 22px 16px}
+.s12w7-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--amber)}
+.s12w7-w h1{font-size:24px;line-height:1.12;margin:3px 0 8px}
+.s12w7-say{border:1px solid #bae6fd;background:#f2f9ff;border-radius:10px;padding:7px 12px;color:#0c4a6e;font-size:13.5px;line-height:1.5;margin:0 0 10px}
+.s12w7-say b{color:#075985;font-weight:800}
+.s12w7-say i{font-style:normal;color:#92400e;font-weight:800}
+.s12w7-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.s12w7-lb{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.s12w7-sl{display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 10px;font-size:11.5px;font-weight:700;color:var(--muted)}
+.s12w7-sl input{width:190px;vertical-align:middle;accent-color:var(--amber)}
+.s12w7-sl b{font:800 12.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--ink);min-width:132px}
+.s12w7-bar button{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;padding:5px 13px;font:800 11.5px Inter,sans-serif;cursor:pointer}
+.s12w7-bar button.on{border-color:var(--cyan);color:#0e5c72;background:#f0fbff;box-shadow:inset 0 0 0 1px var(--cyan)}
+.s12w7-sep{width:1px;height:20px;background:var(--line);margin:0 3px}
+.s12w7-hint{font-size:11.5px;font-weight:700;color:var(--muted)}
+.s12w7-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:11px 13px;margin-bottom:10px}
+.s12w7-card:last-child{margin-bottom:0}
+.s12w7-card h2{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px;font-weight:800}
+.s12w7-card svg{display:block;width:100%;height:auto}
+.s12w7-met{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
+.s12w7-met div{border:1px solid var(--line);border-radius:8px;background:#fbfdff;padding:5px 9px}
+.s12w7-met b{display:block;font:800 15px ui-monospace,SFMono-Regular,Consolas,monospace}
+.s12w7-met span{display:block;color:var(--muted);font-size:10px;margin-top:1px}
+.s12w7-mod{margin-top:8px;border:1px solid var(--line);border-radius:8px;background:#f8fafc;padding:6px 10px;white-space:pre;overflow-x:auto;font:700 11px/1.3 ui-monospace,SFMono-Regular,Consolas,monospace;color:#334155}
+.s12w7-note{margin:7px 0 0;font-size:12.5px;color:var(--muted);line-height:1.45}
+.s12w7-note b{color:var(--ink)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s12w7-w">
+<div class="s12w7-k">ERA V5 Session 12 &middot; communication during compute</div>
+<h1>Overlapping Communication with Compute</h1>
+<p class="s12w7-say" id="s12w7-say"></p>
+
+<div class="s12w7-bar">
+<label class="s12w7-sl" for="s12w7-b">bucket size <input id="s12w7-b" type="range" min="0" max="5" step="1" value="1" aria-label="Bucket size, one to twelve layers of gradient per transfer"><b id="s12w7-bv"></b></label>
+<span class="s12w7-sep" aria-hidden="true"></span>
+<span class="s12w7-lb">gpu</span>
+<button type="button" class="s12w7-g" data-v="0" aria-label="H100, compute 7.10 seconds per step">H100</button>
+<button type="button" class="s12w7-g" data-v="1" aria-label="B200, compute 3.12 seconds per step">B200</button>
+<span class="s12w7-hint">drag the bucket size from 12 layers to 1</span>
+</div>
+
+<div class="s12w7-card">
+<h2>One training step on a pinned ten second axis</h2>
+<svg id="s12w7-tl" viewBox="0 0 1120 158" role="img" aria-label="Timeline of one training step with twelve backward layer blocks above and the gradient transfers for each bucket below"></svg>
+<div class="s12w7-met">
+<div><b id="s12w7-m1" style="color:var(--ink)"></b><span>step time</span></div>
+<div><b id="s12w7-m2" style="color:var(--amber)"></b><span>of the transfer time is hidden</span></div>
+<div><b id="s12w7-m3" style="color:var(--cyan)"></b><span>transfers per step</span></div>
+<div><b id="s12w7-m4" style="color:var(--amber)"></b><span>seconds per transfer</span></div>
+</div>
+<div class="s12w7-mod" id="s12w7-mod"></div>
+<p class="s12w7-note" id="s12w7-note"></p>
+</div>
+
+<div class="s12w7-card">
+<h2>The forward pass under stage 3</h2>
+<svg id="s12w7-pf" viewBox="0 0 1120 92" role="img" aria-label="Static strip showing twelve forward layer blocks with the parameter gather for the next layer running underneath each one"></svg>
+<p class="s12w7-note">The same arrangement runs in the other direction. The gather for layer <b>i</b> plus one runs while layer <b>i</b> computes, so the parameters have arrived by the time they are needed.</p>
+</div>
+</main>
+
+<script>
+(function(){
+'use strict';
+var LAY=12,VOL=120,BW=50,TAU=0.10,AXIS=10,
+    STOPS=[1,2,3,4,6,12],
+    GPU=[['H100',7.10],['B200',3.12]],
+    X0=62,X1=1108,SC=(X1-X0)/AXIS,
+    CY='#0891b2',CYF='#e2f4fa',AM='#d97706',AMF='#fdeacf',
+    gsel=0;
+function $(i){return document.getElementById('s12w7-'+i);}
+function X(t){return X0+t*SC;}
+function f2(v){return v.toFixed(2);}
+function tx(x,y,s,c,a,sz,w){return '<text x="'+x.toFixed(1)+'" y="'+y+'" text-anchor="'+(a||'middle')+'" font-size="'+(sz||10)+'" font-weight="'+(w||700)+'" fill="'+c+'">'+s+'</text>';}
+function pad(s,n){s=String(s);while(s.length<n)s+=' ';return s;}
+function sched(k,tc){
+  var n=LAY/k,tl=tc/LAY,gb=VOL*k/LAY,tb=gb/BW+TAU,net=n*tb,b=[],prev=0,i,ready,st;
+  for(i=1;i<=n;i++){
+    ready=(i<n)?tl*k*i:Math.max(tc,net);
+    st=Math.max(ready,prev);
+    b.push({r:tl*k*i,s:st,e:st+tb});
+    prev=st+tb;
+  }
+  return {k:k,n:n,tl:tl,gb:gb,tb:tb,net:net,b:b,step:prev,hid:1-(prev-tc)/net,tc:tc};
+}
+function timeline(m,ghost){
+  var s='',i,j,x,a,c,bl,w,q=false;
+  s+=tx(X0,12,'backward pass runs the last layer first','#8b9aad','start',10.5);
+  for(i=0;i<=AXIS;i++){x=X(i);s+='<line x1="'+x.toFixed(1)+'" y1="20" x2="'+x.toFixed(1)+'" y2="138" stroke="#eef3f9"/>';s+=tx(x,152,i,'#8b9aad','middle',9.5);}
+  s+=tx(X0-8,152,'seconds','#8b9aad','end',9.5);
+  s+='<line x1="'+X0+'" y1="138" x2="'+X1+'" y2="138" stroke="#e6edf6"/>';
+  s+=tx(X0-8,52,'compute','#8b9aad','end',10.5,800);
+  s+=tx(X0-8,112,'network','#8b9aad','end',10.5,800);
+  for(i=0;i<LAY;i++){
+    a=X(m.tl*i);c=X(m.tl*(i+1));w=c-a-1.4;
+    s+='<rect x="'+(a+0.7).toFixed(1)+'" y="26" width="'+Math.max(0.6,w).toFixed(1)+'" height="44" rx="3" fill="'+CYF+'"/>';
+    if(w>19)s+=tx((a+c)/2,53,'L'+(LAY-i),'#0e5c72','middle',w>34?11:9);
+  }
+  for(i=0;i<m.n;i++){
+    a=X(m.tl*m.k*i);c=X(m.tl*m.k*(i+1));
+    s+='<rect x="'+(a+0.7).toFixed(1)+'" y="26" width="'+(c-a-1.4).toFixed(1)+'" height="44" rx="4" fill="none" stroke="'+CY+'" stroke-width="1.6"/>';
+  }
+  for(i=0;i<m.n;i++){
+    bl=m.b[i];x=X(bl.r);
+    s+='<line x1="'+x.toFixed(1)+'" y1="70" x2="'+x.toFixed(1)+'" y2="86" stroke="'+AM+'" stroke-width="1"/>';
+    a=X(bl.s);c=X(bl.e);w=c-a;
+    if(bl.s>bl.r+1e-9)q=true;
+    s+='<rect x="'+a.toFixed(1)+'" y="86" width="'+w.toFixed(1)+'" height="44" rx="3" fill="'+AMF+'" stroke="'+AM+'" stroke-width="1.2"/>';
+    if(w>44)s+=tx((a+c)/2,113,f2(m.tb)+' s','#92400e','middle',w>62?11:9.5);
+  }
+  x=X(Math.min(AXIS,ghost));
+  if(Math.abs(ghost-m.step)>0.005){
+    s+='<line x1="'+x.toFixed(1)+'" y1="20" x2="'+x.toFixed(1)+'" y2="138" stroke="#94a3b8" stroke-width="1.4" stroke-dasharray="5 4"/>';
+    s+=tx(x,16,'one bucket, '+f2(ghost)+' s','#64748b',x>1030?'end':'middle',10);
+  }
+  x=X(Math.min(AXIS,m.step));
+  s+='<line x1="'+x.toFixed(1)+'" y1="20" x2="'+x.toFixed(1)+'" y2="138" stroke="'+AM+'" stroke-width="2"/>';
+  s+=tx(x,16,'step '+f2(m.step)+' s','#92400e',x>1030?'end':'middle',11,800);
+  $('tl').innerHTML=s;
+  return q;
+}
+function prefetch(){
+  var s='',i,a,c,w=(X1-X0)/LAY;
+  s+=tx(X0-8,30,'forward','#8b9aad','end',10.5,800);
+  s+=tx(X0-8,73,'network','#8b9aad','end',10.5,800);
+  for(i=0;i<LAY;i++){
+    a=X0+w*i;c=a+w;
+    s+='<rect x="'+(a+0.7).toFixed(1)+'" y="8" width="'+(w-1.4).toFixed(1)+'" height="36" rx="3" fill="'+CYF+'" stroke="'+CY+'" stroke-width="1.2"/>';
+    s+=tx((a+c)/2,31,'L'+(i+1),'#0e5c72','middle',11);
+    if(i<LAY-1){
+      s+='<rect x="'+(a+7).toFixed(1)+'" y="54" width="'+(w-14).toFixed(1)+'" height="30" rx="3" fill="#fff" stroke="'+CY+'" stroke-width="1.2" stroke-dasharray="4 3"/>';
+      s+=tx((a+c)/2,73,'get L'+(i+2),'#0e5c72','middle',9.5);
+    }
+  }
+  $('pf').innerHTML=s;
+}
+function draw(){
+  var si=+$('b').value,k=STOPS[si],tc=GPU[gsel][1],m=sched(k,tc),
+      gh=sched(LAY,tc).step,i,early=0,q;
+  for(i=0;i<m.n;i++)if(m.b[i].e<=tc+1e-9)early++;
+  $('bv').textContent=k+(k===1?' layer':' layers')+' · '+m.gb.toFixed(0)+' GB';
+  q=timeline(m,gh);
+  $('m1').textContent=f2(m.step)+' s';
+  $('m2').textContent=Math.round(m.hid*100)+'%';
+  $('m3').textContent=m.n;
+  $('m4').textContent=f2(m.tb)+' s';
+  $('mod').textContent=
+    pad('t_bucket',13)+' = '+m.gb.toFixed(0)+' GB / '+BW+' GB/s + '+TAU.toFixed(2)+' s = '+f2(m.tb)+' s\n'+
+    pad('network_total',13)+' = '+m.n+' x '+f2(m.tb)+' s = '+f2(m.net)+' s\n'+
+    pad('step',13)+' = max('+f2(tc)+' s compute, '+f2(m.net)+' s network) + '+f2(m.tb)+' s = '+f2(m.step)+' s\n'+
+    pad('hidden',13)+' = 1 - ('+f2(m.step)+' s - '+f2(tc)+' s) / '+f2(m.net)+' s = '+Math.round(m.hid*100)+'%';
+  $('say').innerHTML='The gradients leave in <b>'+m.n+'</b> bucket'+(m.n===1?'':'s')+' of <b>'+m.gb.toFixed(0)+' GB</b> on the '+GPU[gsel][0]+
+    '. Each transfer takes <b>'+f2(m.tb)+' s</b>, and <b>'+early+'</b> of them finish before the backward pass ends. '+
+    (k===LAY
+      ? 'The step takes <b>'+f2(m.step)+' s</b>, which is the baseline where the whole 120 GB waits for the end of the backward pass. '
+      : 'The step takes <b>'+f2(m.step)+' s</b>. A single bucket of 120 GB gives a step of <b>'+f2(gh)+' s</b>. ')+
+    'Drag the bucket size to the left to split the transfer into more pieces.';
+  $('note').innerHTML=q
+    ? 'The amber blocks butt together with no gaps. A bucket is ready every <b>'+f2(m.tl*k)+' s</b> and each transfer takes <b>'+f2(m.tb)+' s</b>, so the buckets queue behind one another.'
+    : 'Every tick marks the moment a bucket’s last layer finished. The network lane sits empty for <b>'+f2(m.step-m.net)+' s</b> of the <b>'+f2(m.step)+' s</b> step, which is the whitespace under the compute blocks.';
+}
+Array.prototype.forEach.call(document.querySelectorAll('.s12w7-g'),function(b){
+  b.addEventListener('click',function(){
+    gsel=+b.getAttribute('data-v');
+    Array.prototype.forEach.call(document.querySelectorAll('.s12w7-g'),function(o){o.classList.toggle('on',+o.getAttribute('data-v')===gsel);});
+    draw();
+  });
+});
+Array.prototype.forEach.call(document.querySelectorAll('.s12w7-g'),function(o){o.classList.toggle('on',+o.getAttribute('data-v')===gsel);});
+$('b').addEventListener('input',draw);
+prefetch();
+draw();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

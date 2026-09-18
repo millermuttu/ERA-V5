@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 12 Widget 3 - The Ring All-Reduce</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s12w3-w{max-width:1180px;margin:0 auto;padding:14px 22px 16px}
+.s12w3-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--amber)}
+.s12w3-w h1{font-size:24px;line-height:1.12;margin:3px 0 5px}
+.s12w3-sub{color:var(--muted);margin:0 0 10px;font-size:13px;line-height:1.5;max-width:1010px}
+.s12w3-sub b{color:var(--ink)}
+.s12w3-sub code{font:800 12.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--ink)}
+.s12w3-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:9px}
+.s12w3-bar button{border:1px solid var(--amber);background:#fff;color:#b45309;border-radius:8px;padding:7px 16px;font:800 12.5px Inter,sans-serif;cursor:pointer}
+.s12w3-bar button:disabled{border-color:var(--line);color:#b6c2d2;cursor:default}
+.s12w3-chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 12px;font:800 11.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--ink)}
+.s12w3-chip.ph{border-color:#fcd9a4;background:#fffaf2;color:#b45309}
+.s12w3-st{font-size:11.5px;font-weight:700;color:var(--muted)}
+.s12w3-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:10px 13px 11px}
+.s12w3-card h2{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 5px;font-weight:800}
+.s12w3-card svg{display:block;width:100%;height:auto}
+.s12w3-foot{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:6px;padding-top:7px;border-top:1px solid #eef3f9}
+.s12w3-m{font:700 12px Inter,sans-serif;color:var(--muted)}
+.s12w3-m b{font:800 13px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--ink)}
+.s12w3-lg{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--muted)}
+.s12w3-lg i{display:block;width:16px;height:12px;border-radius:3px;flex:none;font-style:normal}
+.s12w3-lg i.a{border:2.5px solid var(--amber)}
+.s12w3-lg i.b{border:1.6px dashed var(--amber)}
+.s12w3-note{margin:8px 0 0;font-size:12.5px;line-height:1.5;color:var(--muted);min-height:38px}
+.s12w3-note b{color:var(--ink);font:800 13px ui-monospace,SFMono-Regular,Consolas,monospace}
+@media(max-width:940px){.s12w3-foot{gap:10px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s12w3-w">
+<div class="s12w3-k">ERA V5 Session 12 &middot; collective operations</div>
+<h1>The Ring All-Reduce</h1>
+<p class="s12w3-sub">Four GPUs each hold four chunks of one gradient. Every cell is a place-value number whose units digit is GPU&nbsp;0&rsquo;s contribution, whose tens digit is GPU&nbsp;1&rsquo;s, whose hundreds digit is GPU&nbsp;2&rsquo;s and whose thousands digit is GPU&nbsp;3&rsquo;s. The digit value names the chunk, so a cell reading <code>1101</code> is chunk&nbsp;0 carrying every contribution except GPU&nbsp;1&rsquo;s. All four GPUs send to their right neighbour at the same time on every step.</p>
+
+<div class="s12w3-bar">
+<button id="s12w3-step" type="button" aria-label="Advance one send of the ring all-reduce">Step</button>
+<button id="s12w3-back" type="button" aria-label="Return one send, to re-read a cell">Back</button>
+<span class="s12w3-chip ph" id="s12w3-phase">phase: reduce-scatter</span>
+<span class="s12w3-chip" id="s12w3-stepn">step 1 of 6</span>
+<span class="s12w3-st" id="s12w3-status" aria-live="polite"></span>
+</div>
+
+<div class="s12w3-card">
+<h2>Four GPUs on a ring, six sends, one contribution at a time</h2>
+<svg id="s12w3-svg" viewBox="0 0 1140 342" role="img" aria-label="Four GPU boxes in a row, each holding four gradient chunks, joined by three arrows and one dashed return arrow that closes the ring"></svg>
+<div class="s12w3-foot">
+<span class="s12w3-m">chunks fully summed: <b id="s12w3-cs">0</b> of 4</span>
+<span class="s12w3-m">cells holding a full sum: <b id="s12w3-cc">0</b> of 16</span>
+<span class="s12w3-lg"><i class="a"></i>the chunk this GPU sends next</span>
+<span class="s12w3-lg"><i class="b"></i>changed on the last send</span>
+</div>
+<p class="s12w3-note" id="s12w3-note"></p>
+</div>
+</main>
+
+<script>
+(function(){
+'use strict';
+var CHK=['#0891b2','#7c3aed','#159447','#475569'],
+    TINT=['#e8f6fa','#f4f0ff','#eaf8f0','#eef1f6'],
+    AMB='#d97706',
+    BX=[17,311,605,899],BW=224,BY=8,BH=254,
+    CY=[38,94,150,206],CH=48,CW=204,MIDY=135,
+    RETY=312,BOT=BY+BH,
+    N=4,STEPS=6,k=0,busy=false,
+    RM=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+function $(i){return document.getElementById('s12w3-'+i);}
+function init(){var a=[],g,c;for(g=0;g<N;g++){a[g]=[];for(c=0;c<N;c++){a[g][c]=Math.pow(10,g)*(c+1);}}return a;}
+var FULL=(function(){var b=init(),f=[],c,g;for(c=0;c<N;c++){f[c]=0;for(g=0;g<N;g++){f[c]+=b[g][c];}}return f;}());
+
+function sends(s){
+  var t,r=[],g;
+  if(s<=3){t=s-1;for(g=0;g<N;g++){r.push({f:g,t:(g+1)%N,c:((g-t)%N+N)%N});}}
+  else{t=s-4;for(g=0;g<N;g++){r.push({f:g,t:(g+1)%N,c:((g+1-t)%N+N)%N});}}
+  return r;
+}
+function stateAt(n){
+  var a=init(),ch=[],s,i,m,v;
+  for(s=1;s<=n;s++){
+    m=sends(s);ch=[];v=[];
+    for(i=0;i<N;i++){v[i]=a[m[i].f][m[i].c];}
+    for(i=0;i<N;i++){
+      if(s<=3){a[m[i].t][m[i].c]+=v[i];}else{a[m[i].t][m[i].c]=v[i];}
+      ch.push(m[i].t*N+m[i].c);
+    }
+  }
+  return {a:a,ch:ch};
+}
+function counts(a){
+  var g,c,cells=0,ok=0,any;
+  for(c=0;c<N;c++){any=0;for(g=0;g<N;g++){if(a[g][c]===FULL[c]){cells++;any=1;}}ok+=any;}
+  return {cells:cells,chunks:ok};
+}
+function tx(x,y,s,col,an,fs,fw,fam){
+  return '<text x="'+x+'" y="'+y+'" text-anchor="'+(an||'middle')+'" font-size="'+(fs||10)+'" font-weight="'+(fw||700)+'"'+(fam?' font-family="'+fam+'"':'')+' fill="'+col+'">'+s+'</text>';
+}
+var MONO='ui-monospace,SFMono-Regular,Consolas,monospace';
+
+function ring(){
+  var s='',g,x1,x2;
+  s+='<defs>'+
+     '<marker id="s12w3-ar" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0 0 7 3 0 6z" fill="'+AMB+'"/></marker>'+
+     '<marker id="s12w3-ar2" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0 0 7 3 0 6z" fill="'+AMB+'"/></marker>'+
+     '</defs>';
+  for(g=0;g<N-1;g++){
+    x1=BX[g]+BW;x2=BX[g+1];
+    s+='<rect x="'+(x1+4)+'" y="'+BY+'" width="'+(x2-x1-8)+'" height="'+BH+'" rx="7" fill="#fff7ec"/>';
+    s+='<line x1="'+(x1+8)+'" y1="'+MIDY+'" x2="'+(x2-12)+'" y2="'+MIDY+'" stroke="'+AMB+'" stroke-width="2" marker-end="url(#s12w3-ar)"/>';
+  }
+  s+='<path d="M'+(BX[3]+BW/2)+','+(BOT+4)+' L'+(BX[3]+BW/2)+','+RETY+' L'+(BX[0]+BW/2)+','+RETY+' L'+(BX[0]+BW/2)+','+(BOT+8)+'" fill="none" stroke="'+AMB+'" stroke-width="2" stroke-dasharray="7 5" stroke-linejoin="round" marker-end="url(#s12w3-ar2)"/>';
+  s+=tx((BX[0]+BX[3]+BW)/2,RETY+20,'the ring closes here, GPU 3 sends to GPU 0','#b45309','middle',11,800);
+  return s;
+}
+function boxes(a,out,ch){
+  var s='',g,c,i,full,fill,col,st,sw,da;
+  for(g=0;g<N;g++){
+    s+='<rect x="'+BX[g]+'" y="'+BY+'" width="'+BW+'" height="'+BH+'" rx="10" fill="#fff" stroke="'+(g===0?'#cbd6e4':'#dbe4f0')+'"/>';
+    s+=tx(BX[g]+12,27,'GPU '+g,'#334155','start',13,800);
+    s+=tx(BX[g]+BW-12,27,'holds 4 chunks','#9aa9bb','end',10,700);
+    for(c=0;c<N;c++){
+      i=g*N+c;full=a[g][c]===FULL[c];
+      fill=full?CHK[c]:TINT[c];col=full?'#ffffff':CHK[c];
+      st=CHK[c];sw=1;da='';
+      if(out&&out[g]===c){st=AMB;sw=3;}
+      else if(ch.indexOf(i)>=0){st=AMB;sw=1.8;da=' stroke-dasharray="5 3"';}
+      else if(full){st=CHK[c];sw=1;}
+      s+='<rect x="'+(BX[g]+10)+'" y="'+CY[c]+'" width="'+CW+'" height="'+CH+'" rx="8" fill="'+fill+'" stroke="'+st+'" stroke-width="'+sw+'"'+da+' opacity="'+(full||sw>1?1:0.92)+'"/>';
+      s+=tx(BX[g]+22,CY[c]+19,'chunk '+c,full?'rgba(255,255,255,.85)':'#8b9aad','start',10,800);
+      s+=tx(BX[g]+CW-2,CY[c]+38,a[g][c],col,'end',21,800,MONO);
+      if(full){s+=tx(BX[g]+22,CY[c]+38,'full sum','rgba(255,255,255,.9)','start',10,800);}
+    }
+  }
+  return s;
+}
+function tokenPath(m){
+  var yc=CY[m.c]+CH/2;
+  if(m.f===N-1){
+    return 'M'+(BX[3]+BW/2)+','+(BOT+6)+' L'+(BX[3]+BW/2)+','+RETY+' L'+(BX[0]+BW/2)+','+RETY+' L'+(BX[0]+BW/2)+','+(BOT+6);
+  }
+  return 'M'+(BX[m.f]+BW-6)+','+yc+' L'+(BX[m.t]+6)+','+yc;
+}
+function draw(){
+  var st=stateAt(k),a=st.a,cn=counts(a),out=null,m,i,s;
+  if(k<STEPS){m=sends(k+1);out=[];for(i=0;i<N;i++){out[m[i].f]=m[i].c;}}
+  s=ring()+boxes(a,out,st.ch)+'<g id="s12w3-tok"></g>';
+  $('svg').innerHTML=s;
+  $('cs').textContent=cn.chunks;
+  $('cc').textContent=cn.cells;
+  $('phase').textContent=k>=STEPS?'phase: complete':(k<3?'phase: reduce-scatter':'phase: all-gather');
+  $('stepn').textContent=k>=STEPS?'6 of 6 sent':('step '+(k+1)+' of 6');
+  $('status').textContent=k>=STEPS?'Every GPU holds the same four sums.':(k<3?'Reduce-scatter adds the arriving value into the cell.':'All-gather writes the arriving value over the cell.');
+  $('step').disabled=busy||k>=STEPS;
+  $('back').disabled=busy||k<=0;
+  note(k);
+}
+function note(n){
+  var el=$('note'),prev,cur,m,i,pick=-1,s;
+  if(n===0){el.innerHTML='No sends have happened yet. Each GPU holds only its own contribution, so the units digit belongs to GPU 0 and the thousands digit belongs to GPU 3.';return;}
+  prev=stateAt(n-1).a;cur=stateAt(n).a;m=sends(n);
+  for(i=0;i<N;i++){if(m[i].c===0){pick=i;break;}}
+  if(pick<0){pick=0;}
+  i=m[pick];
+  s='Send '+n+' moved chunk '+i.c+' from GPU '+i.f+' to GPU '+i.t+'. ';
+  if(n<=3){s+='There <b>'+prev[i.t][i.c]+'</b> plus <b>'+prev[i.f][i.c]+'</b> became <b>'+cur[i.t][i.c]+'</b>.';}
+  else{s+='There <b>'+prev[i.t][i.c]+'</b> was written over with <b>'+cur[i.t][i.c]+'</b>.';}
+  if(n===3){s+=' Reduce-scatter is done, and every chunk is complete on exactly one GPU.';}
+  if(n===STEPS){s+=' Every GPU now holds '+FULL.join(', ')+', which is the all-reduce result.';}
+  el.innerHTML=s;
+}
+function animate(m,done){
+  var g=document.getElementById('s12w3-tok'),s='',i,paths=[],lens=[],els=[],st=stateAt(k).a,t0=null,D=700;
+  for(i=0;i<N;i++){s+='<path id="s12w3-p'+i+'" d="'+tokenPath(m[i])+'" fill="none" stroke="none"/>';}
+  for(i=0;i<N;i++){
+    s+='<g id="s12w3-t'+i+'" opacity="0.98">'+
+       '<rect x="-31" y="-13" width="62" height="26" rx="7" fill="'+CHK[m[i].c]+'" stroke="#ffffff" stroke-width="2"/>'+
+       tx(0,5,st[m[i].f][m[i].c],'#ffffff','middle',13,800,MONO)+'</g>';
+  }
+  g.innerHTML=s;
+  for(i=0;i<N;i++){paths[i]=document.getElementById('s12w3-p'+i);lens[i]=paths[i].getTotalLength();els[i]=document.getElementById('s12w3-t'+i);}
+  function place(u){
+    var j,p,e=u<0.5?2*u*u:1-Math.pow(-2*u+2,2)/2;
+    for(j=0;j<N;j++){p=paths[j].getPointAtLength(e*lens[j]);els[j].setAttribute('transform','translate('+p.x.toFixed(2)+','+p.y.toFixed(2)+')');}
+  }
+  place(0);
+  if(RM){done();return;}
+  function frame(ts){
+    if(t0===null){t0=ts;}
+    var u=Math.min(1,(ts-t0)/D);
+    place(u);
+    if(u<1){requestAnimationFrame(frame);}else{done();}
+  }
+  requestAnimationFrame(frame);
+}
+function step(){
+  if(busy||k>=STEPS){return;}
+  busy=true;$('step').disabled=true;$('back').disabled=true;
+  var m=sends(k+1);
+  animate(m,function(){busy=false;k++;draw();});
+}
+function back(){
+  if(busy||k<=0){return;}
+  k--;draw();
+}
+$('step').addEventListener('click',step);
+$('back').addEventListener('click',back);
+draw();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

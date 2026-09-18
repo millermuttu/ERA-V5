@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 12 Widget 8 - Precision</title>
+<!-- Claim: eight-bit arithmetic changes 2 of the 16 bytes held per parameter, and its real contribution is to matmul rate, activation memory and network traffic. -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s12w8-w{max-width:1180px;margin:0 auto;padding:14px 22px 16px}
+.s12w8-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--violet)}
+.s12w8-w h1{font-size:24px;line-height:1.12;margin:3px 0 8px}
+.s12w8-say{border:1px solid #ddd6fe;background:#f7f5ff;border-radius:10px;padding:9px 12px;color:#4c1d95;font-size:13.5px;line-height:1.5;margin:0 0 10px}
+.s12w8-say b{color:#5b21b6;font-weight:800}
+.s12w8-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.s12w8-lb{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.s12w8-bar button{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;padding:5px 14px;font:800 11.5px ui-monospace,SFMono-Regular,Consolas,monospace;cursor:pointer}
+.s12w8-bar button.on{border-color:var(--violet);color:#5b21b6;background:#f7f5ff;box-shadow:inset 0 0 0 1px var(--violet)}
+.s12w8-sep{width:1px;height:20px;background:var(--line);margin:0 5px}
+.s12w8-hint{font-size:11.5px;font-weight:700;color:var(--muted)}
+.s12w8-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:11px 13px;margin-bottom:10px}
+.s12w8-card:last-child{margin-bottom:0}
+.s12w8-card h2{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px;font-weight:800}
+.s12w8-card svg{display:block;width:100%;height:auto}
+.s12w8-met{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
+.s12w8-met div{border:1px solid var(--line);border-radius:8px;background:#fbfdff;padding:6px 9px}
+.s12w8-met b{display:block;font:800 16px ui-monospace,SFMono-Regular,Consolas,monospace}
+.s12w8-met span{display:block;color:var(--muted);font-size:10px;margin-top:1px}
+.s12w8-note{margin:7px 0 0;font-size:12.5px;color:var(--muted);line-height:1.45}
+.s12w8-note b{color:var(--ink)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s12w8-w">
+<div class="s12w8-k">ERA V5 Session 12 &middot; what 8-bit arithmetic changes</div>
+<h1>Precision</h1>
+<p class="s12w8-say" id="s12w8-say"></p>
+
+<div class="s12w8-bar">
+<span class="s12w8-lb">matmul precision</span>
+<button type="button" class="s12w8-p" data-v="0" aria-label="Matmul precision BF16, two bytes per value">BF16</button>
+<button type="button" class="s12w8-p" data-v="1" aria-label="Matmul precision FP8, one byte per value plus a block scale">FP8</button>
+<span class="s12w8-sep" aria-hidden="true"></span>
+<span class="s12w8-lb">Adam moments</span>
+<button type="button" class="s12w8-a" data-v="0" aria-label="Adam moments in FP32, four bytes each">FP32</button>
+<button type="button" class="s12w8-a" data-v="1" aria-label="Adam moments in BF16, two bytes each">BF16</button>
+<span class="s12w8-hint">Flip either toggle. The dashed outline holds the bytes the FP8 matmul removes.</span>
+</div>
+
+<div class="s12w8-card">
+<h2>Bytes of persistent training state per parameter, one square per byte</h2>
+<svg id="s12w8-strip" viewBox="0 0 1120 160" role="img" aria-label="A row of squares, one per byte of training state per parameter, bracketed into the master weight, the two Adam moments, the weight copy used by the matmul, and the gradient"></svg>
+<div class="s12w8-met">
+<div><b id="s12w8-m1" style="color:var(--ink)"></b><span>bytes per parameter</span></div>
+<div><b id="s12w8-m2" style="color:var(--green)"></b><span>bytes set by the optimizer</span></div>
+<div><b id="s12w8-m3" style="color:var(--cyan)"></b><span>bytes set by the matmul</span></div>
+</div>
+</div>
+
+<div class="s12w8-card">
+<h2>What the FP8 matmul changes, on one fixed 0 to 100 percent axis</h2>
+<svg id="s12w8-bars" viewBox="0 0 1120 162" role="img" aria-label="Four bars on a fixed zero to one hundred percent axis comparing the change in stored state, peak matmul rate, activation bytes and communication bytes"></svg>
+<p class="s12w8-note" id="s12w8-note"></p>
+</div>
+</main>
+
+<script>
+(function(){
+'use strict';
+var MASTER=4,MOM=[4,2],MM=[2,1],BLOCK=32,BASE=16,
+    X0=24,S=58,
+    VI='#7c3aed',VIF='#f0ebfe',GR='#159447',GRF='#dcfce7',GRF2='#ecfaf1',
+    CY='#0891b2',CYF='#dff2f9',AM='#d97706',AMF='#fdeacf',INK='#152033',
+    p=0,a=0;
+function $(i){return document.getElementById('s12w8-'+i);}
+function X(b){return X0+b*S;}
+function fb(v){return (Math.abs(v-Math.round(v))<1e-9)?String(Math.round(v)):v.toFixed(2);}
+function f2(v){return v.toFixed(2);}
+function fp(v){return (Math.abs(v-Math.round(v))<1e-9)?String(Math.round(v)):v.toFixed(1);}
+function tx(x,y,s,c,al,sz,w){return '<text x="'+x.toFixed(1)+'" y="'+y+'" text-anchor="'+(al||'middle')+'" font-size="'+(sz||10)+'" font-weight="'+(w||700)+'" fill="'+c+'">'+s+'</text>';}
+function scale(pp){return pp?1/BLOCK:0;}
+function total(pp,aa){return MASTER+2*MOM[aa]+2*MM[pp]+2*scale(pp);}
+function optb(aa){return MASTER+2*MOM[aa];}
+function mmb(pp){return 2*MM[pp]+2*scale(pp);}
+function strip(){
+  var s='',g,i,j,b=0,x,sc=scale(p),n,lo,hi,last=0,
+      G=[['master weight',MASTER,VI,VIF,0],['Adam m',MOM[a],GR,GRF,0],['Adam v',MOM[a],GR,GRF2,0],
+         ['weight copy for the matmul',MM[p],CY,CYF,sc],['gradient',MM[p],AM,AMF,sc]],
+      lab=[111,124,111,124,111],ends=[];
+  for(g=0;g<G.length;g++){
+    n=G[g][1];lo=b;
+    for(j=0;j<n;j++){
+      s+='<rect x="'+(X(b)+1.5).toFixed(1)+'" y="34" width="'+(S-3).toFixed(1)+'" height="52" rx="4" fill="'+G[g][3]+'" stroke="'+G[g][2]+'" stroke-width="1.2"/>';
+      b+=1;
+    }
+    if(G[g][4]>0){s+='<rect x="'+X(b).toFixed(1)+'" y="34" width="'+(G[g][4]*S).toFixed(2)+'" height="52" fill="'+INK+'"/>';b+=G[g][4];last=X(b);}
+    hi=b;ends.push([lo,hi]);
+    s+='<path d="M'+(X(lo)+1.5).toFixed(1)+' 92 L'+(X(lo)+1.5).toFixed(1)+' 98 L'+(X(hi)-1.5).toFixed(1)+' 98 L'+(X(hi)-1.5).toFixed(1)+' 92" fill="none" stroke="'+G[g][2]+'" stroke-width="1.2"/>';
+    if(lab[g]===124)s+='<line x1="'+((X(lo)+X(hi))/2).toFixed(1)+'" y1="98" x2="'+((X(lo)+X(hi))/2).toFixed(1)+'" y2="114" stroke="'+G[g][2]+'" stroke-width="1"/>';
+    s+=tx((X(lo)+X(hi))/2,lab[g],G[g][0]+' '+fb(hi-lo),G[g][2],'middle',10.5,800);
+  }
+  x=X(BASE);
+  s+='<line x1="'+x.toFixed(1)+'" y1="28" x2="'+x.toFixed(1)+'" y2="142" stroke="#94a3b8" stroke-width="1.3" stroke-dasharray="5 4"/>';
+  s+=tx(x,152,'16.00 byte baseline','#64748b','end',10);
+  lo=total(1,a);hi=total(0,a);
+  s+='<rect x="'+X(lo).toFixed(1)+'" y="30" width="'+((hi-lo)*S).toFixed(1)+'" height="60" rx="5" fill="none" stroke="'+VI+'" stroke-width="1.5" stroke-dasharray="6 4"/>';
+  s+=tx((X(lo)+X(hi))/2,20,'the FP8 matmul removes '+f2(hi-lo)+' bytes',VI,'middle',10.5,800);
+  if(p){
+    s+='<polyline points="'+(last-0.9).toFixed(1)+',34 '+(last-0.9).toFixed(1)+',26 958,26" fill="none" stroke="'+INK+'" stroke-width="1"/>';
+    s+=tx(964,30,'block scale',INK,'start',10,800);
+    s+=tx(964,43,'1 byte per '+BLOCK+' values','#64748b','start',10);
+  }
+  x=X(optb(a));
+  s+='<path d="M'+(X(0)+1.5).toFixed(1)+' 134 L'+(X(0)+1.5).toFixed(1)+' 140 L'+(x-1.5).toFixed(1)+' 140 L'+(x-1.5).toFixed(1)+' 134" fill="none" stroke="#94a3b8" stroke-width="1.2"/>';
+  s+=tx((X(0)+x)/2,152,'set by the optimizer, not by the matmul','#475569','middle',11,800);
+  $('strip').innerHTML=s;
+}
+function bars(){
+  var s='',i,x,BX=296,BW=734,rows,v,y,st0=total(0,a),st1=total(1,a);
+  rows=[
+    ['stored state',f2(st0)+' bytes to '+f2(st1)+' bytes',(st0-st1)/st0*100,'less',VI,'#f0ebfe'],
+    ['peak matmul rate','8-bit values through the same units',(MM[0]/MM[1]-1)*100,'more',CY,CYF],
+    ['activation bytes',MM[0]+' bytes to '+MM[1]+' byte per value',(1-MM[1]/MM[0])*100,'less',CY,CYF],
+    ['communication bytes',MM[0]+' bytes to '+MM[1]+' byte per value',(1-MM[1]/MM[0])*100,'less',AM,AMF]
+  ];
+  for(i=0;i<=4;i++){
+    x=BX+BW*i/4;
+    s+='<line x1="'+x.toFixed(1)+'" y1="18" x2="'+x.toFixed(1)+'" y2="140" stroke="'+(i===0?'#cbd5e1':'#eef3f9')+'"/>';
+    s+=tx(x,156,(i*25)+'%','#8b9aad','middle',9.5);
+  }
+  for(i=0;i<rows.length;i++){
+    y=26+i*30;v=rows[i][2];
+    s+='<rect x="'+BX+'" y="'+y+'" width="'+BW+'" height="20" rx="4" fill="#f8fafc"/>';
+    s+='<rect x="'+BX+'" y="'+y+'" width="'+(BW*v/100).toFixed(1)+'" height="20" rx="4" fill="'+rows[i][5]+'" stroke="'+rows[i][4]+'" stroke-width="1.3"/>';
+    s+=tx(BX+BW*v/100+9,y+15,fp(v)+'% '+rows[i][3],rows[i][4],'start',11.5,800);
+    s+=tx(BX-12,y+9,rows[i][0],'#334155','end',11.5,800);
+    s+=tx(BX-12,y+20,rows[i][1],'#8b9aad','end',9.5,700);
+  }
+  $('bars').innerHTML=s;
+}
+function draw(){
+  var t=total(p,a),ob=optb(a),mb=mmb(p),t0=total(0,a),t1=total(1,a);
+  strip();bars();
+  $('m1').textContent=f2(t);
+  $('m2').textContent=f2(ob);
+  $('m3').textContent=f2(mb);
+  $('say').innerHTML='One parameter holds <b>'+f2(t)+' bytes</b> of training state here, with <b>'+f2(ob)+'</b> set by the optimizer and <b>'+f2(mb)+'</b> set by the matmul. '+
+    (p?'The 0.06 is the MXFP8 block scale, one byte for every '+BLOCK+' values on two tensors. ':'An FP8 matmul leaves <b>'+f2(t1)+' bytes</b>, where the 0.06 is the block scale of one byte per '+BLOCK+' values. ')+
+    'The four bytes of the 32-bit master weight survive every setting.';
+  $('note').innerHTML='The FP8 matmul removes <b>'+f2(t0-t1)+'</b> of the <b>'+f2(t0)+'</b> bytes held per parameter, which is <b>'+fp((t0-t1)/t0*100)+'%</b> of the stored state. '+
+    'It doubles the peak matrix multiply rate, and it halves both the activation bytes kept for the backward pass and the bytes crossing the interconnect.';
+}
+function wire(cls,set){
+  Array.prototype.forEach.call(document.querySelectorAll(cls),function(b){
+    b.addEventListener('click',function(){
+      set(+b.getAttribute('data-v'));
+      Array.prototype.forEach.call(document.querySelectorAll(cls),function(o){o.classList.toggle('on',+o.getAttribute('data-v')===(cls==='.s12w8-p'?p:a));});
+      draw();
+    });
+  });
+}
+wire('.s12w8-p',function(v){p=v;});
+wire('.s12w8-a',function(v){a=v;});
+Array.prototype.forEach.call(document.querySelectorAll('.s12w8-p'),function(o){o.classList.toggle('on',+o.getAttribute('data-v')===p);});
+Array.prototype.forEach.call(document.querySelectorAll('.s12w8-a'),function(o){o.classList.toggle('on',+o.getAttribute('data-v')===a);});
+draw();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>
