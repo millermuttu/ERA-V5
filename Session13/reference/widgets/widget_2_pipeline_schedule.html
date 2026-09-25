@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 13 Widget 2 - Pipeline Schedules</title>
+<!-- Claim: the schedule decides how many micro-batches stage 0 holds, and the waiting share depends only on stages and micro-batches. -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--idle:#cbd5e1;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s13w2-w{max-width:1180px;margin:0 auto;padding:14px 22px 16px}
+.s13w2-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.s13w2-w h1{font-size:24px;line-height:1.12;margin:3px 0 5px}
+.s13w2-sub{color:var(--muted);margin:0 0 10px;font-size:13px;line-height:1.5;max-width:1010px}
+.s13w2-sub b{color:var(--ink)}
+.s13w2-sub .f{color:#0e7490}.s13w2-sub .b{color:#6d28d9}
+.s13w2-bar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.s13w2-lb{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.s13w2-bar button{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;padding:6px 14px;font:800 11.5px Inter,sans-serif;cursor:pointer}
+.s13w2-bar button.on{border-color:var(--cyan);color:#0e7490;background:#effbfe;box-shadow:inset 0 0 0 1px var(--cyan)}
+.s13w2-sep{width:1px;height:20px;background:var(--line);margin:0 5px}
+.s13w2-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:11px 14px 10px;margin-bottom:10px}
+.s13w2-card h2{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px;font-weight:800}
+.s13w2-card h2 span{text-transform:none;letter-spacing:0;font-weight:700;color:#8b9aad;margin-left:6px}
+.s13w2-card svg{display:block;width:100%;height:auto}
+.s13w2-row{display:grid;grid-template-columns:230px 1fr 230px;align-items:center;gap:12px}
+.s13w2-row+.s13w2-row{margin-top:8px}
+.s13w2-gut{font-size:12.5px;font-weight:800;color:var(--ink);text-align:right;line-height:1.25}
+.s13w2-gut small{display:block;font-size:10px;font-weight:700;color:var(--muted)}
+.s13w2-tk{position:relative;height:34px;border-radius:8px;background:#f4f7fb;border:1px solid #e4ebf4}
+.s13w2-gh{position:absolute;left:0;top:4px;bottom:4px;border:1.5px dashed #9fb0c4;border-radius:6px}
+.s13w2-fl{position:absolute;left:0;top:4px;bottom:4px;border-radius:6px;transition:width .35s ease-in-out}
+.s13w2-fl.cy{background:linear-gradient(180deg,#1fa7c6,#0891b2)}
+.s13w2-fl.sl{background:repeating-linear-gradient(45deg,#cbd5e1 0,#cbd5e1 3px,#e9eef5 3px,#e9eef5 7px);border:1px solid #b6c3d3}
+.s13w2-ax{position:relative;height:14px}
+.s13w2-ax i{position:absolute;top:0;transform:translateX(-50%);font:700 9.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:#93a3b6;font-style:normal}
+.s13w2-val b{display:block;font:800 19px ui-monospace,SFMono-Regular,Consolas,monospace;line-height:1.1}
+.s13w2-val span{display:block;font-size:10.5px;font-weight:700;color:#8b9aad;margin-top:1px}
+.s13w2-note{margin:8px 0 0;font-size:12.5px;color:var(--muted);line-height:1.5;border-top:1px solid #eef3f9;padding-top:7px}
+.s13w2-note b{color:var(--ink);font-weight:800}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s13w2-w">
+<div class="s13w2-k">ERA V5 Session 13 &middot; pipeline schedules</div>
+<h1>Pipeline Schedules</h1>
+<p class="s13w2-sub" id="s13w2-sub"></p>
+
+<div class="s13w2-bar">
+<span class="s13w2-lb">schedule</span>
+<button type="button" class="s13w2-s" data-v="afab" aria-label="Schedule: all forward passes, then all backward passes">all forward, then all backward</button>
+<button type="button" class="s13w2-s" data-v="1f1b" aria-label="Schedule: 1F1B, one forward then one backward after warm-up">1F1B</button>
+<span class="s13w2-sep" aria-hidden="true"></span>
+<span class="s13w2-lb">stages</span>
+<button type="button" class="s13w2-p" data-v="4" aria-label="4 pipeline stages">4</button>
+<button type="button" class="s13w2-p" data-v="8" aria-label="8 pipeline stages">8</button>
+<span class="s13w2-sep" aria-hidden="true"></span>
+<span class="s13w2-lb">micro-batches</span>
+<button type="button" class="s13w2-m" data-v="4" aria-label="4 micro-batches">4</button>
+<button type="button" class="s13w2-m" data-v="8" aria-label="8 micro-batches">8</button>
+<button type="button" class="s13w2-m" data-v="16" aria-label="16 micro-batches">16</button>
+</div>
+
+<div class="s13w2-card">
+<h2>Stages against time slots <span>Each forward pass and each backward pass is drawn as one slot.</span></h2>
+<svg id="s13w2-g" viewBox="0 0 1108 262" role="img" aria-label="Grid of pipeline stages against time slots showing forward passes, backward passes and idle slots"></svg>
+</div>
+
+<div class="s13w2-card">
+<h2>Readouts counted from the grid <span>The dashed outline is the other schedule.</span></h2>
+<div class="s13w2-row">
+  <span class="s13w2-gut" aria-hidden="true"></span>
+  <div class="s13w2-ax" id="s13w2-axw"></div>
+  <span></span>
+</div>
+<div class="s13w2-row">
+  <span class="s13w2-gut">share of the step spent waiting<small id="s13w2-wc"></small></span>
+  <div class="s13w2-tk"><div class="s13w2-fl sl" id="s13w2-fw"></div><div class="s13w2-gh" id="s13w2-gw"></div></div>
+  <div class="s13w2-val"><b id="s13w2-vw" style="color:var(--ink)"></b><span id="s13w2-xw"></span></div>
+</div>
+<div class="s13w2-row" style="margin-top:12px">
+  <span class="s13w2-gut" aria-hidden="true"></span>
+  <div class="s13w2-ax" id="s13w2-axm"></div>
+  <span></span>
+</div>
+<div class="s13w2-row">
+  <span class="s13w2-gut">activation memory at stage 0, GiB<small id="s13w2-mc"></small></span>
+  <div class="s13w2-tk"><div class="s13w2-fl cy" id="s13w2-fm"></div><div class="s13w2-gh" id="s13w2-gm"></div></div>
+  <div class="s13w2-val"><b id="s13w2-vm" style="color:#0e7490"></b><span id="s13w2-xm"></span></div>
+</div>
+<p class="s13w2-note" id="s13w2-note"></p>
+</div>
+</main>
+
+<script>
+(function(){
+'use strict';
+var SEQ=8192,HID=5120,ACT=34,LAYERS=96,GIB=Math.pow(2,30),
+    WMAX=70,MMAX=510,MAXCOL=46,
+    X0=70,X1=1100,Y0=26,GH=208,CW=(X1-X0)/MAXCOL,
+    NAME={afab:'all forward, then all backward','1f1b':'1F1B'},
+    st={s:'1f1b',p:4,m:8};
+function $(i){return document.getElementById('s13w2-'+i);}
+function pct(v){return (v*100).toFixed(1)+'%';}
+function gib(b){return (b/GIB).toFixed(1)+' GiB';}
+function tx(x,y,s,c,a,sz,w){return '<text x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" text-anchor="'+(a||'middle')+'" font-size="'+(sz||10)+'" font-weight="'+(w||700)+'" fill="'+c+'">'+s+'</text>';}
+
+/* Build the schedule as a grid g[stage][slot] = {k:'F'|'B', j} or undefined. */
+function build(p,m,sch){
+  var g=[],tF=[],tB=[],T=0,i,j;
+  for(i=0;i<p;i++){g.push([]);tF.push([]);tB.push([]);}
+  function put(i,t,k,j){g[i][t]={k:k,j:j};if(t+1>T)T=t+1;}
+  if(sch==='afab'){
+    for(i=0;i<p;i++){for(j=0;j<m;j++){put(i,i+j,'F',j);put(i,(m+p-1)+j+(p-1-i),'B',j);}}
+    return {g:g,T:T};
+  }
+  /* Non-interleaved 1F1B: stage i runs p-1-i warm-up forwards, then alternates F and B, then drains. */
+  var ops=[],pos=[],free=[],left=0,w,r,o,op,rd,t,prog,src;
+  for(i=0;i<p;i++){
+    w=Math.min(p-1-i,m);o=[];
+    for(j=0;j<w;j++)o.push(['F',j]);
+    for(r=0;r<m-w;r++){o.push(['F',w+r]);o.push(['B',r]);}
+    for(j=m-w;j<m;j++)o.push(['B',j]);
+    ops.push(o);pos.push(0);free.push(0);left+=o.length;
+  }
+  while(left>0){
+    prog=false;
+    for(i=0;i<p;i++){
+      if(pos[i]>=ops[i].length)continue;
+      op=ops[i][pos[i]];
+      if(op[0]==='F'){src=i===0?-1:tF[i-1][op[1]];rd=i===0?0:(src===undefined?null:src+1);}
+      else{src=i===p-1?tF[i][op[1]]:tB[i+1][op[1]];rd=src===undefined?null:src+1;}
+      if(rd===null)continue;
+      t=Math.max(rd,free[i]);
+      (op[0]==='F'?tF:tB)[i][op[1]]=t;put(i,t,op[0],op[1]);
+      free[i]=t+1;pos[i]++;left--;prog=true;
+    }
+    if(!prog)break;
+  }
+  return {g:g,T:T};
+}
+/* Count everything from the drawn grid. */
+function count(b,p){
+  var idle=0,held=0,peak=0,peakAt=0,i,t,c;
+  for(i=0;i<p;i++){for(t=0;t<b.T;t++){if(!b.g[i][t])idle++;}}
+  for(t=0;t<b.T;t++){c=b.g[0][t];if(c){held+=c.k==='F'?1:-1;if(held>peak){peak=held;peakAt=t;}}}
+  return {idle:idle,cells:p*b.T,share:idle/(p*b.T),peak:peak,peakAt:peakAt};
+}
+function perMicro(p){return SEQ*HID*ACT*(LAYERS/p);}
+
+function grid(b,c,p){
+  var s='',rh=GH/p,i,t,x,y,cell,fs;
+  s+='<defs><pattern id="s13w2-h" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#f1f5f9"/><line x1="0" y1="0" x2="0" y2="6" stroke="#cbd5e1" stroke-width="3"/></pattern></defs>';
+  fs=CW>20?10:9;
+  for(i=0;i<p;i++){
+    y=Y0+i*rh;
+    s+=tx(X0-10,y+rh/2+4,'stage '+i,'#65758b','end',11,800);
+    for(t=0;t<b.T;t++){
+      x=X0+t*CW;cell=b.g[i][t];
+      if(!cell){s+='<rect x="'+(x+0.8).toFixed(1)+'" y="'+(y+1).toFixed(1)+'" width="'+(CW-1.6).toFixed(1)+'" height="'+(rh-2).toFixed(1)+'" rx="2.5" fill="url(#s13w2-h)"/>';}
+      else{
+        s+='<rect x="'+(x+0.8).toFixed(1)+'" y="'+(y+1).toFixed(1)+'" width="'+(CW-1.6).toFixed(1)+'" height="'+(rh-2).toFixed(1)+'" rx="2.5" fill="'+(cell.k==='F'?'#0891b2':'#7c3aed')+'"/>';
+        s+=tx(x+CW/2,y+rh/2+3.6,String(cell.j+1),'#fff','middle',fs,800);
+      }
+    }
+  }
+  s+='<line x1="'+X0+'" y1="'+(Y0+GH+3)+'" x2="'+X1+'" y2="'+(Y0+GH+3)+'" stroke="#e1e8f1"/>';
+  for(t=0;t<=MAXCOL;t+=4){
+    x=X0+t*CW;
+    if(Math.abs(t-b.T)<3)continue;
+    s+='<line x1="'+x.toFixed(1)+'" y1="'+(Y0+GH+3)+'" x2="'+x.toFixed(1)+'" y2="'+(Y0+GH+7)+'" stroke="#c6d2e0"/>';
+    s+=tx(x,Y0+GH+18,String(t),'#93a3b6','middle',9.5);
+  }
+  s+=tx(X0-10,Y0+GH+18,'slot','#93a3b6','end',9.5);
+  x=X0+b.T*CW;
+  s+='<line x1="'+x.toFixed(1)+'" y1="'+(Y0-4)+'" x2="'+x.toFixed(1)+'" y2="'+(Y0+GH+8)+'" stroke="#152033" stroke-width="1.6"/>';
+  s+=tx(x,Y0+GH+19,'step ends at '+b.T,'#152033',x>1010?'end':'middle',10.5,800);
+  /* stage 0 peak marker */
+  x=X0+c.peakAt*CW+CW/2;
+  s+='<path d="M'+(x-4).toFixed(1)+' '+(Y0-8)+' L'+(x+4).toFixed(1)+' '+(Y0-8)+' L'+x.toFixed(1)+' '+(Y0-2)+' Z" fill="#152033"/>';
+  s+=tx(x+(x>900?-8:8),Y0-7,'stage 0 holds '+c.peak+' micro-batches here',  '#152033',x>900?'end':'start',10.5,800);
+  $('g').innerHTML=s;
+}
+function axis(id,max,step,fmt){
+  var s='',v;
+  for(v=0;v<=max+1e-9;v+=step){s+='<i style="left:'+(v/max*100)+'%">'+fmt(v)+'</i>';}
+  $(id).innerHTML=s;
+}
+function draw(){
+  var p=st.p,m=st.m,oth=st.s==='afab'?'1f1b':'afab',
+      b=build(p,m,st.s),c=count(b,p),
+      bo=build(p,m,oth),co=count(bo,p),
+      mem=c.peak*perMicro(p),memo=co.peak*perMicro(p),
+      inter=(p-1)/(2*m+p-1);
+  grid(b,c,p);
+  $('sub').innerHTML='Each row is one GPU holding <b>'+(LAYERS/p)+'</b> of the 96 layers, and each column is one time slot. '+
+    '<b class="f">Cyan</b> cells are forward passes, <b class="b">violet</b> cells are backward passes, and hatched cells are slots where the stage waits.';
+  $('fw').style.width=Math.min(100,c.share*100/WMAX*100)+'%';
+  $('gw').style.width=Math.min(100,co.share*100/WMAX*100)+'%';
+  $('vw').textContent=pct(c.share);
+  $('xw').textContent=NAME[oth]+': '+pct(co.share);
+  $('wc').textContent=c.idle+' idle of '+c.cells+' cells, formula '+(p-1)+'/'+(m+p-1)+' = '+pct((p-1)/(m+p-1));
+  $('fm').style.width=Math.min(100,mem/GIB/MMAX*100)+'%';
+  $('gm').style.width=Math.min(100,memo/GIB/MMAX*100)+'%';
+  $('vm').textContent=gib(mem);
+  $('xm').textContent=NAME[oth]+': '+gib(memo);
+  $('mc').textContent=c.peak+' micro-batches held x '+gib(perMicro(p))+' each';
+  $('note').innerHTML='Both schedules wait <b>'+pct(c.share)+'</b> of the step at '+p+' stages and '+m+' micro-batches. '+
+    'Stage 0 holds <b>'+(st.s==='1f1b'?c.peak:co.peak)+'</b> micro-batches under 1F1B and <b>'+(st.s==='afab'?c.peak:co.peak)+'</b> under all forward, then all backward. '+
+    'Interleaved 1F1B with 2 chunks per GPU waits (p-1)/(2m+p-1) = '+(p-1)+'/'+(2*m+p-1)+' = <b id="s13w2-vi">'+pct(inter)+'</b>.';
+}
+function marks(){
+  [['s','s'],['p','p'],['m','m']].forEach(function(k){
+    Array.prototype.forEach.call(document.querySelectorAll('.s13w2-'+k[0]),function(b){
+      var v=b.getAttribute('data-v');b.classList.toggle('on',String(st[k[1]])===v);
+    });
+  });
+}
+['s','p','m'].forEach(function(k){
+  Array.prototype.forEach.call(document.querySelectorAll('.s13w2-'+k),function(b){
+    b.addEventListener('click',function(){var v=b.getAttribute('data-v');st[k]=k==='s'?v:+v;marks();draw();});
+  });
+});
+axis('axw',WMAX,10,function(v){return v+'%';});
+axis('axm',MMAX,85,function(v){return String(Math.round(v));});
+marks();draw();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 13 Widget 7 - Shared State Across Pipeline Stages</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s13w7-w{max-width:1180px;margin:0 auto;padding:14px 22px 16px}
+.s13w7-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.s13w7-w h1{font-size:24px;line-height:1.12;margin:3px 0 8px}
+.s13w7-say{border:1px solid #a5f3fc;background:#ecfeff;border-radius:10px;padding:9px 12px;color:#164e63;font-size:13.5px;line-height:1.5;margin:0 0 10px}
+.s13w7-say b{color:#0e7490;font-weight:800}
+.s13w7-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.s13w7-lb{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.s13w7-bar button{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;padding:5px 14px;font:800 11.5px Inter,sans-serif;cursor:pointer}
+.s13w7-bar button.on{border-color:var(--cyan);color:#0e7490;background:#ecfeff;box-shadow:inset 0 0 0 1px var(--cyan)}
+.s13w7-g{display:grid;grid-template-columns:1fr 1.08fr;gap:12px;align-items:start}
+.s13w7-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:11px 13px}
+.s13w7-card h2{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 7px;font-weight:800}
+.s13w7-card h2 span{color:var(--ink)}
+.s13w7-card svg{display:block;width:100%;height:auto}
+.s13w7-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.s13w7-tile{border:1px solid var(--line);border-radius:9px;background:#fbfdff;padding:8px 10px}
+.s13w7-tile b{display:block;font:800 26px ui-monospace,SFMono-Regular,Consolas,monospace;line-height:1.05}
+.s13w7-tile span{display:block;color:var(--muted);font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;line-height:1.3;margin-top:3px;min-height:26px}
+.s13w7-tile i{display:block;font-style:normal;font-size:12px;font-weight:700;color:var(--ink);margin-top:3px}
+.s13w7-tile svg{margin-top:6px}
+.s13w7-note{margin:8px 0 0;font-size:12.5px;color:var(--muted);line-height:1.45}
+.s13w7-note b{color:var(--ink)}
+.s13w7-sep{height:1px;background:var(--line);margin:11px 0 9px}
+.s13w7-send{margin-top:9px;border:1px solid var(--line);border-radius:9px;background:#fbfdff;padding:7px 10px;font-size:12.5px;line-height:1.45;color:var(--ink);font-weight:600}
+@media(max-width:940px){.s13w7-g{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s13w7-w">
+<div class="s13w7-k">ERA V5 Session 13 · DeepSeek-V4.1-Flash</div>
+<h1>Shared State Across Pipeline Stages</h1>
+<p class="s13w7-say" id="s13w7-say"></p>
+<div class="s13w7-bar">
+<span class="s13w7-lb">pipeline stages</span>
+<button type="button" class="s13w7-o" data-v="1" aria-label="One pipeline stage holding all 40 layers">1</button>
+<button type="button" class="s13w7-o" data-v="2" aria-label="Two pipeline stages of 20 layers each">2</button>
+<button type="button" class="s13w7-o" data-v="4" aria-label="Four pipeline stages of 10 layers each">4</button>
+<button type="button" class="s13w7-o" data-v="8" aria-label="Eight pipeline stages of 5 layers each">8</button>
+</div>
+<section class="s13w7-g">
+<div class="s13w7-card">
+<h2 id="s13w7-ch"></h2>
+<svg id="s13w7-col" viewBox="0 0 560 496" role="img" aria-label="Forty layers stacked with layer 1 at the bottom, pipeline stages as shaded bands, and a bus carrying the output of layer 20, from which layers 21 to 40 project their keys and values"></svg>
+<p class="s13w7-note">A <b style="color:#dc2626">red tap</b> marks a reader layer on a different stage from layer 20.</p>
+</div>
+<div class="s13w7-card">
+<h2>Counted from the drawn cuts</h2>
+<div class="s13w7-tiles">
+<div class="s13w7-tile"><b id="s13w7-own"></b><span>owner stage</span><i id="s13w7-ownr"></i><svg id="s13w7-owns" viewBox="0 0 160 10" aria-hidden="true"></svg></div>
+<div class="s13w7-tile"><b id="s13w7-rs"></b><span>other stages that read the shared state</span><i id="s13w7-rsl"></i><svg id="s13w7-rss" viewBox="0 0 160 10" aria-hidden="true"></svg></div>
+<div class="s13w7-tile"><b id="s13w7-x"></b><span>reader layers on another stage</span><i id="s13w7-xl"></i><svg id="s13w7-xs" viewBox="0 0 160 10" aria-hidden="true"></svg></div>
+</div>
+<p class="s13w7-note">Many attention layers also share keys, values and index results with later layers. DeepSeek places a lightweight copy of those shared components, called a shadow indexer, on each stage that reads them.</p>
+<div class="s13w7-sep"></div>
+<h2 id="s13w7-lh"></h2>
+<svg id="s13w7-life" viewBox="0 0 560 152" role="img" aria-label="Timeline of one micro-batch, with one forward pass per stage going up and one backward pass per stage coming down, and a bar for how long the shared tensor is held"></svg>
+<p class="s13w7-note">Each column is one stage running its forward pass (F) or backward pass (B) for one micro-batch.</p>
+<div class="s13w7-send">The shared tensors reach the reader stages on the same point-to-point sends that carry activations between stages.</div>
+</div>
+</section>
+</main>
+<script>
+(function(){
+'use strict';
+var L=40,PROD=20,
+    COL=['#0891b2','#7c3aed','#159447','#d97706','#db2777','#2563eb','#65a30d','#9333ea'],
+    RED='#dc2626',INK='#152033',
+    TOP=8,PITCH=12,BX0=108,BX1=286,BUS=322,
+    N=4;
+function $(i){return document.getElementById('s13w7-'+i);}
+function tx(x,y,s,c,a,z,w,h){return '<text x="'+x+'" y="'+y+'" text-anchor="'+(a||'middle')+'" font-size="'+(z||9.5)+'" font-weight="'+(w||700)+'" fill="'+c+'"'+(h?' stroke="#fff" stroke-width="3" paint-order="stroke"':'')+'>'+s+'</text>';}
+function cuts(){var c=[],k;for(k=1;k<N;k++)c.push(k*L/N);return c;}
+function stageOf(i,c){var s=0,k;for(k=0;k<c.length;k++)if(i>c[k])s++;return s;}
+function lo(s,c){return s===0?1:c[s-1]+1;}
+function hi(s,c){return s===c.length?L:c[s];}
+function rowTop(i){return TOP+(L-i)*PITCH;}
+function plural(n,w){return n+' '+w+(n===1?'':'s');}
+function stageList(a){
+  if(!a.length)return 'none';
+  if(a.length===1)return 'stage '+a[0];
+  if(a.length===2)return 'stages '+a[0]+' and '+a[1];
+  var run=true,k;for(k=1;k<a.length;k++)if(a[k]!==a[k-1]+1)run=false;
+  return run?'stages '+a[0]+' to '+a[a.length-1]:'stages '+a.slice(0,-1).join(', ')+' and '+a[a.length-1];
+}
+function stats(){
+  var c=cuts(),own=stageOf(PROD,c),rs=[],x=0,minR=N,i,s;
+  for(i=PROD+1;i<=L;i++){
+    s=stageOf(i,c);
+    if(s<minR)minR=s;
+    if(s!==own){x++;if(rs.indexOf(s)<0)rs.push(s);}
+  }
+  rs.sort(function(a,b){return a-b;});
+  var start=own,end=2*N-1-minR;
+  return {c:c,own:own,rs:rs,x:x,start:start,end:end,held:end-start+1,total:2*N};
+}
+function column(S){
+  var c=S.c,s='',k,i,y,y0,y1,col,cross,topOwn;
+  for(k=0;k<N;k++){
+    y0=rowTop(hi(k,c));y1=rowTop(lo(k,c))+PITCH;
+    s+='<rect x="4" y="'+y0+'" width="552" height="'+(y1-y0)+'" fill="'+COL[k]+'" opacity=".09"/>';
+    s+='<rect x="4" y="'+y0+'" width="4" height="'+(y1-y0)+'" fill="'+COL[k]+'"/>';
+    s+=tx(16,(y0+y1)/2+4,'stage '+k,COL[k],'start',11,800);
+  }
+  for(i=1;i<=L;i++){
+    y=rowTop(i);
+    s+='<rect x="'+BX0+'" y="'+(y+2.5)+'" width="'+(BX1-BX0)+'" height="7" rx="2" fill="'+(i===PROD?INK:'#b6c3d3')+'"/>';
+    if(i===1||i%5===0)s+=tx(BX0-7,y+9,i,'#65758b','end',9,700);
+  }
+  /* taps and bus */
+  topOwn=rowTop(hi(S.own,c));
+  for(i=PROD+1;i<=L;i++){
+    y=rowTop(i)+6;cross=stageOf(i,c)!==S.own;col=cross?RED:INK;
+    s+='<line x1="'+BUS+'" y1="'+y+'" x2="'+(BX1+6)+'" y2="'+y+'" stroke="'+col+'" stroke-width="1.6"/>';
+    s+='<circle cx="'+(BX1+5)+'" cy="'+y+'" r="2.3" fill="'+col+'"/>';
+  }
+  var yP=rowTop(PROD),yT=rowTop(L)+6;
+  if(topOwn<yP)s+='<line x1="'+BUS+'" y1="'+yP+'" x2="'+BUS+'" y2="'+Math.max(topOwn,yT)+'" stroke="'+INK+'" stroke-width="2.4"/>';
+  if(topOwn>yT)s+='<line x1="'+BUS+'" y1="'+Math.min(topOwn,yP)+'" x2="'+BUS+'" y2="'+yT+'" stroke="'+RED+'" stroke-width="2.4"/>';
+  /* cuts */
+  for(k=0;k<c.length;k++){
+    y=rowTop(c[k]);
+    s+='<line x1="4" y1="'+y+'" x2="556" y2="'+y+'" stroke="'+INK+'" stroke-width="1.5"/>';
+    s+=tx(553,y-3,'cut','#65758b','end',9,800);
+    if(c[k]>=PROD)s+='<circle cx="'+BUS+'" cy="'+y+'" r="3.6" fill="#fff" stroke="'+RED+'" stroke-width="2"/>';
+  }
+  /* producer */
+  s+='<line x1="'+BX1+'" y1="'+yP+'" x2="'+BUS+'" y2="'+yP+'" stroke="'+INK+'" stroke-width="2.4"/>';
+  s+='<rect x="'+(BUS-4)+'" y="'+(yP-4)+'" width="8" height="8" fill="'+INK+'" transform="rotate(45 '+BUS+' '+yP+')"/>';
+  s+=tx(BUS+10,yP+15,'output of layer 20, shared with the upper layers',INK,'start',10.5,800,1);
+  s+=tx(BUS+10,yT+4,'layers 21 to 40 project their keys and values from it','#65758b','start',10,800,1);
+  $('col').innerHTML=s;
+}
+function strip(a,n,fn){var s='',w=160/n,k;for(k=0;k<n;k++)s+='<rect x="'+(k*w+.6).toFixed(2)+'" y="1" width="'+(w-1.2).toFixed(2)+'" height="8" rx="1.5" '+fn(k)+'/>';$(a).innerHTML=s;}
+function life(S){
+  var LX=62,SW=(556-LX)/16,RP=12,RB=102,s='',k,x,y,t,b;
+  for(k=0;k<N;k++){
+    y=RB-(k+1)*RP;
+    s+=tx(LX-6,y+8.5,'stage '+k,COL[k],'end',9,800);
+    s+='<rect x="'+LX+'" y="'+(y+1)+'" width="'+(SW*2*N)+'" height="10" fill="#f1f5f9"/>';
+    x=LX+k*SW;
+    s+='<rect x="'+(x+1)+'" y="'+(y+1)+'" width="'+(SW-2)+'" height="10" rx="2" fill="'+COL[k]+'" opacity=".35"/>';
+    s+=tx(x+SW/2,y+9,'F',INK,null,8,800);
+    t=2*N-1-k;x=LX+t*SW;
+    s+='<rect x="'+(x+1)+'" y="'+(y+1)+'" width="'+(SW-2)+'" height="10" rx="2" fill="'+COL[k]+'"/>';
+    s+=tx(x+SW/2,y+9,'B','#fff',null,8,800);
+  }
+  x=LX+S.start*SW;b=LX+(S.end+1)*SW;
+  s+='<line x1="'+(x+1)+'" y1="'+(RB-(S.own+1)*RP+1)+'" x2="'+(x+1)+'" y2="108" stroke="'+INK+'" stroke-width="1" stroke-dasharray="2 2"/>';
+  s+='<line x1="'+(b-1)+'" y1="'+(RB-(2*N-1-S.end+1)*RP+11)+'" x2="'+(b-1)+'" y2="108" stroke="'+INK+'" stroke-width="1" stroke-dasharray="2 2"/>';
+  s+=tx(LX-6,117,'shared','#152033','end',9,800);
+  s+='<rect x="'+(x+1)+'" y="108" width="'+(b-x-2)+'" height="11" rx="3" fill="'+(S.x?RED:INK)+'"/>';
+  s+='<line x1="'+LX+'" y1="128" x2="'+(LX+N*SW-2)+'" y2="128" stroke="#94a3b8" stroke-width="1.5"/>';
+  s+='<line x1="'+(LX+N*SW+2)+'" y1="128" x2="'+(LX+2*N*SW)+'" y2="128" stroke="#94a3b8" stroke-width="1.5"/>';
+  s+=tx(LX,139,'forward sweep up the stages','#0e7490','start',9.5,800);
+  s+=tx(LX+N*SW+2,150,'backward sweep down the stages','#6d28d9','start',9.5,800);
+  $('life').innerHTML=s;
+}
+function draw(){
+  var S=stats(),per=L/N,k;
+  $('ch').textContent=(N===1?'40 layers in 1 stage':'40 layers, '+N+' stages of '+per+' layers each')+', layer 1 at the bottom';
+  $('own').textContent=S.own;$('own').style.color=COL[S.own];
+  $('ownr').textContent='layers '+lo(S.own,S.c)+' to '+hi(S.own,S.c);
+  $('rs').textContent=S.rs.length;$('rs').style.color=S.rs.length?RED:INK;
+  $('rsl').textContent=stageList(S.rs);
+  $('x').textContent=S.x;$('x').style.color=S.x?RED:INK;
+  $('xl').textContent='of '+(L-PROD)+' reader layers';
+  strip('owns',N,function(k){return 'fill="'+COL[k]+'" opacity="'+(k===S.own?1:.15)+'"';});
+  strip('rss',N,function(k){return S.rs.indexOf(k)>=0?'fill="'+RED+'"':'fill="#e2e8f0"';});
+  strip('xs',L-PROD,function(k){return k<S.x?'fill="'+RED+'"':'fill="#e2e8f0"';});
+  $('lh').innerHTML='How long the shared tensor stays in memory: <span id="s13w7-held">'+S.held+'</span> of '+S.total+' steps';
+  $('say').innerHTML='Layers 21 to 40 project their keys and values from the output of layer 20. With '+plural(N,'stage')+', <b>stage '+S.own+'</b> owns that state'+(S.x
+    ? ' and <b>'+plural(S.x,'reader layer')+'</b> sit on '+plural(S.rs.length,'other stage')+'.'
+    : ' and every reader layer sits on the same stage.');
+  column(S);life(S);
+}
+Array.prototype.forEach.call(document.querySelectorAll('.s13w7-o'),function(b){
+  b.addEventListener('click',function(){
+    N=+b.getAttribute('data-v');
+    Array.prototype.forEach.call(document.querySelectorAll('.s13w7-o'),function(o){o.classList.toggle('on',+o.getAttribute('data-v')===N);});
+    draw();
+  });
+});
+Array.prototype.forEach.call(document.querySelectorAll('.s13w7-o'),function(o){o.classList.toggle('on',+o.getAttribute('data-v')===N);});
+draw();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

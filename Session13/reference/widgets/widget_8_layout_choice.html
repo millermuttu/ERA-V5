@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 13 Widget 8 - Choosing a Layout</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s13w8-w{max-width:1180px;margin:0 auto;padding:18px 22px 20px}
+.s13w8-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.s13w8-w h1{font-size:26px;line-height:1.12;margin:4px 0 10px}
+.s13w8-say{border:1px solid #bae6f0;background:#f0fbfd;border-radius:10px;padding:12px 14px;color:#155e75;font-size:13.5px;line-height:1.55;margin:0 0 14px}
+.s13w8-say b{color:#0e7490;font-weight:800}
+.s13w8-bar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.s13w8-lb{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.s13w8-bar button{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;padding:6px 14px;font:800 11.5px Inter,sans-serif;cursor:pointer}
+.s13w8-bar button.s13w8-q.on{border-color:var(--cyan);color:#0e7490;background:#effbfe;box-shadow:inset 0 0 0 1px var(--cyan)}
+.s13w8-bar button.s13w8-n{min-width:46px}
+.s13w8-bar button.s13w8-n.on{border-color:var(--ink);color:var(--ink);background:#eef2f7;box-shadow:inset 0 0 0 1px var(--ink)}
+.s13w8-sep{width:1px;height:20px;background:var(--line);margin:0 5px}
+.s13w8-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:13px 16px 12px}
+.s13w8-card h2{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;font-weight:800}
+.s13w8-cap{position:relative;height:15px}
+.s13w8-cap i{position:absolute;top:0;transform:translateX(-50%);font:800 10px Inter,sans-serif;font-style:normal;color:var(--ink);white-space:nowrap}
+.s13w8-tk{position:relative;height:56px;border-radius:8px;background:#f4f7fb;border:1px solid #e4ebf4;overflow:hidden;
+ background-image:repeating-linear-gradient(to right,#dde6f2 0,#dde6f2 1px,transparent 1px,transparent 12.5%)}
+.s13w8-fs,.s13w8-fa{position:absolute;top:5px;bottom:5px;transition:left .4s ease-in-out,width .4s ease-in-out,background-color .4s}
+.s13w8-fs{left:0;border-radius:5px 0 0 5px}
+.s13w8-fa{border-radius:0 5px 5px 0}
+.s13w8-lim{position:absolute;top:0;bottom:0;width:2px;background:var(--ink)}
+.s13w8-ax{position:relative;height:14px;margin-top:5px}
+.s13w8-ax i{position:absolute;top:0;transform:translateX(-50%);font:700 9.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:#93a3b6;font-style:normal;white-space:nowrap}
+.s13w8-ax i:first-child{transform:none}.s13w8-ax i:last-child{transform:translateX(-100%)}
+.s13w8-leg{margin:8px 0 0;font-size:12px;color:var(--muted);line-height:1.4;display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.s13w8-leg b{color:var(--ink)}
+.s13w8-chip{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.s13w8-met{display:grid;grid-template-columns:1.25fr 1.15fr 1fr;gap:8px;margin-top:12px}
+.s13w8-box{border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.9);padding:10px 12px}
+.s13w8-box>span:not(.s13w8-rd){display:block;color:var(--muted);font-size:10.5px;line-height:1.3;font-weight:700;letter-spacing:.03em;text-transform:uppercase}
+.s13w8-rd{display:block;margin-top:3px;font:700 12.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.s13w8-rd b{font-size:17px;font-weight:800;color:var(--ink)}
+.s13w8-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:7px;margin-top:14px}
+.s13w8-tile{border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.9);padding:9px 10px 10px;min-height:128px}
+.s13w8-tn{display:block;font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink);line-height:1.25;min-height:25px}
+.s13w8-ts{display:inline-block;margin:4px 0 4px;font:800 10.5px Inter,sans-serif;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:2px 8px}
+.s13w8-on{background:#eafaf0;color:#0f7a39;border:1px solid #a9e3c1}
+.s13w8-off{background:#f2f5f9;color:#7c8aa0;border:1px solid #dde5ef}
+.s13w8-tr{display:block;font-size:11px;line-height:1.35;color:var(--muted)}
+.s13w8-lay{margin:14px 0 0;font:800 15px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--ink)}
+.s13w8-note{margin:8px 0 0;font-size:12.5px;line-height:1.5;min-height:20px}
+@media(max-width:1000px){.s13w8-grid{grid-template-columns:repeat(4,1fr)}.s13w8-met{grid-template-columns:1fr}.s13w8-rd{white-space:normal}}
+@media(max-width:620px){.s13w8-grid{grid-template-columns:repeat(2,1fr)}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s13w8-w">
+<div class="s13w8-k">ERA V5 Session 13 &middot; choosing a layout</div>
+<h1>Choosing a Layout</h1>
+<p class="s13w8-say">A dense model of <b>30.2 billion parameters</b> trains on nodes of eight <b>NVIDIA B200</b> GPUs, and this budget has <b>167.6 GiB</b> free on each card. Pick a sequence length and a node count to see the layout the rules produce.</p>
+
+<div class="s13w8-bar">
+<span class="s13w8-lb">sequence length</span>
+<button type="button" class="s13w8-q" data-v="8192" aria-label="Sequence length 8,192 tokens">8,192</button>
+<button type="button" class="s13w8-q" data-v="16384" aria-label="Sequence length 16,384 tokens">16,384</button>
+<button type="button" class="s13w8-q" data-v="32768" aria-label="Sequence length 32,768 tokens">32,768</button>
+<button type="button" class="s13w8-q" data-v="65536" aria-label="Sequence length 65,536 tokens">65,536</button>
+<button type="button" class="s13w8-q" data-v="131072" aria-label="Sequence length 131,072 tokens">131,072</button>
+<span class="s13w8-sep" aria-hidden="true"></span>
+<span class="s13w8-lb">nodes</span>
+<button type="button" class="s13w8-n" data-v="1" aria-label="1 B200 node, 8 GPUs">1</button>
+<button type="button" class="s13w8-n" data-v="2" aria-label="2 B200 nodes, 16 GPUs">2</button>
+<button type="button" class="s13w8-n" data-v="4" aria-label="4 B200 nodes, 32 GPUs">4</button>
+<button type="button" class="s13w8-n" data-v="8" aria-label="8 B200 nodes, 64 GPUs">8</button>
+</div>
+
+<div class="s13w8-card">
+<h2 id="s13w8-h2">memory per GPU</h2>
+<div class="s13w8-cap"><i id="s13w8-cap">card limit 167.6 GiB</i></div>
+<div class="s13w8-tk"><div class="s13w8-fs" id="s13w8-fs"></div><div class="s13w8-fa" id="s13w8-fa"></div><div class="s13w8-lim" id="s13w8-lim"></div></div>
+<div class="s13w8-ax" id="s13w8-ax"></div>
+<p class="s13w8-leg"><span><i class="s13w8-chip" id="s13w8-c1" aria-hidden="true"></i><b>state</b>, weights and optimizer</span><span><i class="s13w8-chip" id="s13w8-c2" aria-hidden="true"></i><b>activations</b> kept for the backward pass</span><span>the axis is pinned from <b>0</b> to <b>320 GiB</b></span></p>
+</div>
+
+<div class="s13w8-met">
+<div class="s13w8-box"><span id="s13w8-l1"></span><span class="s13w8-rd" id="s13w8-r1"></span></div>
+<div class="s13w8-box"><span id="s13w8-l2"></span><span class="s13w8-rd" id="s13w8-r2"></span></div>
+<div class="s13w8-box"><span id="s13w8-l3"></span><span class="s13w8-rd" id="s13w8-r3"></span></div>
+</div>
+
+<div class="s13w8-grid" id="s13w8-grid"></div>
+<p class="s13w8-lay" id="s13w8-lay"></p>
+<p class="s13w8-note" id="s13w8-note"></p>
+</main>
+
+<script>
+(function(){
+'use strict';
+var P=30.2e9,CAP=167.6,TP=8,GIB=1073741824,ACT0=127.5,AXMAX=320,BASE=8192,
+    GREEN='#159447',RED='#dc2626',VIO='#7c3aed',CYAN='#0891b2',DKRED='#b91c1c',LTRED='#ef4444',
+    SEQS=[8192,16384,32768,65536,131072],NSET=[1,2,4,8],
+    seq=8192,nodes=1;
+function $(i){return document.getElementById('s13w8-'+i);}
+function f1(v){return v.toFixed(1);}
+function f2(v){return v.toFixed(2);}
+function trim(v){return String(+v.toFixed(2));}
+function comma(n){return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+function optBytes(dp){return 4+12/dp;}
+function stateGiB(dp){return P*optBytes(dp)/TP/GIB;}
+function actGiB(s,cp){return ACT0*(s/BASE)/(TP*cp);}
+function plan(s,n){
+  var c=[],i,cp,dp,st,ac,best;
+  for(i=0;i<NSET.length;i++){
+    cp=NSET[i];
+    if(cp<=n&&n%cp===0){
+      dp=n/cp;st=stateGiB(dp);ac=actGiB(s,cp);
+      c.push({cp:cp,dp:dp,state:st,act:ac,total:st+ac,fits:(st+ac)<=CAP+1e-9});
+    }
+  }
+  for(i=0;i<c.length;i++){if(c[i].fits)return c[i];}
+  best=c[0];
+  for(i=1;i<c.length;i++){if(c[i].total<best.total)best=c[i];}
+  return best;
+}
+function firstFit(s){
+  var i,p;
+  for(i=0;i<NSET.length;i++){p=plan(s,NSET[i]);if(p.fits)return {n:NSET[i],cp:p.cp};}
+  return null;
+}
+function tile(name,on,deg,reason){
+  return '<div class="s13w8-tile"><span class="s13w8-tn">'+name+'</span>'+
+    '<span class="s13w8-ts '+(on?'s13w8-on':'s13w8-off')+'">'+(on?('on'+(deg?' &middot; '+deg:'')):'off')+'</span>'+
+    '<span class="s13w8-tr">'+reason+'</span></div>';
+}
+function tiles(p){
+  var s='';
+  s+=tile('ZeRO-1',p.dp>1,p.dp>1?('DP '+p.dp):'',
+      p.dp>1?'The 12 bytes of optimizer state are divided across the '+p.dp+' copies. The traffic stays the same.'
+            :'There are no data-parallel copies to divide across.');
+  s+=tile('ZeRO-2',false,'',p.dp>1?'The layout already fits without dividing the gradients.':'There are no data-parallel copies to divide across.');
+  s+=tile('ZeRO-3',false,'',p.dp>1?'Tensor parallelism already divides the weights. This would raise traffic from 2P to 3P.':'There are no data-parallel copies to divide across.');
+  s+=tile('tensor parallelism',true,'8','The eight GPUs of one node are joined by NVLink 5.');
+  s+=tile('sequence parallelism',true,'8','Sequence parallelism always runs with tensor parallelism.');
+  s+=tile('pipeline parallelism',false,'','The model fits without dividing it by layer.');
+  s+=tile('context parallelism',p.cp>1,p.cp>1?String(p.cp):'',
+      p.cp>1?'One sequence is split across '+p.cp+' groups of eight GPUs.'
+            :'One sequence still fits on a group of eight GPUs.');
+  $('grid').innerHTML=s;
+}
+function axis(){
+  var s='',i;
+  for(i=0;i<=4;i++){s+='<i style="left:'+(i/4*100)+'%">'+(i*80)+' GiB</i>';}
+  $('ax').innerHTML=s;
+}
+function draw(){
+  var p=plan(seq,nodes),fits=p.fits,mult=seq/BASE,div=TP*p.cp,
+      cs=fits?VIO:DKRED,ca=fits?CYAN:LTRED,
+      ws=Math.max(0,Math.min(100,p.state/AXMAX*100)),
+      wa=Math.max(0,Math.min(100-ws,p.act/AXMAX*100)),
+      lim=CAP/AXMAX*100,adv;
+  $('h2').textContent='memory per GPU at '+comma(seq)+' tokens on '+nodes+(nodes===1?' node':' nodes')+', '+(nodes*8)+' GPUs';
+  $('cap').style.left=lim+'%';
+  $('lim').style.left='calc('+lim+'% - 1px)';
+  $('fs').style.width=ws+'%';$('fs').style.background=cs;
+  $('fa').style.left=ws+'%';$('fa').style.width=wa+'%';$('fa').style.background=ca;
+  $('c1').style.background=cs;$('c2').style.background=ca;
+
+  $('l1').textContent='state per GPU';
+  $('r1').innerHTML='<b style="color:'+cs+'">'+f2(p.state)+' GiB</b> = 30.2e9 &times; '+trim(optBytes(p.dp))+' bytes / 8 / 2^30';
+  $('l2').textContent='activations per GPU';
+  $('r2').innerHTML='<b style="color:'+ca+'">'+f1(p.act)+' GiB</b> = 127.5 GiB &times; '+mult+' / '+div;
+  $('l3').textContent=fits?'total per GPU, fits':'total per GPU, does not fit';
+  $('r3').innerHTML='<b style="color:'+(fits?GREEN:RED)+'">'+f1(p.total)+' GiB</b> of 167.6 GiB';
+
+  tiles(p);
+  $('lay').innerHTML='TP 8 &times; CP '+p.cp+' &times; DP '+p.dp+' = '+(nodes*8)+' GPUs';
+
+  if(fits){
+    $('note').innerHTML='<span style="color:'+GREEN+'">This layout fits on '+(nodes*8)+' B200 GPUs with '+f1(CAP-p.total)+' GiB to spare on each card.</span>';
+  }else{
+    adv=firstFit(seq);
+    $('note').innerHTML='<span style="color:'+RED+'">The smallest total reachable on '+nodes+(nodes===1?' node is ':' nodes is ')+f1(p.total)+' GiB at CP = '+p.cp+'.</span>'+
+      (adv?'<span style="color:'+RED+'"> '+adv.n+' nodes fit this length'+(adv.cp>1?', with CP = '+adv.cp:'')+'.</span>':'');
+  }
+}
+function marks(){
+  Array.prototype.forEach.call(document.querySelectorAll('.s13w8-q'),function(b){b.classList.toggle('on',+b.getAttribute('data-v')===seq);});
+  Array.prototype.forEach.call(document.querySelectorAll('.s13w8-n'),function(b){b.classList.toggle('on',+b.getAttribute('data-v')===nodes);});
+}
+Array.prototype.forEach.call(document.querySelectorAll('.s13w8-q'),function(b){
+  b.addEventListener('click',function(){seq=+b.getAttribute('data-v');marks();draw();});
+});
+Array.prototype.forEach.call(document.querySelectorAll('.s13w8-n'),function(b){
+  b.addEventListener('click',function(){nodes=+b.getAttribute('data-v');marks();draw();});
+});
+axis();marks();draw();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

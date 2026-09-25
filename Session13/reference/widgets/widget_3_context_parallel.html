@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 13 Widget 3 - Context Parallelism</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s13w3-w{max-width:1180px;margin:0 auto;padding:14px 22px 16px}
+.s13w3-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.s13w3-w h1{font-size:24px;line-height:1.12;margin:3px 0 5px}
+.s13w3-sub{color:var(--muted);margin:0 0 10px;font-size:13px;line-height:1.5;max-width:1010px}
+.s13w3-sub b{color:var(--ink)}
+.s13w3-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:9px}
+.s13w3-lb{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-left:6px}
+.s13w3-seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff}
+.s13w3-seg button{border:0;border-right:1px solid var(--line);background:#fff;color:var(--muted);padding:7px 14px;font:800 12.5px Inter,sans-serif;cursor:pointer}
+.s13w3-seg button:last-child{border-right:0}
+.s13w3-seg button[aria-pressed="true"]{background:var(--cyan);color:#fff}
+.s13w3-go{border:1px solid var(--cyan);background:#fff;color:#0e7490;border-radius:8px;padding:7px 16px;font:800 12.5px Inter,sans-serif;cursor:pointer;margin-left:6px}
+.s13w3-go:disabled{border-color:var(--line);color:#b6c2d2;cursor:default}
+.s13w3-chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 12px;font:800 11.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--ink)}
+.s13w3-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:10px 13px 11px}
+.s13w3-card h2{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 5px;font-weight:800}
+.s13w3-card svg{display:block;width:100%;height:auto}
+.s13w3-note{margin:6px 0 0;padding-top:6px;border-top:1px solid #eef3f9;font-size:12.5px;line-height:1.5;color:var(--muted);min-height:26px}
+.s13w3-note b{color:var(--ink);font:800 13px ui-monospace,SFMono-Regular,Consolas,monospace}
+.s13w3-note .r{color:var(--red);font-weight:800}
+.s13w3-g{display:grid;grid-template-columns:1fr 1.15fr 1.15fr;gap:12px;margin-top:10px;align-items:stretch}
+.s13w3-g.s13w3-hv .s13w3-rd{grid-column:span 2}
+.s13w3-ms{display:grid;grid-template-columns:1fr;gap:0 16px}
+.s13w3-hv .s13w3-ms{grid-template-columns:1fr 1fr}
+.s13w3-m{border-bottom:1px solid #eef3f9;padding:2px 0 4px}
+.s13w3-m span{display:block;font-size:11px;font-weight:700;color:var(--muted)}
+.s13w3-m b{font:800 14.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--ink)}
+.s13w3-m b.r{color:var(--red)}
+.s13w3-m i{font-style:normal;font:700 10.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:#8b9aad}
+.s13w3-m em{display:block;font-style:normal;font-size:11px;font-weight:800;color:var(--red)}
+.s13w3-cz{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.s13w3-cz span{display:block;font-size:11px;font-weight:800;color:var(--ink);margin-bottom:3px}
+.s13w3-cz p{margin:3px 0 0;font-size:11.5px;line-height:1.35;font-weight:700;color:var(--ink)}
+.s13w3-cz p i{display:block;font-style:normal;font:700 10.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:#8b9aad;margin-top:1px}
+@media(max-width:940px){.s13w3-g{grid-template-columns:1fr}.s13w3-g.s13w3-hv .s13w3-rd{grid-column:auto}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s13w3-w">
+<div class="s13w3-k">ERA V5 Session 13 &middot; context parallelism</div>
+<h1>Context Parallelism</h1>
+<p class="s13w3-sub">One sequence of <b>131,072 tokens</b> is divided evenly across GPUs. Attention on each GPU needs the keys and values of the tokens held by other GPUs.</p>
+
+<div class="s13w3-bar">
+<span class="s13w3-lb">view</span>
+<span class="s13w3-seg" id="s13w3-view">
+<button type="button" data-v="ring" aria-pressed="true" aria-label="Show Ring Attention, key-value blocks passed around a ring">Ring</button>
+<button type="button" data-v="gather" aria-pressed="false" aria-label="Show all-gather context parallelism, one gather of keys and values per layer">All-gather</button>
+<button type="button" data-v="head" aria-pressed="false" aria-label="Show the by-head method, an all-to-all that regroups the query heads">By head</button>
+</span>
+<span class="s13w3-lb">CP degree</span>
+<span class="s13w3-seg" id="s13w3-cp">
+<button type="button" data-c="2" aria-pressed="false" aria-label="Context parallel degree 2">2</button>
+<button type="button" data-c="4" aria-pressed="false" aria-label="Context parallel degree 4">4</button>
+<button type="button" data-c="8" aria-pressed="true" aria-label="Context parallel degree 8">8</button>
+<button type="button" data-c="16" aria-pressed="false" aria-label="Context parallel degree 16">16</button>
+</span>
+<button class="s13w3-go" id="s13w3-step" type="button" aria-label="Advance one step">Step</button>
+<span class="s13w3-chip" id="s13w3-stn">step 0 of 7</span>
+</div>
+
+<div class="s13w3-card">
+<h2 id="s13w3-h">One sequence, one segment per GPU</h2>
+<svg id="s13w3-seq" viewBox="0 0 1136 46" role="img" aria-label="The sequence of 131,072 tokens drawn as a bar divided into one colored segment per GPU"></svg>
+<svg id="s13w3-main" viewBox="0 0 1136 200" role="img" aria-label="The GPUs of the context parallel group and the data each one holds"></svg>
+<p class="s13w3-note" id="s13w3-note" aria-live="polite"></p>
+</div>
+
+<section class="s13w3-g" id="s13w3-g">
+<div class="s13w3-card">
+<h2>Activations per GPU, log axis</h2>
+<svg id="s13w3-act" viewBox="0 0 330 96" role="img" aria-label="Activation memory per GPU as two bars on a fixed log axis, with the capacity of one card marked"></svg>
+</div>
+<div class="s13w3-card" id="s13w3-czc">
+<h2>Causal attention work per GPU, same axis</h2>
+<div class="s13w3-cz">
+<div><span>one continuous piece per GPU</span>
+<svg id="s13w3-czA" viewBox="0 0 172 92" role="img" aria-label="Attention work per GPU when each GPU holds one continuous piece of the sequence"></svg>
+<p id="s13w3-czAt"></p></div>
+<div><span id="s13w3-czBh">head-tail split into 16 chunks</span>
+<svg id="s13w3-czB" viewBox="0 0 172 92" role="img" aria-label="Attention work per GPU when each GPU holds one head chunk and one tail chunk"></svg>
+<p id="s13w3-czBt"></p></div>
+</div>
+</div>
+<div class="s13w3-card s13w3-rd">
+<h2 id="s13w3-rh">Ring readouts</h2>
+<div class="s13w3-ms" id="s13w3-ms"></div>
+</div>
+</section>
+</main>
+
+<script>
+(function(){
+'use strict';
+var PAL=['#0891b2','#7c3aed','#159447','#d97706','#db2777','#2563eb','#65a30d','#9333ea'],
+    RED='#dc2626',IDLE='#cbd5e1',INK='#152033',MUTED='#65758b',
+    MONO='ui-monospace,SFMono-Regular,Consolas,monospace',
+    SEQ=131072,HID=5120,BPT=34,LAYERS=96,QH=40,KVH=8,HD=128,KVB=2,TP=8,
+    GIB=1073741824,CARD=80e9/GIB,
+    W=1136,
+    view='ring',c=8,k=0,hp=0,busy=false,
+    RM=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+function $(i){return document.getElementById('s13w3-'+i);}
+function mix(h,t){var n=parseInt(h.slice(1),16),r=n>>16,g=(n>>8)&255,b=n&255;
+  r=Math.round(r+(255-r)*t);g=Math.round(g+(255-g)*t);b=Math.round(b+(255-b)*t);
+  return 'rgb('+r+','+g+','+b+')';}
+function col(g){return g<8?PAL[g]:mix(PAL[g%8],0.5);}
+function txc(g){return g<8?'#ffffff':INK;}
+function fi(n){return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+function f1(v){var s=v.toFixed(1),p=s.split('.');return fi(p[0])+'.'+p[1];}
+function mb(b){return f1(b/1e6)+' MB';}
+function gb(b){return f1(b/1e9)+' GB';}
+function tx(x,y,s,c2,an,fs,fw,fam){
+  return '<text x="'+x+'" y="'+y+'" text-anchor="'+(an||'middle')+'" font-size="'+(fs||10)+'" font-weight="'+(fw||700)+'"'+(fam?' font-family="'+fam+'"':'')+' fill="'+c2+'">'+s+'</text>';}
+var DEFS='<defs><pattern id="s13w3-hat" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#f1f5f9"/><line x1="0" y1="0" x2="0" y2="6" stroke="'+IDLE+'" stroke-width="2.4"/></pattern>'+
+  '<marker id="s13w3-ar" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0 0 7 3 0 6z" fill="#475569"/></marker></defs>';
+
+/* live quantities */
+function tokens(){return SEQ/c;}
+function actGiB(){return SEQ*HID*BPT*LAYERS/c/GIB;}
+function blockBytes(){return 2*KVH*HD*tokens()*KVB;}
+function passes(){return c-1;}
+function ringFwd(){return blockBytes()*passes()*LAYERS;}
+function fullKV(){return 2*KVH*HD*SEQ*KVB;}
+function agRecv(){return fullKV()*(c-1)/c;}
+function agFwd(){return agRecv()*LAYERS;}
+function headsOK(){return QH%c===0;}
+
+/* sequence bar */
+function seqBar(){
+  var s='',x0=8,x1=W-8,sw=(x1-x0)/c,g,x;
+  s+=tx(x0,11,'token 0',MUTED,'start',10);
+  s+=tx(x1,11,'token '+fi(SEQ),MUTED,'end',10);
+  s+=tx(W/2,11,fi(tokens())+' tokens per segment = '+fi(SEQ)+' / '+c,INK,'middle',10.5,800);
+  for(g=0;g<c;g++){
+    x=x0+g*sw;
+    s+='<rect x="'+(x+1)+'" y="17" width="'+(sw-2)+'" height="26" rx="4" fill="'+col(g)+'"/>';
+    s+=tx(x+sw/2,34.5,(sw>=90?'GPU ':'')+g,txc(g),'middle',sw>=60?11:10,800);
+  }
+  $('seq').innerHTML=s;
+}
+
+/* ring view */
+function ringGeo(){
+  var G=c<=4?60:c<=8?34:10,bw=Math.min(230,(W-20-G*(c-1))/c),tot=c*bw+(c-1)*G,x0=(W-tot)/2,
+      cols=c===2?2:4,gap=c===16?2:4,
+      cs=Math.min(34,(bw-12-(cols-1)*gap)/cols),i,xs=[];
+  for(i=0;i<c;i++){xs.push(x0+i*(bw+G));}
+  return {G:G,bw:bw,xs:xs,cols:cols,gap:gap,cs:cs,BY:4,BH:158,CHY:110,CHH:30,RET:176};
+}
+function held(g,kk){return ((g-kk)%c+c)%c;}
+function chipW(q){return Math.min(q.bw-12,96);}
+function ring(){
+  var q=ringGeo(),s=DEFS,g,j,x,cx,cy,seen,gx,gy,cw,h,lab,
+      gw=q.cols*q.cs+(q.cols-1)*q.gap,ay=q.CHY+q.CHH/2;
+  for(g=0;g<c-1;g++){
+    x=q.xs[g]+q.bw;
+    s+='<line x1="'+(x+2)+'" y1="'+ay+'" x2="'+(x+q.G-3)+'" y2="'+ay+'" stroke="#475569" stroke-width="1.8" marker-end="url(#s13w3-ar)"/>';
+  }
+  var a=q.xs[c-1]+q.bw/2,b=q.xs[0]+q.bw/2;
+  s+='<path d="M'+a+','+(q.BY+q.BH+2)+' L'+a+','+q.RET+' L'+b+','+q.RET+' L'+b+','+(q.BY+q.BH+6)+'" fill="none" stroke="#475569" stroke-width="1.8" stroke-dasharray="7 5" marker-end="url(#s13w3-ar)"/>';
+  s+=tx((a+b)/2,q.RET+17,'GPU '+(c-1)+' sends to GPU 0',MUTED,'middle',10.5,800);
+  for(g=0;g<c;g++){
+    x=q.xs[g];
+    s+='<rect x="'+x+'" y="'+q.BY+'" width="'+q.bw+'" height="'+q.BH+'" rx="9" fill="#fff" stroke="'+(g===0?'#94a3b8':'#dbe4f0')+'" stroke-width="'+(g===0?1.6:1)+'"/>';
+    s+='<rect x="'+x+'" y="'+q.BY+'" width="'+q.bw+'" height="5" rx="2" fill="'+col(g)+'"/>';
+    s+=tx(x+q.bw/2,23,(q.bw>=70?'GPU ':'')+g,INK,'middle',q.bw>=70?12.5:11,800);
+    gx=x+(q.bw-gw)/2;gy=31;
+    for(j=0;j<c;j++){
+      cx=gx+(j%q.cols)*(q.cs+q.gap);cy=gy+Math.floor(j/q.cols)*(q.cs+q.gap);
+      seen=((g-j)%c+c)%c<=k;
+      s+='<rect x="'+cx+'" y="'+cy+'" width="'+q.cs+'" height="'+q.cs+'" rx="'+(q.cs>14?4:2)+'" fill="'+(seen?col(j):'url(#s13w3-hat)')+'" stroke="'+(seen?'none':IDLE)+'"/>';
+      if(q.cs>=20){s+=tx(cx+q.cs/2,cy+q.cs/2+4,j,seen?txc(j):'#94a3b8','middle',11,800,MONO);}
+    }
+    if(q.bw>=70){s+=tx(x+q.bw/2,q.CHY-10,'attended '+(k+1)+' of '+c,MUTED,'middle',10,700);}
+    h=held(g,k);cw=chipW(q);
+    lab=cw>=70?'KV block '+h:String(h);
+    s+='<g class="s13w3-tok" data-g="'+g+'" transform="translate('+(x+q.bw/2)+','+ay+')">'+
+       '<rect x="'+(-cw/2)+'" y="'+(-q.CHH/2)+'" width="'+cw+'" height="'+q.CHH+'" rx="7" fill="'+col(h)+'" stroke="#fff" stroke-width="2"/>'+
+       tx(0,4.5,lab,txc(h),'middle',cw>=70?12:11,800,MONO)+'</g>';
+    if(q.bw>=70){s+=tx(x+q.bw/2,q.CHY+q.CHH+14,'holding now',MUTED,'middle',9.5,700);}
+  }
+  return s;
+}
+
+/* all-gather view: static before and after pair */
+function gather(){
+  var s=DEFS,LX=112,G=c<=4?24:c<=8?12:5,bw=Math.min(210,(W-LX-6-G*(c-1))/c),tot=c*bw+(c-1)*G,
+      x0=LX+((W-LX)-tot)/2,RY=[6,114],BH=72,per=c>8?8:c,nr=Math.ceil(c/per),cg=2,
+      r,g,j,x,y,cwid,ch,filled,cx,cy,ql;
+  for(r=0;r<2;r++){
+    y=RY[r];
+    s+=tx(4,y+16,r===0?'before':'after',INK,'start',12.5,800);
+    s+=tx(4,y+35,'queries',MUTED,'start',10,700);
+    s+=tx(4,y+59,'keys and values',MUTED,'start',10,700);
+    for(g=0;g<c;g++){
+      x=x0+g*(bw+G);
+      s+='<rect x="'+x+'" y="'+y+'" width="'+bw+'" height="'+BH+'" rx="8" fill="#fff" stroke="#dbe4f0"/>';
+      s+='<rect x="'+x+'" y="'+y+'" width="'+bw+'" height="4" rx="2" fill="'+col(g)+'"/>';
+      s+=tx(x+bw/2,y+17,(bw>=64?'GPU ':'')+g,INK,'middle',bw>=64?11.5:10.5,800);
+      ql=bw>=110?'queries '+g:bw>=46?'Q '+g:String(g);
+      s+='<rect x="'+(x+6)+'" y="'+(y+23)+'" width="'+(bw-12)+'" height="17" rx="4" fill="'+col(g)+'"/>';
+      s+=tx(x+bw/2,y+35.5,ql,txc(g),'middle',10,800,MONO);
+      cwid=(bw-12-(per-1)*cg)/per;ch=(22-(nr-1)*cg)/nr;
+      for(j=0;j<c;j++){
+        filled=r===1||j===g;
+        cx=x+6+(j%per)*(cwid+cg);cy=y+45+Math.floor(j/per)*(ch+cg);
+        s+='<rect x="'+cx+'" y="'+cy+'" width="'+cwid+'" height="'+ch+'" rx="2" fill="'+(filled?col(j):'url(#s13w3-hat)')+'" stroke="'+(filled?'none':IDLE)+'"/>';
+      }
+      if(r===0){s+='<line x1="'+(x+bw/2)+'" y1="'+(y+BH+4)+'" x2="'+(x+bw/2)+'" y2="'+(RY[1]-4)+'" stroke="#475569" stroke-width="1.6" marker-end="url(#s13w3-ar)"/>';}
+    }
+  }
+  s+=tx(4,RY[0]+BH+23,'one all-gather',PAL[0],'start',11,800);
+  return s;
+}
+
+/* by-head view: 40 query heads in 8 groups of 5 against token segments */
+function heads(){
+  var s=DEFS,GX0=124,GX1=1110,GY=22,GH=128,GAP=8,per=QH/c,ok=headsOK(),
+      cw=(GX1-GX0-GAP*(KVH-1))/QH,rh=GH/c,h,j,g,x0,x1,mx,my;
+  function hx(i){return GX0+i*cw+Math.floor(i/5)*GAP;}
+  for(g=0;g<KVH;g++){
+    x0=hx(g*5);x1=hx(g*5+4)+cw;
+    s+=tx((x0+x1)/2,GY-7,'KV head '+g,INK,'middle',10.5,800);
+  }
+  if(rh>=14){for(j=0;j<c;j++){s+=tx(GX0-8,GY+j*rh+rh/2+4,'tokens on GPU '+j,MUTED,'end',10.5,700);}}
+  else{s+=tx(GX0-8,GY+GH/2-3,c+' token',MUTED,'end',10.5,700)+tx(GX0-8,GY+GH/2+11,'segments',MUTED,'end',10.5,700);}
+  if(!ok){
+    for(g=0;g<KVH;g++){x0=hx(g*5);x1=hx(g*5+4)+cw;
+      s+='<rect x="'+x0+'" y="'+GY+'" width="'+(x1-x0)+'" height="'+GH+'" fill="url(#s13w3-hat)" stroke="'+IDLE+'"/>';}
+    mx=(GX0+GX1)/2;my=GY+GH/2;
+    s+='<rect x="'+(mx-290)+'" y="'+(my-31)+'" width="580" height="62" rx="10" fill="#fff" stroke="'+RED+'" stroke-width="2"/>';
+    s+=tx(mx,my-5,QH+' query heads cannot be divided evenly among '+c+' GPUs',RED,'middle',16,800);
+    s+=tx(mx,my+17,(QH/c).toFixed(1)+' query heads per GPU = '+QH+' / '+c,RED,'middle',11.5,700,MONO);
+    s+=tx(mx,GY+GH+26,'no regroup is possible at CP = '+c,RED,'middle',11,800);
+    return s;
+  }
+  for(h=0;h<QH;h++){for(j=0;j<c;j++){
+    g=hp===0?j:Math.floor(h/per);
+    s+='<rect x="'+hx(h)+'" y="'+(GY+j*rh)+'" width="'+cw+'" height="'+rh+'" fill="'+col(g)+'" stroke="#fff" stroke-width="0.8"/>';
+  }}
+  if(hp===0){
+    s+=tx(mx=(GX0+GX1)/2,GY+GH+26,'before the all-to-all, each GPU owns one token segment across all '+QH+' query heads',MUTED,'middle',11,800);
+  }else{
+    for(g=0;g<c;g++){
+      x0=hx(g*per);x1=hx((g+1)*per-1)+cw;
+      s+='<line x1="'+(x0+1)+'" y1="'+(GY+GH+8)+'" x2="'+(x1-1)+'" y2="'+(GY+GH+8)+'" stroke="'+col(g)+'" stroke-width="3"/>';
+      s+=tx((x0+x1)/2,GY+GH+23,(x1-x0>=50?'GPU ':'')+g,INK,'middle',10.5,800);
+    }
+    s+=tx((GX0+GX1)/2,GY+GH+42,'after the all-to-all, each GPU owns '+per+' query heads across all '+fi(SEQ)+' tokens',MUTED,'middle',11,800);
+  }
+  return s;
+}
+
+/* activation bars on a pinned log axis */
+function actChart(){
+  var LO=10,HI=3000,X0=100,X1=304,s='',t=[10,30,100,300,1000,3000],i,v,rows,x,w,over,cx;
+  function lx(g){return X0+Math.log(g/LO)/Math.log(HI/LO)*(X1-X0);}
+  for(i=0;i<t.length;i++){x=lx(t[i]);s+='<line x1="'+x+'" y1="14" x2="'+x+'" y2="76" stroke="#eef3f9"/>'+tx(x,90,fi(t[i]),'#8b9aad','middle',9);}
+  rows=[['CP only',actGiB()],['CP with TP = '+TP,actGiB()/TP]];
+  for(i=0;i<2;i++){
+    v=rows[i][1];over=v>CARD;w=lx(Math.max(v,LO))-X0;
+    s+=tx(X0-7,34+i*30,rows[i][0],INK,'end',10.5,800);
+    s+='<rect x="'+X0+'" y="'+(19+i*30)+'" width="'+w+'" height="22" rx="4" fill="'+(over?RED:INK)+'" opacity="'+(over?.9:.85)+'"/>';
+    x=X0+w+5;
+    if(x<lx(CARD)+5&&x+62>lx(CARD)){x=lx(CARD)+5;}
+    if(x>X1-70){s+=tx(X0+w-5,34.5+i*30,f1(v)+' GiB','#ffffff','end',11,800,MONO);}
+    else{s+=tx(x,34.5+i*30,f1(v)+' GiB',over?RED:INK,'start',11,800,MONO).replace('<text ','<text stroke="#fff" stroke-width="3.2" paint-order="stroke" ');}
+  }
+  cx=lx(CARD);
+  s+='<line x1="'+cx+'" y1="12" x2="'+cx+'" y2="78" stroke="'+INK+'" stroke-width="1.4" stroke-dasharray="5 3"/>';
+  s+=tx(cx+4,10,'one card '+CARD.toFixed(1)+' GiB',INK,'start',9.5,800);
+  s+=tx(X0-16,90,'GiB','#8b9aad','end',9);
+  $('act').innerHTML=s;
+}
+
+/* causal load: two bar groups on one fixed axis, in units of one piece attending to one piece */
+function causal(){
+  var MAX=c-0.5,BX0=4,BX1=168,BY0=4,BY1=60,bg=c<=4?6:c<=8?3:1.5,bwid=(BX1-BX0-bg*(c-1))/c,
+      j,x,hA,hB=(c/2)/MAX*(BY1-BY0),sA='',sB='',n=2*c,sw,o,lb;
+  for(j=0;j<c;j++){
+    x=BX0+j*(bwid+bg);
+    hA=(j+0.5)/MAX*(BY1-BY0);
+    sA+='<rect x="'+x+'" y="'+(BY1-hA)+'" width="'+bwid+'" height="'+hA+'" rx="1.5" fill="'+col(j)+'"/>';
+    sB+='<rect x="'+x+'" y="'+(BY1-hB)+'" width="'+bwid+'" height="'+hB+'" rx="1.5" fill="'+col(j)+'"/>';
+    if(c<=8||j===0||j===c-1){lb=tx(x+bwid/2,70,j,MUTED,'middle',8.5,700);sA+=lb;sB+=lb;}
+  }
+  lb='<line x1="'+BX0+'" y1="'+BY1+'" x2="'+BX1+'" y2="'+BY1+'" stroke="#94a3b8"/>';
+  sA+=lb;sB+=lb;
+  sw=(BX1-BX0)/c;
+  for(j=0;j<c;j++){sA+='<rect x="'+(BX0+j*sw)+'" y="76" width="'+sw+'" height="12" fill="'+col(j)+'" stroke="#fff" stroke-width=".6"/>';}
+  sw=(BX1-BX0)/n;
+  for(j=0;j<n;j++){o=j<c?j:n-1-j;sB+='<rect x="'+(BX0+j*sw)+'" y="76" width="'+sw+'" height="12" fill="'+col(o)+'" stroke="#fff" stroke-width=".6"/>';}
+  $('czA').innerHTML=sA;$('czB').innerHTML=sB;
+  $('czBh').textContent='head-tail split into '+n+' chunks';
+  $('czAt').innerHTML='last GPU does '+(2*c-1)+' times the work of the first<i>'+(2*c-1)+' = ('+(c-1)+' + 0.5) / 0.5</i>';
+  $('czBt').innerHTML='every GPU does the same work<i>'+n+' chunk-units = (j + 0.5) + ('+(n-1)+' - j + 0.5)</i>';
+}
+
+function metric(label,val,sub,red,extra){
+  return '<div class="s13w3-m"><span>'+label+'</span><b'+(red?' class="r"':'')+'>'+val+'</b>'+(sub?'<i> = '+sub+'</i>':'')+(extra?'<em>'+extra+'</em>':'')+'</div>';
+}
+function readouts(){
+  var m='',t=tokens(),q=QH/c,kv=KVH/c,ok=headsOK();
+  if(view==='ring'){
+    $('rh').textContent='Ring readouts';
+    m+=metric('blocks seen by GPU 0',(k+1)+' of '+c,'');
+    m+=metric('key-value block',mb(blockBytes()),'2 x 8 x 128 x '+fi(t)+' x 2 bytes');
+    m+=metric('passes per layer',String(passes()),c+' - 1');
+    m+=metric('forward traffic into one GPU',gb(ringFwd()),mb(blockBytes())+' x '+passes()+' x '+LAYERS+' layers');
+  }else if(view==='gather'){
+    $('rh').textContent='All-gather readouts';
+    m+=metric('full key-value tensor per layer',mb(fullKV()),'2 x 8 x 128 x '+fi(SEQ)+' x 2 bytes');
+    m+=metric('received by each GPU per layer',mb(agRecv()),mb(fullKV())+' x '+(c-1)+' / '+c);
+    m+=metric('collectives per layer','1','');
+    m+=metric('forward traffic into one GPU',gb(agFwd()),mb(fullKV())+' x '+(c-1)+' / '+c+' x '+LAYERS+' layers');
+  }else{
+    $('rh').textContent='By-head readouts';
+    m+=metric('query heads per GPU',ok?String(q):q.toFixed(1),QH+' / '+c,!ok,ok?'':QH+' query heads cannot be divided evenly among '+c+' GPUs');
+    m+=metric('key-value heads per GPU',kv<1?kv.toFixed(1):String(kv),KVH+' / '+c,false,kv<1?'key-value heads are copied':'');
+    m+=metric('tokens per GPU before the all-to-all',fi(t),fi(SEQ)+' / '+c);
+    m+=metric('tokens per GPU after the all-to-all',ok?fi(SEQ):'none',ok?'all tokens':'',!ok);
+  }
+  $('ms').innerHTML=m;
+}
+function note(){
+  var el=$('note');
+  if(view==='ring'){
+    el.innerHTML=(k<c-1
+      ?'GPU 0 holds key-value block <b>'+held(0,k)+'</b> and has attended to <b>'+(k+1)+'</b> of <b>'+c+'</b> blocks. Each step passes every block to the next GPU in the ring.'
+      :'After <b>'+(c-1)+'</b> pass'+(c-1===1?'':'es')+' every GPU has attended to all <b>'+c+'</b> blocks.')+
+      ' A pass is hidden only when attention on one block takes longer than sending the block.';
+  }else if(view==='gather'){
+    el.innerHTML='Each GPU keeps its own queries, and one all-gather per layer gives every GPU the keys and values of all <b>'+fi(SEQ)+'</b> tokens. It is one collective per layer, and a full set of keys and values makes any attention mask easy to apply.';
+  }else if(!headsOK()){
+    el.innerHTML='<span class="r">'+QH+' query heads cannot be divided evenly among '+c+' GPUs.</span> The CP degree must divide the '+QH+' query heads.';
+  }else if(hp===0){
+    el.innerHTML='Before the all-to-all, each GPU holds <b>'+fi(tokens())+'</b> tokens for all <b>'+QH+'</b> query heads. The CP degree must divide the '+QH+' query heads.';
+  }else{
+    el.innerHTML='After the all-to-all, each GPU holds all <b>'+fi(SEQ)+'</b> tokens for <b>'+(QH/c)+'</b> query heads and <b>'+(KVH/c)+'</b> key-value head'+(KVH/c===1?'':'s')+', so attention runs locally.';
+  }
+}
+function draw(){
+  var i,bs,hv=view==='head';
+  bs=$('view').querySelectorAll('button');for(i=0;i<bs.length;i++){bs[i].setAttribute('aria-pressed',String(bs[i].getAttribute('data-v')===view));}
+  bs=$('cp').querySelectorAll('button');for(i=0;i<bs.length;i++){bs[i].setAttribute('aria-pressed',String(+bs[i].getAttribute('data-c')===c));}
+  $('g').className='s13w3-g'+(hv?' s13w3-hv':'');
+  $('czc').hidden=hv;
+  seqBar();
+  if(view==='ring'){
+    $('h').textContent='Ring Attention: '+c+' GPUs pass key-value blocks to the right';
+    $('main').innerHTML=ring();
+    $('stn').textContent='step '+k+' of '+(c-1);
+    $('step').textContent=k>=c-1?'Start over':'Step';
+    $('step').setAttribute('aria-label',k>=c-1?'Return the ring to step 0':'Pass every key-value block one GPU to the right');
+    $('step').disabled=busy;
+  }else if(view==='gather'){
+    $('h').textContent='All-gather: '+c+' GPUs before and after one all-gather of keys and values';
+    $('main').innerHTML=gather();
+    $('stn').textContent='one all-gather per layer';
+    $('step').textContent='Step';
+    $('step').setAttribute('aria-label','Step is used in the Ring and By head views');
+    $('step').disabled=true;
+  }else{
+    $('h').textContent='By head: 40 query heads in 8 key-value groups, token segments as rows';
+    $('main').innerHTML=heads();
+    $('stn').textContent=!headsOK()?'no regroup at CP = '+c:hp===0?'before the all-to-all':'after the all-to-all';
+    $('step').textContent='Step';
+    $('step').setAttribute('aria-label',hp===0?'Apply the all-to-all':'Return to before the all-to-all');
+    $('step').disabled=busy||!headsOK();
+  }
+  actChart();if(!hv){causal();}readouts();note();
+}
+function animateRing(done){
+  var q=ringGeo(),chips=$('main').querySelectorAll('.s13w3-tok'),paths=[],i,g,a,b,cy=q.CHY+q.CHH/2,t0=null,D=650,ns='http://www.w3.org/2000/svg',p;
+  if(RM){done();return;}
+  for(i=0;i<chips.length;i++){
+    g=+chips[i].getAttribute('data-g');
+    a=q.xs[g]+q.bw/2;
+    p=document.createElementNS(ns,'path');
+    if(g<c-1){b=q.xs[g+1]+q.bw/2;p.setAttribute('d','M'+a+','+cy+' L'+b+','+cy);}
+    else{b=q.xs[0]+q.bw/2;p.setAttribute('d','M'+a+','+cy+' L'+a+','+q.RET+' L'+b+','+q.RET+' L'+b+','+cy);}
+    p.setAttribute('fill','none');p.setAttribute('stroke','none');
+    $('main').appendChild(p);
+    paths.push({el:chips[i],p:p,L:p.getTotalLength()});
+    $('main').appendChild(chips[i]);
+  }
+  function place(u){
+    var e=u<0.5?2*u*u:1-Math.pow(-2*u+2,2)/2,j,pt;
+    for(j=0;j<paths.length;j++){pt=paths[j].p.getPointAtLength(e*paths[j].L);paths[j].el.setAttribute('transform','translate('+pt.x.toFixed(2)+','+pt.y.toFixed(2)+')');}
+  }
+  function frame(ts){
+    if(t0===null){t0=ts;}
+    var u=Math.min(1,(ts-t0)/D);place(u);
+    if(u<1){requestAnimationFrame(frame);}else{done();}
+  }
+  requestAnimationFrame(frame);
+}
+function step(){
+  if(busy){return;}
+  if(view==='ring'){
+    if(k>=c-1){k=0;draw();return;}
+    busy=true;$('step').disabled=true;
+    animateRing(function(){busy=false;k++;draw();});
+  }else if(view==='head'&&headsOK()){hp=1-hp;draw();}
+}
+$('step').addEventListener('click',step);
+$('view').addEventListener('click',function(e){var b=e.target.closest('button');if(!b||busy){return;}view=b.getAttribute('data-v');k=0;hp=0;draw();});
+$('cp').addEventListener('click',function(e){var b=e.target.closest('button');if(!b||busy){return;}c=+b.getAttribute('data-c');k=0;hp=0;draw();});
+draw();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

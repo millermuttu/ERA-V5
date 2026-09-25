@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 13 Widget 6 - Two-Stage Context Parallelism</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s13w6-w{max-width:1180px;margin:0 auto;padding:14px 22px 16px}
+.s13w6-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--violet)}
+.s13w6-w h1{font-size:24px;line-height:1.12;margin:3px 0 5px}
+.s13w6-sub{color:var(--muted);margin:0 0 10px;font-size:13px;line-height:1.5;max-width:1010px}
+.s13w6-sub b{color:var(--ink)}
+.s13w6-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:9px}
+.s13w6-lb{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-left:6px}
+.s13w6-lb:first-child{margin-left:0}
+.s13w6-seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff}
+.s13w6-seg button{border:0;border-right:1px solid var(--line);background:#fff;color:var(--muted);padding:7px 14px;font:800 12.5px Inter,sans-serif;cursor:pointer}
+.s13w6-seg button:last-child{border-right:0}
+.s13w6-seg button[aria-pressed="true"]{background:var(--violet);color:#fff}
+.s13w6-tag{font-size:11.5px;font-weight:700;color:var(--muted);margin-left:8px}
+.s13w6-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:10px 13px 11px}
+.s13w6-card h2{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 5px;font-weight:800}
+.s13w6-card svg{display:block;width:100%;height:auto}
+.s13w6-foot{display:flex;gap:22px;align-items:baseline;flex-wrap:wrap;margin-top:6px;padding-top:7px;border-top:1px solid #eef3f9}
+.s13w6-m{font:700 12px Inter,sans-serif;color:var(--muted)}
+.s13w6-m b{font:800 13.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--ink)}
+.s13w6-m i{font-style:normal;font:700 10.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:#8b9aad;margin-left:4px}
+.s13w6-note{margin:8px 0 0;font-size:12.5px;line-height:1.5;color:var(--muted);min-height:38px}
+.s13w6-note b{color:var(--ink);font:800 13px ui-monospace,SFMono-Regular,Consolas,monospace}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s13w6-w">
+<div class="s13w6-k">ERA V5 Session 13 &middot; DeepSeek-V4</div>
+<h1>Two-Stage Context Parallelism</h1>
+<p class="s13w6-sub" id="s13w6-sub"></p>
+
+<div class="s13w6-bar">
+<span class="s13w6-lb">stage</span>
+<span class="s13w6-seg" id="s13w6-stage">
+<button type="button" data-s="0" aria-pressed="true" aria-label="Show the problem, compression windows that cross a GPU boundary">the problem</button>
+<button type="button" data-s="1" aria-pressed="false" aria-label="Show stage one, boundary entries sent to the next GPU and compressed with padding">stage one</button>
+<button type="button" data-s="2" aria-pressed="false" aria-label="Show stage two, an all-gather that arranges the compressed entries in order">stage two</button>
+</span>
+<span class="s13w6-lb">block size</span>
+<span class="s13w6-seg" id="s13w6-mb">
+<button type="button" data-m="2" aria-pressed="false" aria-label="Compression block size m equals 2">m = 2</button>
+<button type="button" data-m="4" aria-pressed="true" aria-label="Compression block size m equals 4">m = 4</button>
+</span>
+<span class="s13w6-tag" id="s13w6-tag"></span>
+</div>
+
+<div class="s13w6-card">
+<h2 id="s13w6-h">Key-value entries on four GPUs</h2>
+<svg id="s13w6-svg" viewBox="0 0 1136 318" role="img" aria-label="Key-value entries on four GPUs, the per-GPU compressed output, and the gathered compressed set"></svg>
+<div class="s13w6-foot">
+<span class="s13w6-m">entries per GPU s: <b id="s13w6-rs"></b></span>
+<span class="s13w6-m">block size m: <b id="s13w6-rm"></b></span>
+<span class="s13w6-m">fixed length per GPU: <b id="s13w6-rf"></b><i id="s13w6-rfi"></i></span>
+<span class="s13w6-m">compressed entries in the final set: <b id="s13w6-rc"></b><i id="s13w6-rci"></i></span>
+<span class="s13w6-m">padding entries shown: <b id="s13w6-rp"></b></span>
+</div>
+<p class="s13w6-note" id="s13w6-note" aria-live="polite"></p>
+</div>
+</main>
+
+<script>
+(function(){
+'use strict';
+var PAL=['#0891b2','#7c3aed','#159447','#d97706'],
+    RED='#dc2626',IDLE='#cbd5e1',INK='#152033',MUTED='#65758b',
+    MONO='ui-monospace,SFMono-Regular,Consolas,monospace',
+    CP=4,S=12,W=1136,X0=10,GG=28,SEGW=(W-2*X0-(4-1)*GG)/4,
+    YA=24,HA=24,YB=112,HB=22,YC=182,HC=28,YD=254,HD=28,
+    stage=0,m=4,gen=0,moving=false,
+    RM=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+function $(i){return document.getElementById('s13w6-'+i);}
+function mix(h,t){var n=parseInt(h.slice(1),16),r=n>>16,g=(n>>8)&255,b=n&255;
+  r=Math.round(r+(255-r)*t);g=Math.round(g+(255-g)*t);b=Math.round(b+(255-b)*t);
+  return 'rgb('+r+','+g+','+b+')';}
+function tx(x,y,s,c,an,fs,fw,fam){
+  return '<text x="'+x+'" y="'+y+'" text-anchor="'+(an||'middle')+'" font-size="'+(fs||10)+'" font-weight="'+(fw||700)+'"'+(fam?' font-family="'+fam+'"':'')+' fill="'+c+'">'+s+'</text>';}
+var DEFS='<defs><pattern id="s13w6-hat" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#f1f5f9"/><line x1="0" y1="0" x2="0" y2="6" stroke="'+IDLE+'" stroke-width="2.4"/></pattern>'+
+  '<marker id="s13w6-ar" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0 0 7 3 0 6z" fill="#475569"/></marker></defs>';
+
+/* live quantities */
+function perGpu(){return S/m;}
+function fixedLen(){return S/m+1;}
+function finalCount(){return CP*S/m;}
+function padCount(){return CP*fixedLen()-finalCount();}
+function padShown(){return stage===0?0:padCount();}
+
+function segX(g){return X0+g*(SEGW+GG);}
+function cellA(g,i){var ew=SEGW/S,x=segX(g)+i*ew,l=(i%m===0)?2:0.75,r=(i%m===m-1)?2:0.75;return {x:x+l,w:ew-l-r};}
+function cellB(g,i){var n=S+m,ew=SEGW/n,x=segX(g)+i*ew,j=i-m,l,r;
+  l=(i<m)?(i===0?2:0.75):((j%m===0)?2:0.75);r=(i<m)?(i===m-1?2:0.75):((j%m===m-1)?2:0.75);
+  return {x:x+l,w:ew-l-r};}
+function rowLabel(y,s,c){return tx(X0,y,s,c||MUTED,'start',10.5,800);}
+
+function rowA(){
+  var s='',g,i,c,ew=SEGW/S,sent;
+  for(g=0;g<CP;g++){
+    s+=tx(segX(g)+SEGW/2,YA-8,'GPU '+g+': '+S+' uncompressed entries',PAL[g],'middle',11,800);
+    for(i=0;i<S;i++){
+      c=cellA(g,i);sent=stage>0&&g<CP-1&&i>=S-m;
+      s+='<rect x="'+c.x+'" y="'+YA+'" width="'+c.w+'" height="'+HA+'" rx="3" fill="'+PAL[g]+'"'+(sent?' stroke="'+INK+'" stroke-width="1.8"':'')+'/>';
+      s+=tx(c.x+c.w/2,YA+16,g*S+i,'#ffffff','middle',ew>=20?9.5:8.5,800,MONO);
+    }
+  }
+  if(stage===0){
+    for(g=1;g<CP;g++){
+      var a=cellA(g-1,S-m),b=cellA(g,m-1),xl=a.x-3,xr=b.x+b.w+3;
+      s+='<rect x="'+xl+'" y="'+(YA-4)+'" width="'+(xr-xl)+'" height="'+(HA+8)+'" rx="6" fill="none" stroke="'+RED+'" stroke-width="2.5"/>';
+      s+='<line x1="'+(segX(g)-GG/2)+'" y1="'+(YA-6)+'" x2="'+(segX(g)-GG/2)+'" y2="'+(YA+HA+6)+'" stroke="'+RED+'" stroke-width="1.4" stroke-dasharray="3 3"/>';
+      s+=tx((xl+xr)/2,YA+HA+20,'block '+(g*S/m)+' needs entries '+(g*S-m)+' to '+(g*S+m-1),RED,'middle',10.5,800);
+      s+=tx((xl+xr)/2,YA+HA+34,'on GPU '+(g-1)+' and GPU '+g,RED,'middle',10.5,800);
+    }
+  }else{
+    for(g=0;g<CP-1;g++){
+      var p=cellA(g,S-m),q=cellA(g,S-1);
+      s+=tx((p.x+q.x+q.w)/2,YA+HA+15,'last '+m+' sent to GPU '+(g+1),INK,'middle',10,800);
+    }
+  }
+  return s;
+}
+function ghost(y,h,label){
+  var s=rowLabel(y-8,label,'#a8b5c6'),g;
+  for(g=0;g<CP;g++){s+='<rect x="'+segX(g)+'" y="'+y+'" width="'+SEGW+'" height="'+h+'" rx="5" fill="none" stroke="#e2e8f0" stroke-dasharray="4 4"/>';}
+  return s;
+}
+function rowB(showRecv){
+  var s='',g,i,c,n=S+m,ew=SEGW/n,w0,w1;
+  s+=rowLabel(YB-8,'Stage one: each GPU compresses the '+m+' received entries with its own '+S);
+  for(g=0;g<CP;g++){
+    for(i=0;i<n;i++){
+      c=cellB(g,i);
+      if(i<m){
+        if(g===0){s+='<rect x="'+c.x+'" y="'+YB+'" width="'+c.w+'" height="'+HB+'" rx="3" fill="url(#s13w6-hat)" stroke="'+IDLE+'"/>';}
+        else if(showRecv){s+='<rect x="'+c.x+'" y="'+YB+'" width="'+c.w+'" height="'+HB+'" rx="3" fill="'+PAL[g-1]+'" stroke="'+INK+'" stroke-width="1.8"/>'+tx(c.x+c.w/2,YB+15,(g*S-m+i),'#ffffff','middle',ew>=18?9:8,800,MONO);}
+        else{s+='<rect x="'+c.x+'" y="'+YB+'" width="'+c.w+'" height="'+HB+'" rx="3" fill="#fff" stroke="'+IDLE+'" stroke-dasharray="3 2"/>';}
+      }else{
+        s+='<rect x="'+c.x+'" y="'+YB+'" width="'+c.w+'" height="'+HB+'" rx="3" fill="'+mix(PAL[g],0.55)+'"/>';
+      }
+    }
+    if(g>0&&showRecv){
+      w0=cellB(g,0);w1=cellB(g,2*m-1);
+      s+='<rect x="'+(w0.x-2)+'" y="'+(YB-3)+'" width="'+(w1.x+w1.w-w0.x+4)+'" height="'+(HB+6)+'" rx="5" fill="none" stroke="'+INK+'" stroke-width="1.6"/>';
+    }
+    s+=tx(segX(g)+(g===0?SEGW/2:SEGW/2),YB+HB+14,g===0?'GPU 0 starts the sequence':'received from GPU '+(g-1)+' + own entries',MUTED,'middle',9.5,700);
+  }
+  return s;
+}
+function rowC(){
+  var s='',g,j,L=fixedLen(),sw=SEGW/L,x,id;
+  s+=rowLabel(YC-8,'Compressed output per GPU, padded to '+S+' / '+m+' + 1 = '+L+' slots');
+  for(g=0;g<CP;g++){
+    for(j=0;j<L;j++){
+      x=segX(g)+j*sw;
+      if(j<perGpu()){id=g*perGpu()+j;
+        s+='<rect x="'+(x+1.5)+'" y="'+YC+'" width="'+(sw-3)+'" height="'+HC+'" rx="5" fill="'+PAL[g]+'"/>'+tx(x+sw/2,YC+18,'c'+id,'#ffffff','middle',sw>=40?11:10,800,MONO);}
+      else{s+='<rect x="'+(x+1.5)+'" y="'+YC+'" width="'+(sw-3)+'" height="'+HC+'" rx="5" fill="url(#s13w6-hat)" stroke="'+IDLE+'"/>'+tx(x+sw/2,YC+18,'pad','#64748b','middle',sw>=40?10.5:9,800,MONO);}
+    }
+  }
+  return s;
+}
+function rowD(){
+  var s='',T=CP*fixedLen(),F=finalCount(),sw=(W-2*X0)/T,i,x,g,xr;
+  s+=rowLabel(YD-8,'Stage two: all-gather of '+CP+' x '+fixedLen()+' = '+T+' slots, arranged in order with padding at the end');
+  for(i=0;i<T;i++){
+    x=X0+i*sw;
+    if(i<F){g=Math.floor(i/perGpu());
+      s+='<rect x="'+(x+1.5)+'" y="'+YD+'" width="'+(sw-3)+'" height="'+HD+'" rx="5" fill="'+PAL[g]+'"/>'+tx(x+sw/2,YD+18,'c'+i,'#ffffff','middle',sw>=40?11:10,800,MONO);}
+    else{s+='<rect x="'+(x+1.5)+'" y="'+YD+'" width="'+(sw-3)+'" height="'+HD+'" rx="5" fill="url(#s13w6-hat)" stroke="'+IDLE+'"/>'+tx(x+sw/2,YD+18,'pad','#64748b','middle',sw>=40?10.5:9,800,MONO);}
+  }
+  xr=X0+F*sw;
+  s+='<path d="M'+(X0+2)+','+(YD+HD+5)+' v6 H'+(xr-2)+' v-6" fill="none" stroke="'+INK+'" stroke-width="1.4"/>';
+  s+=tx((X0+xr)/2,YD+HD+24,CP+' x '+S+' / '+m+' = '+F+' compressed entries in order',INK,'middle',11,800);
+  s+='<path d="M'+(xr+2)+','+(YD+HD+5)+' v6 H'+(W-X0-2)+' v-6" fill="none" stroke="#94a3b8" stroke-width="1.4"/>';
+  s+=tx((xr+W-X0)/2,YD+HD+24,padCount()+' padding',MUTED,'middle',11,800);
+  return s;
+}
+function note(){
+  var el=$('note'),b=[],g;
+  for(g=1;g<CP;g++){b.push(g);}
+  if(stage===0){
+    el.innerHTML='The first block on GPUs '+b.slice(0,-1).join(', ')+' and '+b[b.length-1]+' reads the <b>'+m+'</b> entries just before it, and those entries sit on the previous GPU. An even split leaves <b>'+(CP-1)+'</b> blocks without the entries they need.';
+  }else if(stage===1){
+    el.innerHTML='Each GPU sends its last <b>'+m+'</b> entries to the next GPU. Every GPU then holds <b>'+perGpu()+'</b> compressed entries in a fixed length of <b>'+fixedLen()+'</b> slots, so all four outputs have the same shape.';
+  }else{
+    el.innerHTML='The all-gather collects <b>'+(CP*fixedLen())+'</b> slots from <b>'+CP+'</b> GPUs. The <b>'+finalCount()+'</b> compressed entries sit in order, and the <b>'+padCount()+'</b> padding entries sit at the end.';
+  }
+}
+function readouts(){
+  $('rs').textContent=S;$('rm').textContent=m;
+  $('rf').textContent=fixedLen();$('rfi').textContent=' = s / m + 1';
+  $('rc').textContent=finalCount();$('rci').textContent=' = cp x s / m = '+CP+' x '+S+' / '+m;
+  $('rp').textContent=padShown();
+}
+function draw(recv){
+  var s=DEFS,i,bs;
+  bs=$('stage').querySelectorAll('button');for(i=0;i<bs.length;i++){bs[i].setAttribute('aria-pressed',String(+bs[i].getAttribute('data-s')===stage));}
+  bs=$('mb').querySelectorAll('button');for(i=0;i<bs.length;i++){bs[i].setAttribute('aria-pressed',String(+bs[i].getAttribute('data-m')===m));}
+  s+=rowA();
+  if(stage===0){s+=ghost(YB,HB,'Stage one');s+=ghost(YC,HC,'Compressed output per GPU');s+=ghost(YD,HD,'Stage two');}
+  else{
+    s+=rowB(recv!==false);
+    if(recv===false){s+=ghost(YC,HC,'Compressed output per GPU');}else{s+=rowC();}
+    if(stage===2){s+='<line x1="'+(W/2)+'" y1="'+(YC+HC+3)+'" x2="'+(W/2)+'" y2="'+(YD-18)+'" stroke="#475569" stroke-width="1.6" marker-end="url(#s13w6-ar)"/>';s+=rowD();}
+    else{s+=ghost(YD,HD,'Stage two');}
+  }
+  $('svg').innerHTML='<g id="s13w6-base">'+s+'</g><g id="s13w6-fly"></g>';
+  $('h').textContent=stage===0?'The problem: compression windows cross GPU boundaries':stage===1?'Stage one: send boundary entries, compress, pad':'Stage two: all-gather into one ordered set';
+  readouts();note();
+}
+function animateSend(){
+  var my=++gen,fly,s='',g,i,a,b,items=[],t0=null,D=750;
+  draw(false);
+  fly=$('fly');
+  moving=true;
+  for(g=0;g<CP-1;g++){
+    for(i=0;i<m;i++){
+      a=cellA(g,S-m+i);b=cellB(g+1,i);
+      items.push({ax:a.x,ay:YA,aw:a.w,bx:b.x,by:YB,bw:b.w,id:'s13w6-f'+items.length});
+      s+='<g id="s13w6-f'+(items.length-1)+'"><rect x="0" y="0" width="'+a.w+'" height="'+HB+'" rx="3" fill="'+PAL[g]+'" stroke="'+INK+'" stroke-width="1.8"/>'+tx(a.w/2,15,g*S+S-m+i,'#ffffff','middle',9,800,MONO)+'</g>';
+    }
+  }
+  fly.innerHTML=s;
+  for(i=0;i<items.length;i++){items[i].el=document.getElementById(items[i].id);}
+  function place(u){
+    var e=u<0.5?2*u*u:1-Math.pow(-2*u+2,2)/2,j,it;
+    for(j=0;j<items.length;j++){it=items[j];
+      it.el.setAttribute('transform','translate('+(it.ax+(it.bx-it.ax)*e).toFixed(2)+','+(it.ay+(it.by-it.ay)*e).toFixed(2)+')');}
+  }
+  place(0);
+  function frame(ts){
+    if(my!==gen){return;}
+    if(t0===null){t0=ts;}
+    var u=Math.min(1,(ts-t0)/D);place(u);
+    if(u<1){requestAnimationFrame(frame);}else{moving=false;draw();}
+  }
+  requestAnimationFrame(frame);
+}
+function go(){
+  gen++;moving=false;
+  if(stage===1&&!RM){animateSend();}else{draw();}
+}
+$('stage').addEventListener('click',function(e){var b=e.target.closest('button');if(!b){return;}stage=+b.getAttribute('data-s');go();});
+$('mb').addEventListener('click',function(e){var b=e.target.closest('button');if(!b){return;}m=+b.getAttribute('data-m');go();});
+$('sub').innerHTML='DeepSeek-V4 compresses key-value entries in blocks of <b>m</b>, and each compressed entry also reads the <b>m</b> entries just before its block. Dividing the sequence evenly across GPUs puts some of those entries on the wrong GPU.';
+$('tag').textContent='Follows DeepSeek-V4’s description, with illustrative sizes: '+CP+' GPUs, '+S+' entries each.';
+draw();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

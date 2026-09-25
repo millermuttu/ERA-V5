@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 13 Widget 5 - DualPipe</title>
+<!-- Claim: feeding a pipeline from both ends cuts the stage-count term of the bubble from PP-1 to PP/2-1, and it costs 2x parameter memory per device. -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--idle:#cbd5e1;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s13w5-w{max-width:1180px;margin:0 auto;padding:14px 22px 16px}
+.s13w5-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.s13w5-w h1{font-size:24px;line-height:1.12;margin:3px 0 5px}
+.s13w5-sub{color:var(--muted);margin:0 0 10px;font-size:13px;line-height:1.5;max-width:1010px}
+.s13w5-sub b{color:var(--ink)}
+.s13w5-bar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.s13w5-lb{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.s13w5-bar button{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;padding:6px 14px;font:800 11.5px Inter,sans-serif;cursor:pointer}
+.s13w5-bar button.on{border-color:var(--cyan);color:#0e7490;background:#effbfe;box-shadow:inset 0 0 0 1px var(--cyan)}
+.s13w5-bar button.s13w5-step{border-color:var(--ink);color:#fff;background:var(--ink);padding:6px 18px}
+.s13w5-sep{width:1px;height:20px;background:var(--line);margin:0 5px}
+.s13w5-slot{font:800 15px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--ink);margin-left:6px}
+.s13w5-slot small{font:700 11.5px Inter,sans-serif;color:var(--muted);margin-left:0}
+.s13w5-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:11px 14px 10px;margin-bottom:10px}
+.s13w5-card:last-child{margin-bottom:0}
+.s13w5-card h2{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px;font-weight:800}
+.s13w5-card h2 span{text-transform:none;letter-spacing:0;font-weight:700;color:#8b9aad;margin-left:6px}
+.s13w5-card svg{display:block;width:100%;height:auto}
+.s13w5-cols{display:grid;grid-template-columns:1.25fr 1fr;gap:10px}
+.s13w5-tb{width:100%;border-collapse:collapse;font-size:12.5px}
+.s13w5-tb th{font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);font-weight:800;text-align:right;padding:4px 8px;border-bottom:1px solid var(--line)}
+.s13w5-tb th:first-child,.s13w5-tb td:first-child{text-align:left}
+.s13w5-tb td{padding:5px 8px;border-bottom:1px solid #eef3f9;text-align:right;font-weight:700;color:var(--ink)}
+.s13w5-tb td b{font:800 14px ui-monospace,SFMono-Regular,Consolas,monospace}
+.s13w5-tb tr:last-child td{border-bottom:0}
+.s13w5-tb .r b{color:var(--red)}
+.s13w5-tb .c b{color:#0e7490}
+.s13w5-cp{display:block;font-size:10.5px;font-weight:700;color:var(--muted);line-height:1.2}
+.s13w5-note{margin:6px 0 0;font-size:12.5px;color:var(--muted);line-height:1.5}
+.s13w5-note b{color:var(--ink);font-weight:800}
+.s13w5-f{font:700 12.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:#334155;background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:6px 10px;margin:0 0 7px;line-height:1.55}
+.s13w5-f span{font:800 10.5px Inter,sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-right:6px}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s13w5-w">
+<div class="s13w5-k">ERA V5 Session 13 &middot; DeepSeek-V3 DualPipe</div>
+<h1>DualPipe</h1>
+<p class="s13w5-sub" id="s13w5-sub"></p>
+
+<div class="s13w5-bar">
+<span class="s13w5-lb">PP</span>
+<button type="button" class="s13w5-p" data-v="4" aria-label="4 pipeline stages">4</button>
+<button type="button" class="s13w5-p" data-v="8" aria-label="8 pipeline stages">8</button>
+<button type="button" class="s13w5-p" data-v="16" aria-label="16 pipeline stages">16</button>
+<span class="s13w5-sep" aria-hidden="true"></span>
+<button type="button" class="s13w5-step" id="s13w5-step" aria-label="Advance one time slot, returning to slot 0 once every GPU in both pipelines has work">Step</button>
+<span class="s13w5-slot" id="s13w5-slot" aria-live="polite"></span>
+</div>
+
+<div class="s13w5-card">
+<h2>GPUs with work at the current slot</h2>
+<svg id="s13w5-pl" viewBox="0 0 1108 278" role="img" aria-label="Two pipelines of GPU boxes. In the 1F1B pipeline each GPU holds one stage. In the DualPipe pipeline each GPU holds two stages, one for each direction. A bar chart shows slots before every GPU has work."></svg>
+</div>
+
+<div class="s13w5-cols">
+<div class="s13w5-card">
+<h2>Cost per device</h2>
+<table class="s13w5-tb">
+<thead><tr><th></th><th>fed from one end, 1F1B</th><th>fed from both ends, DualPipe</th></tr></thead>
+<tbody>
+<tr class="c"><td>slots before every GPU has work</td><td><b id="s13w5-t1"></b></td><td><b id="s13w5-t2"></b></td></tr>
+<tr class="r"><td>parameters per device</td><td><b style="color:var(--ink)">1x</b></td><td><b>2x</b><span class="s13w5-cp">two copies of the model's parameters</span></td></tr>
+<tr><td>activations per device</td><td><b id="s13w5-a1"></b></td><td><b id="s13w5-a2"></b></td></tr>
+<tr><td>devices</td><td><b id="s13w5-d1"></b></td><td><b id="s13w5-d2"></b></td></tr>
+</tbody>
+</table>
+<p class="s13w5-note" id="s13w5-dv"></p>
+</div>
+<div class="s13w5-card">
+<h2>Published formulas</h2>
+<p class="s13w5-f"><span>1F1B</span>(PP&minus;1)(F+B)<br><span>DualPipe</span>(PP/2&minus;1)(F&amp;B+B&minus;3W)</p>
+<p class="s13w5-note" id="s13w5-term"></p>
+</div>
+</div>
+</main>
+
+<script>
+(function(){
+'use strict';
+var MAXPP=16,X0=150,X1=1100,AXMAX=15,
+    st={pp:8,slot:3};
+function $(i){return document.getElementById('s13w5-'+i);}
+function tx(x,y,s,c,a,sz,w){return '<text x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" text-anchor="'+(a||'middle')+'" font-size="'+(sz||10)+'" font-weight="'+(w||700)+'" fill="'+c+'">'+s+'</text>';}
+/* Slot at which stage i first has work. */
+function startTop(i){return i;}
+function startBot(i,pp){return Math.min(i,pp-1-i);}
+function fullTop(pp){var m=0,i;for(i=0;i<pp;i++)m=Math.max(m,startTop(i));return m;}
+function fullBot(pp){var m=0,i;for(i=0;i<pp;i++)m=Math.max(m,startBot(i,pp));return m;}
+function sl(n){return n+(n===1?' slot':' slots');}
+function busy(fn,pp,slot){var n=0,i;for(i=0;i<pp;i++)if(fn(i,pp)<=slot)n++;return n;}
+
+var CY='#0891b2',VI='#7c3aed';
+function arrow(x,y,dir,c){
+  return '<path d="M'+(x-7*dir).toFixed(1)+' '+(y-7)+' L'+x.toFixed(1)+' '+y+' L'+(x-7*dir).toFixed(1)+' '+(y+7)+'" fill="none" stroke="'+c+'" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>';
+}
+function geo(pp){var gap=pp>8?4:6,L=X0+18,R=X1-18;return {gap:gap,L:L,R:R,w:(R-L-gap*(pp-1))/pp};}
+function feed(y,L,R,both){
+  var s='<line x1="'+(X0+2)+'" y1="'+y+'" x2="'+(L-4)+'" y2="'+y+'" stroke="'+CY+'" stroke-width="2.4" stroke-linecap="round"/>'+arrow(L-4,y,1,CY);
+  if(both){s+='<line x1="'+(R+4)+'" y1="'+y+'" x2="'+(X1-2)+'" y2="'+y+'" stroke="'+VI+'" stroke-width="2.4" stroke-linecap="round"/>'+arrow(R+4,y,-1,VI);}
+  return s;
+}
+/* One stage label inside a GPU box; lit once its stream has reached the GPU. */
+function pill(cx,y,w,label,c,on,sz,gid){
+  return '<g data-s13w5="'+gid+'" data-on="'+(on?1:0)+'"><rect x="'+(cx-w/2).toFixed(1)+'" y="'+y+'" width="'+w.toFixed(1)+'" height="18" rx="4" fill="'+(on?c:'#fff')+'" stroke="'+c+'" stroke-width="1.2"'+(on?'':' stroke-dasharray="3 2" opacity="0.75"')+'/>'+
+    tx(cx,y+12.6,label,on?'#fff':c,'middle',sz,800)+'</g>';
+}
+function laneTop(pp,slot,y){
+  var g=geo(pp),s='',h=50,i,x,on,full=fullTop(pp),sz=pp>8?9.5:11;
+  s+=tx(X0-14,y+h/2-9,'1F1B','#152033','end',12.5,800);
+  s+=tx(X0-14,y+h/2+4,'fed from one end','#152033','end',10.5,700);
+  s+=tx(X0-14,y+h/2+18,busy(startTop,pp,slot)+' of '+pp+' GPUs have work','#65758b','end',10.5,700);
+  s+=feed(y+h/2,g.L,g.R,false);
+  for(i=0;i<pp;i++){
+    x=g.L+i*(g.w+g.gap);on=startTop(i)<=slot;
+    s+=tx(x+g.w/2,y-5,'GPU '+i,'#65758b','middle',pp>8?9:10,800);
+    s+='<rect x="'+x.toFixed(1)+'" y="'+y+'" width="'+g.w.toFixed(1)+'" height="'+h+'" rx="6" fill="'+(on?CY:'url(#s13w5-h)')+'" stroke="'+(on?'#0e7490':'#cbd5e1')+'" stroke-width="1.2"/>';
+    s+='<g data-s13w5="top"><text x="'+(x+g.w/2).toFixed(1)+'" y="'+(y+21)+'" text-anchor="middle" font-size="'+sz+'" font-weight="800" fill="'+(on?'#fff':'#65758b')+'">stage '+i+'</text></g>';
+    s+=tx(x+g.w/2,y+37,on?(pp>8?'@'+i:'from slot '+i):'waiting',on?'#e0f7fc':'#8b9aad','middle',pp>8?9.5:10,700);
+  }
+  s+=tx(g.L,y+h+15,'work enters at GPU 0','#8b9aad','start',10.5,700);
+  s+=tx(g.R,y+h+15,'every GPU has work at slot '+full,slot>=full?'#0e7490':'#8b9aad','end',10.5,800);
+  return s;
+}
+function laneBot(pp,slot,y){
+  var g=geo(pp),s='',h=58,i,x,cx,any,full=fullBot(pp),sz=pp>8?9:11,pw=Math.min(g.w-6,74);
+  s+=tx(X0-14,y+h/2-9,'DualPipe','#152033','end',12.5,800);
+  s+=tx(X0-14,y+h/2+4,'fed from both ends','#152033','end',10.5,700);
+  s+=tx(X0-14,y+h/2+18,busy(startBot,pp,slot)+' of '+pp+' GPUs have work','#65758b','end',10.5,700);
+  s+=feed(y+h/2,g.L,g.R,true);
+  for(i=0;i<pp;i++){
+    x=g.L+i*(g.w+g.gap);cx=x+g.w/2;any=startBot(i,pp)<=slot;
+    s+='<rect x="'+x.toFixed(1)+'" y="'+y+'" width="'+g.w.toFixed(1)+'" height="'+h+'" rx="6" fill="'+(any?'#fff':'url(#s13w5-h)')+'" stroke="'+(any?'#64748b':'#cbd5e1')+'" stroke-width="1.2"/>';
+    s+=pill(cx,y+7,pw,'stage '+i,CY,i<=slot,sz,'cy');
+    s+=pill(cx,y+33,pw,'stage '+(pp-1-i),VI,(pp-1-i)<=slot,sz,'vi');
+  }
+  s+=tx(g.L,y+h+15,'cyan stream enters at GPU 0','#0e7490','start',10.5,800);
+  s+=tx(g.L+176,y+h+15,'violet stream enters at GPU '+(pp-1),'#6d28d9','start',10.5,800);
+  s+=tx(g.R,y+h+15,'every GPU has work at slot '+full,slot>=full?'#0e7490':'#8b9aad','end',10.5,800);
+  return s;
+}
+function bars(pp,slot,y){
+  var s='',L=X0+18,R=X1-18,sc=(R-L)/AXMAX,i,x,vals=[[fullTop(pp),'fed from one end'],[fullBot(pp),'fed from both ends']],k,v;
+  s+=tx(X0-14,y+4,'slots before every','#152033','end',11.5,800);
+  s+=tx(X0-14,y+18,'GPU has work','#152033','end',11.5,800);
+  for(i=0;i<=AXMAX;i++){
+    x=L+i*sc;
+    s+='<line x1="'+x.toFixed(1)+'" y1="'+(y-12)+'" x2="'+x.toFixed(1)+'" y2="'+(y+40)+'" stroke="#eef3f9"/>';
+    s+=tx(x,y+53,String(i),'#93a3b6','middle',9.5);
+  }
+  for(k=0;k<2;k++){
+    v=vals[k][0];
+    s+='<rect x="'+L+'" y="'+(y-10+k*26)+'" width="'+Math.max(2,v*sc).toFixed(1)+'" height="20" rx="4" fill="#0891b2" opacity="'+(k===0?0.55:1)+'"/>';
+    s+=v>AXMAX-4?tx(L+v*sc-8,y+4+k*26,sl(v)+', '+vals[k][1],k===0?'#152033':'#fff','end',11.5,800):tx(L+v*sc+8,y+4+k*26,sl(v)+', '+vals[k][1],'#152033','start',11.5,800);
+  }
+  x=L+slot*sc;
+  s+='<line x1="'+x.toFixed(1)+'" y1="'+(y-16)+'" x2="'+x.toFixed(1)+'" y2="'+(y+42)+'" stroke="#152033" stroke-width="1.8" stroke-dasharray="4 3"/>';
+  s+=tx(x,y-20,'slot '+slot,'#152033',x>1040?'end':'middle',10,800);
+  return s;
+}
+function draw(){
+  var pp=st.pp,slot=st.slot,ft=fullTop(pp),fb=fullBot(pp),s='';
+  s+='<defs><pattern id="s13w5-h" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="7" height="7" fill="#f1f5f9"/><line x1="0" y1="0" x2="0" y2="7" stroke="#cbd5e1" stroke-width="3"/></pattern></defs>';
+  s+=laneTop(pp,slot,18);
+  s+=laneBot(pp,slot,104);
+  s+=bars(pp,slot,212);
+  $('pl').innerHTML=s;
+  $('sub').innerHTML='Each box is one GPU. In DualPipe, each GPU holds two stages, one for each direction, so work can enter at both ends. '+
+    'Work advances one GPU per time slot. Hatched GPUs are still waiting for their first work.';
+  $('slot').innerHTML='slot '+slot+': <small>one end needs '+sl(ft)+', both ends need '+sl(fb)+'</small>';
+  $('t1').textContent=ft;$('t2').textContent=fb;
+  $('a1').textContent=pp;$('a2').textContent=pp+1;
+  $('d1').textContent=pp;$('d2').textContent=pp;
+  $('dv').innerHTML='Feeding from both ends doubles the parameter memory on each of the <b>'+pp+'</b> devices. DualPipeV gives the same wait of <b>'+sl(fb)+'</b> with PP/2 = <b>'+(pp/2)+'</b> devices.';
+  $('term').innerHTML='This widget draws the stage-count term of each formula, which is PP&minus;1 = <b>'+ft+'</b> for 1F1B and PP/2&minus;1 = <b>'+fb+'</b> for DualPipe at PP = '+pp+'.';
+}
+function marks(){
+  Array.prototype.forEach.call(document.querySelectorAll('.s13w5-p'),function(b){b.classList.toggle('on',+b.getAttribute('data-v')===st.pp);});
+}
+Array.prototype.forEach.call(document.querySelectorAll('.s13w5-p'),function(b){
+  b.addEventListener('click',function(){st.pp=+b.getAttribute('data-v');st.slot=st.pp/2-1;marks();draw();});
+});
+$('step').addEventListener('click',function(){
+  var done=Math.max(fullTop(st.pp),fullBot(st.pp));
+  st.slot=st.slot>=done?0:st.slot+1;draw();
+});
+marks();draw();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>
