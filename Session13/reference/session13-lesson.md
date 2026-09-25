@@ -3,7 +3,7 @@
 Source: https://axiom.theschoolofai.in/courses/cmq97i5kn032208o8xu5dab4q/sessions/cms13nr0y6n1u8b5zs9hi/lesson
 Captured: 2026-09-25
 
-Widgets (9) saved under `widgets/`, inline scripts collapsed into `widgets-scripts-dump.txt`.
+Widgets (9) saved under `widgets/`.
 Videos embedded on the page: https://youtu.be/iZzAM911-sk (Studio) and https://youtu.be/i7vPv7eJ_Wc (GMeet)
 
 ## 0. Why this session exists at all
