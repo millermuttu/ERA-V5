@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 14 Widget 2 - Total and Active Parameters</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s14w2-w{max-width:1180px;margin:0 auto;padding:18px 22px 20px}
+.s14w2-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.s14w2-w h1{font-size:26px;line-height:1.12;margin:4px 0 10px}
+.s14w2-say{border:1px solid #bae6f0;background:#f0fbfd;border-radius:10px;padding:12px 14px;color:#155e75;font-size:13.5px;line-height:1.55;margin:0 0 14px}
+.s14w2-say b{color:#0e7490;font-weight:800}
+.s14w2-bar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.s14w2-lb{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.s14w2-bar button{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;padding:6px 14px;font:800 11.5px Inter,sans-serif;cursor:pointer;min-width:46px}
+.s14w2-bar button.s14w2-e.on{border-color:var(--ink);color:var(--ink);background:#eef2f7;box-shadow:inset 0 0 0 1px var(--ink)}
+.s14w2-bar button.s14w2-q.on{border-color:var(--cyan);color:#0e7490;background:#effbfe;box-shadow:inset 0 0 0 1px var(--cyan)}
+.s14w2-sep{width:1px;height:20px;background:var(--line);margin:0 5px}
+.s14w2-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:13px 16px 12px;margin-bottom:10px}
+.s14w2-card h2{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;font-weight:800;display:flex;gap:10px;align-items:center}
+.s14w2-tag{font:800 10px Inter,sans-serif;letter-spacing:.04em;text-transform:none;border-radius:999px;padding:2px 9px;background:#eafaf0;color:#0f7a39;border:1px solid #a9e3c1}
+.s14w2-tag.off{visibility:hidden}
+.s14w2-lay{display:grid;grid-template-columns:auto 1fr;gap:22px;align-items:start}
+.s14w2-grid{display:grid;grid-template-columns:repeat(32,15px);grid-auto-rows:15px;gap:4px;height:148px;align-content:start}
+.s14w2-sq{border-radius:3px;background:#e4ebf4;border:1px solid #d3dde9;transition:background-color .3s,border-color .3s}
+.s14w2-sq.lit{background:var(--cyan);border-color:#0e7490}
+.s14w2-side{font-size:12.5px;line-height:1.5;color:var(--muted)}
+.s14w2-side p{margin:0 0 7px}
+.s14w2-side b{color:var(--ink)}
+.s14w2-chip{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.s14w2-row{display:grid;grid-template-columns:230px 1fr;gap:12px;align-items:center;margin-bottom:6px}
+.s14w2-rl{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink);line-height:1.25}
+.s14w2-rl small{display:block;font-size:10.5px;font-weight:700;letter-spacing:0;text-transform:none;color:var(--muted)}
+.s14w2-tk{position:relative;height:26px;border-radius:7px;background:#f4f7fb;border:1px solid #e4ebf4;overflow:hidden;
+ background-image:repeating-linear-gradient(to right,#dde6f2 0,#dde6f2 1px,transparent 1px,transparent 12.5%)}
+.s14w2-f{position:absolute;left:0;top:4px;bottom:4px;border-radius:0 5px 5px 0;transition:width .4s ease-in-out}
+.s14w2-fv{position:absolute;top:50%;transform:translateY(-50%);font:800 11.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--ink);white-space:nowrap;padding-left:8px;transition:left .4s ease-in-out}
+.s14w2-ax{position:relative;height:14px;margin:2px 0 0 242px}
+.s14w2-ax i{position:absolute;top:0;transform:translateX(-50%);font:700 9.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:#93a3b6;font-style:normal;white-space:nowrap}
+.s14w2-ax i:first-child{transform:none}.s14w2-ax i:last-child{transform:translateX(-100%)}
+.s14w2-leg{margin:8px 0 0;font-size:11.5px;color:var(--muted);line-height:1.4}
+.s14w2-leg b{color:var(--ink)}
+.s14w2-met{display:grid;gap:8px;margin-top:8px}
+.s14w2-m2{grid-template-columns:1fr 1fr}
+.s14w2-m3{grid-template-columns:1fr 1fr 1fr}
+.s14w2-box{border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.9);padding:9px 12px}
+.s14w2-box>span:not(.s14w2-rd){display:block;color:var(--muted);font-size:10.5px;line-height:1.3;font-weight:700;letter-spacing:.03em;text-transform:uppercase}
+.s14w2-rd{display:block;margin-top:3px;font:700 12px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.s14w2-rd b{font-size:17px;font-weight:800;color:var(--ink)}
+.s14w2-fit{margin:12px 0 0;font:800 14px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--ink)}
+.s14w2-fit span{color:var(--muted);font-weight:700}
+@media(max-width:1000px){.s14w2-lay{grid-template-columns:1fr}.s14w2-grid{grid-template-columns:repeat(16,15px);height:auto}.s14w2-m2,.s14w2-m3{grid-template-columns:1fr}.s14w2-rd{white-space:normal}.s14w2-row{grid-template-columns:1fr}.s14w2-ax{margin-left:0}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s14w2-w">
+<div class="s14w2-k">ERA V5 Session 14 &middot; total and active parameters</div>
+<h1>Total and Active Parameters</h1>
+<p class="s14w2-say">Our worked model has <b>48 layers</b> with experts of width <b>768</b>, and each token passes through <b>k</b> of the <b>E</b> experts in every layer.</p>
+
+<div class="s14w2-bar">
+<span class="s14w2-lb">experts per layer E</span>
+<button type="button" class="s14w2-e" data-v="32" aria-label="32 experts per layer">32</button>
+<button type="button" class="s14w2-e" data-v="64" aria-label="64 experts per layer">64</button>
+<button type="button" class="s14w2-e" data-v="128" aria-label="128 experts per layer">128</button>
+<button type="button" class="s14w2-e" data-v="256" aria-label="256 experts per layer">256</button>
+<span class="s14w2-sep" aria-hidden="true"></span>
+<span class="s14w2-lb">experts used per token k</span>
+<button type="button" class="s14w2-q" data-v="2" aria-label="Each token uses 2 experts">2</button>
+<button type="button" class="s14w2-q" data-v="4" aria-label="Each token uses 4 experts">4</button>
+<button type="button" class="s14w2-q" data-v="8" aria-label="Each token uses 8 experts">8</button>
+<button type="button" class="s14w2-q" data-v="16" aria-label="Each token uses 16 experts">16</button>
+</div>
+
+<div class="s14w2-card">
+<h2><span id="s14w2-h2"></span><span class="s14w2-tag" id="s14w2-tag">our model, the Qwen3-30B-A3B shape</span></h2>
+<div class="s14w2-lay">
+<div class="s14w2-grid" id="s14w2-grid" role="img" aria-label="Grid of experts in one layer"></div>
+<div class="s14w2-side">
+<p><i class="s14w2-chip" style="background:#0891b2" aria-hidden="true"></i><b>lit</b>: an expert this token runs through.</p>
+<p><i class="s14w2-chip" style="background:#e4ebf4;border:1px solid #d3dde9" aria-hidden="true"></i><b>grey</b>: an expert this token does not use.</p>
+<p id="s14w2-cnt"></p>
+<p>The lit squares are a simulated router choice from a fixed random seed.</p>
+</div>
+</div>
+</div>
+
+<div class="s14w2-card">
+<h2>parameters in the whole model, 48 layers</h2>
+<div class="s14w2-row"><div class="s14w2-rl">total parameters<small>every weight, held in memory</small></div><div class="s14w2-tk"><div class="s14w2-f" id="s14w2-ft" style="background:#7c3aed"></div><span class="s14w2-fv" id="s14w2-vt"></span></div></div>
+<div class="s14w2-row"><div class="s14w2-rl">active parameters<small>weights one token computes with</small></div><div class="s14w2-tk"><div class="s14w2-f" id="s14w2-fa" style="background:#0891b2"></div><span class="s14w2-fv" id="s14w2-va"></span></div></div>
+<div class="s14w2-ax" id="s14w2-ax"></div>
+<p class="s14w2-leg">Per layer: <b>18.87M</b> attention, <b>4.719M = 3 &times; 2,048 &times; 768</b> per expert, <b>2,048 &times; E</b> router, <b>4,096</b> norm weights. Once: <b>622.33M</b> embeddings, output layer and final norm. The axis is pinned from <b>0</b> to <b>64 B</b>.</p>
+</div>
+
+<div class="s14w2-met s14w2-m2">
+<div class="s14w2-box"><span>total parameters</span><span class="s14w2-rd" id="s14w2-r1"></span></div>
+<div class="s14w2-box"><span>active parameters, router still counts all E</span><span class="s14w2-rd" id="s14w2-r2"></span></div>
+</div>
+<div class="s14w2-met s14w2-m3">
+<div class="s14w2-box"><span>total / active</span><span class="s14w2-rd" id="s14w2-r3"></span></div>
+<div class="s14w2-box"><span>compute per token, 6 &times; active</span><span class="s14w2-rd" id="s14w2-r4"></span></div>
+<div class="s14w2-box"><span>training state, 16 bytes per weight</span><span class="s14w2-rd" id="s14w2-r5"></span></div>
+</div>
+<p class="s14w2-fit" id="s14w2-fit"></p>
+</main>
+
+<script>
+(function(){
+'use strict';
+var L=48,ATT=18874624,EXP=3*2048*768,HID=2048,NORM=4096,ONCE=622329856+2048,
+    BPW=16,GIB=1073741824,CARD=167.6,AXMAX=64e9,E=128,k=8;
+function $(i){return document.getElementById('s14w2-'+i);}
+function f1(v){return v.toFixed(1);}
+function f2(v){return v.toFixed(2);}
+function comma(n){return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+function params(nE,used){return L*(ATT+used*EXP+HID*nE+NORM)+ONCE;}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function pick(nE,n){
+  var r=mulberry32(nE*1000+n*7+14),a=[],i,j,t,o={};
+  for(i=0;i<nE;i++){a.push(i);}
+  for(i=0;i<n;i++){j=i+Math.floor(r()*(nE-i));t=a[i];a[i]=a[j];a[j]=t;o[a[i]]=true;}
+  return o;
+}
+function axis(){
+  var s='',i;
+  for(i=0;i<=4;i++){s+='<i style="left:'+(i/4*100)+'%">'+(i*16)+' B</i>';}
+  $('ax').innerHTML=s;
+}
+function draw(){
+  var T=params(E,E),A=params(E,k),lit=pick(E,k),s='',i,st,wT,wA,cards;
+  for(i=0;i<E;i++){s+='<div class="s14w2-sq'+(lit[i]?' lit':'')+'"></div>';}
+  $('grid').innerHTML=s;
+  $('grid').setAttribute('aria-label','Grid of '+E+' experts in one layer with '+k+' lit');
+  $('h2').textContent='one layer: '+E+' experts, '+k+' used by this token';
+  $('tag').className='s14w2-tag'+(E===128&&k===8?'':' off');
+  $('cnt').innerHTML='This token uses <b>'+k+' of '+E+'</b> experts in this layer, which is <b>'+f1(k/E*100)+'%</b> of the expert weights.';
+
+  wT=T/AXMAX*100;wA=A/AXMAX*100;
+  $('ft').style.width=wT+'%';if(wT>80){$('vt').style.left=(wT-9)+'%';$('vt').style.color='#fff';}else{$('vt').style.left=wT+'%';$('vt').style.color='';}$('vt').textContent=f2(T/1e9)+' B';
+  $('fa').style.width=wA+'%';$('va').style.left=wA+'%';$('va').textContent=f2(A/1e9)+' B';
+
+  $('r1').innerHTML='<b>'+f2(T/1e9)+' B</b> = 48 &times; (18.87M + '+E+' &times; 4.719M + 2,048 &times; '+E+' + 4,096) + 622.33M';
+  $('r2').innerHTML='<b>'+f2(A/1e9)+' B</b> = 48 &times; (18.87M + '+k+' &times; 4.719M + 2,048 &times; '+E+' + 4,096) + 622.33M';
+  $('r3').innerHTML='<b>'+f1(T/A)+'</b> = '+f2(T/1e9)+' B / '+f2(A/1e9)+' B';
+  $('r4').innerHTML='<b>'+f1(6*A/1e9)+' GFLOP</b> = 6 &times; '+f2(A/1e9)+' B';
+  st=T*BPW/GIB;
+  $('r5').innerHTML='<b>'+f1(st)+' GiB</b> = '+f2(T/1e9)+' B &times; 16 / 2^30';
+  cards=Math.ceil(st/CARD);
+  $('fit').innerHTML='B200 cards for the training state: '+cards+' = ceil('+f1(st)+' GiB / 167.6 GiB) = ceil('+f2(st/CARD)+')';
+}
+function marks(){
+  Array.prototype.forEach.call(document.querySelectorAll('.s14w2-e'),function(b){b.classList.toggle('on',+b.getAttribute('data-v')===E);});
+  Array.prototype.forEach.call(document.querySelectorAll('.s14w2-q'),function(b){b.classList.toggle('on',+b.getAttribute('data-v')===k);});
+}
+Array.prototype.forEach.call(document.querySelectorAll('.s14w2-e'),function(b){
+  b.addEventListener('click',function(){E=+b.getAttribute('data-v');marks();draw();});
+});
+Array.prototype.forEach.call(document.querySelectorAll('.s14w2-q'),function(b){
+  b.addEventListener('click',function(){k=+b.getAttribute('data-v');marks();draw();});
+});
+axis();marks();draw();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

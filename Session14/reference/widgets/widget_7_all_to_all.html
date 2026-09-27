@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 14 Widget 7 - Dispatch and Combine</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s14w7-w{max-width:1180px;margin:0 auto;padding:18px 22px 20px}
+.s14w7-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.s14w7-w h1{font-size:25px;line-height:1.12;margin:3px 0 7px}
+.s14w7-say{border:1px solid #bae6f0;background:#f0fbfd;border-radius:10px;padding:7px 14px;color:#155e75;font-size:13.5px;line-height:1.5;margin:0 0 10px}
+.s14w7-say b{color:#0e7490;font-weight:800}
+.s14w7-bar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:9px}
+.s14w7-lb{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.s14w7-bar button{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;padding:6px 14px;font:800 11.5px Inter,sans-serif;cursor:pointer}
+.s14w7-bar button.s14w7-st{border-color:var(--ink);color:var(--ink);background:#eef2f7;box-shadow:inset 0 0 0 1px var(--ink);min-width:150px}
+.s14w7-bar button.s14w7-q.on{border-color:var(--cyan);color:#0e7490;background:#effbfe;box-shadow:inset 0 0 0 1px var(--cyan)}
+.s14w7-sep{width:1px;height:20px;background:var(--line);margin:0 5px}
+.s14w7-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:10px 16px 9px}
+.s14w7-card h2{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 7px;font-weight:800}
+.s14w7-ph{display:flex;gap:6px;margin:0 0 8px}
+.s14w7-ph span{flex:1;text-align:center;border:1px solid #e4ebf4;border-radius:7px;padding:4px 0;font:800 10.5px Inter,sans-serif;letter-spacing:.05em;text-transform:uppercase;color:#93a3b6;background:#f7f9fc}
+.s14w7-ph span.on{color:var(--ink);border-color:var(--ink);background:#eef2f7}
+.s14w7-stage{position:relative}
+.s14w7-gpus{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:8px}
+.s14w7-gpu{border:1px solid var(--line);border-top-width:4px;border-radius:8px;background:#f7f9fc;padding:5px 7px 6px;transition:background-color .3s,box-shadow .3s}
+.s14w7-gpu.hot{background:#fffbeb;box-shadow:0 0 0 2px #fcd34d}
+.s14w7-gn{display:block;font-size:11px;font-weight:800;color:var(--ink)}
+.s14w7-ge{display:block;font:700 9.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--muted);white-space:nowrap}
+.s14w7-tok{margin-top:4px;border:1px solid #c7d3e3;border-radius:6px;background:#fff;padding:2px 4px;font-size:10px;line-height:1.3;white-space:nowrap;letter-spacing:-.01em;color:var(--ink);transition:background-color .3s,box-shadow .3s}
+.s14w7-tok b{font-weight:800}
+.s14w7-tok small{font-size:9px;color:var(--muted);font-weight:700}
+.s14w7-tok.sum{background:#ecfdf3;border-color:#159447;box-shadow:0 0 0 1px #159447;transition-delay:.9s}
+.s14w7-slots{height:38px;margin-top:5px}
+.s14w7-inf{margin-top:3px;height:39px;font-size:10px;line-height:1.3;color:var(--muted);overflow:hidden}
+.s14w7-inf b{color:var(--ink);font-weight:800}
+.s14w7-dot{position:absolute;width:17px;height:17px;border-radius:50%;border:1.5px solid rgba(255,255,255,.95);box-shadow:0 0 0 1px rgba(21,32,51,.22);color:#fff;font:800 9.5px/14px Inter,sans-serif;text-align:center;font-style:normal;cursor:default;transition:left .8s ease-in-out,top .8s ease-in-out,box-shadow .3s}
+.s14w7-dot.home{border:2px dashed #fff;line-height:13px;box-shadow:0 0 0 1.5px #152033}
+.s14w7-leg{margin:6px 0 0;font-size:11.5px;line-height:1.4;color:var(--muted)}
+.s14w7-leg b{color:var(--ink);font-weight:800}
+.s14w7-leg i{display:inline-block;width:11px;height:11px;border-radius:50%;vertical-align:-1px;margin:0 3px 0 0;background:#7c3aed;font-style:normal}
+.s14w7-leg i.hm{background:#0891b2;border:2px dashed #fff;box-shadow:0 0 0 1.5px #152033;width:13px;height:13px;margin-left:3px}
+.s14w7-cap{margin:6px 0 0;font-size:13px;line-height:1.45;min-height:38px}
+.s14w7-cap b{font-weight:800}
+.s14w7-row{display:grid;grid-template-columns:128px 1fr 62px;gap:10px;align-items:center;margin-bottom:5px}
+.s14w7-rn{font-size:11.5px;font-weight:800;color:var(--ink)}
+.s14w7-tk{position:relative;height:18px;border-radius:6px;background:#f4f7fb;border:1px solid #e4ebf4;overflow:hidden;
+ background-image:repeating-linear-gradient(to right,#dde6f2 0,#dde6f2 1px,transparent 1px,transparent 10%)}
+.s14w7-fill{position:absolute;left:0;top:3px;bottom:3px;border-radius:0 4px 4px 0;transition:width .4s ease-in-out}
+.s14w7-rv{font:800 12px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--ink);text-align:right}
+.s14w7-ax{position:relative;height:14px;margin:2px 72px 0 138px}
+.s14w7-ax i{position:absolute;top:0;transform:translateX(-50%);font:700 9.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:#93a3b6;font-style:normal;white-space:nowrap}
+.s14w7-ax i:first-child{transform:none}.s14w7-ax i:last-child{transform:translateX(-100%)}
+.s14w7-met{display:grid;grid-template-columns:1fr 1.25fr 1fr;gap:7px;margin-top:8px}
+.s14w7-box{border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.9);padding:6px 12px}
+.s14w7-box>span:not(.s14w7-rd){display:block;color:var(--muted);font-size:10.5px;line-height:1.3;font-weight:700;letter-spacing:.03em;text-transform:uppercase}
+.s14w7-rd{display:block;margin-top:3px;font:700 12px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.s14w7-rd b{font-size:16px;font-weight:800;color:var(--ink)}
+.s14w7-note{margin:7px 0 0;font-size:12.5px;line-height:1.5;min-height:20px;color:var(--muted)}
+@media(max-width:1000px){.s14w7-gpus{grid-template-columns:repeat(4,minmax(0,1fr))}.s14w7-met{grid-template-columns:1fr}.s14w7-rd{white-space:normal}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s14w7-w">
+<div class="s14w7-k">ERA V5 Session 14 &middot; expert parallelism</div>
+<h1>Dispatch and Combine</h1>
+<p class="s14w7-say">Each of the eight GPUs in one node holds <b>16 of the 128 experts</b> of every mixture-of-experts layer.</p>
+
+<div class="s14w7-bar">
+<span class="s14w7-lb">phase</span>
+<button type="button" class="s14w7-st" id="s14w7-step" aria-label="Step to the next phase">Step to dispatch</button>
+<button type="button" id="s14w7-reset" aria-label="Reset to the route phase">Reset</button>
+<span class="s14w7-sep" aria-hidden="true"></span>
+<span class="s14w7-lb">link</span>
+<button type="button" class="s14w7-q" data-v="nv5" aria-label="NVLink 5 inside a B200 node, 900 GB/s">NVLink 5 &middot; B200 node</button>
+<button type="button" class="s14w7-q" data-v="nv4" aria-label="NVLink 4 inside an H100 node, 450 GB/s">NVLink 4 &middot; H100 node</button>
+<button type="button" class="s14w7-q" data-v="net" aria-label="Network card between nodes, 50 GB/s">network card &middot; between nodes</button>
+</div>
+
+<div class="s14w7-card">
+<h2 id="s14w7-h2">one mixture-of-experts layer on 8 GPUs</h2>
+<div class="s14w7-ph" id="s14w7-ph"><span>1 &middot; route</span><span>2 &middot; dispatch</span><span>3 &middot; compute</span><span>4 &middot; combine</span></div>
+<div class="s14w7-stage" id="s14w7-stage"><div class="s14w7-gpus" id="s14w7-gpus"></div></div>
+<p class="s14w7-leg"><i aria-hidden="true"></i><b>dot fill</b> = colour of the GPU that holds the chosen expert &nbsp;&middot;&nbsp; <b>digit</b> = home GPU of the token &nbsp;&middot;&nbsp; <i class="hm" aria-hidden="true"></i><b>dashed ring</b> = a copy whose expert sits on its home GPU stays in place &nbsp;&middot;&nbsp; hover a dot to see its expert</p>
+<p class="s14w7-cap" id="s14w7-cap"></p>
+</div>
+
+<div class="s14w7-card" style="margin-top:8px">
+<h2 id="s14w7-h2b">time per 8,192-token sequence per GPU</h2>
+<div class="s14w7-row"><span class="s14w7-rn">communication</span><div class="s14w7-tk"><div class="s14w7-fill" id="s14w7-fc" style="background:#7c3aed"></div></div><span class="s14w7-rv" id="s14w7-vc"></span></div>
+<div class="s14w7-row"><span class="s14w7-rn">compute</span><div class="s14w7-tk"><div class="s14w7-fill" id="s14w7-fp" style="background:#0891b2"></div></div><span class="s14w7-rv" id="s14w7-vp"></span></div>
+<div class="s14w7-ax" id="s14w7-ax"></div>
+</div>
+
+<div class="s14w7-met">
+<div class="s14w7-box"><span>bytes per token per layer, dispatch</span><span class="s14w7-rd" id="s14w7-r1"></span></div>
+<div class="s14w7-box"><span>traffic per sequence per GPU, both directions of training</span><span class="s14w7-rd" id="s14w7-r2"></span></div>
+<div class="s14w7-box"><span>communication time</span><span class="s14w7-rd" id="s14w7-r3"></span></div>
+<div class="s14w7-box"><span>bytes per token per layer, combine</span><span class="s14w7-rd" id="s14w7-r4"></span></div>
+<div class="s14w7-box"><span>compute per sequence and its time</span><span class="s14w7-rd" id="s14w7-r5"></span></div>
+<div class="s14w7-box"><span>communication / compute</span><span class="s14w7-rd" id="s14w7-r6"></span></div>
+</div>
+<p class="s14w7-note" id="s14w7-note"></p>
+</main>
+
+<script>
+(function(){
+'use strict';
+var K=8,H=2048,BYTES=2,SEQ=8192,L=48,G=8,E=128,PER=16,SEED=52,
+    ACTIVE=48*(18874624+8*4718592+2048*128+4096)+622329856+2048,
+    COLS=['#0891b2','#7c3aed','#159447','#d97706','#dc2626','#2563eb','#db2777','#92400e'],
+    LINKS={
+      nv5:{name:'NVLink 5',bw:900,flops:2.25,chip:'a B200',pf:'2.25'},
+      nv4:{name:'NVLink 4',bw:450,flops:0.989,chip:'an H100',pf:'0.989'},
+      net:{name:'network card',bw:50,flops:2.25,chip:'a B200',pf:'2.25'}
+    },
+    PHASES=['route','dispatch','compute','combine'],
+    CAPS=[
+      '<b>Route.</b> The router on each GPU picks 8 experts for its token. The fixed map, expert / 16 rounded down, gives the destination GPU of each copy.',
+      '<b>Dispatch.</b> Every copy travels to the GPU that holds its expert. This step is the first all-to-all. The received counts are uneven because the router decides the destinations live for every batch.',
+      '<b>Compute.</b> Each GPU runs its own experts on the copies it received. An expert that two tokens chose runs on both copies.',
+      '<b>Combine.</b> Every result travels back to the GPU whose number it carries. This step is the second all-to-all. Each token adds its 8 results, each one weighted by its router score.'
+    ],
+    link='nv5',phase=0,dots=[],route=[],recv=[],
+    reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function $(i){return document.getElementById('s14w7-'+i);}
+function ft(v){return v.toFixed(v<0.5?3:2);}
+function comma(n){return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+function build(){
+  var rnd=mulberry32(SEED),s='',g,d,ex,list;
+  for(g=0;g<G;g++){
+    list=[];
+    while(list.length<K){ex=Math.floor(rnd()*E);if(list.indexOf(ex)<0){list.push(ex);}}
+    list.sort(function(a,b){return a-b;});
+    route.push(list);recv.push([]);
+    s+='<div class="s14w7-gpu" id="s14w7-g'+g+'" style="border-top-color:'+COLS[g]+'"><span class="s14w7-gn">GPU '+g+'</span>'+
+       '<span class="s14w7-ge">experts '+(PER*g)+' to '+(PER*g+PER-1)+'</span>'+
+       '<div class="s14w7-tok" id="s14w7-t'+g+'"><b>token T'+g+'</b>&nbsp;<small>(home GPU '+g+')</small></div>'+
+       '<div class="s14w7-slots" id="s14w7-s'+g+'"></div><div class="s14w7-inf" id="s14w7-i'+g+'"></div></div>';
+  }
+  $('gpus').innerHTML=s;
+  /* one copy per (token, expert); copies that stay home take the first slots in both layouts */
+  for(g=0;g<G;g++){
+    var mine=route[g].map(function(x){return {src:g,ex:x,dst:Math.floor(x/PER)};});
+    mine.sort(function(a,b){return (b.dst===g)-(a.dst===g)||a.ex-b.ex;});
+    mine.forEach(function(o,i){o.si=i;dots.push(o);});
+  }
+  for(d=0;d<G;d++){
+    var got=dots.filter(function(o){return o.dst===d;});
+    got.sort(function(a,b){return (b.src===d)-(a.src===d)||a.src-b.src||a.ex-b.ex;});
+    got.forEach(function(o,i){o.di=i;});
+    recv[d]=got;
+  }
+  var st=$('stage');
+  dots.forEach(function(o){
+    var e=document.createElement('i');e.className='s14w7-dot'+(o.src===o.dst?' home':'');
+    e.style.background=COLS[o.dst];e.textContent=o.src;
+    e.title='copy of token T'+o.src+' for expert '+o.ex+' on GPU '+o.dst+(o.src===o.dst?' (stays home)':'');
+    e.setAttribute('aria-hidden','true');st.appendChild(e);o.el=e;
+  });
+}
+function slotXY(g,idx){
+  var st=$('stage').getBoundingClientRect(),r=$('s'+g).getBoundingClientRect(),
+      per=Math.max(1,Math.floor((r.width+2)/19)),col=idx%per,row=Math.floor(idx/per);
+  return {x:r.left-st.left+col*19,y:r.top-st.top+row*20};
+}
+function info(g){
+  var got=recv[g],n=got.length,ran=[];
+  if(phase===0){return 'picks experts <b>'+route[g].join(', ')+'</b>';}
+  if(phase===1){return 'received: <b>'+n+' copies</b> (average 8)';}
+  if(phase===2){
+    got.forEach(function(o){if(ran.indexOf(o.ex)<0){ran.push(o.ex);}});
+    ran.sort(function(a,b){return a-b;});
+    return (ran.length===1?'expert ':'experts ')+'<b>'+ran.join(', ')+'</b> ran on <b>'+n+' copies</b>';
+  }
+  return '<b>8 weighted outputs added</b> into token T'+g;
+}
+function place(){
+  var away=(phase===1||phase===2),g;
+  dots.forEach(function(o){
+    var p=away?slotXY(o.dst,o.di):slotXY(o.src,o.si);
+    o.el.style.transitionDelay=reduce?'0s':((o.si%K)*0.04)+'s';
+    o.el.style.left=p.x+'px';o.el.style.top=p.y+'px';
+  });
+  for(g=0;g<G;g++){
+    $('g'+g).classList.toggle('hot',phase===2);
+    $('t'+g).classList.toggle('sum',phase===3);
+    $('i'+g).innerHTML=info(g);
+  }
+  Array.prototype.forEach.call($('ph').children,function(e,i){e.classList.toggle('on',i===phase);});
+  $('cap').innerHTML=CAPS[phase];
+  $('step').textContent='Step to '+PHASES[(phase+1)%4];
+}
+function draw(){
+  var c=LINKS[link],perTok=K*H*BYTES,
+      traffic=2*perTok*SEQ*(7/8)*L*2,gb=traffic/1e9,
+      tc=gb/c.bw,
+      flop=6*ACTIVE*SEQ,tf=flop/1e12,tp=tf/(c.flops*1000),
+      ratio=tc/tp,stay=dots.filter(function(o){return o.src===o.dst;}).length;
+  $('h2').textContent=link==='net'?'one mixture-of-experts layer on 8 GPUs joined by network cards':'one mixture-of-experts layer on 8 GPUs in one node';
+  $('h2b').textContent='time per 8,192-token sequence per GPU over '+c.name+', compute on '+c.chip;
+  $('fc').style.width=Math.min(100,tc/1.0*100)+'%';
+  $('fp').style.width=Math.min(100,tp/1.0*100)+'%';
+  $('vc').textContent=ft(tc)+' s';
+  $('vp').textContent=tp.toFixed(3)+' s';
+  $('r1').innerHTML='<b>'+comma(perTok)+' B</b> = 8 &times; 2,048 &times; 2';
+  $('r4').innerHTML='<b>'+comma(perTok)+' B</b> = 8 &times; 2,048 &times; 2';
+  $('r2').innerHTML='<b>'+gb.toFixed(1)+' GB</b> = 2 &times; 32,768 B &times; 8,192 &times; 7/8 &times; 48 &times; 2';
+  $('r3').innerHTML='<b style="color:#7c3aed">'+ft(tc)+' s</b> = '+gb.toFixed(1)+' GB / '+c.bw+' GB/s';
+  $('r5').innerHTML='<b style="color:#0891b2">'+tp.toFixed(3)+' s</b> = '+tf.toFixed(1)+' TFLOP / '+c.pf+' PFLOPS';
+  $('r6').innerHTML='<b style="color:'+(ratio>1?'#dc2626':'#159447')+'">'+ratio.toFixed(ratio<10?2:1)+'</b> = '+ft(tc)+' s / '+tp.toFixed(3)+' s';
+  $('note').innerHTML='The cards show one token per GPU. The readouts are for a full sequence of 8,192 tokens per GPU. '+
+    'The compute is '+tf.toFixed(1)+' TFLOP = 6 &times; 3.35e9 active weights &times; 8,192 tokens. '+
+    'The expert choices are a simulation with made-up routing from a fixed seed. '+stay+' of the '+dots.length+' copies stay on their home GPU. '+
+    'The factor 7/8 is the share of the traffic that leaves each GPU.';
+  Array.prototype.forEach.call(document.querySelectorAll('.s14w7-q'),function(b){b.classList.toggle('on',b.getAttribute('data-v')===link);});
+}
+function axis(){
+  var s='',i;
+  for(i=0;i<=5;i++){s+='<i style="left:'+(i*20)+'%">'+(i*0.2).toFixed(1)+' s</i>';}
+  $('ax').innerHTML=s;
+}
+$('step').addEventListener('click',function(){phase=(phase+1)%4;place();});
+$('reset').addEventListener('click',function(){phase=0;place();});
+Array.prototype.forEach.call(document.querySelectorAll('.s14w7-q'),function(b){
+  b.addEventListener('click',function(){link=b.getAttribute('data-v');draw();});
+});
+function snap(){
+  dots.forEach(function(o){o.el.style.transition='none';});
+  place();
+  setTimeout(function(){dots.forEach(function(o){o.el.style.transition='';});},30);
+}
+window.addEventListener('resize',snap);
+build();axis();
+dots.forEach(function(o){o.el.style.transition='none';});
+place();draw();
+setTimeout(function(){dots.forEach(function(o){o.el.style.transition='';});},30);
+if(window.ResizeObserver){var lastW=0;new ResizeObserver(function(){var w=$('gpus').offsetWidth;if(w!==lastW){lastW=w;snap();}}).observe($('gpus'));}
+if(document.fonts&&document.fonts.ready){document.fonts.ready.then(snap);}
+window.addEventListener('load',snap);
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

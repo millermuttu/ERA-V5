@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 14 Widget 1 - The Router</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s14w1-w{max-width:1180px;margin:0 auto;padding:18px 22px 20px}
+.s14w1-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.s14w1-w h1{font-size:26px;line-height:1.12;margin:4px 0 10px}
+.s14w1-say{border:1px solid #bae6f0;background:#f0fbfd;border-radius:10px;padding:12px 14px;color:#155e75;font-size:13.5px;line-height:1.55;margin:0 0 14px}
+.s14w1-say b{color:#0e7490;font-weight:800}
+.s14w1-bar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.s14w1-lb{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.s14w1-bar button{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;padding:6px 14px;font:800 11.5px Inter,sans-serif;cursor:pointer;min-width:46px}
+.s14w1-bar button.on{border-color:var(--cyan);color:#0e7490;background:#effbfe;box-shadow:inset 0 0 0 1px var(--cyan)}
+.s14w1-sep{width:1px;height:20px;background:var(--line);margin:0 5px}
+.s14w1-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:13px 16px 12px}
+.s14w1-card h2{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;font-weight:800}
+.s14w1-g{display:grid;grid-template-columns:170px repeat(8,1fr);column-gap:8px;row-gap:0;align-items:end}
+.s14w1-rl{font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);line-height:1.3;align-self:center}
+.s14w1-rl small{display:block;font-size:10px;font-weight:700;letter-spacing:0;text-transform:none;color:#93a3b6}
+.s14w1-eh{text-align:center;font:800 10.5px Inter,sans-serif;letter-spacing:.04em;text-transform:uppercase;color:var(--ink);padding-bottom:4px}
+.s14w1-eh.kp{color:#0e7490}
+.s14w1-tk{position:relative;border-radius:7px;background:#f4f7fb;border:1px solid #e4ebf4;overflow:hidden}
+.s14w1-tk.kp{border-color:#9bd9e8;background:#f0fbfd}
+.s14w1-t1{height:62px}.s14w1-t2{height:62px}.s14w1-t3{height:46px}
+.s14w1-b{position:absolute;left:22%;right:22%;transition:top .35s ease-in-out,height .35s ease-in-out,background-color .35s}
+.s14w1-z{position:absolute;left:0;right:0;height:1px;background:#93a3b6}
+.s14w1-v{text-align:center;font:700 11.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--muted);padding:2px 0 8px;white-space:nowrap}
+.s14w1-v.kp{color:var(--ink);font-weight:800}
+.s14w1-leg{margin:2px 0 0;font-size:12px;color:var(--muted);line-height:1.4;display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.s14w1-leg b{color:var(--ink)}
+.s14w1-chip{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.s14w1-rule{margin:6px 0 0;font-size:12.5px;line-height:1.45;color:#93a3b6}
+.s14w1-rule.on{color:var(--ink)}
+.s14w1-rule b{font-weight:800}
+.s14w1-met{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.s14w1-col{display:grid;gap:8px;align-content:start}
+.s14w1-box{border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.9);padding:10px 12px}
+.s14w1-box>span:not(.s14w1-rd){display:block;color:var(--muted);font-size:10.5px;line-height:1.3;font-weight:700;letter-spacing:.03em;text-transform:uppercase}
+.s14w1-rd{display:block;margin-top:3px;font:700 12px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.s14w1-rd b{font-size:16px;font-weight:800;color:var(--ink)}
+.s14w1-wl{min-height:136px}
+.s14w1-wl .s14w1-rd{margin-top:4px}
+.s14w1-wl .s14w1-rd b{font-size:14px}
+.s14w1-box>span.s14w1-nt{text-transform:none;letter-spacing:0;font-size:11.5px}
+.s14w1-note{margin:10px 0 0;font-size:12.5px;line-height:1.5;color:var(--muted)}
+@media(max-width:1000px){.s14w1-met{grid-template-columns:1fr}.s14w1-rd{white-space:normal}.s14w1-g{grid-template-columns:90px repeat(8,1fr);column-gap:4px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s14w1-w">
+<div class="s14w1-k">ERA V5 Session 14 &middot; the router</div>
+<h1>From Logits to Expert Weights</h1>
+<p class="s14w1-say">The router gives one token a <b>logit</b> for each of the <b>8 experts</b>, turns the logits into <b>scores</b>, keeps the <b>top k</b> scores, and rescales them into <b>weights</b> that add up to 1.</p>
+
+<div class="s14w1-bar">
+<span class="s14w1-lb">token</span>
+<button type="button" class="s14w1-t" data-v="0" aria-label="Token A">A</button>
+<button type="button" class="s14w1-t" data-v="1" aria-label="Token B">B</button>
+<button type="button" class="s14w1-t" data-v="2" aria-label="Token C">C</button>
+<span class="s14w1-sep" aria-hidden="true"></span>
+<span class="s14w1-lb">score function</span>
+<button type="button" class="s14w1-f" data-v="softmax" aria-label="Score function softmax">softmax</button>
+<button type="button" class="s14w1-f" data-v="sigmoid" aria-label="Score function sigmoid">sigmoid</button>
+<span class="s14w1-sep" aria-hidden="true"></span>
+<span class="s14w1-lb">top-k</span>
+<button type="button" class="s14w1-n" data-v="1" aria-label="Keep the top 1 expert">1</button>
+<button type="button" class="s14w1-n" data-v="2" aria-label="Keep the top 2 experts">2</button>
+<button type="button" class="s14w1-n" data-v="4" aria-label="Keep the top 4 experts">4</button>
+</div>
+
+<div class="s14w1-card">
+<h2 id="s14w1-h2">one token through the router</h2>
+<div class="s14w1-g" id="s14w1-g"></div>
+<p class="s14w1-leg"><span><i class="s14w1-chip" style="background:#0891b2" aria-hidden="true"></i><b>kept</b>, one of the top k scores</span><span><i class="s14w1-chip" style="background:#cbd5e1" aria-hidden="true"></i><b>dropped</b> for this token</span><span>logit axis pinned from <b>&minus;1.5</b> to <b>2.5</b>, score and weight axes from <b>0</b> to <b>1</b></span></p>
+<p class="s14w1-rule" id="s14w1-rs"><b>Softmax:</b> the 8 scores compete with each other and always add up to 1.</p>
+<p class="s14w1-rule" id="s14w1-rg"><b>Sigmoid:</b> each score is computed from its own logit alone and lies between 0 and 1.</p>
+</div>
+
+<div class="s14w1-met">
+<div class="s14w1-col">
+<div class="s14w1-box"><span class="s14w1-nt" id="s14w1-l1"></span><span class="s14w1-rd" id="s14w1-r1"></span></div>
+<div class="s14w1-box"><span id="s14w1-l2"></span><span class="s14w1-rd" id="s14w1-r2"></span></div>
+</div>
+<div class="s14w1-box s14w1-wl"><span class="s14w1-nt" id="s14w1-l3">weight of each kept expert = its score / sum of the kept scores</span><div id="s14w1-r3"></div></div>
+</div>
+</main>
+
+<script>
+(function(){
+'use strict';
+var TOK=[
+  [2.0,0.5,1.2,-0.3,0.9,1.8,-1.0,0.1],
+  [-0.4,0.8,0.2,2.3,-0.6,0.3,1.1,-0.2],
+  [0.3,-0.5,1.1,0.6,0.2,-0.8,0.9,1.6]
+],
+LMIN=-1.5,LMAX=2.5,CYAN='#0891b2',GREY='#cbd5e1',VIO='#7c3aed',LVIO='#c4b5fd',GREEN='#159447',
+tok=0,fn='softmax',k=2;
+function $(i){return document.getElementById('s14w1-'+i);}
+function f1(v){return v.toFixed(1);}
+function f2(v){return v.toFixed(2);}
+function f3(v){return v.toFixed(3);}
+function ex(v){return 'e^'+(v<0?'&minus;':'')+f1(Math.abs(v));}
+function scores(l){
+  var i,s=0,e=[],o=[];
+  if(fn==='softmax'){
+    for(i=0;i<8;i++){e.push(Math.exp(l[i]));s+=e[i];}
+    for(i=0;i<8;i++){o.push(e[i]/s);}
+    return {sc:o,den:s};
+  }
+  for(i=0;i<8;i++){o.push(1/(1+Math.exp(-l[i])));}
+  return {sc:o,den:0};
+}
+function topk(sc){
+  var idx=[0,1,2,3,4,5,6,7];
+  idx.sort(function(a,b){return sc[b]-sc[a];});
+  return idx.slice(0,k);
+}
+function build(){
+  var s='<div></div>',i;
+  for(i=0;i<8;i++){s+='<div class="s14w1-eh" id="s14w1-eh'+i+'">expert '+i+'</div>';}
+  s+='<div class="s14w1-rl">logit<small>one number per expert</small></div>';
+  for(i=0;i<8;i++){s+='<div class="s14w1-tk s14w1-t1" id="s14w1-ta'+i+'"><div class="s14w1-z" style="top:'+((LMAX/(LMAX-LMIN))*100)+'%"></div><div class="s14w1-b" id="s14w1-ba'+i+'"></div></div>';}
+  s+='<div></div>';
+  for(i=0;i<8;i++){s+='<div class="s14w1-v" id="s14w1-va'+i+'"></div>';}
+  s+='<div class="s14w1-rl" id="s14w1-sl">score</div>';
+  for(i=0;i<8;i++){s+='<div class="s14w1-tk s14w1-t2" id="s14w1-tb'+i+'"><div class="s14w1-b" id="s14w1-bb'+i+'"></div></div>';}
+  s+='<div></div>';
+  for(i=0;i<8;i++){s+='<div class="s14w1-v" id="s14w1-vb'+i+'"></div>';}
+  s+='<div class="s14w1-rl">weight<small>kept scores rescaled to sum 1</small></div>';
+  for(i=0;i<8;i++){s+='<div class="s14w1-tk s14w1-t3" id="s14w1-tc'+i+'"><div class="s14w1-b" id="s14w1-bc'+i+'"></div></div>';}
+  s+='<div></div>';
+  for(i=0;i<8;i++){s+='<div class="s14w1-v" id="s14w1-vc'+i+'"></div>';}
+  $('g').innerHTML=s;
+}
+function draw(){
+  var l=TOK[tok],r=scores(l),sc=r.sc,kp=topk(sc),on={},i,sum=0,ks=0,top=kp[0],rng=LMAX-LMIN,
+      v,t,h,w,parts=[],lines='',wsum=0;
+  for(i=0;i<kp.length;i++){on[kp[i]]=true;ks+=sc[kp[i]];}
+  for(i=0;i<8;i++){sum+=sc[i];}
+  $('h2').textContent='token '+'ABC'.charAt(tok)+' with '+fn+' scores, keeping the top '+k+(k===1?' expert':' experts');
+  $('sl').innerHTML='score<small>'+(fn==='softmax'?'softmax over all 8 logits':'sigmoid of each logit')+'</small>';
+  for(i=0;i<8;i++){
+    v=l[i];
+    if(v>=0){t=(LMAX-v)/rng*100;h=v/rng*100;}else{t=LMAX/rng*100;h=-v/rng*100;}
+    $('ba'+i).style.top=t+'%';$('ba'+i).style.height=h+'%';
+    $('ba'+i).style.background=on[i]?VIO:LVIO;
+    $('va'+i).textContent=(v<0?'−':'')+f1(Math.abs(v));
+    $('va'+i).className='s14w1-v'+(on[i]?' kp':'');
+    $('bb'+i).style.top=(100-sc[i]*100)+'%';$('bb'+i).style.height=(sc[i]*100)+'%';
+    $('bb'+i).style.background=on[i]?CYAN:GREY;
+    $('vb'+i).textContent=f3(sc[i]);
+    $('vb'+i).className='s14w1-v'+(on[i]?' kp':'');
+    $('tb'+i).className='s14w1-tk s14w1-t2'+(on[i]?' kp':'');
+    $('eh'+i).className='s14w1-eh'+(on[i]?' kp':'');
+    w=on[i]?sc[i]/ks:0;
+    $('bc'+i).style.top=(100-w*100)+'%';$('bc'+i).style.height=(w*100)+'%';
+    $('bc'+i).style.background=GREEN;
+    $('vc'+i).textContent=on[i]?f3(w):'dropped';
+    $('vc'+i).className='s14w1-v'+(on[i]?' kp':'');
+  }
+  $('rs').className='s14w1-rule'+(fn==='softmax'?' on':'');
+  $('rg').className='s14w1-rule'+(fn==='sigmoid'?' on':'');
+
+  if(fn==='softmax'){
+    $('l1').textContent='score of expert '+top+' = e^logit / sum of e^logit over all 8 experts';
+    $('r1').innerHTML='<b>'+f3(sc[top])+'</b> = '+ex(l[top])+' / '+f2(r.den);
+  }else{
+    $('l1').textContent='score of expert '+top+' = 1 / (1 + e^(−logit))';
+    $('r1').innerHTML='<b>'+f3(sc[top])+'</b> = 1 / (1 + '+ex(-l[top])+')';
+  }
+  for(i=0;i<8;i++){parts.push(f3(sc[i]));}
+  $('l2').textContent=fn==='softmax'?'sum of all 8 softmax scores':'sum of all 8 sigmoid scores';
+  $('r2').innerHTML='<b>'+f3(sum)+'</b> = '+parts.join(' + ');
+
+  parts=[];
+  for(i=0;i<kp.length;i++){parts.push(f3(sc[kp[i]]));}
+  var den=kp.length===1?parts[0]:'('+parts.join(' + ')+')';
+  for(i=0;i<kp.length;i++){
+    w=sc[kp[i]]/ks;wsum+=w;
+    lines+='<span class="s14w1-rd">expert '+kp[i]+': <b>'+f3(w)+'</b> = '+f3(sc[kp[i]])+' / '+den+'</span>';
+  }
+  lines+='<span class="s14w1-rd">sum of kept weights: <b>'+f3(wsum)+'</b></span>';
+  $('r3').innerHTML=lines;
+}
+function marks(){
+  Array.prototype.forEach.call(document.querySelectorAll('.s14w1-t'),function(b){b.classList.toggle('on',+b.getAttribute('data-v')===tok);});
+  Array.prototype.forEach.call(document.querySelectorAll('.s14w1-f'),function(b){b.classList.toggle('on',b.getAttribute('data-v')===fn);});
+  Array.prototype.forEach.call(document.querySelectorAll('.s14w1-n'),function(b){b.classList.toggle('on',+b.getAttribute('data-v')===k);});
+}
+Array.prototype.forEach.call(document.querySelectorAll('.s14w1-t'),function(b){
+  b.addEventListener('click',function(){tok=+b.getAttribute('data-v');marks();draw();});
+});
+Array.prototype.forEach.call(document.querySelectorAll('.s14w1-f'),function(b){
+  b.addEventListener('click',function(){fn=b.getAttribute('data-v');marks();draw();});
+});
+Array.prototype.forEach.call(document.querySelectorAll('.s14w1-n'),function(b){
+  b.addEventListener('click',function(){k=+b.getAttribute('data-v');marks();draw();});
+});
+build();marks();draw();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

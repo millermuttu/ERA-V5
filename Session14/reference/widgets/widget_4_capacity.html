@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 14 Widget 4 - Capacity and Dropped Tokens</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s14w4-w{max-width:1180px;margin:0 auto;padding:18px 22px 20px}
+.s14w4-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.s14w4-w h1{font-size:26px;line-height:1.12;margin:4px 0 10px}
+.s14w4-say{border:1px solid #bae6f0;background:#f0fbfd;border-radius:10px;padding:12px 14px;color:#155e75;font-size:13.5px;line-height:1.55;margin:0 0 14px}
+.s14w4-say b{color:#0e7490;font-weight:800}
+.s14w4-bar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.s14w4-lb{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.s14w4-bar button{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;padding:6px 14px;font:800 11.5px Inter,sans-serif;cursor:pointer}
+.s14w4-bar button.s14w4-q.on{border-color:var(--cyan);color:#0e7490;background:#effbfe;box-shadow:inset 0 0 0 1px var(--cyan)}
+.s14w4-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:13px 16px 12px}
+.s14w4-card h2{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;font-weight:800}
+.s14w4-plot{display:grid;grid-template-columns:44px 1fr;gap:6px;margin-top:16px}
+.s14w4-yax{position:relative;height:250px}
+.s14w4-yax i{font-style:normal;position:absolute;right:0;transform:translateY(50%);font:700 9.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:#93a3b6;font-style:normal;white-space:nowrap}
+.s14w4-area{position:relative;height:250px;border-left:1px solid #cfd9e6;border-bottom:1px solid #cfd9e6;
+ background-image:repeating-linear-gradient(to top,#e7edf5 0,#e7edf5 1px,transparent 1px,transparent 14.2857%)}
+.s14w4-cols{position:absolute;inset:0;display:grid;grid-template-columns:repeat(16,1fr);gap:10px;padding:0 8px}
+.s14w4-col{position:relative;height:100%}
+.s14w4-kp,.s14w4-dp{position:absolute;left:0;right:0;transition:height .35s ease-in-out,bottom .35s ease-in-out}
+.s14w4-kp{bottom:0;background:var(--cyan)}
+.s14w4-dp{background:var(--red);border-radius:4px 4px 0 0}
+.s14w4-bn{position:absolute;left:50%;transform:translateX(-50%);font:800 10px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--ink);font-style:normal;white-space:nowrap;transition:bottom .35s ease-in-out}
+.s14w4-cap{position:absolute;left:0;right:0;height:0;border-top:2px dashed var(--ink);transition:bottom .35s ease-in-out}
+.s14w4-capl{position:absolute;right:6px;transform:translateY(-100%);font:800 10px Inter,sans-serif;color:var(--ink);background:rgba(255,255,255,.85);padding:0 4px;white-space:nowrap;transition:bottom .35s ease-in-out}
+.s14w4-xl{display:grid;grid-template-columns:repeat(16,1fr);gap:10px;padding:0 8px;margin:5px 0 0 50px}
+.s14w4-xl i{font:700 10px ui-monospace,SFMono-Regular,Consolas,monospace;color:#93a3b6;font-style:normal;text-align:center;white-space:nowrap}
+.s14w4-leg{margin:8px 0 0;font-size:12px;color:var(--muted);line-height:1.4;display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.s14w4-leg b{color:var(--ink)}
+.s14w4-chip{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.s14w4-met{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+.s14w4-box{border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.9);padding:10px 12px}
+.s14w4-box>span:not(.s14w4-rd){display:block;color:var(--muted);font-size:10.5px;line-height:1.3;font-weight:700;letter-spacing:.03em;text-transform:uppercase}
+.s14w4-rd{display:block;margin-top:3px;font:700 12.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.s14w4-rd b{font-size:17px;font-weight:800;color:var(--ink)}
+.s14w4-note{margin:12px 0 0;font-size:12.5px;line-height:1.5;min-height:20px}
+@media(max-width:1000px){.s14w4-met{grid-template-columns:1fr 1fr}.s14w4-rd{white-space:normal}.s14w4-cols,.s14w4-xl{gap:4px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s14w4-w">
+<div class="s14w4-k">ERA V5 Session 14 &middot; capacity and token dropping</div>
+<h1>Capacity and Dropped Tokens</h1>
+<p class="s14w4-say">A batch sends <b>1,024 token assignments</b> to <b>16 experts</b>, an average of <b>64</b> per expert, and each expert can take only as many tokens as it has slots.</p>
+
+<div class="s14w4-bar">
+<span class="s14w4-lb">capacity factor</span>
+<button type="button" class="s14w4-q" data-v="1" aria-label="Capacity factor 1.0">1.0</button>
+<button type="button" class="s14w4-q" data-v="1.25" aria-label="Capacity factor 1.25">1.25</button>
+<button type="button" class="s14w4-q" data-v="1.5" aria-label="Capacity factor 1.5">1.5</button>
+<button type="button" class="s14w4-q" data-v="2" aria-label="Capacity factor 2.0">2.0</button>
+<button type="button" class="s14w4-q" data-v="0" aria-label="Dropless, no capacity limit">dropless</button>
+</div>
+
+<div class="s14w4-card">
+<h2 id="s14w4-h2"></h2>
+<div class="s14w4-plot">
+<div class="s14w4-yax" id="s14w4-yax"></div>
+<div class="s14w4-area"><div class="s14w4-cols" id="s14w4-cols"></div><div class="s14w4-cap" id="s14w4-cap"></div><span class="s14w4-capl" id="s14w4-capl"></span></div>
+</div>
+<div class="s14w4-xl" id="s14w4-xl"></div>
+<p class="s14w4-leg"><span><i class="s14w4-chip" style="background:#0891b2" aria-hidden="true"></i><b>kept</b>, processed by the expert</span><span><i class="s14w4-chip" style="background:#dc2626" aria-hidden="true"></i><b>dropped</b>, beyond the capacity line</span><span>the axis is pinned from <b>0</b> to <b>140 tokens</b></span></p>
+</div>
+
+<div class="s14w4-met">
+<div class="s14w4-box"><span>capacity per expert</span><span class="s14w4-rd" id="s14w4-r1"></span></div>
+<div class="s14w4-box"><span>dropped tokens</span><span class="s14w4-rd" id="s14w4-r2"></span></div>
+<div class="s14w4-box"><span>dropped share</span><span class="s14w4-rd" id="s14w4-r3"></span></div>
+<div class="s14w4-box"><span>slots reserved</span><span class="s14w4-rd" id="s14w4-r4"></span></div>
+</div>
+
+<p class="s14w4-note" id="s14w4-note"></p>
+</main>
+
+<script>
+(function(){
+'use strict';
+var LOAD=[118,96,88,80,74,70,66,62,58,54,50,46,44,42,40,36],E=16,TOT=1024,AVG=TOT/E,AXMAX=140,
+    RED='#dc2626',GREEN='#159447',AMBER='#d97706',CYAN='#0891b2',
+    cf=1;
+function $(i){return document.getElementById('s14w4-'+i);}
+function comma(n){return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+function cfs(v){return v===1?'1.0':(v===2?'2.0':String(v));}
+function build(){
+  var s='',x='',y='',i;
+  for(i=0;i<E;i++){
+    s+='<div class="s14w4-col"><div class="s14w4-kp" id="s14w4-k'+i+'"></div><div class="s14w4-dp" id="s14w4-d'+i+'"></div><i class="s14w4-bn" id="s14w4-n'+i+'"></i></div>';
+    x+='<i>E'+i+'</i>';
+  }
+  for(i=0;i<=7;i++){y+='<i style="bottom:'+(i*20/AXMAX*100)+'%">'+(i*20)+'</i>';}
+  $('cols').innerHTML=s;$('xl').innerHTML=x;$('yax').innerHTML=y;
+}
+function pct(v){return v/AXMAX*100;}
+function draw(){
+  var dropless=cf===0,cap=dropless?Infinity:Math.floor(TOT/E*cf),drop=0,i,kept,d,share,slots,col,
+      over=[];
+  for(i=0;i<E;i++){
+    kept=Math.min(LOAD[i],cap);d=LOAD[i]-kept;drop+=d;
+    if(d>0)over.push(i);
+    $('k'+i).style.height=pct(kept)+'%';
+    $('d'+i).style.bottom=pct(kept)+'%';
+    $('d'+i).style.height=pct(d)+'%';
+    $('k'+i).style.borderRadius=d>0?'0':'4px 4px 0 0';
+    $('n'+i).style.bottom='calc('+pct(LOAD[i])+'% + 3px)';
+    $('n'+i).innerHTML=LOAD[i]+(d>0?' <span style="color:'+RED+'">&minus;'+d+'</span>':'');
+  }
+  share=drop/TOT*100;
+  col=drop===0?GREEN:(share<5?AMBER:RED);
+  if(dropless){
+    $('cap').hidden=true;$('capl').hidden=true;
+    $('h2').textContent='tokens per expert, dropless';
+    $('r1').innerHTML='<b>no limit</b>, each expert takes its full load';
+    slots=TOT;
+    $('r4').innerHTML='<b>'+comma(slots)+'</b> = sum of loads = 1.00 &times; 1,024';
+  }else{
+    $('cap').hidden=false;$('capl').hidden=false;
+    $('cap').style.bottom=pct(cap)+'%';
+    $('capl').style.bottom=pct(cap)+'%';
+    $('capl').textContent='capacity '+cap;
+    $('h2').textContent='tokens per expert, capacity factor '+cfs(cf);
+    $('r1').innerHTML='<b>'+cap+'</b> = floor(1,024 / 16 &times; '+cfs(cf)+')';
+    slots=E*cap;
+    $('r4').innerHTML='<b>'+comma(slots)+'</b> = 16 &times; '+cap+' = '+(slots/TOT).toFixed(2)+' &times; 1,024';
+  }
+  $('r2').innerHTML='<b style="color:'+col+'">'+drop+'</b> = '+(drop?'sum of (load &minus; '+cap+') over full experts':'no expert exceeds its slots');
+  $('r3').innerHTML='<b style="color:'+col+'">'+share.toFixed(1)+'%</b> = '+drop+' / 1,024';
+  var t;
+  if(dropless){
+    t='<span style="color:'+GREEN+'">Dropless routing processes all 1,024 assignments, and the size of each expert\'s work changes from batch to batch.</span>';
+  }else if(drop>0){
+    t='<span style="color:'+RED+'">'+over.length+(over.length===1?' expert is':' experts are')+' over capacity.</span> A dropped token skips the expert and continues through the residual connection.';
+  }else{
+    t='<span style="color:'+GREEN+'">Every expert fits under its '+cap+' slots, and '+comma(slots-TOT)+' reserved slots stay empty.</span> A dropped token would skip the expert and continue through the residual connection.';
+  }
+  $('note').innerHTML=t;
+}
+function marks(){
+  Array.prototype.forEach.call(document.querySelectorAll('.s14w4-q'),function(b){b.classList.toggle('on',+b.getAttribute('data-v')===cf);});
+}
+Array.prototype.forEach.call(document.querySelectorAll('.s14w4-q'),function(b){
+  b.addEventListener('click',function(){cf=+b.getAttribute('data-v');marks();draw();});
+});
+build();marks();draw();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

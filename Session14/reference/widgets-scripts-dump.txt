@@ -1,0 +1,975 @@
+=== widget_1_router.html ===
+
+(function(){
+'use strict';
+var TOK=[
+  [2.0,0.5,1.2,-0.3,0.9,1.8,-1.0,0.1],
+  [-0.4,0.8,0.2,2.3,-0.6,0.3,1.1,-0.2],
+  [0.3,-0.5,1.1,0.6,0.2,-0.8,0.9,1.6]
+],
+LMIN=-1.5,LMAX=2.5,CYAN='#0891b2',GREY='#cbd5e1',VIO='#7c3aed',LVIO='#c4b5fd',GREEN='#159447',
+tok=0,fn='softmax',k=2;
+function $(i){return document.getElementById('s14w1-'+i);}
+function f1(v){return v.toFixed(1);}
+function f2(v){return v.toFixed(2);}
+function f3(v){return v.toFixed(3);}
+function ex(v){return 'e^'+(v<0?'&minus;':'')+f1(Math.abs(v));}
+function scores(l){
+  var i,s=0,e=[],o=[];
+  if(fn==='softmax'){
+    for(i=0;i<8;i++){e.push(Math.exp(l[i]));s+=e[i];}
+    for(i=0;i<8;i++){o.push(e[i]/s);}
+    return {sc:o,den:s};
+  }
+  for(i=0;i<8;i++){o.push(1/(1+Math.exp(-l[i])));}
+  return {sc:o,den:0};
+}
+function topk(sc){
+  var idx=[0,1,2,3,4,5,6,7];
+  idx.sort(function(a,b){return sc[b]-sc[a];});
+  return idx.slice(0,k);
+}
+function build(){
+  var s='<div></div>',i;
+  for(i=0;i<8;i++){s+='<div class="s14w1-eh" id="s14w1-eh'+i+'">expert '+i+'</div>';}
+  s+='<div class="s14w1-rl">logit<small>one number per expert</small></div>';
+  for(i=0;i<8;i++){s+='<div class="s14w1-tk s14w1-t1" id="s14w1-ta'+i+'"><div class="s14w1-z" style="top:'+((LMAX/(LMAX-LMIN))*100)+'%"></div><div class="s14w1-b" id="s14w1-ba'+i+'"></div></div>';}
+  s+='<div></div>';
+  for(i=0;i<8;i++){s+='<div class="s14w1-v" id="s14w1-va'+i+'"></div>';}
+  s+='<div class="s14w1-rl" id="s14w1-sl">score</div>';
+  for(i=0;i<8;i++){s+='<div class="s14w1-tk s14w1-t2" id="s14w1-tb'+i+'"><div class="s14w1-b" id="s14w1-bb'+i+'"></div></div>';}
+  s+='<div></div>';
+  for(i=0;i<8;i++){s+='<div class="s14w1-v" id="s14w1-vb'+i+'"></div>';}
+  s+='<div class="s14w1-rl">weight<small>kept scores rescaled to sum 1</small></div>';
+  for(i=0;i<8;i++){s+='<div class="s14w1-tk s14w1-t3" id="s14w1-tc'+i+'"><div class="s14w1-b" id="s14w1-bc'+i+'"></div></div>';}
+  s+='<div></div>';
+  for(i=0;i<8;i++){s+='<div class="s14w1-v" id="s14w1-vc'+i+'"></div>';}
+  $('g').innerHTML=s;
+}
+function draw(){
+  var l=TOK[tok],r=scores(l),sc=r.sc,kp=topk(sc),on={},i,sum=0,ks=0,top=kp[0],rng=LMAX-LMIN,
+      v,t,h,w,parts=[],lines='',wsum=0;
+  for(i=0;i<kp.length;i++){on[kp[i]]=true;ks+=sc[kp[i]];}
+  for(i=0;i<8;i++){sum+=sc[i];}
+  $('h2').textContent='token '+'ABC'.charAt(tok)+' with '+fn+' scores, keeping the top '+k+(k===1?' expert':' experts');
+  $('sl').innerHTML='score<small>'+(fn==='softmax'?'softmax over all 8 logits':'sigmoid of each logit')+'</small>';
+  for(i=0;i<8;i++){
+    v=l[i];
+    if(v>=0){t=(LMAX-v)/rng*100;h=v/rng*100;}else{t=LMAX/rng*100;h=-v/rng*100;}
+    $('ba'+i).style.top=t+'%';$('ba'+i).style.height=h+'%';
+    $('ba'+i).style.background=on[i]?VIO:LVIO;
+    $('va'+i).textContent=(v<0?'−':'')+f1(Math.abs(v));
+    $('va'+i).className='s14w1-v'+(on[i]?' kp':'');
+    $('bb'+i).style.top=(100-sc[i]*100)+'%';$('bb'+i).style.height=(sc[i]*100)+'%';
+    $('bb'+i).style.background=on[i]?CYAN:GREY;
+    $('vb'+i).textContent=f3(sc[i]);
+    $('vb'+i).className='s14w1-v'+(on[i]?' kp':'');
+    $('tb'+i).className='s14w1-tk s14w1-t2'+(on[i]?' kp':'');
+    $('eh'+i).className='s14w1-eh'+(on[i]?' kp':'');
+    w=on[i]?sc[i]/ks:0;
+    $('bc'+i).style.top=(100-w*100)+'%';$('bc'+i).style.height=(w*100)+'%';
+    $('bc'+i).style.background=GREEN;
+    $('vc'+i).textContent=on[i]?f3(w):'dropped';
+    $('vc'+i).className='s14w1-v'+(on[i]?' kp':'');
+  }
+  $('rs').className='s14w1-rule'+(fn==='softmax'?' on':'');
+  $('rg').className='s14w1-rule'+(fn==='sigmoid'?' on':'');
+
+  if(fn==='softmax'){
+    $('l1').textContent='score of expert '+top+' = e^logit / sum of e^logit over all 8 experts';
+    $('r1').innerHTML='<b>'+f3(sc[top])+'</b> = '+ex(l[top])+' / '+f2(r.den);
+  }else{
+    $('l1').textContent='score of expert '+top+' = 1 / (1 + e^(−logit))';
+    $('r1').innerHTML='<b>'+f3(sc[top])+'</b> = 1 / (1 + '+ex(-l[top])+')';
+  }
+  for(i=0;i<8;i++){parts.push(f3(sc[i]));}
+  $('l2').textContent=fn==='softmax'?'sum of all 8 softmax scores':'sum of all 8 sigmoid scores';
+  $('r2').innerHTML='<b>'+f3(sum)+'</b> = '+parts.join(' + ');
+
+  parts=[];
+  for(i=0;i<kp.length;i++){parts.push(f3(sc[kp[i]]));}
+  var den=kp.length===1?parts[0]:'('+parts.join(' + ')+')';
+  for(i=0;i<kp.length;i++){
+    w=sc[kp[i]]/ks;wsum+=w;
+    lines+='<span class="s14w1-rd">expert '+kp[i]+': <b>'+f3(w)+'</b> = '+f3(sc[kp[i]])+' / '+den+'</span>';
+  }
+  lines+='<span class="s14w1-rd">sum of kept weights: <b>'+f3(wsum)+'</b></span>';
+  $('r3').innerHTML=lines;
+}
+function marks(){
+  Array.prototype.forEach.call(document.querySelectorAll('.s14w1-t'),function(b){b.classList.toggle('on',+b.getAttribute('data-v')===tok);});
+  Array.prototype.forEach.call(document.querySelectorAll('.s14w1-f'),function(b){b.classList.toggle('on',b.getAttribute('data-v')===fn);});
+  Array.prototype.forEach.call(document.querySelectorAll('.s14w1-n'),function(b){b.classList.toggle('on',+b.getAttribute('data-v')===k);});
+}
+Array.prototype.forEach.call(document.querySelectorAll('.s14w1-t'),function(b){
+  b.addEventListener('click',function(){tok=+b.getAttribute('data-v');marks();draw();});
+});
+Array.prototype.forEach.call(document.querySelectorAll('.s14w1-f'),function(b){
+  b.addEventListener('click',function(){fn=b.getAttribute('data-v');marks();draw();});
+});
+Array.prototype.forEach.call(document.querySelectorAll('.s14w1-n'),function(b){
+  b.addEventListener('click',function(){k=+b.getAttribute('data-v');marks();draw();});
+});
+build();marks();draw();
+}());
+
+
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+
+
+=== widget_2_active_total.html ===
+
+(function(){
+'use strict';
+var L=48,ATT=18874624,EXP=3*2048*768,HID=2048,NORM=4096,ONCE=622329856+2048,
+    BPW=16,GIB=1073741824,CARD=167.6,AXMAX=64e9,E=128,k=8;
+function $(i){return document.getElementById('s14w2-'+i);}
+function f1(v){return v.toFixed(1);}
+function f2(v){return v.toFixed(2);}
+function comma(n){return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+function params(nE,used){return L*(ATT+used*EXP+HID*nE+NORM)+ONCE;}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function pick(nE,n){
+  var r=mulberry32(nE*1000+n*7+14),a=[],i,j,t,o={};
+  for(i=0;i<nE;i++){a.push(i);}
+  for(i=0;i<n;i++){j=i+Math.floor(r()*(nE-i));t=a[i];a[i]=a[j];a[j]=t;o[a[i]]=true;}
+  return o;
+}
+function axis(){
+  var s='',i;
+  for(i=0;i<=4;i++){s+='<i style="left:'+(i/4*100)+'%">'+(i*16)+' B</i>';}
+  $('ax').innerHTML=s;
+}
+function draw(){
+  var T=params(E,E),A=params(E,k),lit=pick(E,k),s='',i,st,wT,wA,cards;
+  for(i=0;i<E;i++){s+='<div class="s14w2-sq'+(lit[i]?' lit':'')+'"></div>';}
+  $('grid').innerHTML=s;
+  $('grid').setAttribute('aria-label','Grid of '+E+' experts in one layer with '+k+' lit');
+  $('h2').textContent='one layer: '+E+' experts, '+k+' used by this token';
+  $('tag').className='s14w2-tag'+(E===128&&k===8?'':' off');
+  $('cnt').innerHTML='This token uses <b>'+k+' of '+E+'</b> experts in this layer, which is <b>'+f1(k/E*100)+'%</b> of the expert weights.';
+
+  wT=T/AXMAX*100;wA=A/AXMAX*100;
+  $('ft').style.width=wT+'%';if(wT>80){$('vt').style.left=(wT-9)+'%';$('vt').style.color='#fff';}else{$('vt').style.left=wT+'%';$('vt').style.color='';}$('vt').textContent=f2(T/1e9)+' B';
+  $('fa').style.width=wA+'%';$('va').style.left=wA+'%';$('va').textContent=f2(A/1e9)+' B';
+
+  $('r1').innerHTML='<b>'+f2(T/1e9)+' B</b> = 48 &times; (18.87M + '+E+' &times; 4.719M + 2,048 &times; '+E+' + 4,096) + 622.33M';
+  $('r2').innerHTML='<b>'+f2(A/1e9)+' B</b> = 48 &times; (18.87M + '+k+' &times; 4.719M + 2,048 &times; '+E+' + 4,096) + 622.33M';
+  $('r3').innerHTML='<b>'+f1(T/A)+'</b> = '+f2(T/1e9)+' B / '+f2(A/1e9)+' B';
+  $('r4').innerHTML='<b>'+f1(6*A/1e9)+' GFLOP</b> = 6 &times; '+f2(A/1e9)+' B';
+  st=T*BPW/GIB;
+  $('r5').innerHTML='<b>'+f1(st)+' GiB</b> = '+f2(T/1e9)+' B &times; 16 / 2^30';
+  cards=Math.ceil(st/CARD);
+  $('fit').innerHTML='B200 cards for the training state: '+cards+' = ceil('+f1(st)+' GiB / 167.6 GiB) = ceil('+f2(st/CARD)+')';
+}
+function marks(){
+  Array.prototype.forEach.call(document.querySelectorAll('.s14w2-e'),function(b){b.classList.toggle('on',+b.getAttribute('data-v')===E);});
+  Array.prototype.forEach.call(document.querySelectorAll('.s14w2-q'),function(b){b.classList.toggle('on',+b.getAttribute('data-v')===k);});
+}
+Array.prototype.forEach.call(document.querySelectorAll('.s14w2-e'),function(b){
+  b.addEventListener('click',function(){E=+b.getAttribute('data-v');marks();draw();});
+});
+Array.prototype.forEach.call(document.querySelectorAll('.s14w2-q'),function(b){
+  b.addEventListener('click',function(){k=+b.getAttribute('data-v');marks();draw();});
+});
+axis();marks();draw();
+}());
+
+
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+
+
+=== widget_3_collapse.html ===
+
+(function(){
+'use strict';
+var E=16,T=256,K=2,WIN=20,END=300,MEAN=T*K/E,AXMAX=256,SEED=14,
+    SC=0.5,SN=1,AL=0.08,DC=0.01,LAM=0.3,GAM=0.02,
+    CYAN='#0891b2',RED='#dc2626',GREEN='#159447',AMBER='#d97706',
+    NAMES=['no balancing','auxiliary loss','bias method'],
+    mode=0,sim=null,timer=0,running=false,
+    reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function $(i){return document.getElementById('s14w3-'+i);}
+function rng(seed){var a=seed>>>0;return function(){a=(a+0x6D2B79F5)>>>0;var t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;};}
+function make(m){
+  var r=rng(SEED),spare=null,c=[],s=[],b=[],hist=[],i,st;
+  function nrm(){
+    if(spare!==null){var v=spare;spare=null;return v;}
+    var u=r()||1e-12,w=r(),q=Math.sqrt(-2*Math.log(u));
+    spare=q*Math.sin(6.283185307179586*w);return q*Math.cos(6.283185307179586*w);
+  }
+  for(i=0;i<E;i++){c.push(SC*nrm());s.push(0);b.push(0);}
+  st={step:0,hist:hist};
+  st.adv=function(){
+    var load=[],t,j,a1,a2,v1,v2,x,f;
+    for(j=0;j<E;j++)load.push(0);
+    for(t=0;t<T;t++){
+      a1=-1;a2=-1;v1=-1e9;v2=-1e9;
+      for(j=0;j<E;j++){
+        x=s[j]+c[j]+SN*nrm()+(m===2?b[j]:0);
+        if(x>v1){v2=v1;a2=a1;v1=x;a1=j;}else if(x>v2){v2=x;a2=j;}
+      }
+      load[a1]++;load[a2]++;
+    }
+    for(j=0;j<E;j++){
+      f=load[j]/(T*K);
+      s[j]+=AL*load[j]/T-DC*s[j];
+      if(m===1)s[j]-=LAM*(f-1/E);
+    }
+    if(m===2){for(j=0;j<E;j++){b[j]+=GAM*Math.sign(MEAN-load[j]);}}
+    hist.push(load);if(hist.length>WIN)hist.shift();
+    st.step++;
+  };
+  return st;
+}
+function avg(){
+  var a=[],j,k,h=sim.hist;
+  for(j=0;j<E;j++){a.push(0);for(k=0;k<h.length;k++)a[j]+=h[k][j]/h.length;}
+  return a;
+}
+function deadList(){
+  var d=[],j,k,h=sim.hist;
+  if(!h.length)return d;
+  for(j=0;j<E;j++){var z=true;for(k=0;k<h.length;k++){if(h[k][j]>0){z=false;break;}}if(z)d.push(j);}
+  return d;
+}
+function build(){
+  var s='',x='',y='',i;
+  for(i=0;i<E;i++){
+    s+='<div class="s14w3-col"><div class="s14w3-bv" id="s14w3-b'+i+'"></div><i class="s14w3-bn" id="s14w3-n'+i+'"></i></div>';
+    x+='<i id="s14w3-x'+i+'">E'+i+'</i>';
+  }
+  for(i=0;i<=4;i++){y+='<i style="bottom:'+(i*25)+'%">'+(i*64)+'</i>';}
+  y+='<i style="bottom:'+(MEAN/AXMAX*100)+'%;color:#7c3aed;font-weight:800">32</i>';
+  $('cols').innerHTML=s;$('xl').innerHTML=x;$('yax').innerHTML=y;
+  $('even').style.bottom=(MEAN/AXMAX*100)+'%';
+}
+function draw(){
+  var a=avg(),dl=deadList(),dead={},mx=0,j,h,has=sim.hist.length>0,mv,col;
+  dl.forEach(function(d){dead[d]=1;});
+  for(j=0;j<E;j++){
+    mx=Math.max(mx,a[j]);
+    h=Math.min(100,a[j]/AXMAX*100);
+    $('b'+j).style.height=h+'%';
+    $('b'+j).style.background=dead[j]?RED:CYAN;
+    $('n'+j).style.bottom='calc('+h+'% + 3px)';
+    $('n'+j).textContent=has?(dead[j]?'0':a[j].toFixed(0)):'';
+    $('n'+j).style.color=dead[j]?RED:'#152033';
+    $('x'+j).className=dead[j]?'dead':'';
+  }
+  $('h2').textContent='load per expert, '+NAMES[mode];
+  $('r1').innerHTML='<b>'+sim.step+'</b> of '+END+' steps';
+  $('r2').innerHTML='<b style="color:'+(dl.length?RED:GREEN)+'">'+dl.length+'</b> = experts with 0 tokens in the last '+WIN+' steps';
+  if(has){
+    mv=(mx-MEAN)/MEAN;col=mv<0.3?GREEN:(mv<=1?AMBER:RED);
+    $('r3').innerHTML='<b style="color:'+col+'">'+mv.toFixed(2)+'</b> = ('+mx.toFixed(1)+' &minus; 32) / 32';
+  }else{
+    $('r3').innerHTML='<b>0.00</b> = (max load &minus; 32) / 32';
+  }
+  rule();
+  note(dl.length,has?mv:0);
+  $('step').disabled=running||sim.step>=END;
+  $('run').classList.toggle('on',running);
+}
+function rule(){
+  var base='s_i &larr; s_i + 0.08 &times; load_i / 256 &minus; 0.01 &times; s_i <span>(an expert that gets tokens scores higher)</span>';
+  if(mode===0){
+    $('rule').innerHTML='choose top-2 of s_i + noise<br>'+base;
+  }else if(mode===1){
+    $('rule').innerHTML='choose top-2 of s_i + noise<br>'+base+'<br>s_i &larr; s_i &minus; &lambda; &times; (share_i &minus; 1/16) <span>with &lambda; = 0.3, the gradient of the auxiliary loss</span>';
+  }else{
+    $('rule').innerHTML='choose top-2 of s_i + b_i + noise <span>(the bias is used only for choosing)</span><br>'+base+'<br>b_i &larr; b_i + &gamma; &times; sign(mean load &minus; load_i) <span>with &gamma; = 0.02 here. Real training runs use 0.001 over many thousands of steps.</span>';
+  }
+}
+function note(d,mv){
+  var t='';
+  if(sim.step===0){t='Press Run to train for '+END+' steps, or Step to advance one step at a time.';}
+  else if(sim.step<END){t='The loads are still moving at step '+sim.step+'.';}
+  else if(mode===0){t='<span style="color:'+RED+'">Without balancing, '+d+' of 16 experts receive no tokens and stop learning.</span>';}
+  else if(mode===1){t='<span style="color:'+AMBER+'">The auxiliary loss keeps every expert alive, and the busiest expert still takes '+(mv*100).toFixed(0)+'% more than the even share.</span>';}
+  else{t='<span style="color:'+GREEN+'">The bias method keeps every expert alive, and the busiest expert sits within '+(mv*100).toFixed(0)+'% of the even share.</span>';}
+  $('note').innerHTML=t;
+}
+function stop(){if(timer){cancelAnimationFrame(timer);timer=0;}running=false;}
+function reset(){stop();sim=make(mode);draw();}
+function frame(){
+  var n=0;
+  while(n<4&&sim.step<END){sim.adv();n++;}
+  if(sim.step>=END){running=false;timer=0;draw();return;}
+  draw();
+  timer=requestAnimationFrame(frame);
+}
+function run(){
+  if(running)return;
+  if(sim.step>=END)sim=make(mode);
+  if(reduce){while(sim.step<END)sim.adv();draw();return;}
+  running=true;draw();
+  timer=requestAnimationFrame(frame);
+}
+function marks(){
+  Array.prototype.forEach.call(document.querySelectorAll('.s14w3-m'),function(b){b.classList.toggle('on',+b.getAttribute('data-v')===mode);});
+}
+Array.prototype.forEach.call(document.querySelectorAll('.s14w3-m'),function(b){
+  b.addEventListener('click',function(){mode=+b.getAttribute('data-v');marks();reset();});
+});
+$('step').addEventListener('click',function(){if(!running&&sim.step<END){sim.adv();draw();}});
+$('run').addEventListener('click',run);
+$('reset').addEventListener('click',reset);
+build();marks();reset();
+}());
+
+
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+
+
+=== widget_4_capacity.html ===
+
+(function(){
+'use strict';
+var LOAD=[118,96,88,80,74,70,66,62,58,54,50,46,44,42,40,36],E=16,TOT=1024,AVG=TOT/E,AXMAX=140,
+    RED='#dc2626',GREEN='#159447',AMBER='#d97706',CYAN='#0891b2',
+    cf=1;
+function $(i){return document.getElementById('s14w4-'+i);}
+function comma(n){return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+function cfs(v){return v===1?'1.0':(v===2?'2.0':String(v));}
+function build(){
+  var s='',x='',y='',i;
+  for(i=0;i<E;i++){
+    s+='<div class="s14w4-col"><div class="s14w4-kp" id="s14w4-k'+i+'"></div><div class="s14w4-dp" id="s14w4-d'+i+'"></div><i class="s14w4-bn" id="s14w4-n'+i+'"></i></div>';
+    x+='<i>E'+i+'</i>';
+  }
+  for(i=0;i<=7;i++){y+='<i style="bottom:'+(i*20/AXMAX*100)+'%">'+(i*20)+'</i>';}
+  $('cols').innerHTML=s;$('xl').innerHTML=x;$('yax').innerHTML=y;
+}
+function pct(v){return v/AXMAX*100;}
+function draw(){
+  var dropless=cf===0,cap=dropless?Infinity:Math.floor(TOT/E*cf),drop=0,i,kept,d,share,slots,col,
+      over=[];
+  for(i=0;i<E;i++){
+    kept=Math.min(LOAD[i],cap);d=LOAD[i]-kept;drop+=d;
+    if(d>0)over.push(i);
+    $('k'+i).style.height=pct(kept)+'%';
+    $('d'+i).style.bottom=pct(kept)+'%';
+    $('d'+i).style.height=pct(d)+'%';
+    $('k'+i).style.borderRadius=d>0?'0':'4px 4px 0 0';
+    $('n'+i).style.bottom='calc('+pct(LOAD[i])+'% + 3px)';
+    $('n'+i).innerHTML=LOAD[i]+(d>0?' <span style="color:'+RED+'">&minus;'+d+'</span>':'');
+  }
+  share=drop/TOT*100;
+  col=drop===0?GREEN:(share<5?AMBER:RED);
+  if(dropless){
+    $('cap').hidden=true;$('capl').hidden=true;
+    $('h2').textContent='tokens per expert, dropless';
+    $('r1').innerHTML='<b>no limit</b>, each expert takes its full load';
+    slots=TOT;
+    $('r4').innerHTML='<b>'+comma(slots)+'</b> = sum of loads = 1.00 &times; 1,024';
+  }else{
+    $('cap').hidden=false;$('capl').hidden=false;
+    $('cap').style.bottom=pct(cap)+'%';
+    $('capl').style.bottom=pct(cap)+'%';
+    $('capl').textContent='capacity '+cap;
+    $('h2').textContent='tokens per expert, capacity factor '+cfs(cf);
+    $('r1').innerHTML='<b>'+cap+'</b> = floor(1,024 / 16 &times; '+cfs(cf)+')';
+    slots=E*cap;
+    $('r4').innerHTML='<b>'+comma(slots)+'</b> = 16 &times; '+cap+' = '+(slots/TOT).toFixed(2)+' &times; 1,024';
+  }
+  $('r2').innerHTML='<b style="color:'+col+'">'+drop+'</b> = '+(drop?'sum of (load &minus; '+cap+') over full experts':'no expert exceeds its slots');
+  $('r3').innerHTML='<b style="color:'+col+'">'+share.toFixed(1)+'%</b> = '+drop+' / 1,024';
+  var t;
+  if(dropless){
+    t='<span style="color:'+GREEN+'">Dropless routing processes all 1,024 assignments, and the size of each expert\'s work changes from batch to batch.</span>';
+  }else if(drop>0){
+    t='<span style="color:'+RED+'">'+over.length+(over.length===1?' expert is':' experts are')+' over capacity.</span> A dropped token skips the expert and continues through the residual connection.';
+  }else{
+    t='<span style="color:'+GREEN+'">Every expert fits under its '+cap+' slots, and '+comma(slots-TOT)+' reserved slots stay empty.</span> A dropped token would skip the expert and continue through the residual connection.';
+  }
+  $('note').innerHTML=t;
+}
+function marks(){
+  Array.prototype.forEach.call(document.querySelectorAll('.s14w4-q'),function(b){b.classList.toggle('on',+b.getAttribute('data-v')===cf);});
+}
+Array.prototype.forEach.call(document.querySelectorAll('.s14w4-q'),function(b){
+  b.addEventListener('click',function(){cf=+b.getAttribute('data-v');marks();draw();});
+});
+build();marks();draw();
+}());
+
+
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+
+
+=== widget_5_scope.html ===
+
+(function(){
+'use strict';
+var E=16,EVEN=100/E,
+    SUBJ=[{n:'code',w:0.5},{n:'maths',w:0.25},{n:'prose',w:0.25}],
+    /* whole-batch rows: maths leans on experts 1-4, prose on 5-8, code on 9-16.
+       every value is a multiple of 0.25, so the sums below are exact. */
+    GLOBAL=[
+      [1,1.5,2,2.5, 1,1.5,2,2.5, 11.5,11.5,11,11,10.5,10.5,10,10],
+      [22,21,20,19, 1,1,1,1, 1,1,1.5,1.5,2,2,2.5,2.5],
+      [1,1,1,1, 22,21,20,19, 1,1,1.5,1.5,2,2,2.5,2.5]
+    ],
+    MICRO=[0,1,2].map(function(){var r=[],j;for(j=0;j<E;j++)r.push(EVEN);return r;}),
+    mode='micro';
+function $(i){return document.getElementById('s14w5-'+i);}
+function p2(v){return (+v.toFixed(2))+'%';}
+/* check the whole-batch table once: rows sum to 100, every expert load equals 100/16 */
+(function(){
+  var i,j,s,l;
+  for(i=0;i<3;i++){s=0;for(j=0;j<E;j++)s+=GLOBAL[i][j];if(Math.abs(s-100)>1e-9)throw new Error('row '+i+' sums to '+s);}
+  for(j=0;j<E;j++){l=0;for(i=0;i<3;i++)l+=SUBJ[i].w*GLOBAL[i][j];if(Math.abs(l-EVEN)>1e-9)throw new Error('expert '+j+' load '+l);}
+}());
+function color(v){
+  var t=Math.max(0,Math.min(1,v/25)),stops=[[244,247,251],[165,216,230],[8,145,178],[22,78,99]],pos=[0,0.25,0.6,1],k=0,a,b,u;
+  while(k<pos.length-2&&t>pos[k+1])k++;
+  a=stops[k];b=stops[k+1];u=(t-pos[k])/(pos[k+1]-pos[k]);
+  return 'rgb('+[0,1,2].map(function(c){return Math.round(a[c]+(b[c]-a[c])*u);}).join(',')+')';
+}
+function draw(){
+  var T=mode==='micro'?MICRO:GLOBAL,h='',i,j,mx=[],arg=[],load=[],v,maxL,s;
+  for(i=0;i<3;i++){mx.push(0);arg.push(0);for(j=0;j<E;j++){if(T[i][j]>mx[i]+1e-9){mx[i]=T[i][j];arg[i]=j;}}}
+  for(j=0;j<E;j++){s=0;for(i=0;i<3;i++)s+=SUBJ[i].w*T[i][j];load.push(s);}
+  h+='<div></div>';
+  for(j=0;j<E;j++)h+='<div class="s14w5-ch">E'+(j+1)+'</div>';
+  for(i=0;i<3;i++){
+    h+='<div class="s14w5-rl">'+SUBJ[i].n+'<small>'+(SUBJ[i].w*100)+'% of the batch</small></div>';
+    for(j=0;j<E;j++){
+      v=T[i][j];
+      h+='<div class="s14w5-c'+(mode==='global'&&j===arg[i]?' mx':'')+'" style="background:'+color(v)+';color:'+(v>9?'#fff':'#35506b')+'">'+(+v.toFixed(2))+'</div>';
+    }
+  }
+  h+='<div class="s14w5-rl ldl">total load<small>share of all tokens</small></div>';
+  for(j=0;j<E;j++)h+='<div class="s14w5-ld">'+(+load[j].toFixed(2))+'</div>';
+  $('hm').innerHTML=h;
+  $('h2').textContent=mode==='micro'?'share of each subject per expert, balanced over each micro-batch':'share of each subject per expert, balanced over the whole batch';
+  $('r1').innerHTML='code <b>'+p2(mx[0])+'</b> &middot; maths <b>'+p2(mx[1])+'</b> &middot; prose <b>'+p2(mx[2])+'</b>';
+  maxL=Math.max.apply(null,load);
+  $('r2').innerHTML='<b>'+p2(maxL)+'</b> = 0.5 &times; code + 0.25 &times; maths + 0.25 &times; prose'+(Math.min.apply(null,load)===maxL?', all 16 experts':'');
+  $('r3').innerHTML='<b style="color:var(--green)">'+(+(maxL/EVEN-1).toFixed(4))+'</b> = '+p2(maxL)+' / '+p2(EVEN)+' &minus; 1';
+  if(mode==='micro'){
+    $('note').innerHTML='Every micro-batch must spread its tokens evenly, so <b>every expert takes 6.25% of every subject</b>. '+
+      '<span style="color:var(--green)">Both modes are perfectly balanced overall, and only the whole-batch mode lets experts divide the work by subject.</span>';
+  }else{
+    $('note').innerHTML='Experts E1 to E4 take '+p2(GLOBAL[1][0]+GLOBAL[1][1]+GLOBAL[1][2]+GLOBAL[1][3])+' of the maths tokens, and E5 to E8 take '+
+      p2(GLOBAL[2][4]+GLOBAL[2][5]+GLOBAL[2][6]+GLOBAL[2][7])+' of the prose tokens. '+
+      '<span style="color:var(--green)">Both modes are perfectly balanced overall, and only the whole-batch mode lets experts divide the work by subject.</span>';
+  }
+}
+function marks(){
+  Array.prototype.forEach.call(document.querySelectorAll('.s14w5-q'),function(b){b.classList.toggle('on',b.getAttribute('data-v')===mode);});
+}
+Array.prototype.forEach.call(document.querySelectorAll('.s14w5-q'),function(b){
+  b.addEventListener('click',function(){mode=b.getAttribute('data-v');marks();draw();});
+});
+marks();draw();
+}());
+
+
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+
+
+=== widget_6_growth.html ===
+
+(function(){
+'use strict';
+var LET='abcdefgh'.split(''),
+    SC=['#0891b2','#7c3aed','#d97706','#159447','#dc2626','#2563eb','#db2777','#0d9488'],
+    FAM=[{n:'A',c:'#0891b2'},{n:'B',c:'#7c3aed'},{n:'C',c:'#d97706'},{n:'D',c:'#159447'}],
+    STEPS=200,SOFT=100,TOK=128,WIN=20,E=24,SUB=12,
+    stage='dense',method='copy',routing='hard',
+    sim=null,timer=null;
+function $(i){return document.getElementById('s14w6-'+i);}
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function gauss(r){var u=r()||1e-9,v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+function half(r){var a=[0,1,2,3,4,5,6,7],i,j,t;for(i=7;i>0;i--){j=Math.floor(r()*(i+1));t=a[i];a[i]=a[j];a[j]=t;}return a.slice(0,4).sort();}
+function comma(n){return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+function shade(hex,k){ /* k in 0..5: darker to lighter clone of the same family */
+  var n=parseInt(hex.slice(1),16),r=n>>16,g=n>>8&255,b=n&255,t=k*0.11;
+  return 'rgb('+Math.round(r+(255-r)*t)+','+Math.round(g+(255-g)*t)+','+Math.round(b+(255-b)*t)+')';
+}
+
+/* ---------- stage 1: dense layer to experts ---------- */
+var PART=(function(){var r=mulberry(7);return [half(r),half(r),half(r),half(r)];}()),
+    DROP=(function(){var r=mulberry(1007);return [half(r),half(r),half(r),half(r)];}());
+function slice(k,state){
+  if(state==='empty')return '<div class="s14w6-sl empty">'+LET[k]+'</div>';
+  return '<div class="s14w6-sl'+(state==='new'?' new':'')+'" style="background-color:'+SC[k]+'">'+(state==='new'?'new':LET[k])+'</div>';
+}
+function drawSlices(){
+  var h='',e,k,held,missed=[];
+  h+='<div class="s14w6-row dense"><div class="s14w6-rn">dense layer<small>8 slices of the hidden units</small></div>';
+  for(k=0;k<8;k++)h+=slice(k,'full');
+  h+='</div><div class="s14w6-gap"></div>';
+  for(e=0;e<4;e++){
+    h+='<div class="s14w6-row"><div class="s14w6-rn">expert '+(e+1)+'<small>'+
+      (method==='copy'?'all 8 slices':method==='partition'?'slices '+PART[e].map(function(i){return LET[i];}).join(', '):'slices '+DROP[e].map(function(i){return LET[i];}).join(', ')+' redrawn')+'</small></div>';
+    for(k=0;k<8;k++){
+      if(method==='copy')h+=slice(k,'full');
+      else if(method==='partition')h+=slice(k,PART[e].indexOf(k)>=0?'full':'empty');
+      else h+=slice(k,DROP[e].indexOf(k)>=0?'new':'full');
+    }
+    h+='</div>';
+  }
+  if(method==='partition'){
+    h+='<div class="s14w6-row"><div class="s14w6-rn">shared expert<small>all 8 slices, used by every token</small></div>';
+    for(k=0;k<8;k++)h+=slice(k,'full');
+    h+='</div>';
+  }
+  $('slices').innerHTML=h;
+  for(k=0;k<8;k++){held=false;for(e=0;e<4;e++)if(PART[e].indexOf(k)>=0)held=true;if(!held)missed.push(LET[k]);}
+  $('h1').textContent=method==='copy'?'copy: every expert starts as the dense layer':method==='partition'?'partition: every expert takes a random half of the slices':'drop: every expert is a copy with half of it redrawn';
+  $('leg1').innerHTML=method==='copy'?'<span>Each coloured box is <b>one slice</b> of the dense layer, a block of its hidden units.</span><span>Four identical experts get identical gradients at the start.</span>':
+    method==='partition'?'<span>A dashed box is a slice <b>this expert does not hold</b>.</span><span>The halves are drawn with a fixed seed, so they overlap.</span>':
+    '<span>A hatched box marks a slice with <b>fresh random weights</b>.</span><span>Each expert redraws a different half.</span>';
+  if(method==='copy'){
+    $('l1').textContent='slices each expert holds';$('v1').innerHTML='<b>8</b> = 8 &times; 1';
+    $('l2').textContent='experts that differ from expert 1';$('v2').innerHTML='<b>0</b> of 3';
+    $('l3').textContent='starting point';$('v3').innerHTML='<b style="color:var(--amber)">experts start identical</b>';
+    $('note').innerHTML='The router sees four equal experts, so the experts need something else to make them grow apart.';
+  }else if(method==='partition'){
+    $('l1').textContent='chance a slice is missed by all 4 experts';$('v1').innerHTML='<b>'+(+(Math.pow(1-4/8,4)*100).toFixed(2))+'%</b> = (1 &minus; 4/8)^4';
+    $('l2').textContent='slices missed in this draw';$('v2').innerHTML='<b>'+missed.length+'</b> of 8'+(missed.length?', slice '+missed.join(', '):'');
+    $('l3').textContent='with 20 experts';$('v3').innerHTML='<b>1 in '+comma(Math.pow(2,20))+'</b> = (1/2)^20';
+    $('note').innerHTML='In this draw slice '+missed.join(', ')+' is held by no routed expert, and the shared expert still carries it. '+
+      'With 20 experts the chance of a missed slice is (1/2)^20, about one in a million, as in the Lightning LM 5B model.';
+  }else{
+    $('l1').textContent='slices each expert keeps';$('v1').innerHTML='<b>4</b> = 8 &times; (1 &minus; 0.5)';
+    $('l2').textContent='slices each expert redraws';$('v2').innerHTML='<b>4</b> = 8 &times; 0.5';
+    $('l3').textContent='drop ratio';$('v3').innerHTML='<b style="color:var(--violet)">half of each expert redrawn, r = 0.5</b>';
+    $('note').innerHTML='Each expert keeps half of what the dense layer learned, and its redrawn half gives it a different start from the other three.';
+  }
+}
+
+/* ---------- stage 2: few experts to many (simulation) ---------- */
+function newSim(prob){
+  var r=mulberry(7),c=[],s=[],e;
+  for(e=0;e<E;e++){c.push(gauss(r)*0.02);s.push(new Array(SUB).fill(0));}
+  return {r:r,c:c,s:s,prob:prob,step:0,hist:[]};
+}
+function stepSim(S){
+  var r=S.r,n=[],cnt=new Array(E).fill(0),i,e,k,f,sub,sc,pick,soft=S.prob&&S.step<SOFT,w,j,tot,u,idx;
+  for(e=0;e<E;e++)n.push(new Array(SUB).fill(0));
+  for(i=0;i<TOK;i++){
+    f=Math.floor(r()*4);sub=Math.floor(r()*SUB);sc=[];
+    for(e=0;e<E;e++)sc.push((Math.floor(e/6)===f?3:0)+S.c[e]+S.s[e][sub]+gauss(r)*0.005);
+    pick=[];
+    if(soft){
+      w=sc.map(function(x){return Math.exp(x);});
+      for(j=0;j<2;j++){
+        tot=0;for(e=0;e<E;e++)if(pick.indexOf(e)<0)tot+=w[e];
+        u=r()*tot;
+        for(e=0;e<E;e++){if(pick.indexOf(e)>=0)continue;u-=w[e];if(u<=0)break;}
+        if(e>=E)e=E-1;while(pick.indexOf(e)>=0)e--;
+        pick.push(e);
+      }
+    }else{
+      idx=sc.map(function(x,q){return q;}).sort(function(a,b){return sc[b]-sc[a];});pick=[idx[0],idx[1]];
+    }
+    for(j=0;j<2;j++){n[pick[j]][sub]++;cnt[pick[j]]++;}
+  }
+  for(e=0;e<E;e++)for(k=0;k<SUB;k++)S.s[e][k]=S.s[e][k]*0.98+0.02*n[e][k];
+  S.hist.push(cnt);S.step++;
+}
+function recent(S){
+  var tot=new Array(E).fill(0),from=Math.max(0,S.hist.length-WIN),t,e;
+  for(t=from;t<S.hist.length;t++)for(e=0;e<E;e++)tot[e]+=S.hist[t][e];
+  return tot;
+}
+function drawRouter(){
+  var a='',b='',f,k;
+  for(f=0;f<4;f++)a+='<i style="height:28px;background:'+FAM[f].c+'"></i>';
+  for(f=0;f<4;f++)for(k=0;k<6;k++)b+='<i style="height:'+(k===5?'5px;margin-bottom:5px':'5px')+';background:'+shade(FAM[f].c,k)+'"></i>';
+  $('r4').innerHTML=a;$('r24').innerHTML=b;
+}
+function drawSim(){
+  var S=sim,tot=recent(S),h='',f,k,e,dead=[0,0,0,0],allDead=0,mx=0,ht,measured=S.step>=WIN;
+  for(e=0;e<E;e++)mx=Math.max(mx,tot[e]);
+  mx=Math.max(mx,WIN*TOK*2/12);
+  for(f=0;f<4;f++){
+    var bars='',lab='';
+    for(k=0;k<6;k++){
+      e=f*6+k;ht=S.step?Math.round(tot[e]/mx*100):0;
+      var isDead=measured&&tot[e]===0;
+      if(isDead){dead[f]++;allDead++;}
+      bars+='<div class="s14w6-b" style="height:'+ht+'%;background:'+shade(FAM[f].c,k)+'"></div>';
+      lab+='<i class="'+(isDead?'dead':'')+'">'+(isDead?'dead':(f*6+k+1))+'</i>';
+    }
+    h+='<div class="s14w6-fam"><div class="s14w6-fh" style="color:'+FAM[f].c+'">family '+FAM[f].n+', from expert '+(f+1)+'</div><div class="s14w6-col">'+bars+'</div><div class="s14w6-xl">'+lab+'</div></div>';
+  }
+  $('bars').innerHTML=h;
+  $('prog').style.width=(S.step/STEPS*100)+'%';
+  $('h2').textContent=(routing==='hard'?'hard top-k from the first step':'probabilistic selection for steps 1 to 100, then hard top-k')+', step '+S.step+' of '+STEPS;
+  $('l1').textContent='dead experts per family';
+  $('l2').textContent='dead experts in total';
+  $('l3').textContent='expert slots filled per step';
+  $('v3').innerHTML='<b>'+(TOK*2)+'</b> = '+TOK+' tokens &times; 2';
+  if(!measured){
+    $('v1').innerHTML='<b>'+FAM.map(function(F){return F.n+' 0';}).join(' &middot; ')+'</b>';
+    $('v2').innerHTML='<b>0</b> of 24'+(S.step===0?', press Run':', counted from step 20');
+  }else{
+    $('v1').innerHTML='<b>'+FAM.map(function(F,i){return F.n+' '+dead[i];}).join(' &middot; ')+'</b>';
+    $('v2').innerHTML='<b style="color:'+(allDead?'var(--red)':'var(--green)')+'">'+allDead+'</b> = '+dead.join(' + ')+' of 24';
+  }
+  $('note').innerHTML='The Lightning LM models grew from <b>20 experts to 460</b> by cloning each expert 23 times. '+
+    'An early clone-only attempt with hard top-k reached <b>168 dead experts out of 460</b> within a few hundred steps, and probabilistic selection during the early window kept every expert alive.';
+}
+function stop(){if(timer){clearInterval(timer);timer=null;}}
+function reset(){stop();sim=newSim(routing==='prob');drawSim();}
+function run(){
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  reset();
+  if(reduce){while(sim.step<STEPS)stepSim(sim);drawSim();return;}
+  timer=setInterval(function(){
+    var i;for(i=0;i<5&&sim.step<STEPS;i++)stepSim(sim);
+    drawSim();
+    if(sim.step>=STEPS)stop();
+  },30);
+}
+
+/* ---------- wiring ---------- */
+function marks(){
+  Array.prototype.forEach.call(document.querySelectorAll('.s14w6-q'),function(b){b.classList.toggle('on',b.getAttribute('data-v')===stage);});
+  Array.prototype.forEach.call(document.querySelectorAll('#s14w6-g2a .s14w6-n'),function(b){b.classList.toggle('on',b.getAttribute('data-v')===method);});
+  Array.prototype.forEach.call(document.querySelectorAll('#s14w6-g2b .s14w6-n'),function(b){b.classList.toggle('on',b.getAttribute('data-v')===routing);});
+  $('g2a').hidden=stage!=='dense';$('g2b').hidden=stage==='dense';
+  $('c1').hidden=stage!=='dense';$('c2').hidden=stage==='dense';
+}
+function draw(){if(stage==='dense'){stop();drawSlices();}else{if(!sim)reset();drawSim();}}
+Array.prototype.forEach.call(document.querySelectorAll('.s14w6-q'),function(b){
+  b.addEventListener('click',function(){stage=b.getAttribute('data-v');marks();draw();});
+});
+Array.prototype.forEach.call(document.querySelectorAll('#s14w6-g2a .s14w6-n'),function(b){
+  b.addEventListener('click',function(){method=b.getAttribute('data-v');marks();draw();});
+});
+Array.prototype.forEach.call(document.querySelectorAll('#s14w6-g2b .s14w6-n'),function(b){
+  b.addEventListener('click',function(){routing=b.getAttribute('data-v');marks();reset();});
+});
+$('run').addEventListener('click',run);
+drawRouter();marks();draw();
+}());
+
+
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+
+
+=== widget_7_all_to_all.html ===
+
+(function(){
+'use strict';
+var K=8,H=2048,BYTES=2,SEQ=8192,L=48,G=8,E=128,PER=16,SEED=52,
+    ACTIVE=48*(18874624+8*4718592+2048*128+4096)+622329856+2048,
+    COLS=['#0891b2','#7c3aed','#159447','#d97706','#dc2626','#2563eb','#db2777','#92400e'],
+    LINKS={
+      nv5:{name:'NVLink 5',bw:900,flops:2.25,chip:'a B200',pf:'2.25'},
+      nv4:{name:'NVLink 4',bw:450,flops:0.989,chip:'an H100',pf:'0.989'},
+      net:{name:'network card',bw:50,flops:2.25,chip:'a B200',pf:'2.25'}
+    },
+    PHASES=['route','dispatch','compute','combine'],
+    CAPS=[
+      '<b>Route.</b> The router on each GPU picks 8 experts for its token. The fixed map, expert / 16 rounded down, gives the destination GPU of each copy.',
+      '<b>Dispatch.</b> Every copy travels to the GPU that holds its expert. This step is the first all-to-all. The received counts are uneven because the router decides the destinations live for every batch.',
+      '<b>Compute.</b> Each GPU runs its own experts on the copies it received. An expert that two tokens chose runs on both copies.',
+      '<b>Combine.</b> Every result travels back to the GPU whose number it carries. This step is the second all-to-all. Each token adds its 8 results, each one weighted by its router score.'
+    ],
+    link='nv5',phase=0,dots=[],route=[],recv=[],
+    reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function $(i){return document.getElementById('s14w7-'+i);}
+function ft(v){return v.toFixed(v<0.5?3:2);}
+function comma(n){return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+function build(){
+  var rnd=mulberry32(SEED),s='',g,d,ex,list;
+  for(g=0;g<G;g++){
+    list=[];
+    while(list.length<K){ex=Math.floor(rnd()*E);if(list.indexOf(ex)<0){list.push(ex);}}
+    list.sort(function(a,b){return a-b;});
+    route.push(list);recv.push([]);
+    s+='<div class="s14w7-gpu" id="s14w7-g'+g+'" style="border-top-color:'+COLS[g]+'"><span class="s14w7-gn">GPU '+g+'</span>'+
+       '<span class="s14w7-ge">experts '+(PER*g)+' to '+(PER*g+PER-1)+'</span>'+
+       '<div class="s14w7-tok" id="s14w7-t'+g+'"><b>token T'+g+'</b>&nbsp;<small>(home GPU '+g+')</small></div>'+
+       '<div class="s14w7-slots" id="s14w7-s'+g+'"></div><div class="s14w7-inf" id="s14w7-i'+g+'"></div></div>';
+  }
+  $('gpus').innerHTML=s;
+  /* one copy per (token, expert); copies that stay home take the first slots in both layouts */
+  for(g=0;g<G;g++){
+    var mine=route[g].map(function(x){return {src:g,ex:x,dst:Math.floor(x/PER)};});
+    mine.sort(function(a,b){return (b.dst===g)-(a.dst===g)||a.ex-b.ex;});
+    mine.forEach(function(o,i){o.si=i;dots.push(o);});
+  }
+  for(d=0;d<G;d++){
+    var got=dots.filter(function(o){return o.dst===d;});
+    got.sort(function(a,b){return (b.src===d)-(a.src===d)||a.src-b.src||a.ex-b.ex;});
+    got.forEach(function(o,i){o.di=i;});
+    recv[d]=got;
+  }
+  var st=$('stage');
+  dots.forEach(function(o){
+    var e=document.createElement('i');e.className='s14w7-dot'+(o.src===o.dst?' home':'');
+    e.style.background=COLS[o.dst];e.textContent=o.src;
+    e.title='copy of token T'+o.src+' for expert '+o.ex+' on GPU '+o.dst+(o.src===o.dst?' (stays home)':'');
+    e.setAttribute('aria-hidden','true');st.appendChild(e);o.el=e;
+  });
+}
+function slotXY(g,idx){
+  var st=$('stage').getBoundingClientRect(),r=$('s'+g).getBoundingClientRect(),
+      per=Math.max(1,Math.floor((r.width+2)/19)),col=idx%per,row=Math.floor(idx/per);
+  return {x:r.left-st.left+col*19,y:r.top-st.top+row*20};
+}
+function info(g){
+  var got=recv[g],n=got.length,ran=[];
+  if(phase===0){return 'picks experts <b>'+route[g].join(', ')+'</b>';}
+  if(phase===1){return 'received: <b>'+n+' copies</b> (average 8)';}
+  if(phase===2){
+    got.forEach(function(o){if(ran.indexOf(o.ex)<0){ran.push(o.ex);}});
+    ran.sort(function(a,b){return a-b;});
+    return (ran.length===1?'expert ':'experts ')+'<b>'+ran.join(', ')+'</b> ran on <b>'+n+' copies</b>';
+  }
+  return '<b>8 weighted outputs added</b> into token T'+g;
+}
+function place(){
+  var away=(phase===1||phase===2),g;
+  dots.forEach(function(o){
+    var p=away?slotXY(o.dst,o.di):slotXY(o.src,o.si);
+    o.el.style.transitionDelay=reduce?'0s':((o.si%K)*0.04)+'s';
+    o.el.style.left=p.x+'px';o.el.style.top=p.y+'px';
+  });
+  for(g=0;g<G;g++){
+    $('g'+g).classList.toggle('hot',phase===2);
+    $('t'+g).classList.toggle('sum',phase===3);
+    $('i'+g).innerHTML=info(g);
+  }
+  Array.prototype.forEach.call($('ph').children,function(e,i){e.classList.toggle('on',i===phase);});
+  $('cap').innerHTML=CAPS[phase];
+  $('step').textContent='Step to '+PHASES[(phase+1)%4];
+}
+function draw(){
+  var c=LINKS[link],perTok=K*H*BYTES,
+      traffic=2*perTok*SEQ*(7/8)*L*2,gb=traffic/1e9,
+      tc=gb/c.bw,
+      flop=6*ACTIVE*SEQ,tf=flop/1e12,tp=tf/(c.flops*1000),
+      ratio=tc/tp,stay=dots.filter(function(o){return o.src===o.dst;}).length;
+  $('h2').textContent=link==='net'?'one mixture-of-experts layer on 8 GPUs joined by network cards':'one mixture-of-experts layer on 8 GPUs in one node';
+  $('h2b').textContent='time per 8,192-token sequence per GPU over '+c.name+', compute on '+c.chip;
+  $('fc').style.width=Math.min(100,tc/1.0*100)+'%';
+  $('fp').style.width=Math.min(100,tp/1.0*100)+'%';
+  $('vc').textContent=ft(tc)+' s';
+  $('vp').textContent=tp.toFixed(3)+' s';
+  $('r1').innerHTML='<b>'+comma(perTok)+' B</b> = 8 &times; 2,048 &times; 2';
+  $('r4').innerHTML='<b>'+comma(perTok)+' B</b> = 8 &times; 2,048 &times; 2';
+  $('r2').innerHTML='<b>'+gb.toFixed(1)+' GB</b> = 2 &times; 32,768 B &times; 8,192 &times; 7/8 &times; 48 &times; 2';
+  $('r3').innerHTML='<b style="color:#7c3aed">'+ft(tc)+' s</b> = '+gb.toFixed(1)+' GB / '+c.bw+' GB/s';
+  $('r5').innerHTML='<b style="color:#0891b2">'+tp.toFixed(3)+' s</b> = '+tf.toFixed(1)+' TFLOP / '+c.pf+' PFLOPS';
+  $('r6').innerHTML='<b style="color:'+(ratio>1?'#dc2626':'#159447')+'">'+ratio.toFixed(ratio<10?2:1)+'</b> = '+ft(tc)+' s / '+tp.toFixed(3)+' s';
+  $('note').innerHTML='The cards show one token per GPU. The readouts are for a full sequence of 8,192 tokens per GPU. '+
+    'The compute is '+tf.toFixed(1)+' TFLOP = 6 &times; 3.35e9 active weights &times; 8,192 tokens. '+
+    'The expert choices are a simulation with made-up routing from a fixed seed. '+stay+' of the '+dots.length+' copies stay on their home GPU. '+
+    'The factor 7/8 is the share of the traffic that leaves each GPU.';
+  Array.prototype.forEach.call(document.querySelectorAll('.s14w7-q'),function(b){b.classList.toggle('on',b.getAttribute('data-v')===link);});
+}
+function axis(){
+  var s='',i;
+  for(i=0;i<=5;i++){s+='<i style="left:'+(i*20)+'%">'+(i*0.2).toFixed(1)+' s</i>';}
+  $('ax').innerHTML=s;
+}
+$('step').addEventListener('click',function(){phase=(phase+1)%4;place();});
+$('reset').addEventListener('click',function(){phase=0;place();});
+Array.prototype.forEach.call(document.querySelectorAll('.s14w7-q'),function(b){
+  b.addEventListener('click',function(){link=b.getAttribute('data-v');draw();});
+});
+function snap(){
+  dots.forEach(function(o){o.el.style.transition='none';});
+  place();
+  setTimeout(function(){dots.forEach(function(o){o.el.style.transition='';});},30);
+}
+window.addEventListener('resize',snap);
+build();axis();
+dots.forEach(function(o){o.el.style.transition='none';});
+place();draw();
+setTimeout(function(){dots.forEach(function(o){o.el.style.transition='';});},30);
+if(window.ResizeObserver){var lastW=0;new ResizeObserver(function(){var w=$('gpus').offsetWidth;if(w!==lastW){lastW=w;snap();}}).observe($('gpus'));}
+if(document.fonts&&document.fonts.ready){document.fonts.ready.then(snap);}
+window.addEventListener('load',snap);
+}());
+
+
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+
+
+=== widget_8_layout.html ===
+
+(function(){
+'use strict';
+var GIB=1073741824,EXP=48*128*4718592,
+    TOTAL=48*(18874624+128*4718592+2048*128+4096)+622329856+2048,
+    DENSE=TOTAL-EXP,
+    ACTIVE=48*(18874624+8*4718592+2048*128+4096)+622329856+2048,
+    SEQ=8192,H=2048,L=48,K=8,E=128,AXMAX=180,TMAX=1.0,NET=50,
+    NODES={
+      h100:{name:'H100',cap:74.5,nv:450,nvName:'NVLink 4',pf:0.989,pfs:'0.989'},
+      b200:{name:'B200',cap:167.6,nv:900,nvName:'NVLink 5',pf:2.25,pfs:'2.25'}
+    },
+    WORDS={1:'one',2:'two',4:'four'},
+    GREEN='#159447',RED='#dc2626',
+    node='b200',ep=8;
+function $(i){return document.getElementById('s14w8-'+i);}
+function comma(n){return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+function ft(v){return v.toFixed(v<0.5?3:2);}
+function calc(){
+  var c=NODES[node],gpus=ep,n=ep/8,
+      expG=EXP/ep*16/GIB,
+      denG=DENSE*(4+12/gpus)/GIB,
+      actG=SEQ*H*34*L/GIB,
+      state=expG+denG,total=state+actG,
+      full=2*K*H*2*SEQ*L*2,
+      share=(ep===8)?7/8:(ep-8)/ep,
+      traffic=full*share/1e9,
+      bw=(ep===8)?c.nv:NET,
+      tc=traffic/bw,
+      tf=6*ACTIVE*SEQ/1e12,tp=tf/(c.pf*1000),
+      tok=gpus*SEQ*K/E;
+  return {c:c,gpus:gpus,n:n,expG:expG,denG:denG,actG:actG,state:state,total:total,fits:total<=c.cap+1e-9,
+          share:share,traffic:traffic,bw:bw,tc:tc,tf:tf,tp:tp,tok:tok};
+}
+function axis(){
+  var s='',i;
+  for(i=0;i<=6;i++){s+='<i style="left:'+(i/6*100)+'%">'+(i*30)+' GiB</i>';}
+  $('ax').innerHTML=s;
+  s='';
+  for(i=0;i<=5;i++){s+='<i style="left:'+(i*20)+'%">'+(i*0.2).toFixed(1)+' s</i>';}
+  $('bax').innerHTML=s;
+}
+function draw(){
+  var r=calc(),c=r.c,
+      w1=r.expG/AXMAX*100,w2=r.denG/AXMAX*100,w3=Math.min(100-w1-w2,r.actG/AXMAX*100),
+      lim=c.cap/AXMAX*100,shareTxt=(ep===8)?'7/8':(ep===16?'1/2':'3/4'),
+      where=(ep===8)?'inside one node over '+c.nvName:'between nodes over the network card',
+      ratio=r.tc/r.tp;
+  $('h2').textContent='memory per GPU on '+WORDS[r.n]+' '+c.name+(r.n===1?' node':' nodes')+', '+r.gpus+' GPUs';
+  $('cap').textContent='card '+c.cap+' GiB';
+  $('cap').style.left=lim+'%';
+  $('lim').style.left='calc('+lim+'% - 1px)';
+  $('s1').style.left='0%';$('s1').style.width=w1+'%';
+  $('s2').style.left=w1+'%';$('s2').style.width=w2+'%';
+  $('s3').style.left=(w1+w2)+'%';$('s3').style.width=w3+'%';
+
+  $('h2b').textContent='time per 8,192-token sequence per GPU, all-to-all '+where;
+  $('fc').style.width=Math.min(100,r.tc/TMAX*100)+'%';
+  $('fp').style.width=Math.min(100,r.tp/TMAX*100)+'%';
+  $('vc').innerHTML='<b style="color:#7c3aed">'+ft(r.tc)+' s</b> = '+r.traffic.toFixed(1)+' GB / '+r.bw+' GB/s';
+  $('vp').innerHTML='<b style="color:#0891b2">'+ft(r.tp)+' s</b> = '+r.tf.toFixed(1)+' TFLOP / '+c.pfs+' PFLOPS';
+
+  $('r1').innerHTML='<b style="color:#7c3aed">'+r.expG.toFixed(1)+' GiB</b> = 28.99e9 / '+ep+' &times; 16 B';
+  $('r2').innerHTML='<b style="color:#d97706">'+r.denG.toFixed(1)+' GiB</b> = 1.54e9 &times; (4 + 12 / '+r.gpus+') B';
+  $('r3').innerHTML='<b style="color:#0891b2">'+r.actG.toFixed(1)+' GiB</b> = 8,192 &times; 2,048 &times; 34 &times; 48 B';
+  $('l4').textContent=(r.fits?'total per GPU, fits the ':'total per GPU, over the ')+c.cap+' GiB card';
+  $('r4').innerHTML='<b style="color:'+(r.fits?GREEN:RED)+'">'+r.total.toFixed(1)+' GiB</b> = '+r.state.toFixed(1)+' state + '+r.actG.toFixed(1)+' activations';
+  $('r5').innerHTML='<b>'+comma(r.tok)+'</b> = '+r.gpus+' &times; 8,192 &times; 8 / 128';
+  $('l6').textContent=(ep===8)?'all-to-all traffic, share that leaves each GPU':'all-to-all traffic, share that crosses nodes';
+  $('r6').innerHTML='<b>'+r.traffic.toFixed(1)+' GB</b> = 51.5 GB &times; '+shareTxt;
+
+  if(r.fits){
+    $('lay').textContent='EP '+ep+' on '+WORDS[r.n]+' '+c.name+(r.n===1?' node':' nodes')+', ZeRO-1 across '+r.gpus+' copies for the dense parts';
+    $('note').innerHTML='<span style="color:'+GREEN+'">This layout leaves '+(c.cap-r.total).toFixed(1)+' GiB free on each card.</span> '+
+      '<span style="color:'+(ratio>1?RED:GREEN)+'">The all-to-all takes '+ratio.toFixed(ratio<10?2:1)+' times as long as the compute.</span>';
+  }else{
+    $('lay').textContent='EP '+ep+' on '+WORDS[r.n]+' '+c.name+(r.n===1?' node':' nodes')+' does not fit';
+    $('note').innerHTML='<span style="color:'+RED+'">The total of '+r.total.toFixed(1)+' GiB is more than the '+c.cap+' GiB card.</span>';
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.s14w8-q'),function(b){b.classList.toggle('on',b.getAttribute('data-v')===node);});
+  Array.prototype.forEach.call(document.querySelectorAll('.s14w8-n'),function(b){b.classList.toggle('on',+b.getAttribute('data-v')===ep);});
+}
+Array.prototype.forEach.call(document.querySelectorAll('.s14w8-q'),function(b){
+  b.addEventListener('click',function(){node=b.getAttribute('data-v');draw();});
+});
+Array.prototype.forEach.call(document.querySelectorAll('.s14w8-n'),function(b){
+  b.addEventListener('click',function(){ep=+b.getAttribute('data-v');draw();});
+});
+axis();draw();
+}());
+
+
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+

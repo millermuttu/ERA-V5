@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 14 Widget 6 - Growing the Experts</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s14w6-w{max-width:1180px;margin:0 auto;padding:18px 22px 20px}
+.s14w6-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.s14w6-w h1{font-size:26px;line-height:1.12;margin:4px 0 10px}
+.s14w6-say{border:1px solid #bae6f0;background:#f0fbfd;border-radius:10px;padding:12px 14px;color:#155e75;font-size:13.5px;line-height:1.55;margin:0 0 14px}
+.s14w6-say b{color:#0e7490;font-weight:800}
+.s14w6-bar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.s14w6-lb{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.s14w6-bar button{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;padding:6px 14px;font:800 11.5px Inter,sans-serif;cursor:pointer}
+.s14w6-bar button.s14w6-q.on{border-color:var(--cyan);color:#0e7490;background:#effbfe;box-shadow:inset 0 0 0 1px var(--cyan)}
+.s14w6-bar button.s14w6-n.on{border-color:var(--ink);color:var(--ink);background:#eef2f7;box-shadow:inset 0 0 0 1px var(--ink)}
+.s14w6-bar button.s14w6-run{border-color:var(--green);color:#fff;background:var(--green)}
+.s14w6-sep{width:1px;height:20px;background:var(--line);margin:0 5px}
+.s14w6-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:13px 16px 12px}
+.s14w6-card h2{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;font-weight:800}
+/* stage 1: slices */
+.s14w6-row{display:grid;grid-template-columns:150px repeat(8,1fr);gap:4px;margin-bottom:5px;align-items:center}
+.s14w6-rn{font-size:11px;font-weight:800;color:var(--ink);line-height:1.2}
+.s14w6-rn small{display:block;font-weight:700;color:var(--muted);font-size:10px}
+.s14w6-sl{height:34px;border-radius:6px;display:flex;align-items:center;justify-content:center;font:800 13px ui-monospace,SFMono-Regular,Consolas,monospace;color:#fff;transition:background-color .35s,opacity .35s}
+.s14w6-sl.empty{background:#f4f7fb!important;border:1px dashed #cfd9e6;color:#b6c3d3}
+.s14w6-sl.new{color:var(--ink);background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.75) 0,rgba(255,255,255,.75) 4px,transparent 4px,transparent 9px)!important}
+.s14w6-gap{height:8px}
+.s14w6-row.dense .s14w6-sl{height:30px}
+/* stage 2: router and loads */
+.s14w6-two{display:grid;grid-template-columns:330px 1fr;gap:18px}
+.s14w6-rt{display:flex;align-items:center;gap:10px}
+.s14w6-rcol{display:flex;flex-direction:column;gap:2px;width:120px}
+.s14w6-rcol i{display:block;border-radius:3px}
+.s14w6-arrow{font:800 12px Inter,sans-serif;color:var(--muted);text-align:center;width:52px;line-height:1.25}
+.s14w6-rcap{display:flex;gap:10px;font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.s14w6-rcap span{width:120px}.s14w6-rcap span.gap{width:52px}
+.s14w6-bars{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.s14w6-fam{border:1px solid #e4ebf4;border-radius:8px;padding:6px 8px 5px;background:#f8fafd}
+.s14w6-fh{font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;margin-bottom:4px}
+.s14w6-col{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;height:150px;align-items:end}
+.s14w6-b{position:relative;border-radius:3px 3px 0 0;min-height:2px;transition:height .12s linear}
+.s14w6-xl{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-top:3px}
+.s14w6-xl i{font:700 9.5px ui-monospace,SFMono-Regular,Consolas,monospace;font-style:normal;text-align:center;color:#93a3b6}
+.s14w6-xl i.dead{color:var(--red);font-weight:800}
+.s14w6-prog{height:6px;border-radius:3px;background:#e4ebf4;margin-top:10px;overflow:hidden}
+.s14w6-prog i{display:block;height:100%;width:0;background:var(--cyan)}
+.s14w6-leg{margin:8px 0 0;font-size:12px;color:var(--muted);line-height:1.4;display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.s14w6-leg b{color:var(--ink)}
+.s14w6-chip{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.s14w6-met{display:grid;grid-template-columns:1.2fr 1.2fr 1fr;gap:8px;margin-top:12px}
+.s14w6-box{border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.9);padding:10px 12px}
+.s14w6-box>span:not(.s14w6-rd){display:block;color:var(--muted);font-size:10.5px;line-height:1.3;font-weight:700;letter-spacing:.03em;text-transform:uppercase}
+.s14w6-rd{display:block;margin-top:3px;font:700 12.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.s14w6-rd b{font-size:17px;font-weight:800;color:var(--ink)}
+.s14w6-note{margin:10px 0 0;font-size:12.5px;line-height:1.5;min-height:38px}
+@media(max-width:1000px){.s14w6-met{grid-template-columns:1fr}.s14w6-rd{white-space:normal}.s14w6-two{grid-template-columns:1fr}.s14w6-bars{grid-template-columns:repeat(2,1fr)}.s14w6-row{grid-template-columns:90px repeat(8,1fr)}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s14w6-w">
+<div class="s14w6-k">ERA V5 Session 14 &middot; growing a mixture of experts</div>
+<h1>Growing the Experts</h1>
+<p class="s14w6-say">A mixture-of-experts model can start from a trained <b>dense feed-forward layer</b>, and a model with a few experts can grow into one with <b>many experts</b>. Pick a stage and a method to see how the new experts get their first weights.</p>
+
+<div class="s14w6-bar">
+<span class="s14w6-lb">stage</span>
+<button type="button" class="s14w6-q" data-v="dense" aria-label="Stage: dense layer to experts">dense to experts</button>
+<button type="button" class="s14w6-q" data-v="many" aria-label="Stage: few experts to many">few experts to many</button>
+<span class="s14w6-sep" aria-hidden="true"></span>
+<span id="s14w6-g2a">
+<span class="s14w6-lb">method</span>
+<button type="button" class="s14w6-n" data-v="copy" aria-label="Method: copy the dense layer into every expert">copy</button>
+<button type="button" class="s14w6-n" data-v="partition" aria-label="Method: give each expert a random half of the slices">partition</button>
+<button type="button" class="s14w6-n" data-v="drop" aria-label="Method: copy, then redraw half of each expert">drop</button>
+</span>
+<span id="s14w6-g2b" hidden>
+<span class="s14w6-lb">routing</span>
+<button type="button" class="s14w6-n" data-v="hard" aria-label="Routing: hard top-k from the first step">hard top-k</button>
+<button type="button" class="s14w6-n" data-v="prob" aria-label="Routing: probabilistic selection for the first 100 steps">probabilistic selection</button>
+<span class="s14w6-sep" aria-hidden="true"></span>
+<button type="button" class="s14w6-run" id="s14w6-run" aria-label="Run the simulation for 200 steps">Run 200 steps</button>
+</span>
+</div>
+
+<div class="s14w6-card" id="s14w6-c1">
+<h2 id="s14w6-h1"></h2>
+<div id="s14w6-slices"></div>
+<p class="s14w6-leg" id="s14w6-leg1"></p>
+</div>
+
+<div class="s14w6-card" id="s14w6-c2" hidden>
+<h2 id="s14w6-h2"></h2>
+<div class="s14w6-two">
+<div>
+<div class="s14w6-rcap"><span>router, 4 rows</span><span class="gap"></span><span>router, 24 rows</span></div>
+<div class="s14w6-rt"><div class="s14w6-rcol" id="s14w6-r4"></div><div class="s14w6-arrow">each row<br>copied<br>6 times<br>&rarr;</div><div class="s14w6-rcol" id="s14w6-r24"></div></div>
+</div>
+<div>
+<div class="s14w6-rcap"><span style="width:auto">tokens each expert received in the last 20 steps</span></div>
+<div class="s14w6-bars" id="s14w6-bars"></div>
+<div class="s14w6-prog"><i id="s14w6-prog"></i></div>
+</div>
+</div>
+<p class="s14w6-leg"><span><b>Simulation with made-up numbers</b>, seeded so every run gives the same result.</span><span>128 tokens per step, each sent to 2 experts</span><span>a clone that wins a token scores higher on that kind of token next time</span><span>a <b style="color:var(--red)">red label</b> marks a dead expert, with no tokens in the last 20 steps</span></p>
+</div>
+
+<div class="s14w6-met">
+<div class="s14w6-box"><span id="s14w6-l1"></span><span class="s14w6-rd" id="s14w6-v1"></span></div>
+<div class="s14w6-box"><span id="s14w6-l2"></span><span class="s14w6-rd" id="s14w6-v2"></span></div>
+<div class="s14w6-box"><span id="s14w6-l3"></span><span class="s14w6-rd" id="s14w6-v3"></span></div>
+</div>
+<p class="s14w6-note" id="s14w6-note"></p>
+</main>
+
+<script>
+(function(){
+'use strict';
+var LET='abcdefgh'.split(''),
+    SC=['#0891b2','#7c3aed','#d97706','#159447','#dc2626','#2563eb','#db2777','#0d9488'],
+    FAM=[{n:'A',c:'#0891b2'},{n:'B',c:'#7c3aed'},{n:'C',c:'#d97706'},{n:'D',c:'#159447'}],
+    STEPS=200,SOFT=100,TOK=128,WIN=20,E=24,SUB=12,
+    stage='dense',method='copy',routing='hard',
+    sim=null,timer=null;
+function $(i){return document.getElementById('s14w6-'+i);}
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function gauss(r){var u=r()||1e-9,v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+function half(r){var a=[0,1,2,3,4,5,6,7],i,j,t;for(i=7;i>0;i--){j=Math.floor(r()*(i+1));t=a[i];a[i]=a[j];a[j]=t;}return a.slice(0,4).sort();}
+function comma(n){return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+function shade(hex,k){ /* k in 0..5: darker to lighter clone of the same family */
+  var n=parseInt(hex.slice(1),16),r=n>>16,g=n>>8&255,b=n&255,t=k*0.11;
+  return 'rgb('+Math.round(r+(255-r)*t)+','+Math.round(g+(255-g)*t)+','+Math.round(b+(255-b)*t)+')';
+}
+
+/* ---------- stage 1: dense layer to experts ---------- */
+var PART=(function(){var r=mulberry(7);return [half(r),half(r),half(r),half(r)];}()),
+    DROP=(function(){var r=mulberry(1007);return [half(r),half(r),half(r),half(r)];}());
+function slice(k,state){
+  if(state==='empty')return '<div class="s14w6-sl empty">'+LET[k]+'</div>';
+  return '<div class="s14w6-sl'+(state==='new'?' new':'')+'" style="background-color:'+SC[k]+'">'+(state==='new'?'new':LET[k])+'</div>';
+}
+function drawSlices(){
+  var h='',e,k,held,missed=[];
+  h+='<div class="s14w6-row dense"><div class="s14w6-rn">dense layer<small>8 slices of the hidden units</small></div>';
+  for(k=0;k<8;k++)h+=slice(k,'full');
+  h+='</div><div class="s14w6-gap"></div>';
+  for(e=0;e<4;e++){
+    h+='<div class="s14w6-row"><div class="s14w6-rn">expert '+(e+1)+'<small>'+
+      (method==='copy'?'all 8 slices':method==='partition'?'slices '+PART[e].map(function(i){return LET[i];}).join(', '):'slices '+DROP[e].map(function(i){return LET[i];}).join(', ')+' redrawn')+'</small></div>';
+    for(k=0;k<8;k++){
+      if(method==='copy')h+=slice(k,'full');
+      else if(method==='partition')h+=slice(k,PART[e].indexOf(k)>=0?'full':'empty');
+      else h+=slice(k,DROP[e].indexOf(k)>=0?'new':'full');
+    }
+    h+='</div>';
+  }
+  if(method==='partition'){
+    h+='<div class="s14w6-row"><div class="s14w6-rn">shared expert<small>all 8 slices, used by every token</small></div>';
+    for(k=0;k<8;k++)h+=slice(k,'full');
+    h+='</div>';
+  }
+  $('slices').innerHTML=h;
+  for(k=0;k<8;k++){held=false;for(e=0;e<4;e++)if(PART[e].indexOf(k)>=0)held=true;if(!held)missed.push(LET[k]);}
+  $('h1').textContent=method==='copy'?'copy: every expert starts as the dense layer':method==='partition'?'partition: every expert takes a random half of the slices':'drop: every expert is a copy with half of it redrawn';
+  $('leg1').innerHTML=method==='copy'?'<span>Each coloured box is <b>one slice</b> of the dense layer, a block of its hidden units.</span><span>Four identical experts get identical gradients at the start.</span>':
+    method==='partition'?'<span>A dashed box is a slice <b>this expert does not hold</b>.</span><span>The halves are drawn with a fixed seed, so they overlap.</span>':
+    '<span>A hatched box marks a slice with <b>fresh random weights</b>.</span><span>Each expert redraws a different half.</span>';
+  if(method==='copy'){
+    $('l1').textContent='slices each expert holds';$('v1').innerHTML='<b>8</b> = 8 &times; 1';
+    $('l2').textContent='experts that differ from expert 1';$('v2').innerHTML='<b>0</b> of 3';
+    $('l3').textContent='starting point';$('v3').innerHTML='<b style="color:var(--amber)">experts start identical</b>';
+    $('note').innerHTML='The router sees four equal experts, so the experts need something else to make them grow apart.';
+  }else if(method==='partition'){
+    $('l1').textContent='chance a slice is missed by all 4 experts';$('v1').innerHTML='<b>'+(+(Math.pow(1-4/8,4)*100).toFixed(2))+'%</b> = (1 &minus; 4/8)^4';
+    $('l2').textContent='slices missed in this draw';$('v2').innerHTML='<b>'+missed.length+'</b> of 8'+(missed.length?', slice '+missed.join(', '):'');
+    $('l3').textContent='with 20 experts';$('v3').innerHTML='<b>1 in '+comma(Math.pow(2,20))+'</b> = (1/2)^20';
+    $('note').innerHTML='In this draw slice '+missed.join(', ')+' is held by no routed expert, and the shared expert still carries it. '+
+      'With 20 experts the chance of a missed slice is (1/2)^20, about one in a million, as in the Lightning LM 5B model.';
+  }else{
+    $('l1').textContent='slices each expert keeps';$('v1').innerHTML='<b>4</b> = 8 &times; (1 &minus; 0.5)';
+    $('l2').textContent='slices each expert redraws';$('v2').innerHTML='<b>4</b> = 8 &times; 0.5';
+    $('l3').textContent='drop ratio';$('v3').innerHTML='<b style="color:var(--violet)">half of each expert redrawn, r = 0.5</b>';
+    $('note').innerHTML='Each expert keeps half of what the dense layer learned, and its redrawn half gives it a different start from the other three.';
+  }
+}
+
+/* ---------- stage 2: few experts to many (simulation) ---------- */
+function newSim(prob){
+  var r=mulberry(7),c=[],s=[],e;
+  for(e=0;e<E;e++){c.push(gauss(r)*0.02);s.push(new Array(SUB).fill(0));}
+  return {r:r,c:c,s:s,prob:prob,step:0,hist:[]};
+}
+function stepSim(S){
+  var r=S.r,n=[],cnt=new Array(E).fill(0),i,e,k,f,sub,sc,pick,soft=S.prob&&S.step<SOFT,w,j,tot,u,idx;
+  for(e=0;e<E;e++)n.push(new Array(SUB).fill(0));
+  for(i=0;i<TOK;i++){
+    f=Math.floor(r()*4);sub=Math.floor(r()*SUB);sc=[];
+    for(e=0;e<E;e++)sc.push((Math.floor(e/6)===f?3:0)+S.c[e]+S.s[e][sub]+gauss(r)*0.005);
+    pick=[];
+    if(soft){
+      w=sc.map(function(x){return Math.exp(x);});
+      for(j=0;j<2;j++){
+        tot=0;for(e=0;e<E;e++)if(pick.indexOf(e)<0)tot+=w[e];
+        u=r()*tot;
+        for(e=0;e<E;e++){if(pick.indexOf(e)>=0)continue;u-=w[e];if(u<=0)break;}
+        if(e>=E)e=E-1;while(pick.indexOf(e)>=0)e--;
+        pick.push(e);
+      }
+    }else{
+      idx=sc.map(function(x,q){return q;}).sort(function(a,b){return sc[b]-sc[a];});pick=[idx[0],idx[1]];
+    }
+    for(j=0;j<2;j++){n[pick[j]][sub]++;cnt[pick[j]]++;}
+  }
+  for(e=0;e<E;e++)for(k=0;k<SUB;k++)S.s[e][k]=S.s[e][k]*0.98+0.02*n[e][k];
+  S.hist.push(cnt);S.step++;
+}
+function recent(S){
+  var tot=new Array(E).fill(0),from=Math.max(0,S.hist.length-WIN),t,e;
+  for(t=from;t<S.hist.length;t++)for(e=0;e<E;e++)tot[e]+=S.hist[t][e];
+  return tot;
+}
+function drawRouter(){
+  var a='',b='',f,k;
+  for(f=0;f<4;f++)a+='<i style="height:28px;background:'+FAM[f].c+'"></i>';
+  for(f=0;f<4;f++)for(k=0;k<6;k++)b+='<i style="height:'+(k===5?'5px;margin-bottom:5px':'5px')+';background:'+shade(FAM[f].c,k)+'"></i>';
+  $('r4').innerHTML=a;$('r24').innerHTML=b;
+}
+function drawSim(){
+  var S=sim,tot=recent(S),h='',f,k,e,dead=[0,0,0,0],allDead=0,mx=0,ht,measured=S.step>=WIN;
+  for(e=0;e<E;e++)mx=Math.max(mx,tot[e]);
+  mx=Math.max(mx,WIN*TOK*2/12);
+  for(f=0;f<4;f++){
+    var bars='',lab='';
+    for(k=0;k<6;k++){
+      e=f*6+k;ht=S.step?Math.round(tot[e]/mx*100):0;
+      var isDead=measured&&tot[e]===0;
+      if(isDead){dead[f]++;allDead++;}
+      bars+='<div class="s14w6-b" style="height:'+ht+'%;background:'+shade(FAM[f].c,k)+'"></div>';
+      lab+='<i class="'+(isDead?'dead':'')+'">'+(isDead?'dead':(f*6+k+1))+'</i>';
+    }
+    h+='<div class="s14w6-fam"><div class="s14w6-fh" style="color:'+FAM[f].c+'">family '+FAM[f].n+', from expert '+(f+1)+'</div><div class="s14w6-col">'+bars+'</div><div class="s14w6-xl">'+lab+'</div></div>';
+  }
+  $('bars').innerHTML=h;
+  $('prog').style.width=(S.step/STEPS*100)+'%';
+  $('h2').textContent=(routing==='hard'?'hard top-k from the first step':'probabilistic selection for steps 1 to 100, then hard top-k')+', step '+S.step+' of '+STEPS;
+  $('l1').textContent='dead experts per family';
+  $('l2').textContent='dead experts in total';
+  $('l3').textContent='expert slots filled per step';
+  $('v3').innerHTML='<b>'+(TOK*2)+'</b> = '+TOK+' tokens &times; 2';
+  if(!measured){
+    $('v1').innerHTML='<b>'+FAM.map(function(F){return F.n+' 0';}).join(' &middot; ')+'</b>';
+    $('v2').innerHTML='<b>0</b> of 24'+(S.step===0?', press Run':', counted from step 20');
+  }else{
+    $('v1').innerHTML='<b>'+FAM.map(function(F,i){return F.n+' '+dead[i];}).join(' &middot; ')+'</b>';
+    $('v2').innerHTML='<b style="color:'+(allDead?'var(--red)':'var(--green)')+'">'+allDead+'</b> = '+dead.join(' + ')+' of 24';
+  }
+  $('note').innerHTML='The Lightning LM models grew from <b>20 experts to 460</b> by cloning each expert 23 times. '+
+    'An early clone-only attempt with hard top-k reached <b>168 dead experts out of 460</b> within a few hundred steps, and probabilistic selection during the early window kept every expert alive.';
+}
+function stop(){if(timer){clearInterval(timer);timer=null;}}
+function reset(){stop();sim=newSim(routing==='prob');drawSim();}
+function run(){
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  reset();
+  if(reduce){while(sim.step<STEPS)stepSim(sim);drawSim();return;}
+  timer=setInterval(function(){
+    var i;for(i=0;i<5&&sim.step<STEPS;i++)stepSim(sim);
+    drawSim();
+    if(sim.step>=STEPS)stop();
+  },30);
+}
+
+/* ---------- wiring ---------- */
+function marks(){
+  Array.prototype.forEach.call(document.querySelectorAll('.s14w6-q'),function(b){b.classList.toggle('on',b.getAttribute('data-v')===stage);});
+  Array.prototype.forEach.call(document.querySelectorAll('#s14w6-g2a .s14w6-n'),function(b){b.classList.toggle('on',b.getAttribute('data-v')===method);});
+  Array.prototype.forEach.call(document.querySelectorAll('#s14w6-g2b .s14w6-n'),function(b){b.classList.toggle('on',b.getAttribute('data-v')===routing);});
+  $('g2a').hidden=stage!=='dense';$('g2b').hidden=stage==='dense';
+  $('c1').hidden=stage!=='dense';$('c2').hidden=stage==='dense';
+}
+function draw(){if(stage==='dense'){stop();drawSlices();}else{if(!sim)reset();drawSim();}}
+Array.prototype.forEach.call(document.querySelectorAll('.s14w6-q'),function(b){
+  b.addEventListener('click',function(){stage=b.getAttribute('data-v');marks();draw();});
+});
+Array.prototype.forEach.call(document.querySelectorAll('#s14w6-g2a .s14w6-n'),function(b){
+  b.addEventListener('click',function(){method=b.getAttribute('data-v');marks();draw();});
+});
+Array.prototype.forEach.call(document.querySelectorAll('#s14w6-g2b .s14w6-n'),function(b){
+  b.addEventListener('click',function(){routing=b.getAttribute('data-v');marks();reset();});
+});
+$('run').addEventListener('click',run);
+drawRouter();marks();draw();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>
