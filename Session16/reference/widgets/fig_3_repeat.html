@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 16 Figure 3 - The Value of Repeated Data</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;font-variant-numeric:tabular-nums}
+.s16f3-w{max-width:1180px;margin:0 auto;padding:16px 22px 16px}
+.s16f3-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.s16f3-w h1{font-size:22px;line-height:1.15;margin:3px 0 12px}
+.s16f3-card{position:relative;background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:14px 16px 12px}
+.s16f3-card svg{display:block;width:100%;height:auto;overflow:visible}
+.s16f3-card svg text{font-family:Inter,ui-sans-serif,system-ui,sans-serif;font-variant-numeric:tabular-nums}
+.s16f3-note{margin:10px 2px 0;font-size:13px;line-height:1.5;color:var(--muted)}
+.s16f3-note b{color:var(--ink)}
+.s16f3-tip{position:absolute;pointer-events:none;background:#fff;border:1px solid var(--line);border-radius:9px;box-shadow:0 8px 22px rgba(20,42,75,.13);padding:8px 11px;font:600 13px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--ink);white-space:nowrap;z-index:5}
+.s16f3-tip b{font-family:Inter,sans-serif;font-weight:800}
+.s16f3-tip span{color:var(--muted)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+</style>
+</head>
+<body>
+<main class="s16f3-w">
+<div class="s16f3-k">ERA V5 Session 16 &middot; repeated data</div>
+<h1>The Value of Repeated Data</h1>
+<div class="s16f3-card" id="s16f3-card"><svg id="s16f3-svg" viewBox="0 0 1100 384" role="img" aria-label="Two charts. Left: effective data against epochs. Right: the value of each new epoch. Marks at 4, 16 and 40 epochs."></svg><div class="s16f3-tip" id="s16f3-tip" hidden></div></div>
+<p class="s16f3-note"><b>D&prime; = U<sub>D</sub> + U<sub>D</sub> &middot; R*<sub>D</sub> &middot; (1 &minus; e<sup>&minus;R<sub>D</sub> / R*<sub>D</sub></sup>)</b> with <b>R*<sub>D</sub> = 15.4</b> (Muennighoff and colleagues, 2023). R<sub>D</sub> is the number of repeats: epochs &minus; 1. Move the pointer over a chart to read the values.</p>
+
+</main>
+<script>
+(function(){
+'use strict';
+var NS='http://www.w3.org/2000/svg';
+var CS=getComputedStyle(document.documentElement);
+var K={};['ink','muted','line','cyan','violet','green','amber','red'].forEach(function(n){K[n]=CS.getPropertyValue('--'+n).trim();});
+function $(i){return document.getElementById('s16f3-'+i);}
+function el(t,a,p){var e=document.createElementNS(NS,t);if(a){for(var k in a){if(a[k]!==undefined&&a[k]!==null)e.setAttribute(k,a[k]);}}if(p)p.appendChild(e);return e;}
+function tx(p,x,y,s,a){a=a||{};a.x=x;a.y=y;var e=el('text',a,p);e.textContent=s;return e;}
+var SUP={'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','-':'⁻'};
+function p10(e){return '10'+String(e).split('').map(function(c){return SUP[c];}).join('');}
+function sci(v){var e=Math.floor(Math.log10(v)+1e-9),m=v/Math.pow(10,e);return (Math.abs(m-1)<1e-6?'':(m.toFixed(1).replace(/\.0$/,'')+' × '))+p10(e);}
+function big(v){var u=[[1e12,'T'],[1e9,'B'],[1e6,'M'],[1e3,'K']];for(var i=0;i<u.length;i++){if(v>=u[i][0]){var x=v/u[i][0];return (x>=100?x.toFixed(0):x>=10?x.toFixed(1):x.toFixed(2))+u[i][1];}}return v.toFixed(0);}
+function lg(lo,hi,a,b){var l0=Math.log10(lo),l1=Math.log10(hi);var f=function(v){return a+(Math.log10(v)-l0)/(l1-l0)*(b-a);};f.inv=function(px){return Math.pow(10,l0+(px-a)/(b-a)*(l1-l0));};return f;}
+function ln(lo,hi,a,b){var f=function(v){return a+(v-lo)/(hi-lo)*(b-a);};f.inv=function(px){return lo+(px-a)/(b-a)*(hi-lo);};return f;}
+function tipAt(tip,card,html,cx,cy){tip.innerHTML=html;tip.hidden=false;var w=tip.offsetWidth,h=tip.offsetHeight,W=card.clientWidth;var x=cx+16,y=cy-h-12;if(x+w>W-6)x=cx-w-16;if(y<6)y=cy+16;tip.style.left=x+'px';tip.style.top=y+'px';}
+function svgPt(svg,ev){var r=svg.getBoundingClientRect(),vb=svg.viewBox.baseVal;return {x:(ev.clientX-r.left)*vb.width/r.width,y:(ev.clientY-r.top)*vb.height/r.height,s:r.width/vb.width,ox:r.left,oy:r.top};}
+function cardPt(card,ev){var r=card.getBoundingClientRect();return {x:ev.clientX-r.left,y:ev.clientY-r.top};}
+var RS=15.4;
+function eff(k){return 1+RS*(1-Math.exp(-(k-1)/RS));}
+function val(k){return k<=1?1:eff(k)-eff(k-1);}
+var svg=$('svg'),card=$('card'),tip=$('tip');
+var Y0=40,Y1=320;
+var MK=[{k:4,c:K.green,t:'almost free'},{k:16,c:K.amber,t:'falls fast'},{k:40,c:K.red,t:'near zero'}];
+function frame(X0,X1,yl,yt,yfmt,title,ytitle){
+  var g=el('g',null,svg),x=ln(0,60,X0,X1),y=ln(0,yl,Y1,Y0);
+  yt.forEach(function(v){el('line',{x1:X0,x2:X1,y1:y(v),y2:y(v),stroke:K.line},g);tx(g,X0-10,y(v)+4.5,yfmt(v),{'text-anchor':'end','font-size':13,fill:K.muted});});
+  [1,10,20,30,40,50,60].forEach(function(v){el('line',{x1:x(v),x2:x(v),y1:Y1,y2:Y1+5,stroke:K.muted,'stroke-opacity':0.6},g);tx(g,x(v),Y1+21,String(v),{'text-anchor':'middle','font-size':13,fill:K.muted});});
+  el('line',{x1:X0,x2:X1,y1:Y1,y2:Y1,stroke:K.muted,'stroke-opacity':0.6},g);
+  tx(g,X0-56,16,title,{'font-size':14.5,'font-weight':800,fill:K.ink});
+  tx(g,(X0+X1)/2,Y1+46,'epochs of the same data',{'text-anchor':'middle','font-size':13.5,'font-weight':700,fill:K.ink});
+  var ym=(Y0+Y1)/2;tx(g,X0-46,ym,ytitle,{'text-anchor':'middle','font-size':13.5,'font-weight':700,fill:K.ink,transform:'rotate(-90 '+(X0-46)+' '+ym+')'});
+  return {x:x,y:y,g:g};
+}
+// left panel
+var LA=frame(70,500,20,[0,5,10,15,20],function(v){return String(v);},'Effective data D′, in epochs of unique data','D′ / Uᴅ');
+var x=LA.x,y=LA.y,g=LA.g;
+el('path',{d:'M'+x(1)+' '+y(1)+'L'+x(20)+' '+y(20),stroke:K.muted,'stroke-width':1.4,'stroke-dasharray':'5 5',fill:'none'},g);
+tx(g,x(20)+8,y(20)+14,'every repeat as good as new data',{'font-size':13,fill:K.muted});
+el('line',{x1:x(0),x2:x(60),y1:y(1+RS),y2:y(1+RS),stroke:K.violet,'stroke-width':1.2,'stroke-dasharray':'2 4'},g);
+tx(g,x(60),y(1+RS)-8,'limit = 1 + R* = 16.4',{'text-anchor':'end','font-size':13,'font-weight':700,fill:K.violet});
+var d='';for(var k=1;k<=60;k+=0.25){d+=(k>1?'L':'M')+x(k).toFixed(1)+' '+y(eff(k)).toFixed(1);}
+el('path',{d:d,fill:'none',stroke:K.cyan,'stroke-width':2.8},g);
+MK.forEach(function(m,i){
+  var cx=x(m.k),cy=y(eff(m.k)),pc=Math.round(eff(m.k)/m.k*100);
+  el('line',{x1:cx,x2:cx,y1:cy+7,y2:Y1,stroke:m.c,'stroke-opacity':0.5,'stroke-dasharray':'2 3'},g);
+  el('circle',{cx:cx,cy:cy,r:6,fill:'#fff',stroke:m.c,'stroke-width':2.6},g);
+  var lx=cx+(i===2?0:12),ly=cy+(i===2?28:22),anc=i===2?'middle':'start';
+  tx(g,lx,ly,m.k+' epochs = '+eff(m.k).toFixed(1),{'text-anchor':anc,'font-size':13,'font-weight':800,fill:m.c});
+  tx(g,lx,ly+17,pc+'% of unique data',{'text-anchor':anc,'font-size':13,fill:K.muted});
+});
+// right panel
+var RA=frame(640,1080,1,[0,0.25,0.5,0.75,1],function(v){return Math.round(v*100)+'%';},'Value of each new epoch','value of the epoch');
+var bw=(RA.x(60)-RA.x(59))*0.62,bars=[];
+for(var k2=1;k2<=60;k2++){
+  var m=null;MK.forEach(function(q){if(q.k===k2)m=q;});
+  var bx=RA.x(k2)-bw/2,by=RA.y(val(k2));
+  bars.push(el('rect',{x:bx,y:by,width:bw,height:Y1-by,rx:1.5,fill:m?m.c:K.cyan,'fill-opacity':m?1:0.35},RA.g));
+}
+MK.forEach(function(m){
+  var cx=RA.x(m.k),cy=RA.y(val(m.k));
+  tx(RA.g,cx-4,cy-28,m.k+' epochs: '+Math.round(val(m.k)*100)+'%',{'font-size':13,'font-weight':800,fill:m.c});
+  tx(RA.g,cx-4,cy-11,m.t,{'font-size':13,fill:K.ink});
+});
+// hover
+var hv=el('g',{'pointer-events':'none'},svg),hd=el('circle',{r:5.5,fill:'#fff',stroke:K.cyan,'stroke-width':2.6},hv);hv.style.display='none';
+function show(k,ev){var cp=cardPt(card,ev);tipAt(tip,card,'<b>epoch '+k+'</b> <span>(R = '+(k-1)+' repeats)</span><br>D′ / U = '+eff(k).toFixed(2)+'<br>share of unique = '+Math.round(eff(k)/k*100)+'%<br>value of this epoch = '+Math.round(val(k)*100)+'%',cp.x,cp.y);}
+function hide(){hv.style.display='none';tip.hidden=true;bars.forEach(function(b){b.setAttribute('stroke','none');});}
+var h1=el('rect',{x:70,y:Y0,width:430,height:Y1-Y0,fill:'transparent'},svg);
+h1.addEventListener('mousemove',function(ev){var p=svgPt(svg,ev),k=Math.max(1,Math.min(60,Math.round(x.inv(p.x))));hv.style.display='';hd.setAttribute('cx',x(k));hd.setAttribute('cy',y(eff(k)));show(k,ev);});
+h1.addEventListener('mouseleave',hide);
+var h2=el('rect',{x:640,y:Y0,width:440,height:Y1-Y0,fill:'transparent'},svg);
+h2.addEventListener('mousemove',function(ev){var p=svgPt(svg,ev),k=Math.max(1,Math.min(60,Math.round(RA.x.inv(p.x))));bars.forEach(function(b,i){b.setAttribute('stroke',i===k-1?K.ink:'none');});show(k,ev);});
+h2.addEventListener('mouseleave',hide);
+
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

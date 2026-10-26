@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 16 Widget 6 - MoE Sparsity and Granularity</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s16w6-w{max-width:1180px;margin:0 auto;padding:18px 22px 20px}
+.s16w6-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.s16w6-w h1{font-size:26px;line-height:1.12;margin:4px 0 10px}
+.s16w6-say{border:1px solid #bae6f0;background:#f0fbfd;border-radius:10px;padding:12px 14px;color:#155e75;font-size:13.5px;line-height:1.55;margin:0 0 14px}
+.s16w6-say b{color:#0e7490;font-weight:800}
+.s16w6-bar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.s16w6-lb{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.s16w6-bar button{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;padding:6px 12px;font:800 11.5px Inter,sans-serif;cursor:pointer}
+.s16w6-bar button.on{border-color:var(--cyan);color:#0e7490;background:#effbfe;box-shadow:inset 0 0 0 1px var(--cyan)}
+.s16w6-sep{width:1px;height:20px;background:var(--line);margin:0 4px}
+.s16w6-row{display:grid;grid-template-columns:1.75fr 1fr;gap:10px}
+.s16w6-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:13px 16px 10px}
+.s16w6-card h2{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px;font-weight:800}
+.s16w6-card svg{display:block;width:100%;height:auto}
+.s16w6-leg{margin:4px 0 0;font-size:12px;color:var(--muted);line-height:1.4;display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.s16w6-leg b{color:var(--ink)}
+.s16w6-chip{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:6px;vertical-align:3px}
+.s16w6-cap{position:relative;height:15px;margin-top:6px}
+.s16w6-cap i{position:absolute;top:0;transform:translateX(-50%);font:800 10px Inter,sans-serif;font-style:normal;color:var(--ink);white-space:nowrap}
+.s16w6-tk{position:relative;height:44px;border-radius:8px;background:#f4f7fb;border:1px solid #e4ebf4;overflow:hidden;
+ background-image:repeating-linear-gradient(to right,#dde6f2 0,#dde6f2 1px,transparent 1px,transparent 25%)}
+.s16w6-fill{position:absolute;top:5px;bottom:5px;left:0;border-radius:5px;transition:width .4s ease-in-out,background-color .4s}
+.s16w6-lim{position:absolute;top:0;bottom:0;width:2px;background:var(--ink)}
+.s16w6-ax{position:relative;height:14px;margin-top:5px}
+.s16w6-ax i{position:absolute;top:0;transform:translateX(-50%);font:700 9.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:#93a3b6;font-style:normal;white-space:nowrap}
+.s16w6-ax i:first-child{transform:none}.s16w6-ax i:last-child{transform:translateX(-100%)}
+.s16w6-mt{margin:10px 0 0;font-size:12px;line-height:1.5;color:var(--muted)}
+.s16w6-mt b{color:var(--ink)}
+.s16w6-met{display:grid;grid-template-columns:1.3fr 1fr 1fr 1.2fr;gap:8px;margin-top:12px}
+.s16w6-box{border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.9);padding:10px 12px}
+.s16w6-box>span:not(.s16w6-rd){display:block;color:var(--muted);font-size:10.5px;line-height:1.3;font-weight:700;letter-spacing:.03em;text-transform:uppercase}
+.s16w6-rd{display:block;margin-top:3px;font:700 12.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.s16w6-rd b{font-size:17px;font-weight:800;color:var(--ink)}
+.s16w6-note{margin:10px 0 0;font-size:12.5px;line-height:1.5;min-height:38px}
+@media(max-width:1000px){.s16w6-row{grid-template-columns:1fr}.s16w6-met{grid-template-columns:1fr 1fr}.s16w6-rd{white-space:normal}}
+@media(max-width:620px){.s16w6-met{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s16w6-w">
+<div class="s16w6-k">ERA V5 Session 16 &middot; MoE sparsity and granularity</div>
+<h1>MoE Sparsity and Granularity</h1>
+<p class="s16w6-say">Pick an <b>activation ratio</b>, a <b>granularity</b> and a <b>compute budget</b> to see the <b>efficiency leverage</b>, the total parameter count and the memory that each GPU must hold.</p>
+
+<div class="s16w6-bar">
+<span class="s16w6-lb">active</span>
+<button type="button" class="s16w6-a" data-v="0.25" aria-label="Activation ratio 25 percent">25%</button>
+<button type="button" class="s16w6-a" data-v="0.094" aria-label="Activation ratio 9.4 percent">9.4%</button>
+<button type="button" class="s16w6-a" data-v="0.055" aria-label="Activation ratio 5.5 percent">5.5%</button>
+<button type="button" class="s16w6-a" data-v="0.031" aria-label="Activation ratio 3.1 percent">3.1%</button>
+<button type="button" class="s16w6-a" data-v="0.015" aria-label="Activation ratio 1.5 percent">1.5%</button>
+<button type="button" class="s16w6-a" data-v="0.008" aria-label="Activation ratio 0.8 percent">0.8%</button>
+<span class="s16w6-sep" aria-hidden="true"></span>
+<span class="s16w6-lb">G</span>
+<button type="button" class="s16w6-g" data-v="2" aria-label="Granularity 2">2</button>
+<button type="button" class="s16w6-g" data-v="4" aria-label="Granularity 4">4</button>
+<button type="button" class="s16w6-g" data-v="8" aria-label="Granularity 8">8</button>
+<button type="button" class="s16w6-g" data-v="12" aria-label="Granularity 12">12</button>
+<button type="button" class="s16w6-g" data-v="24" aria-label="Granularity 24">24</button>
+<button type="button" class="s16w6-g" data-v="48" aria-label="Granularity 48">48</button>
+<span class="s16w6-sep" aria-hidden="true"></span>
+<span class="s16w6-lb">compute</span>
+<button type="button" class="s16w6-c" data-v="1e21" aria-label="Compute budget 1e21 FLOPs">1e21</button>
+<button type="button" class="s16w6-c" data-v="1e22" aria-label="Compute budget 1e22 FLOPs">1e22</button>
+<button type="button" class="s16w6-c" data-v="1e23" aria-label="Compute budget 1e23 FLOPs">1e23</button>
+<button type="button" class="s16w6-c" data-v="1e24" aria-label="Compute budget 1e24 FLOPs">1e24</button>
+<button type="button" class="s16w6-c" data-v="1e25" aria-label="Compute budget 1e25 FLOPs">1e25</button>
+</div>
+
+<div class="s16w6-row">
+<div class="s16w6-card">
+<h2 id="s16w6-h2">efficiency leverage against activation ratio</h2>
+<svg id="s16w6-svg" viewBox="0 0 720 320" role="img" aria-label="Efficiency leverage against activation ratio, log scale, with frontier models marked"></svg>
+<p class="s16w6-leg"><span><i class="s16w6-chip" style="background:#0891b2" aria-hidden="true"></i><b>EL</b> at the selected G and compute</span><span><i class="s16w6-chip" style="background:#c4b5fd" aria-hidden="true"></i><b>EL</b> at G = 12</span><span>fit from Tian et al. 2025</span></p>
+</div>
+<div class="s16w6-card">
+<h2>memory per GPU, training state</h2>
+<div class="s16w6-cap"><i id="s16w6-cap">example limit 160 GB</i></div>
+<div class="s16w6-tk"><div class="s16w6-fill" id="s16w6-fill"></div><div class="s16w6-lim" id="s16w6-lim"></div></div>
+<div class="s16w6-ax" id="s16w6-ax"></div>
+<p class="s16w6-mt">Example: <b>16 bytes</b> per parameter (BF16 weights and gradients, FP32 master weights and Adam state), divided over an example group of <b>64 GPUs</b>. The axis is pinned from <b>0</b> to <b>400 GB</b>.</p>
+<p class="s16w6-mt" id="s16w6-gran"></p>
+</div>
+</div>
+
+<div class="s16w6-met">
+<div class="s16w6-box"><span>efficiency leverage EL</span><span class="s16w6-rd" id="s16w6-r1"></span></div>
+<div class="s16w6-box"><span>active parameters at 500 TPP</span><span class="s16w6-rd" id="s16w6-r2"></span></div>
+<div class="s16w6-box"><span>total parameters</span><span class="s16w6-rd" id="s16w6-r3"></span></div>
+<div class="s16w6-box"><span>memory per GPU</span><span class="s16w6-rd" id="s16w6-r4"></span></div>
+</div>
+<p class="s16w6-note" id="s16w6-note"></p>
+</main>
+
+<script>
+(function(){
+'use strict';
+var A=0.031,G=12,C=1e22,TPP=500,BYTES=16,GPUS=64,LIM=160,AXM=400,
+    W=720,H=320,L=46,R=12,T=14,B=80,XMIN=0.005,XMAX=1,YMAX=30,
+    FA=1.23,FD=-0.0761,FGAM=0.0167,FBET=-0.117,ASTART=0.0163,AMAX=5.28e16,
+    CYAN='#0891b2',LV='#c4b5fd',GREEN='#159447',AMBER='#d97706',RED='#dc2626',INK='#152033',
+    FRONT=[['Qwen3-235B',0.094,0],['DeepSeek-V3',0.055,1],['Kimi K2, DS-V4-Pro',0.031,2],['MAI-Base-2',0.029,3]];
+function $(i){return document.getElementById('s16w6-'+i);}
+// Tian et al. 2025 (arXiv 2507.17702), Eq. 13 and Table 2. Log bases are not stated in the paper;
+// log10 C and log2 G reproduce its headline (EL > 7 at 3.1%, G = 12, 1e22) and its best G of about 8 to 12.
+function ahat(a){return 1/(1/(a+1/(1/ASTART-1/AMAX))+1/AMAX);}
+function h(g){var l=Math.log2(g);return FGAM*l*l+FBET*l;}
+function alpha(c){return FA+FD*Math.log10(c);}
+function el(a,g,c){return Math.pow(ahat(a),alpha(c)+h(g));}
+function mf(m){return m<10?m.toFixed(1):m.toFixed(0);}
+function pct(a){return (a*100).toFixed(a<0.1?1:0)+'%';}
+function big(n){return n>=1e12?(n/1e12).toFixed(2)+'T':n>=1e9?(n/1e9).toFixed(n>=1e11?0:1)+'B':(n/1e6).toFixed(0)+'M';}
+function x(a){return L+(Math.log(a)-Math.log(XMIN))/(Math.log(XMAX)-Math.log(XMIN))*(W-L-R);}
+function y(v){return T+(1-Math.min(v,YMAX)/YMAX)*(H-T-B);}
+function curve(g,c){
+  var s='',i,a,n=120;
+  for(i=0;i<=n;i++){a=Math.exp(Math.log(XMIN)+i/n*(Math.log(XMAX)-Math.log(XMIN)));s+=(i?'L':'M')+x(a).toFixed(1)+','+y(el(a,g,c)).toFixed(1);}
+  return s;
+}
+function axis(){
+  var s='',i;for(i=0;i<=4;i++){s+='<i style="left:'+(i*25)+'%">'+(i*100)+' GB</i>';}
+  $('ax').innerHTML=s;
+}
+function draw(){
+  var E=el(A,G,C),al=alpha(C),hg=h(G),nAct=Math.sqrt(C/(6*TPP)),nTot=nAct/A,mem=nTot*BYTES/GPUS/1e9,
+      fits=mem<=LIM,s='',i,yt=[0,5,10,15,20,25,30],xt=[0.005,0.01,0.02,0.05,0.1,0.2,0.5,1],col,txt,gtxt;
+  for(i=0;i<yt.length;i++){s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y(yt[i])+'" y2="'+y(yt[i])+'" stroke="#e4ebf4"/>'+
+    '<text x="'+(L-7)+'" y="'+(y(yt[i])+4)+'" text-anchor="end" font-size="11" fill="#93a3b6" font-family="ui-monospace,monospace">'+yt[i]+'&times;</text>';}
+  for(i=0;i<xt.length;i++){s+='<text x="'+x(xt[i])+'" y="'+(H-B+15)+'" text-anchor="middle" font-size="11" fill="#93a3b6" font-family="ui-monospace,monospace">'+(xt[i]*100)+'%</text>';}
+  for(i=0;i<FRONT.length;i++){var f=FRONT[i],fx=x(f[1]),ty=H-B+29+f[2]*12,last=f[2]===3;
+    s+='<line x1="'+fx+'" x2="'+fx+'" y1="'+T+'" y2="'+(ty-9)+'" stroke="#cbd5e1" stroke-dasharray="3 4"/>'+
+      '<text x="'+(last?fx-4:fx+4)+'" y="'+ty+'" text-anchor="'+(last?'end':'start')+'" font-size="10.5" font-weight="700" fill="#65758b">'+f[0]+' '+pct(f[1])+'</text>';}
+  s+='<text x="'+(W-R)+'" y="'+(H-4)+'" text-anchor="end" font-size="11" fill="#65758b" font-weight="700">activation ratio (log scale)</text>';
+  if(G!==12){s+='<path d="'+curve(12,C)+'" fill="none" stroke="'+LV+'" stroke-width="2" stroke-dasharray="6 5"/>';}
+  s+='<path d="'+curve(G,C)+'" fill="none" stroke="'+CYAN+'" stroke-width="3"/>';
+  s+='<circle cx="'+x(A)+'" cy="'+y(E)+'" r="6" fill="'+INK+'" stroke="#fff" stroke-width="2"/>';
+  s+='<text x="'+(x(A)+10)+'" y="'+(y(E)-10)+'" font-size="12" font-weight="800" fill="'+INK+'">EL = '+E.toFixed(1)+'&times;</text>';
+  $('svg').innerHTML=s;
+  $('h2').textContent='efficiency leverage against activation ratio at G = '+G+' and '+C.toExponential(0).replace('+','')+' FLOPs';
+
+  $('r1').innerHTML='<b>'+E.toFixed(1)+'&times;</b> = '+ahat(A).toFixed(3)+'^('+(al+hg).toFixed(3)+')';
+  $('r2').innerHTML='<b>'+big(nAct)+'</b> = &radic;(C / (6 &times; 500))';
+  $('r3').innerHTML='<b>'+big(nTot)+'</b> = '+big(nAct)+' / '+A;
+  $('r4').innerHTML='<b style="color:'+(fits?GREEN:RED)+'">'+mf(mem)+' GB</b> = '+big(nTot)+' &times; 16 / 64';
+
+  $('fill').style.width=Math.min(100,mem/AXM*100)+'%';$('fill').style.background=fits?'#7c3aed':RED;
+  $('lim').style.left='calc('+(LIM/AXM*100)+'% - 1px)';$('cap').style.left=(LIM/AXM*100)+'%';
+
+  if(G<8){gtxt='G = '+G+' gives large experts. The Ling fit puts the best G at about 8 to 12, so this loses some leverage.';}
+  else if(G<=12){gtxt='G = '+G+' is near the Ling optimum of about 8 to 12. Here G = 2 &middot; d_model / d_expert.';}
+  else {gtxt='G = '+G+' gives small experts. Small experts run at low MFU. MAI reports MoE-layer MFU went from 24% to 35% only after kernel work.';}
+  $('gran').innerHTML=gtxt;
+
+  var Ehalf=el(Math.min(1,A*2),G,C);
+  if(!fits){col=RED;txt='The training state needs '+mf(mem)+' GB on each GPU. This is more than the example limit of 160 GB. Memory sets the limit here. Use more GPUs per expert group or a higher activation ratio.';}
+  else if(A>0.06){col=AMBER;txt='At '+pct(A)+' active, the model leaves leverage unused. Frontier MoE models use about 3% active or lower.';}
+  else {col=GREEN;txt='The state fits in '+mf(mem)+' GB on each GPU. A change from '+pct(Math.min(1,A*2))+' to '+pct(A)+' active raises EL from '+Ehalf.toFixed(1)+'&times; to '+E.toFixed(1)+'&times;. This step doubles the total parameters for '+(E/Ehalf).toFixed(2)+'&times; more leverage.';}
+  $('note').innerHTML='<span style="color:'+col+'">'+txt+'</span> <span style="color:#65758b">The curve uses the fit from Tian et al. 2025 (Ling, Eq. 13). It gives EL = 7.2&times; at 3.1%, G = 12 and 1e22 FLOPs. The paper predicts more than 7&times; there. The paper does not state the log bases, so we use log10 for C and log2 for G.</span>';
+}
+function marks(){
+  [['a',function(v){return +v===A;}],['g',function(v){return +v===G;}],['c',function(v){return +v===C;}]].forEach(function(g){
+    Array.prototype.forEach.call(document.querySelectorAll('.s16w6-'+g[0]),function(b){b.classList.toggle('on',g[1](b.getAttribute('data-v')));});});
+}
+Array.prototype.forEach.call(document.querySelectorAll('.s16w6-a'),function(b){b.addEventListener('click',function(){A=+b.getAttribute('data-v');marks();draw();});});
+Array.prototype.forEach.call(document.querySelectorAll('.s16w6-g'),function(b){b.addEventListener('click',function(){G=+b.getAttribute('data-v');marks();draw();});});
+Array.prototype.forEach.call(document.querySelectorAll('.s16w6-c'),function(b){b.addEventListener('click',function(){C=+b.getAttribute('data-v');marks();draw();});});
+axis();marks();draw();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

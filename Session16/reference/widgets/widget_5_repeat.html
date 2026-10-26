@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 16 Widget 5 - Repetition Value</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s16w5-w{max-width:1180px;margin:0 auto;padding:18px 22px 20px}
+.s16w5-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.s16w5-w h1{font-size:26px;line-height:1.12;margin:4px 0 10px}
+.s16w5-say{border:1px solid #bae6f0;background:#f0fbfd;border-radius:10px;padding:12px 14px;color:#155e75;font-size:13.5px;line-height:1.55;margin:0 0 14px}
+.s16w5-say b{color:#0e7490;font-weight:800}
+.s16w5-bar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.s16w5-lb{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.s16w5-bar button{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;padding:6px 13px;font:800 11.5px Inter,sans-serif;cursor:pointer}
+.s16w5-bar button.on{border-color:var(--cyan);color:#0e7490;background:#effbfe;box-shadow:inset 0 0 0 1px var(--cyan)}
+.s16w5-sep{width:1px;height:20px;background:var(--line);margin:0 5px}
+.s16w5-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:13px 16px 10px}
+.s16w5-card h2{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px;font-weight:800}
+.s16w5-card svg{display:block;width:100%;height:auto}
+.s16w5-leg{margin:6px 0 0;font-size:12px;color:var(--muted);line-height:1.4;display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.s16w5-leg b{color:var(--ink)}
+.s16w5-chip{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:6px;vertical-align:3px}
+.s16w5-met{display:grid;grid-template-columns:.8fr .8fr 1.9fr 1.1fr;gap:8px;margin-top:12px}
+.s16w5-box{border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.9);padding:10px 12px}
+.s16w5-box>span:not(.s16w5-rd){display:block;color:var(--muted);font-size:10.5px;line-height:1.3;font-weight:700;letter-spacing:.03em;text-transform:uppercase}
+.s16w5-rd{display:block;margin-top:3px;font:700 12.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.s16w5-rd b{font-size:17px;font-weight:800;color:var(--ink)}
+.s16w5-note{margin:10px 0 0;font-size:12.5px;line-height:1.5;min-height:38px}
+.s16w5-src{margin:4px 0 0;font-size:11.5px;color:var(--muted)}
+@media(max-width:1000px){.s16w5-met{grid-template-columns:1fr 1fr}.s16w5-rd{white-space:normal}}
+@media(max-width:620px){.s16w5-met{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s16w5-w">
+<div class="s16w5-k">ERA V5 Session 16 &middot; repetition value</div>
+<h1>Repeated Data</h1>
+<p class="s16w5-say">Pick a count of <b>unique tokens</b> and a count of <b>total training tokens</b>, and the curve shows how many <b>effective tokens</b> the repeated data gives, with the Muennighoff fit <b>R*_D = 15.4</b>.</p>
+
+<div class="s16w5-bar">
+<span class="s16w5-lb">unique tokens</span>
+<button type="button" class="s16w5-u" data-v="0.25" aria-label="Unique tokens 0.25 trillion">0.25T</button>
+<button type="button" class="s16w5-u" data-v="0.5" aria-label="Unique tokens 0.5 trillion">0.5T</button>
+<button type="button" class="s16w5-u" data-v="1" aria-label="Unique tokens 1 trillion">1T</button>
+<button type="button" class="s16w5-u" data-v="2" aria-label="Unique tokens 2 trillion">2T</button>
+<button type="button" class="s16w5-u" data-v="4.5" aria-label="Unique tokens 4.5 trillion">4.5T</button>
+<span class="s16w5-sep" aria-hidden="true"></span>
+<span class="s16w5-lb">total tokens</span>
+<button type="button" class="s16w5-t" data-v="5" aria-label="Total training tokens 5 trillion">5T</button>
+<button type="button" class="s16w5-t" data-v="15" aria-label="Total training tokens 15 trillion">15T</button>
+<button type="button" class="s16w5-t" data-v="30" aria-label="Total training tokens 30 trillion">30T</button>
+<button type="button" class="s16w5-t" data-v="50" aria-label="Total training tokens 50 trillion">50T</button>
+<span class="s16w5-sep" aria-hidden="true"></span>
+<span class="s16w5-lb">source</span>
+<button type="button" class="s16w5-m" data-v="single" aria-label="Single source training">single source</button>
+<button type="button" class="s16w5-m" data-v="mix" aria-label="Source inside a larger mixture">inside a mixture</button>
+</div>
+
+<div class="s16w5-card">
+<h2 id="s16w5-h2">effective tokens against epochs</h2>
+<svg id="s16w5-svg" viewBox="0 0 1130 300" role="img" aria-label="Effective tokens divided by unique tokens against epochs, log scale"></svg>
+<p class="s16w5-leg"><span><i class="s16w5-chip" style="background:#159447" aria-hidden="true"></i><b>effective tokens</b> / unique tokens (Muennighoff fit)</span><span><i class="s16w5-chip" style="background:#93a3b6" aria-hidden="true"></i><b>all tokens unique</b> (the ideal)</span><span><i class="s16w5-chip" style="background:#7c3aed" aria-hidden="true"></i><b>limit</b> = 1 + 15.4 = 16.4</span><span>example numbers</span></p>
+</div>
+
+<div class="s16w5-met">
+<div class="s16w5-box"><span>epochs E</span><span class="s16w5-rd" id="s16w5-r1"></span></div>
+<div class="s16w5-box"><span>repetitions R_D</span><span class="s16w5-rd" id="s16w5-r2"></span></div>
+<div class="s16w5-box"><span>effective tokens D'</span><span class="s16w5-rd" id="s16w5-r3"></span></div>
+<div class="s16w5-box"><span>value of repeated tokens</span><span class="s16w5-rd" id="s16w5-r4"></span></div>
+</div>
+<p class="s16w5-note" id="s16w5-note"></p>
+<p class="s16w5-src">D' = U + U &middot; R*_D &middot; (1 &minus; e^(&minus;R_D / R*_D)). U is the unique tokens. R_D = E &minus; 1. Muennighoff et al. 2023 fit this law on single-source runs.</p>
+</main>
+
+<script>
+(function(){
+'use strict';
+var RS=15.4,U=1,D=15,mode='single',
+    W=1130,H=300,L=58,R=14,T=14,B=34,XMIN=1,XMAX=256,YMAX=20,
+    GREEN='#159447',AMBER='#d97706',RED='#dc2626',VIO='#7c3aed',GREY='#93a3b6',INK='#152033';
+function $(i){return document.getElementById('s16w5-'+i);}
+function tk(v){return (v>=10?v.toFixed(1):v>=1?v.toFixed(2):v.toFixed(3)).replace(/\.?0+$/,'')+'T';}
+function x(e){return L+(Math.log(e)-Math.log(XMIN))/(Math.log(XMAX)-Math.log(XMIN))*(W-L-R);}
+function y(v){return T+(1-Math.min(v,YMAX)/YMAX)*(H-T-B);}
+function ratio(e){return e<=1?e:1+RS*(1-Math.exp(-(e-1)/RS));}
+function path(f){
+  var s='',i,e,n=160;
+  for(i=0;i<=n;i++){e=Math.exp(Math.log(XMIN)+i/n*(Math.log(XMAX)-Math.log(XMIN)));
+    if(f(e)>YMAX&&i>0){s+='L'+x(e).toFixed(1)+','+y(YMAX).toFixed(1);break;}
+    s+=(i?'L':'M')+x(e).toFixed(1)+','+y(f(e)).toFixed(1);}
+  return s;
+}
+function draw(){
+  var E=D/U,Rd=Math.max(0,E-1),Deff=E<=1?D:U+U*RS*(1-Math.exp(-Rd/RS)),
+      val=Rd>0?(Deff-U)/(D-U):1,s='',i,ticks=[1,2,4,8,16,32,64,128,256],yt=[0,4,8,12,16,20],
+      ex=Math.min(E,XMAX),col,txt;
+  // grid
+  for(i=0;i<yt.length;i++){s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y(yt[i])+'" y2="'+y(yt[i])+'" stroke="#e4ebf4"/>'+
+    '<text x="'+(L-8)+'" y="'+(y(yt[i])+4)+'" text-anchor="end" font-size="11" fill="#93a3b6" font-family="ui-monospace,monospace">'+yt[i]+'&times;</text>';}
+  for(i=0;i<ticks.length;i++){s+='<text x="'+x(ticks[i])+'" y="'+(H-B+16)+'" text-anchor="middle" font-size="11" fill="#93a3b6" font-family="ui-monospace,monospace">'+ticks[i]+'</text>';}
+  s+='<text x="'+(W-R)+'" y="'+(H-4)+'" text-anchor="end" font-size="11" fill="#65758b" font-weight="700">epochs E (log scale)</text>';
+  // mixture band
+  if(mode==='mix'){s+='<rect x="'+x(15)+'" y="'+T+'" width="'+(x(20)-x(15))+'" height="'+(H-T-B)+'" fill="#0891b2" opacity=".13"/>'+
+    '<text x="'+((x(15)+x(20))/2)+'" y="'+(H-B-22)+'" text-anchor="middle" font-size="10.5" font-weight="800" fill="#0e7490">15 to 20</text>'+
+    '<text x="'+((x(15)+x(20))/2)+'" y="'+(H-B-9)+'" text-anchor="middle" font-size="10.5" font-weight="800" fill="#0e7490">reuses</text>';}
+  // epoch marks
+  [[4,'4 epochs',GREEN],[16,'16 epochs',AMBER],[40,'40 epochs',RED]].forEach(function(m){
+    s+='<line x1="'+x(m[0])+'" x2="'+x(m[0])+'" y1="'+T+'" y2="'+(H-B)+'" stroke="'+m[2]+'" stroke-dasharray="4 4" stroke-width="1.5"/>'+
+      '<text x="'+(x(m[0])+5)+'" y="'+(T+12)+'" font-size="11" font-weight="800" fill="'+m[2]+'">'+m[1]+'</text>';});
+  // limit
+  s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y(1+RS)+'" y2="'+y(1+RS)+'" stroke="'+VIO+'" stroke-dasharray="2 4" stroke-width="1.5"/>';
+  // ideal and curve
+  s+='<path d="'+path(function(e){return e;})+'" fill="none" stroke="'+GREY+'" stroke-width="2" stroke-dasharray="6 5"/>';
+  s+='<path d="'+path(ratio)+'" fill="none" stroke="'+GREEN+'" stroke-width="3"/>';
+  // point
+  s+='<line x1="'+x(ex)+'" x2="'+x(ex)+'" y1="'+y(Math.min(E,YMAX))+'" y2="'+y(ratio(ex))+'" stroke="'+INK+'" stroke-width="1.5"/>';
+  s+='<circle cx="'+x(ex)+'" cy="'+y(ratio(ex))+'" r="6" fill="'+INK+'" stroke="#fff" stroke-width="2"/>';
+  s+='<text x="'+(x(ex)+(ex>90?-10:10))+'" y="'+(y(ratio(ex))+(ratio(ex)<3?-12:20))+'" text-anchor="'+(ex>90?'end':'start')+'" font-size="12" font-weight="800" fill="'+INK+'">E = '+E.toFixed(1)+', D\' = '+ratio(ex).toFixed(2)+'&times; U</text>';
+  $('svg').innerHTML=s;
+  $('h2').textContent='effective tokens against epochs for '+tk(U)+' unique and '+tk(D)+' total tokens';
+
+  $('r1').innerHTML='<b>'+E.toFixed(1)+'</b> = '+tk(D)+' / '+tk(U);
+  $('r2').innerHTML='<b>'+Rd.toFixed(1)+'</b> = '+E.toFixed(1)+' &minus; 1';
+  $('r3').innerHTML='<b>'+tk(Deff)+'</b> = '+tk(U)+' + '+tk(U)+' &times; 15.4 &times; (1 &minus; e^(&minus;'+Rd.toFixed(1)+' / 15.4))';
+  $('r4').innerHTML='<b>'+Math.round(val*100)+'%</b> = (D\' &minus; U) / (D &minus; U)';
+
+  if(mode==='single'){
+    if(E<=4){col=GREEN;txt='The data repeats '+E.toFixed(1)+' times. Up to about 4 epochs, the loss is nearly equal to the loss with unique data.';}
+    else if(E<=16){col=AMBER;txt='The data repeats '+E.toFixed(1)+' times. Repetition still helps up to about 16 epochs, but each epoch gives less. Plan for this: add regularization or rephrased data.';}
+    else if(E<=40){col=RED;txt='The data repeats '+E.toFixed(1)+' times. After about 16 epochs, the value of repetition falls very fast. Get more unique data or use a smaller token total.';}
+    else {col=RED;txt='The data repeats '+E.toFixed(1)+' times. At 40 epochs and more, repetition is almost worthless. Put the compute into more unique data or more model capacity.';}
+  }else{
+    if(E<=15){col=GREEN;txt='The source repeats '+E.toFixed(1)+' times inside a larger mixture. Sedova et al. 2026 report that a scarce source can be reused 15 to 20 times inside a mixture. The generic data acts as a regularizer.';}
+    else if(E<=20){col=AMBER;txt='The source repeats '+E.toFixed(1)+' times inside a larger mixture. This is at the edge of the 15 to 20 reuses that Sedova et al. 2026 report.';}
+    else {col=RED;txt='The source repeats '+E.toFixed(1)+' times inside a larger mixture. This is more than the 15 to 20 reuses that Sedova et al. 2026 report. Get more unique data for this source.';}
+    txt+=' The curve is the single-source fit, so it gives a low estimate here.';
+  }
+  $('note').innerHTML='<span style="color:'+col+'">'+txt+'</span>';
+}
+function marks(){
+  [['u',function(v){return +v===U;}],['t',function(v){return +v===D;}],['m',function(v){return v===mode;}]].forEach(function(g){
+    Array.prototype.forEach.call(document.querySelectorAll('.s16w5-'+g[0]),function(b){b.classList.toggle('on',g[1](b.getAttribute('data-v')));});});
+}
+Array.prototype.forEach.call(document.querySelectorAll('.s16w5-u'),function(b){b.addEventListener('click',function(){U=+b.getAttribute('data-v');marks();draw();});});
+Array.prototype.forEach.call(document.querySelectorAll('.s16w5-t'),function(b){b.addEventListener('click',function(){D=+b.getAttribute('data-v');marks();draw();});});
+Array.prototype.forEach.call(document.querySelectorAll('.s16w5-m'),function(b){b.addEventListener('click',function(){mode=b.getAttribute('data-v');marks();draw();});});
+marks();draw();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

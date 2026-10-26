@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 16 Widget 3 - IsoFLOP Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s16w3-w{max-width:1180px;margin:0 auto;padding:18px 22px 20px}
+.s16w3-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.s16w3-w h1{font-size:26px;line-height:1.12;margin:4px 0 10px}
+.s16w3-say{border:1px solid #bae6f0;background:#f0fbfd;border-radius:10px;padding:12px 14px;color:#155e75;font-size:13.5px;line-height:1.55;margin:0 0 14px}
+.s16w3-say b{color:#0e7490;font-weight:800}
+.s16w3-bar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.s16w3-lb{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.s16w3-bar button{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;padding:6px 14px;font:800 11.5px Inter,sans-serif;cursor:pointer}
+.s16w3-bar button.s16w3-q.on{border-color:var(--cyan);color:#0e7490;background:#effbfe;box-shadow:inset 0 0 0 1px var(--cyan)}
+.s16w3-bar button.s16w3-n.on{border-color:var(--ink);color:var(--ink);background:#eef2f7;box-shadow:inset 0 0 0 1px var(--ink)}
+.s16w3-sep{width:1px;height:20px;background:var(--line);margin:0 5px}
+.s16w3-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:13px 16px 12px}
+.s16w3-card h2{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px;font-weight:800}
+.s16w3-card svg{display:block;width:100%;height:auto}
+.s16w3-leg{margin:6px 0 0;font-size:12px;color:var(--muted);line-height:1.4;display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.s16w3-leg b{color:var(--ink)}
+.s16w3-chip{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:6px;vertical-align:3px}
+.s16w3-met{display:grid;grid-template-columns:1.3fr 1.1fr 1fr;gap:8px;margin-top:12px}
+.s16w3-box{border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.9);padding:10px 12px}
+.s16w3-box>span:not(.s16w3-rd){display:block;color:var(--muted);font-size:10.5px;line-height:1.3;font-weight:700;letter-spacing:.03em;text-transform:uppercase}
+.s16w3-rd{display:block;margin-top:3px;font:700 12.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.s16w3-rd b{font-size:17px;font-weight:800;color:var(--ink)}
+.s16w3-note{margin:10px 0 0;font-size:12.5px;line-height:1.5;min-height:20px}
+@media(max-width:1000px){.s16w3-met{grid-template-columns:1fr}.s16w3-rd{white-space:normal}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s16w3-w">
+<div class="s16w3-k">ERA V5 Session 16 &middot; IsoFLOP profiles</div>
+<h1>IsoFLOP Explorer</h1>
+<p class="s16w3-say">Each curve fixes the compute <b>C</b> and spends it as <b>C = 6 &middot; N &middot; D</b>, so a larger model gets fewer tokens. The loss comes from the fitted law <b>L(N, D) = E + A / N^&alpha; + B / D^&beta;</b>. Pick a budget and a set of coefficients to see where the minimum falls.</p>
+
+<div class="s16w3-bar">
+<span class="s16w3-lb">compute budget</span>
+<button type="button" class="s16w3-q" data-v="1e21" aria-label="Compute budget 1e21 FLOPs">1e21</button>
+<button type="button" class="s16w3-q" data-v="1e22" aria-label="Compute budget 1e22 FLOPs">1e22</button>
+<button type="button" class="s16w3-q" data-v="1e23" aria-label="Compute budget 1e23 FLOPs">1e23</button>
+<button type="button" class="s16w3-q" data-v="5.88e23" aria-label="Compute budget of Chinchilla, 5.9e23 FLOPs">Chinchilla 5.9e23</button>
+<button type="button" class="s16w3-q" data-v="1e24" aria-label="Compute budget 1e24 FLOPs">1e24</button>
+<button type="button" class="s16w3-q" data-v="1e25" aria-label="Compute budget 1e25 FLOPs">1e25</button>
+<span class="s16w3-sep" aria-hidden="true"></span>
+<span class="s16w3-lb">coefficients</span>
+<button type="button" class="s16w3-n" data-v="E" aria-label="Use the Epoch AI refit coefficients">Epoch refit 2024</button>
+<button type="button" class="s16w3-n" data-v="H" aria-label="Use the Hoffmann Approach 3 coefficients">Hoffmann 2022</button>
+</div>
+
+<div class="s16w3-card">
+<h2 id="s16w3-h2">loss against model size at fixed compute</h2>
+<svg id="s16w3-svg" viewBox="0 0 1100 320" role="img" aria-label="Loss against model size at fixed compute"></svg>
+<p class="s16w3-leg"><span><i class="s16w3-chip" style="background:#7c3aed" aria-hidden="true"></i><b>selected fit</b>, dot at the minimum</span><span><i class="s16w3-chip" style="background:#9aa8bb" aria-hidden="true"></i><b>other fit</b>, ring at its minimum</span><span><i class="s16w3-chip" style="background:#bfe9c9;height:10px" aria-hidden="true"></i><b>flat valley</b>, loss within 0.01 of the minimum</span><span id="s16w3-coef"></span></p>
+</div>
+
+<div class="s16w3-met">
+<div class="s16w3-box"><span>best model size N_opt</span><span class="s16w3-rd" id="s16w3-r1"></span></div>
+<div class="s16w3-box"><span>tokens at the best size D_opt</span><span class="s16w3-rd" id="s16w3-r2"></span></div>
+<div class="s16w3-box"><span>tokens per parameter</span><span class="s16w3-rd" id="s16w3-r3"></span></div>
+</div>
+<p class="s16w3-note" id="s16w3-note"></p>
+</main>
+
+<script>
+(function(){
+'use strict';
+var FITS={
+  H:{name:'Hoffmann 2022',A:406.4,B:410.7,E:1.6934,a:0.3392,b:0.2849},
+  E:{name:'Epoch refit 2024',A:482.01,B:2085.43,E:1.8172,a:0.3478,b:0.3658}
+};
+var VIO='#7c3aed',GREY='#9aa8bb',GREEN='#159447',
+    X0=74,X1=1080,Y0=14,Y1=284,LX0=8,LX1=13,
+    C=1e23,fit='E';
+function $(i){return document.getElementById('s16w3-'+i);}
+function sci(v){var e=Math.floor(Math.log10(v)),m=v/Math.pow(10,e);m=+m.toFixed(1);if(m>=10){m=1;e+=1;}return (m===1?'1':m.toFixed(1))+'e'+e;}
+function big(v){
+  if(v>=1e12)return trim(v/1e12)+'T';
+  if(v>=1e9)return trim(v/1e9)+'B';
+  return trim(v/1e6)+'M';
+}
+function trim(v){return v>=100?v.toFixed(0):(v>=10?v.toFixed(1):v.toFixed(2));}
+function loss(f,N){var D=C/(6*N);return f.E+f.A/Math.pow(N,f.a)+f.B/Math.pow(D,f.b);}
+function gK(f){return Math.pow(f.a*f.A/(f.b*f.B),1/(f.a+f.b));}
+function xp(f){return f.b/(f.a+f.b);}
+function nopt(f){return gK(f)*Math.pow(C/6,xp(f));}
+function sx(N){return X0+(Math.log10(N)-LX0)/(LX1-LX0)*(X1-X0);}
+function valley(f,Lm){
+  var lo=null,hi=null,lg,N;
+  for(lg=LX0;lg<=LX1;lg+=0.001){N=Math.pow(10,lg);if(loss(f,N)<=Lm+0.01){if(lo===null)lo=N;hi=N;}}
+  return [lo,hi];
+}
+function draw(){
+  var f=FITS[fit],o=FITS[fit==='E'?'H':'E'],
+      Nf=nopt(f),Lf=loss(f,Nf),No=nopt(o),Lo=loss(o,No),
+      ymin=Math.floor((Math.min(Lf,Lo)-0.04)*20)/20,ymax=ymin+0.6,
+      sy=function(L){return Y1-(L-ymin)/(ymax-ymin)*(Y1-Y0);},
+      s='',i,lg,v,path,first,yv,Df=C/(6*Nf),tpp=Df/Nf,vl=valley(f,Lf);
+  s+='<defs><clipPath id="s16w3-cl"><rect x="'+X0+'" y="'+Y0+'" width="'+(X1-X0)+'" height="'+(Y1-Y0)+'"/></clipPath></defs>';
+  s+='<rect x="'+sx(vl[0]).toFixed(1)+'" y="'+Y0+'" width="'+(sx(vl[1])-sx(vl[0])).toFixed(1)+'" height="'+(Y1-Y0)+'" fill="#eafaf0" stroke="#bfe9c9"/>';
+  for(i=0;i<=6;i++){v=ymin+i*0.1;yv=sy(v);
+    s+='<line x1="'+X0+'" x2="'+X1+'" y1="'+yv.toFixed(1)+'" y2="'+yv.toFixed(1)+'" stroke="#e4ebf4"/>';
+    s+='<text x="'+(X0-8)+'" y="'+(yv+4).toFixed(1)+'" text-anchor="end" font-size="11" font-family="ui-monospace,monospace" fill="#93a3b6">'+v.toFixed(2)+'</text>';}
+  var lab=['100M','1B','10B','100B','1T','10T'];
+  for(i=LX0;i<=LX1;i++){v=sx(Math.pow(10,i));
+    s+='<line x1="'+v+'" x2="'+v+'" y1="'+Y0+'" y2="'+Y1+'" stroke="#e4ebf4"/>';
+    s+='<text x="'+v+'" y="'+(Y1+17)+'" text-anchor="middle" font-size="11" font-family="ui-monospace,monospace" fill="#93a3b6">'+lab[i-LX0]+'</text>';}
+  s+='<text x="'+((X0+X1)/2)+'" y="'+(Y1+34)+'" text-anchor="middle" font-size="11.5" font-weight="700" fill="#65758b">model size N (parameters, log scale)</text>';
+  s+='<text x="16" y="'+((Y0+Y1)/2)+'" text-anchor="middle" font-size="11.5" font-weight="700" fill="#65758b" transform="rotate(-90 16 '+((Y0+Y1)/2)+')">loss</text>';
+  [[o,GREY,'6 5',2],[f,VIO,'',3]].forEach(function(r){
+    path='';first=true;
+    for(lg=LX0;lg<=LX1+1e-9;lg+=0.01){v=Math.pow(10,lg);yv=Math.max(Y0-40,Math.min(Y1+40,sy(loss(r[0],v))));
+      path+=(first?'M':'L')+sx(v).toFixed(1)+' '+yv.toFixed(1);first=false;}
+    s+='<path d="'+path+'" fill="none" stroke="'+r[1]+'" stroke-width="'+r[3]+'"'+(r[2]?' stroke-dasharray="'+r[2]+'"':'')+' clip-path="url(#s16w3-cl)"/>';
+  });
+  s+='<circle cx="'+sx(No).toFixed(1)+'" cy="'+sy(Lo).toFixed(1)+'" r="6" fill="#fff" stroke="'+GREY+'" stroke-width="2"/>';
+  s+='<line x1="'+sx(Nf).toFixed(1)+'" x2="'+sx(Nf).toFixed(1)+'" y1="'+sy(Lf).toFixed(1)+'" y2="'+Y1+'" stroke="'+VIO+'" stroke-dasharray="3 3"/>';
+  s+='<circle cx="'+sx(Nf).toFixed(1)+'" cy="'+sy(Lf).toFixed(1)+'" r="6.5" fill="'+VIO+'"/>';
+  var tx=Math.max(X0+150,Math.min(X1-150,sx(Nf)));
+  s+='<line x1="'+sx(Nf).toFixed(1)+'" x2="'+sx(Nf).toFixed(1)+'" y1="'+(Y0+24)+'" y2="'+(sy(Lf)-8).toFixed(1)+'" stroke="'+VIO+'" stroke-dasharray="3 3"/>';
+  s+='<text x="'+tx.toFixed(1)+'" y="'+(Y0+16)+'" text-anchor="middle" font-size="12" font-weight="800" fill="'+VIO+'" stroke="#fff" stroke-width="4" paint-order="stroke">minimum: N = '+big(Nf)+', loss = '+Lf.toFixed(3)+'</text>';
+  $('svg').innerHTML=s;
+
+  $('h2').textContent='loss against model size at C = '+sci(C)+' FLOPs, '+f.name+' coefficients';
+  $('coef').innerHTML='<b>'+f.name+'</b>: E = '+f.E+', A = '+f.A+', B = '+f.B+', &alpha; = '+f.a+', &beta; = '+f.b;
+  $('r1').innerHTML='<b style="color:'+VIO+'">'+big(Nf)+'</b> = '+gK(f).toFixed(3)+' &times; ('+sci(C)+' / 6)^'+xp(f).toFixed(3);
+  $('r2').innerHTML='<b>'+big(Df)+'</b> = ('+sci(C)+' / 6) / '+big(Nf);
+  $('r3').innerHTML='<b style="color:'+GREEN+'">'+tpp.toFixed(1)+'</b> = '+big(Df)+' / '+big(Nf);
+  var oT=(C/(6*No))/No;
+  $('note').innerHTML='The valley is flat. Loss stays within 0.01 of the minimum from <b>'+big(vl[0])+'</b> to <b>'+big(vl[1])+'</b> parameters, a range of '+(vl[1]/vl[0]).toFixed(1)+' times in model size. '+
+    'With the '+o.name+' coefficients, the best size is <b>'+big(No)+'</b> at <b>'+oT.toFixed(1)+'</b> tokens per parameter. The coefficients move the answer.';
+}
+function marks(){
+  Array.prototype.forEach.call(document.querySelectorAll('.s16w3-q'),function(b){b.classList.toggle('on',+b.getAttribute('data-v')===C);});
+  Array.prototype.forEach.call(document.querySelectorAll('.s16w3-n'),function(b){b.classList.toggle('on',b.getAttribute('data-v')===fit);});
+}
+Array.prototype.forEach.call(document.querySelectorAll('.s16w3-q'),function(b){
+  b.addEventListener('click',function(){C=+b.getAttribute('data-v');marks();draw();});
+});
+Array.prototype.forEach.call(document.querySelectorAll('.s16w3-n'),function(b){
+  b.addEventListener('click',function(){fit=b.getAttribute('data-v');marks();draw();});
+});
+marks();draw();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 16 Figure 2 - IsoFLOP Curves with the Epoch Refit</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;font-variant-numeric:tabular-nums}
+.s16f2-w{max-width:1180px;margin:0 auto;padding:16px 22px 16px}
+.s16f2-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.s16f2-w h1{font-size:22px;line-height:1.15;margin:3px 0 12px}
+.s16f2-card{position:relative;background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:14px 16px 12px}
+.s16f2-card svg{display:block;width:100%;height:auto;overflow:visible}
+.s16f2-card svg text{font-family:Inter,ui-sans-serif,system-ui,sans-serif;font-variant-numeric:tabular-nums}
+.s16f2-note{margin:10px 2px 0;font-size:13px;line-height:1.5;color:var(--muted)}
+.s16f2-note b{color:var(--ink)}
+.s16f2-tip{position:absolute;pointer-events:none;background:#fff;border:1px solid var(--line);border-radius:9px;box-shadow:0 8px 22px rgba(20,42,75,.13);padding:8px 11px;font:600 13px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--ink);white-space:nowrap;z-index:5}
+.s16f2-tip b{font-family:Inter,sans-serif;font-weight:800}
+.s16f2-tip span{color:var(--muted)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+</style>
+</head>
+<body>
+<main class="s16f2-w">
+<div class="s16f2-k">ERA V5 Session 16 &middot; IsoFLOP curves</div>
+<h1>IsoFLOP Curves with the Epoch Refit</h1>
+<div class="s16f2-card" id="s16f2-card"><svg id="s16f2-svg" viewBox="0 0 1100 406" role="img" aria-label="IsoFLOP curves: loss against model size at four fixed compute budgets, with the best model size of each curve marked."></svg><div class="s16f2-tip" id="s16f2-tip" hidden></div></div>
+<p class="s16f2-note"><b>L = E + A / N^&alpha; + B / D^&beta;</b> with the Epoch refit and <b>D = C / (6 &middot; N)</b>. The dashed line joins the minima. Move the pointer over a curve to read the values.</p>
+
+</main>
+<script>
+(function(){
+'use strict';
+var NS='http://www.w3.org/2000/svg';
+var CS=getComputedStyle(document.documentElement);
+var K={};['ink','muted','line','cyan','violet','green','amber','red'].forEach(function(n){K[n]=CS.getPropertyValue('--'+n).trim();});
+function $(i){return document.getElementById('s16f2-'+i);}
+function el(t,a,p){var e=document.createElementNS(NS,t);if(a){for(var k in a){if(a[k]!==undefined&&a[k]!==null)e.setAttribute(k,a[k]);}}if(p)p.appendChild(e);return e;}
+function tx(p,x,y,s,a){a=a||{};a.x=x;a.y=y;var e=el('text',a,p);e.textContent=s;return e;}
+var SUP={'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','-':'⁻'};
+function p10(e){return '10'+String(e).split('').map(function(c){return SUP[c];}).join('');}
+function sci(v){var e=Math.floor(Math.log10(v)+1e-9),m=v/Math.pow(10,e);return (Math.abs(m-1)<1e-6?'':(m.toFixed(1).replace(/\.0$/,'')+' × '))+p10(e);}
+function big(v){var u=[[1e12,'T'],[1e9,'B'],[1e6,'M'],[1e3,'K']];for(var i=0;i<u.length;i++){if(v>=u[i][0]){var x=v/u[i][0];return (x>=100?x.toFixed(0):x>=10?x.toFixed(1):x.toFixed(2))+u[i][1];}}return v.toFixed(0);}
+function lg(lo,hi,a,b){var l0=Math.log10(lo),l1=Math.log10(hi);var f=function(v){return a+(Math.log10(v)-l0)/(l1-l0)*(b-a);};f.inv=function(px){return Math.pow(10,l0+(px-a)/(b-a)*(l1-l0));};return f;}
+function ln(lo,hi,a,b){var f=function(v){return a+(v-lo)/(hi-lo)*(b-a);};f.inv=function(px){return lo+(px-a)/(b-a)*(hi-lo);};return f;}
+function tipAt(tip,card,html,cx,cy){tip.innerHTML=html;tip.hidden=false;var w=tip.offsetWidth,h=tip.offsetHeight,W=card.clientWidth;var x=cx+16,y=cy-h-12;if(x+w>W-6)x=cx-w-16;if(y<6)y=cy+16;tip.style.left=x+'px';tip.style.top=y+'px';}
+function svgPt(svg,ev){var r=svg.getBoundingClientRect(),vb=svg.viewBox.baseVal;return {x:(ev.clientX-r.left)*vb.width/r.width,y:(ev.clientY-r.top)*vb.height/r.height,s:r.width/vb.width,ox:r.left,oy:r.top};}
+function cardPt(card,ev){var r=card.getBoundingClientRect();return {x:ev.clientX-r.left,y:ev.clientY-r.top};}
+var A=482.01,B=2085.43,E=1.8172,AL=0.3478,BE=0.3658;
+function L(N,C){var D=C/(6*N);return E+A/Math.pow(N,AL)+B/Math.pow(D,BE);}
+var svg=$('svg'),card=$('card'),tip=$('tip');
+var X0=78,X1=1080,Y0=10,Y1=352;
+var x=lg(3e8,1e12,X0,X1),y=ln(1.93,2.48,Y1,Y0);
+var gr=el('g',null,svg);
+// grid and axes
+[1e8*2,1e9,1e10,1e11,1e12].forEach(function(v){});
+[1e9,1e10,1e11,1e12].forEach(function(v){el('line',{x1:x(v),x2:x(v),y1:Y0,y2:Y1,stroke:K.line,'stroke-width':1},gr);tx(gr,x(v),Y1+22,{1e9:'1B',1e10:'10B',1e11:'100B',1e12:'1T'}[v],{'text-anchor':'middle','font-size':13,fill:K.muted});});
+[5e8,2e9,3e9,5e9,2e10,3e10,5e10,2e11,3e11,5e11].forEach(function(v){el('line',{x1:x(v),x2:x(v),y1:Y0,y2:Y1,stroke:K.line,'stroke-opacity':0.45},gr);});
+for(var t=1.95;t<=2.471;t+=0.05){var yy=y(t);el('line',{x1:X0,x2:X1,y1:yy,y2:yy,stroke:K.line,'stroke-opacity':0.8},gr);tx(gr,X0-10,yy+4.5,t.toFixed(2),{'text-anchor':'end','font-size':13,fill:K.muted});}
+el('line',{x1:X0,x2:X1,y1:Y1,y2:Y1,stroke:K.muted,'stroke-opacity':0.6},gr);
+el('line',{x1:X0,x2:X0,y1:Y0,y2:Y1,stroke:K.muted,'stroke-opacity':0.6},gr);
+tx(gr,(X0+X1)/2,Y1+48,'model size N (parameters, log scale)',{'text-anchor':'middle','font-size':13.5,'font-weight':700,fill:K.ink});
+tx(gr,22,(Y0+Y1)/2,'loss',{'text-anchor':'middle','font-size':13.5,'font-weight':700,fill:K.ink,transform:'rotate(-90 22 '+((Y0+Y1)/2)+')'});
+var clip=el('clipPath',{id:'s16f2-clip'},el('defs',null,svg));el('rect',{x:X0,y:Y0,width:X1-X0,height:Y1-Y0},clip);
+
+var BUD=[{C:1e21,c:K.cyan},{C:1e22,c:K.violet},{C:1e23,c:K.green},{C:1e24,c:K.amber}];
+var pg=el('g',{'clip-path':'url(#s16f2-clip)'},svg),lab=el('g',null,svg);
+BUD.forEach(function(b){
+  b.lo=Math.max(3e8,Math.sqrt(b.C/6/1500));b.hi=Math.min(1e12,Math.sqrt(b.C/6/1.5));
+  var d='',best={L:9},i,n=240;
+  for(i=0;i<=n;i++){var N=Math.pow(10,Math.log10(b.lo)+i/n*(Math.log10(b.hi)-Math.log10(b.lo))),l=L(N,b.C);d+=(i?'L':'M')+x(N).toFixed(1)+' '+y(l).toFixed(1);}
+  for(var lN=8;lN<12.5;lN+=0.0005){var N2=Math.pow(10,lN),l2=L(N2,b.C);if(l2<best.L)best={L:l2,N:N2};}
+  b.best=best;b.d=d;
+});
+// flat valley on the 1e23 curve: loss within 0.5% of the best
+var V=BUD[2],vl=null,vh=null;
+for(var lv=8;lv<12.5;lv+=0.002){var Nv=Math.pow(10,lv);if(Nv<V.lo||Nv>V.hi)continue;if(L(Nv,V.C)<=V.best.L*1.005){if(vl===null)vl=Nv;vh=Nv;}}
+var vd='';for(var k=0;k<=80;k++){var Nk=Math.pow(10,Math.log10(vl)+k/80*(Math.log10(vh)-Math.log10(vl)));vd+=(k?'L':'M')+x(Nk).toFixed(1)+' '+y(L(Nk,V.C)).toFixed(1);}
+el('path',{d:vd,fill:'none',stroke:K.green,'stroke-opacity':0.18,'stroke-width':16,'stroke-linecap':'round'},pg);
+// trend through minima
+var md='';BUD.forEach(function(b,i){md+=(i?'L':'M')+x(b.best.N).toFixed(1)+' '+y(b.best.L).toFixed(1);});
+el('path',{d:md,fill:'none',stroke:K.ink,'stroke-opacity':0.55,'stroke-width':1.3,'stroke-dasharray':'5 5'},pg);
+BUD.forEach(function(b){el('path',{d:b.d,fill:'none',stroke:b.c,'stroke-width':2.6,'stroke-linejoin':'round'},pg);});
+BUD.forEach(function(b){
+  var cx=x(b.best.N),cy=y(b.best.L);
+  el('circle',{cx:cx,cy:cy,r:6,fill:'#fff',stroke:b.c,'stroke-width':2.6},lab);
+  el('circle',{cx:cx,cy:cy,r:2.4,fill:b.c},lab);
+  tx(lab,cx+9,cy-14,'best N = '+big(b.best.N),{'font-size':13,'font-weight':700,fill:b.c});
+  var ex=x(b.hi),ey=y(L(b.hi,b.C));
+  tx(lab,ex+8,ey+5,p10(Math.round(Math.log10(b.C)))+' FLOPs',{'font-size':13.5,'font-weight':800,fill:b.c});
+});
+var vx=x(vh)+16,vy=y(L(vh,V.C))+2;
+var ty=y(2.112);
+el('path',{d:'M'+vx+' '+(vy-11)+'V'+(ty-4.5)+'H'+(vx+8),fill:'none',stroke:K.green,'stroke-width':1.2},lab);
+tx(lab,vx+12,ty,'a flat valley: loss within 0.5% of the best',{'font-size':13,'font-weight':700,fill:K.green});
+// hover
+var hv=el('g',{'pointer-events':'none'},svg),hl=el('line',{y1:Y0,y2:Y1,stroke:K.muted,'stroke-dasharray':'3 3'},hv),hd=el('circle',{r:5.5,fill:'#fff','stroke-width':2.6},hv);hv.style.display='none';
+var hit=el('rect',{x:X0,y:Y0,width:X1-X0,height:Y1-Y0,fill:'transparent'},svg);
+hit.addEventListener('mousemove',function(ev){
+  var p=svgPt(svg,ev),N=x.inv(p.x),bb=null,bd=1e9;
+  BUD.forEach(function(b){if(N<b.lo||N>b.hi)return;var d=Math.abs(y(L(N,b.C))-p.y);if(d<bd){bd=d;bb=b;}});
+  if(!bb||bd>40){hv.style.display='none';tip.hidden=true;return;}
+  var l=L(N,bb.C),D=bb.C/(6*N),cy=y(l);
+  hv.style.display='';hl.setAttribute('x1',x(N));hl.setAttribute('x2',x(N));hd.setAttribute('cx',x(N));hd.setAttribute('cy',cy);hd.setAttribute('stroke',bb.c);
+  var cp=cardPt(card,ev);
+  tipAt(tip,card,'<b style="color:'+bb.c+'">C = '+sci(bb.C)+' FLOPs</b><br>N = '+big(N)+' <span>parameters</span><br>D = '+big(D)+' <span>tokens</span><br>D / N = '+(D/N).toFixed(1)+' <span>tokens per parameter</span><br>loss = '+l.toFixed(4),cp.x,cp.y);
+});
+hit.addEventListener('mouseleave',function(){hv.style.display='none';tip.hidden=true;});
+
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

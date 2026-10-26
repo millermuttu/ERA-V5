@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 16 Widget 1 - Counting Training FLOPs</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s16w1-w{max-width:1180px;margin:0 auto;padding:18px 22px 20px}
+.s16w1-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.s16w1-w h1{font-size:26px;line-height:1.12;margin:4px 0 10px}
+.s16w1-say{border:1px solid #bae6f0;background:#f0fbfd;border-radius:10px;padding:12px 14px;color:#155e75;font-size:13.5px;line-height:1.55;margin:0 0 14px}
+.s16w1-say b{color:#0e7490;font-weight:800}
+.s16w1-bar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.s16w1-lb{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.s16w1-bar button{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;padding:6px 14px;font:800 11.5px Inter,sans-serif;cursor:pointer}
+.s16w1-bar button.on{border-color:var(--cyan);color:#0e7490;background:#effbfe;box-shadow:inset 0 0 0 1px var(--cyan)}
+.s16w1-sep{width:1px;height:20px;background:var(--line);margin:0 5px}
+.s16w1-sl{display:inline-flex;align-items:center;gap:8px;margin:0 10px 0 8px}
+.s16w1-sl input{width:190px;accent-color:var(--cyan)}
+.s16w1-v{font:800 12.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--ink);min-width:62px}
+.s16w1-two{display:grid;grid-template-columns:1.05fr 1fr;gap:10px;margin-top:4px}
+.s16w1-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:13px 16px 12px}
+.s16w1-card h2{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;font-weight:800}
+.s16w1-row{margin:0 0 12px}
+.s16w1-rl{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:4px}
+.s16w1-rl b{color:var(--ink)}
+.s16w1-tk{position:relative;height:34px;border-radius:8px;background:#f4f7fb;border:1px solid #e4ebf4;overflow:hidden;
+ background-image:repeating-linear-gradient(to right,#dde6f2 0,#dde6f2 1px,transparent 1px,transparent 10%)}
+.s16w1-f{position:absolute;top:5px;bottom:5px;transition:left .4s ease-in-out,width .4s ease-in-out}
+.s16w1-leg{margin:6px 0 0;font-size:12px;color:var(--muted);line-height:1.4;display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.s16w1-leg b{color:var(--ink)}
+.s16w1-chip{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.s16w1-svg{display:block;width:100%;height:auto}
+.s16w1-met{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.s16w1-box{border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.9);padding:9px 12px}
+.s16w1-box>span:not(.s16w1-rd){display:block;color:var(--muted);font-size:10.5px;line-height:1.3;font-weight:700;letter-spacing:.03em;text-transform:uppercase}
+.s16w1-rd{display:block;margin-top:3px;font:700 12.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.s16w1-rd b{font-size:16px;font-weight:800;color:var(--ink)}
+.s16w1-note{margin:10px 0 0;font-size:12.5px;line-height:1.5;min-height:20px}
+@media(max-width:1000px){.s16w1-two,.s16w1-met{grid-template-columns:1fr}.s16w1-rd{white-space:normal}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s16w1-w">
+<div class="s16w1-k">ERA V5 Session 16 &middot; counting training FLOPs</div>
+<h1>Counting Training FLOPs</h1>
+<p class="s16w1-say">The first estimate of training compute is <b>C = 6 &times; N &times; D</b>, with N the active parameters and D the tokens. The fuller count from DeepSeek LLM adds an <b>attention term</b> that grows with sequence length. Change the shape, the context and the data, and compare the two counts. All values are <b>example numbers</b>.</p>
+
+<div class="s16w1-bar">
+<span class="s16w1-lb">model shape</span>
+<label class="s16w1-sl"><span class="s16w1-lb">layers</span><input type="range" id="s16w1-L" min="8" max="128" step="4" value="60" aria-label="Number of layers"><span class="s16w1-v" id="s16w1-Lv"></span></label>
+<label class="s16w1-sl"><span class="s16w1-lb">hidden size</span><input type="range" id="s16w1-d" min="1024" max="16384" step="512" value="7168" aria-label="Hidden size"><span class="s16w1-v" id="s16w1-dv"></span></label>
+</div>
+<div class="s16w1-bar">
+<span class="s16w1-lb">sequence length</span>
+<button type="button" class="s16w1-q" data-v="4096" aria-label="Sequence length 4,096 tokens">4,096</button>
+<button type="button" class="s16w1-q" data-v="8192" aria-label="Sequence length 8,192 tokens">8,192</button>
+<button type="button" class="s16w1-q" data-v="32768" aria-label="Sequence length 32,768 tokens">32,768</button>
+<button type="button" class="s16w1-q" data-v="131072" aria-label="Sequence length 131,072 tokens">131,072</button>
+<button type="button" class="s16w1-q" data-v="1048576" aria-label="Sequence length 1,048,576 tokens">1,048,576</button>
+</div>
+<div class="s16w1-bar">
+<span class="s16w1-lb">sparsity and data</span>
+<button type="button" class="s16w1-a" data-v="0.03" aria-label="Active fraction 3 percent">3% active</button>
+<button type="button" class="s16w1-a" data-v="0.055" aria-label="Active fraction 5.5 percent">5.5%</button>
+<button type="button" class="s16w1-a" data-v="0.1" aria-label="Active fraction 10 percent">10%</button>
+<button type="button" class="s16w1-a" data-v="1" aria-label="Active fraction 100 percent, dense model">100% dense</button>
+<span class="s16w1-sep" aria-hidden="true"></span>
+<label class="s16w1-sl"><span class="s16w1-lb">tokens</span><input type="range" id="s16w1-D" min="1" max="60" step="1" value="15" aria-label="Training tokens in trillions"><span class="s16w1-v" id="s16w1-Dv"></span></label>
+</div>
+
+<div class="s16w1-two">
+<div class="s16w1-card">
+<h2 id="s16w1-h2">training FLOPs, two counts</h2>
+<div class="s16w1-row"><div class="s16w1-rl"><span><b>6ND</b>, first estimate</span><span id="s16w1-t1"></span></div>
+<div class="s16w1-tk"><div class="s16w1-f" id="s16w1-b1" style="left:0;background:var(--violet);border-radius:5px"></div></div></div>
+<div class="s16w1-row"><div class="s16w1-rl"><span><b>full count</b>, with attention</span><span id="s16w1-t2"></span></div>
+<div class="s16w1-tk"><div class="s16w1-f" id="s16w1-b2" style="left:0;background:var(--violet);border-radius:5px 0 0 5px"></div><div class="s16w1-f" id="s16w1-b3" style="background:var(--amber);border-radius:0 5px 5px 0"></div></div></div>
+<p class="s16w1-leg"><span><i class="s16w1-chip" style="background:var(--violet)" aria-hidden="true"></i><b>matrix term</b>, 72 &times; L &times; d&sup2; per token</span><span><i class="s16w1-chip" style="background:var(--amber)" aria-hidden="true"></i><b>attention term</b>, 12 &times; L &times; d &times; l per token</span><span>Both bars use the scale of the full count.</span></p>
+</div>
+<div class="s16w1-card">
+<h2 id="s16w1-h2b">attention share against sequence length</h2>
+<svg class="s16w1-svg" id="s16w1-svg" viewBox="0 0 520 170" role="img" aria-label="Attention share of the full count against sequence length"></svg>
+</div>
+</div>
+
+<div class="s16w1-met">
+<div class="s16w1-box"><span>active parameters N</span><span class="s16w1-rd" id="s16w1-r1"></span></div>
+<div class="s16w1-box"><span>total parameters</span><span class="s16w1-rd" id="s16w1-r2"></span></div>
+<div class="s16w1-box"><span>first estimate</span><span class="s16w1-rd" id="s16w1-r3"></span></div>
+<div class="s16w1-box"><span>FLOPs per token, full count M</span><span class="s16w1-rd" id="s16w1-r4"></span></div>
+<div class="s16w1-box"><span>full count</span><span class="s16w1-rd" id="s16w1-r5"></span></div>
+<div class="s16w1-box"><span>attention share</span><span class="s16w1-rd" id="s16w1-r6"></span></div>
+</div>
+<p class="s16w1-note" id="s16w1-note"></p>
+</main>
+
+<script>
+(function(){
+'use strict';
+var SEQS=[4096,8192,32768,131072,1048576],GREEN='#159447',AMBER='#d97706',RED='#dc2626',VIO='#7c3aed',CYAN='#0891b2',
+    seq=4096,act=0.03;
+function $(i){return document.getElementById('s16w1-'+i);}
+function comma(n){return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+function sci(v){var e=Math.floor(Math.log10(v)),m=v/Math.pow(10,e);if(m>=9.995){m/=10;e+=1;}return m.toFixed(2)+'e'+e;}
+function par(v){return v>=1e12?(v/1e12).toFixed(2)+'T':(v/1e9).toFixed(v<1e10?2:1)+'B';}
+function pct(v){return (v*100).toFixed(1)+'%';}
+function seqLabel(l){return l>=1048576?'1M':(l/1024)+'k';}
+function curve(d){
+  var W=520,H=170,x0=40,x1=508,y0=12,y1=136,lo=Math.log2(2048),hi=Math.log2(2097152),s='',i,x,y,l,pts=[];
+  function X(l){return x0+(Math.log2(l)-lo)/(hi-lo)*(x1-x0);}
+  function Y(f){return y1-f*(y1-y0);}
+  for(i=0;i<=4;i++){y=Y(i/4);s+='<line x1="'+x0+'" x2="'+x1+'" y1="'+y+'" y2="'+y+'" stroke="#e4ebf4"/>'+
+    '<text x="'+(x0-6)+'" y="'+(y+3.5)+'" text-anchor="end" font-size="10" fill="#93a3b6" font-family="ui-monospace,monospace">'+(i*25)+'%</text>';}
+  for(i=0;i<=60;i++){l=Math.pow(2,lo+(hi-lo)*i/60);pts.push(X(l).toFixed(1)+','+Y(l/(6*d+l)).toFixed(1));}
+  s+='<polyline points="'+pts.join(' ')+'" fill="none" stroke="'+AMBER+'" stroke-width="2.5"/>';
+  for(i=0;i<SEQS.length;i++){
+    l=SEQS[i];x=X(l);y=Y(l/(6*d+l));
+    s+='<text x="'+x+'" y="'+(y1+16)+'" text-anchor="middle" font-size="10" fill="#93a3b6" font-family="ui-monospace,monospace">'+seqLabel(l)+'</text>';
+    if(l===seq){
+      s+='<line x1="'+x+'" x2="'+x+'" y1="'+y0+'" y2="'+y1+'" stroke="'+CYAN+'" stroke-dasharray="3 3"/>'+
+         '<circle cx="'+x+'" cy="'+y+'" r="6" fill="'+CYAN+'" stroke="#fff" stroke-width="2"/>'+
+         '<text x="'+(x>420?x-10:x+10)+'" y="'+(y<30?y+16:y-9)+'" text-anchor="'+(x>420?'end':'start')+'" font-size="11.5" font-weight="800" fill="#0e7490" font-family="Inter,sans-serif">'+pct(l/(6*d+l))+'</text>';
+    }else{
+      s+='<circle cx="'+x+'" cy="'+y+'" r="3.5" fill="#fff" stroke="'+AMBER+'" stroke-width="2"/>';
+    }
+  }
+  s+='<text x="'+x1+'" y="'+(H-2)+'" text-anchor="end" font-size="10" fill="#65758b" font-family="Inter,sans-serif">sequence length l, log scale, hidden size '+comma(d)+'</text>';
+  $('svg').innerHTML=s;
+}
+function draw(){
+  var L=+$('L').value,d=+$('d').value,Dt=+$('D').value,D=Dt*1e12,
+      N=12*L*d*d,tot=N/act,c6=6*N*D,mat=72*L*d*d,att=12*L*d*seq,M=mat+att,full=M*D,share=att/M,ratio=full/c6,col;
+  $('Lv').textContent=L;$('dv').textContent=comma(d);$('Dv').textContent=Dt+'T';
+  $('h2').textContent='training FLOPs at '+comma(seq)+' tokens of context';
+  $('b1').style.width=(c6/full*100)+'%';
+  $('b2').style.width=(mat/M*100)+'%';
+  $('b3').style.left=(mat/M*100)+'%';$('b3').style.width=(att/M*100)+'%';
+  $('t1').textContent=sci(c6)+' FLOPs';$('t2').textContent=sci(full)+' FLOPs';
+  col=share<0.1?GREEN:(share<0.3?AMBER:RED);
+  $('r1').innerHTML='<b>'+par(N)+'</b> = 12 &times; '+L+' &times; '+comma(d)+'&sup2;';
+  $('r2').innerHTML='<b>'+par(tot)+'</b> = '+par(N)+' / '+(act*100)+'%';
+  $('r3').innerHTML='<b style="color:'+VIO+'">'+sci(c6)+'</b> = 6 &times; '+par(N)+' &times; '+Dt+'T';
+  $('r4').innerHTML='<b>'+sci(M)+'</b> = '+sci(mat)+' + '+sci(att);
+  $('r5').innerHTML='<b style="color:'+VIO+'">'+sci(full)+'</b> = M &times; '+Dt+'T';
+  $('r6').innerHTML='<b style="color:'+col+'">'+pct(share)+'</b> = '+comma(seq)+' / (6 &times; '+comma(d)+' + '+comma(seq)+')';
+  if(share<0.1){
+    $('note').innerHTML='<span style="color:'+GREEN+'">The full count is '+ratio.toFixed(2)+' times 6ND. At this context, 6ND is a good first estimate.</span>';
+  }else if(share<0.3){
+    $('note').innerHTML='<span style="color:'+AMBER+'">The full count is '+ratio.toFixed(2)+' times 6ND. Attention adds a clear amount. Use the full count for the budget.</span>';
+  }else{
+    $('note').innerHTML='<span style="color:'+RED+'">The full count is '+ratio.toFixed(2)+' times 6ND. Attention adds a large amount here, so 6ND is too low.</span>';
+  }
+  curve(d);
+}
+function marks(){
+  Array.prototype.forEach.call(document.querySelectorAll('.s16w1-q'),function(b){b.classList.toggle('on',+b.getAttribute('data-v')===seq);});
+  Array.prototype.forEach.call(document.querySelectorAll('.s16w1-a'),function(b){b.classList.toggle('on',+b.getAttribute('data-v')===act);});
+}
+Array.prototype.forEach.call(document.querySelectorAll('.s16w1-q'),function(b){
+  b.addEventListener('click',function(){seq=+b.getAttribute('data-v');marks();draw();});
+});
+Array.prototype.forEach.call(document.querySelectorAll('.s16w1-a'),function(b){
+  b.addEventListener('click',function(){act=+b.getAttribute('data-v');marks();draw();});
+});
+['L','d','D'].forEach(function(k){$(k).addEventListener('input',draw);});
+marks();draw();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 16 Widget 7 - Hyperparameter Laws</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s16w7-w{max-width:1180px;margin:0 auto;padding:18px 22px 20px}
+.s16w7-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.s16w7-w h1{font-size:26px;line-height:1.12;margin:4px 0 10px}
+.s16w7-say{border:1px solid #bae6f0;background:#f0fbfd;border-radius:10px;padding:12px 14px;color:#155e75;font-size:13.5px;line-height:1.55;margin:0 0 14px}
+.s16w7-say b{color:#0e7490;font-weight:800}
+.s16w7-bar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.s16w7-lb{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.s16w7-bar button{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;padding:6px 12px;font:800 11.5px Inter,sans-serif;cursor:pointer}
+.s16w7-bar button.on{border-color:var(--cyan);color:#0e7490;background:#effbfe;box-shadow:inset 0 0 0 1px var(--cyan)}
+.s16w7-sep{width:1px;height:20px;background:var(--line);margin:0 5px}
+.s16w7-two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.s16w7-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:13px 16px 10px}
+.s16w7-card h2{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px;font-weight:800}
+.s16w7-card svg{display:block;width:100%;height:auto}
+.s16w7-leg{margin:10px 0 0;font-size:12px;color:var(--muted);line-height:1.4;display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.s16w7-leg b{color:var(--ink)}
+.s16w7-chip{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.s16w7-met{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-top:10px}
+.s16w7-box{border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.9);padding:9px 12px}
+.s16w7-box>span:not(.s16w7-rd){display:block;color:var(--muted);font-size:10.5px;line-height:1.3;font-weight:700;letter-spacing:.03em;text-transform:uppercase}
+.s16w7-rd{display:block;margin-top:3px;font:700 12px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--muted);line-height:1.4}
+.s16w7-rd b{font-size:15px;font-weight:800;color:var(--ink)}
+.s16w7-note{margin:10px 0 0;font-size:12.5px;line-height:1.5;min-height:20px}
+@media(max-width:1000px){.s16w7-two{grid-template-columns:1fr}.s16w7-met{grid-template-columns:1fr 1fr}.s16w7-rd{white-space:normal}}
+@media(max-width:620px){.s16w7-met{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s16w7-w">
+<div class="s16w7-k">ERA V5 Session 16 &middot; hyperparameter laws</div>
+<h1>Learning Rate and Batch from Scaling Laws</h1>
+<p class="s16w7-say">Three published laws predict the <b>learning rate (LR)</b> and the <b>batch size</b> of a run. Select a compute budget, a ratio of <b>tokens per active parameter (TPP)</b> and a step count to compare <b>DeepSeek LLM</b>, <b>Step Law</b> and <b>MAI-Base-2</b>.</p>
+
+<div class="s16w7-bar">
+<span class="s16w7-lb">compute</span>
+<button type="button" class="s16w7-c" data-v="20" aria-label="Compute budget 1e20 FLOPs">1e20</button>
+<button type="button" class="s16w7-c" data-v="21" aria-label="Compute budget 1e21 FLOPs">1e21</button>
+<button type="button" class="s16w7-c" data-v="22" aria-label="Compute budget 1e22 FLOPs">1e22</button>
+<button type="button" class="s16w7-c" data-v="23" aria-label="Compute budget 1e23 FLOPs">1e23</button>
+<button type="button" class="s16w7-c" data-v="24" aria-label="Compute budget 1e24 FLOPs">1e24</button>
+<button type="button" class="s16w7-c" data-v="25" aria-label="Compute budget 1e25 FLOPs">1e25</button>
+<span class="s16w7-sep" aria-hidden="true"></span>
+<span class="s16w7-lb">TPP</span>
+<button type="button" class="s16w7-t" data-v="20" aria-label="20 tokens per active parameter">20</button>
+<button type="button" class="s16w7-t" data-v="100" aria-label="100 tokens per active parameter">100</button>
+<button type="button" class="s16w7-t" data-v="400" aria-label="400 tokens per active parameter">400</button>
+<button type="button" class="s16w7-t" data-v="700" aria-label="700 tokens per active parameter">700</button>
+<span class="s16w7-sep" aria-hidden="true"></span>
+<span class="s16w7-lb">steps</span>
+<button type="button" class="s16w7-s" data-v="25000" aria-label="25,000 optimizer steps">25k</button>
+<button type="button" class="s16w7-s" data-v="50000" aria-label="50,000 optimizer steps">50k</button>
+<button type="button" class="s16w7-s" data-v="100000" aria-label="100,000 optimizer steps">100k</button>
+<button type="button" class="s16w7-s" data-v="200000" aria-label="200,000 optimizer steps">200k</button>
+<button type="button" class="s16w7-s" data-v="400000" aria-label="400,000 optimizer steps">400k</button>
+</div>
+
+<div class="s16w7-two">
+<div class="s16w7-card"><h2 id="s16w7-h1">learning rate against compute</h2><svg id="s16w7-g1" viewBox="0 0 560 230" role="img" aria-label="Learning rate against compute for three laws"></svg></div>
+<div class="s16w7-card"><h2 id="s16w7-h2">batch size in tokens against compute</h2><svg id="s16w7-g2" viewBox="0 0 560 230" role="img" aria-label="Batch size against compute for three laws"></svg></div>
+</div>
+<p class="s16w7-leg"><span><i class="s16w7-chip" style="background:#0891b2" aria-hidden="true"></i><b>DeepSeek LLM</b> 2024</span><span><i class="s16w7-chip" style="background:#7c3aed" aria-hidden="true"></i><b>Step Law</b> 2025</span><span><i class="s16w7-chip" style="background:#d97706" aria-hidden="true"></i><b>MAI-Base-2</b> 2026</span><span><i class="s16w7-chip" style="background:#cdeedd" aria-hidden="true"></i><b>near-optimal band</b>, 0.5&times; to 2&times; of the mean LR</span><span>Each law uses the same TPP and steps along the curve.</span></p>
+
+<div class="s16w7-met">
+<div class="s16w7-box"><span>model and data at this budget</span><span class="s16w7-rd" id="s16w7-r0"></span><span class="s16w7-rd" id="s16w7-r0b"></span></div>
+<div class="s16w7-box"><span>DeepSeek LLM</span><span class="s16w7-rd" id="s16w7-r1"></span><span class="s16w7-rd" id="s16w7-r1b"></span></div>
+<div class="s16w7-box"><span>Step Law</span><span class="s16w7-rd" id="s16w7-r2"></span><span class="s16w7-rd" id="s16w7-r2b"></span></div>
+<div class="s16w7-box"><span>MAI-Base-2 (natural log)</span><span class="s16w7-rd" id="s16w7-r3"></span><span class="s16w7-rd" id="s16w7-r3b"></span></div>
+</div>
+<p class="s16w7-note" id="s16w7-note"></p>
+</main>
+
+<script>
+(function(){
+'use strict';
+var CY='#0891b2',VI='#7c3aed',AM='#d97706',GR='#159447',RD='#dc2626',
+    lc=23,tpp=100,steps=100000,
+    X0=20,X1=25,W=560,H=230,L=58,R=12,T=10,B=34;
+function $(i){return document.getElementById('s16w7-'+i);}
+function sci(v){var e=Math.floor(Math.log10(v)),m=v/Math.pow(10,e);if(m>=9.995){m/=10;e+=1;}return m.toFixed(2)+'e'+e;}
+function tok(v){if(v>=1e9)return (v/1e9).toFixed(2)+'B';if(v>=1e6)return (v/1e6).toFixed(2)+'M';return (v/1e3).toFixed(0)+'k';}
+function comma(n){return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+function nd(C,t){var N=Math.sqrt(C/(6*t));return {N:N,D:t*N};}
+function ds(C){return {lr:0.3118*Math.pow(C,-0.125),b:0.2920*Math.pow(C,0.3271)};}
+function st(C,t){var q=nd(C,t);return {lr:1.79*Math.pow(q.N,-0.713)*Math.pow(q.D,0.307),b:0.58*Math.pow(q.D,0.571)};}
+function mai(C,t,s){var q=nd(C,t),lr=Math.exp(-1.51+0.175*Math.log(t)-0.573*Math.log(s));return {lr:lr,wd:17.04/(s*lr),b:q.D/s};}
+function gmean(a,b,c){return Math.pow(a*b*c,1/3);}
+function px(lx){return L+(lx-X0)/(X1-X0)*(W-L-R);}
+function chart(id,ylo,yhi,ylab,fmtY,series,band){
+  var pyf=function(v){var ly=Math.log10(v);ly=Math.max(ylo,Math.min(yhi,ly));return T+(yhi-ly)/(yhi-ylo)*(H-T-B);},
+      s='',i,k,lx,pts,up,dn,cx=px(lc);
+  for(i=ylo;i<=yhi;i++){var y=pyf(Math.pow(10,i));s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y+'" y2="'+y+'" stroke="#e4ebf4"/>'+
+    '<text x="'+(L-6)+'" y="'+(y+3.5)+'" text-anchor="end" font-size="10" font-family="ui-monospace,monospace" fill="#93a3b6">'+fmtY(i)+'</text>';}
+  for(i=X0;i<=X1;i++){s+='<text x="'+px(i)+'" y="'+(H-B+15)+'" text-anchor="middle" font-size="10" font-family="ui-monospace,monospace" fill="#93a3b6">1e'+i+'</text>';}
+  s+='<text x="'+((L+W-R)/2)+'" y="'+(H-4)+'" text-anchor="middle" font-size="10.5" font-weight="700" fill="#65758b">training compute C in FLOPs</text>';
+  s+='<text x="12" y="'+((T+H-B)/2)+'" text-anchor="middle" font-size="10.5" font-weight="700" fill="#65758b" transform="rotate(-90 12 '+((T+H-B)/2)+')">'+ylab+'</text>';
+  if(band){up='';dn='';
+    for(k=0;k<=50;k++){lx=X0+(X1-X0)*k/50;var m=band(Math.pow(10,lx));up+=(k?'L':'M')+px(lx).toFixed(1)+' '+pyf(m*2).toFixed(1)+' ';dn=' L'+px(lx).toFixed(1)+' '+pyf(m/2).toFixed(1)+dn;}
+    s+='<path d="'+up+dn+' Z" fill="#cdeedd" opacity=".75"/>';}
+  s+='<line x1="'+cx+'" x2="'+cx+'" y1="'+T+'" y2="'+(H-B)+'" stroke="#152033" stroke-dasharray="3 3" stroke-width="1"/>';
+  for(i=0;i<series.length;i++){pts='';
+    for(k=0;k<=50;k++){lx=X0+(X1-X0)*k/50;pts+=(k?'L':'M')+px(lx).toFixed(1)+' '+pyf(series[i].f(Math.pow(10,lx))).toFixed(1)+' ';}
+    s+='<path d="'+pts+'" fill="none" stroke="'+series[i].c+'" stroke-width="2.4"/>';
+    s+='<circle cx="'+cx+'" cy="'+pyf(series[i].f(Math.pow(10,lc)))+'" r="5" fill="#fff" stroke="'+series[i].c+'" stroke-width="2.4"/>';}
+  $(id).innerHTML=s;
+}
+function draw(){
+  var C=Math.pow(10,lc),q=nd(C,tpp),a=ds(C),b=st(C,tpp),c=mai(C,tpp,steps),
+      m=gmean(a.lr,b.lr,c.lr),ins=[a.lr,b.lr,c.lr].map(function(v){return v>=m/2&&v<=m*2;}),
+      names=['DeepSeek LLM','Step Law','MAI-Base-2'],out=[],i;
+  chart('g1',-4,-2,'learning rate',function(i){return '1e'+i;},[
+    {c:CY,f:function(x){return ds(x).lr;}},
+    {c:VI,f:function(x){return st(x,tpp).lr;}},
+    {c:AM,f:function(x){return mai(x,tpp,steps).lr;}}],
+    function(x){return gmean(ds(x).lr,st(x,tpp).lr,mai(x,tpp,steps).lr);});
+  chart('g2',4,10,'batch in tokens',function(i){return '1e'+i;},[
+    {c:CY,f:function(x){return ds(x).b;}},
+    {c:VI,f:function(x){return st(x,tpp).b;}},
+    {c:AM,f:function(x){return mai(x,tpp,steps).b;}}],null);
+  $('h1').textContent='learning rate against compute, TPP '+tpp+', '+comma(steps)+' steps';
+  $('h2').textContent='batch size in tokens against compute, TPP '+tpp+', '+comma(steps)+' steps';
+  $('r0').innerHTML='<b>N '+sci(q.N)+'</b> = &radic;(C / (6 &middot; '+tpp+'))';
+  $('r0b').innerHTML='<b>D '+sci(q.D)+'</b> = '+tpp+' &middot; N';
+  $('r1').innerHTML='<b style="color:'+CY+'">LR '+sci(a.lr)+'</b> = 0.3118 &middot; C^&minus;0.125';
+  $('r1b').innerHTML='<b>B '+tok(a.b)+'</b> = 0.2920 &middot; C^0.3271';
+  $('r2').innerHTML='<b style="color:'+VI+'">LR '+sci(b.lr)+'</b> = 1.79 &middot; N^&minus;0.713 &middot; D^0.307';
+  $('r2b').innerHTML='<b>B '+tok(b.b)+'</b> = 0.58 &middot; D^0.571';
+  $('r3').innerHTML='<b style="color:'+AM+'">LR '+sci(c.lr)+'</b> = e^(&minus;1.51 + 0.175 &middot; ln '+tpp+' &minus; 0.573 &middot; ln '+comma(steps)+')';
+  $('r3b').innerHTML='<b>B '+tok(c.b)+'</b> = D / steps, <b>WD '+c.wd.toFixed(2)+'</b> = 17.04 / (steps &middot; LR)';
+  for(i=0;i<3;i++){if(!ins[i])out.push(names[i]);}
+  if(out.length===0){
+    $('note').innerHTML='<span style="color:'+GR+'">At 1e'+lc+' FLOPs, all three LR values are in the band from '+sci(m/2)+' to '+sci(m*2)+'. Two labs report that an LR error of 2&times; costs little loss.</span>';
+  }else{
+    $('note').innerHTML='<span style="color:'+RD+'">At 1e'+lc+' FLOPs, the LR'+(out.length>1?' values':'')+' of '+out.join(' and ')+(out.length>1?' are':' is')+' outside the band from '+sci(m/2)+' to '+sci(m*2)+'. The laws differ by more than 2&times; here. Fit the LR law on your own ladder before the main run.</span>';
+  }
+}
+function marks(){
+  [['c',lc],['t',tpp],['s',steps]].forEach(function(p){
+    Array.prototype.forEach.call(document.querySelectorAll('.s16w7-'+p[0]),function(b){b.classList.toggle('on',+b.getAttribute('data-v')===p[1]);});
+  });
+}
+function bind(cls,set){
+  Array.prototype.forEach.call(document.querySelectorAll('.s16w7-'+cls),function(b){
+    b.addEventListener('click',function(){set(+b.getAttribute('data-v'));marks();draw();});
+  });
+}
+bind('c',function(v){lc=v;});bind('t',function(v){tpp=v;});bind('s',function(v){steps=v;});
+marks();draw();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

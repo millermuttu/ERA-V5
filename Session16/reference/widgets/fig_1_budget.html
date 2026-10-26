@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 16 Figure 1 - One Budget, Four Decisions</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;font-variant-numeric:tabular-nums}
+.s16f1-w{max-width:1180px;margin:0 auto;padding:16px 22px 16px}
+.s16f1-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.s16f1-w h1{font-size:22px;line-height:1.15;margin:3px 0 12px}
+.s16f1-card{position:relative;background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:14px 16px 12px}
+.s16f1-card svg{display:block;width:100%;height:auto;overflow:visible}
+.s16f1-card svg text{font-family:Inter,ui-sans-serif,system-ui,sans-serif;font-variant-numeric:tabular-nums}
+.s16f1-note{margin:10px 2px 0;font-size:13px;line-height:1.5;color:var(--muted)}
+.s16f1-note b{color:var(--ink)}
+.s16f1-tip{position:absolute;pointer-events:none;background:#fff;border:1px solid var(--line);border-radius:9px;box-shadow:0 8px 22px rgba(20,42,75,.13);padding:8px 11px;font:600 13px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--ink);white-space:nowrap;z-index:5}
+.s16f1-tip b{font-family:Inter,sans-serif;font-weight:800}
+.s16f1-tip span{color:var(--muted)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+</style>
+</head>
+<body>
+<main class="s16f1-w">
+<div class="s16f1-k">ERA V5 Session 16 &middot; the question before every run</div>
+<h1>One Budget, Four Decisions</h1>
+<div class="s16f1-card"><svg id="s16f1-svg" viewBox="0 0 1100 412" role="img" aria-label="A fixed compute budget splits into four decisions: model size, tokens, batch size and learning rate. The four decisions join into one run that you cannot repeat."></svg></div>
+
+</main>
+<script>
+(function(){
+'use strict';
+var NS='http://www.w3.org/2000/svg';
+var CS=getComputedStyle(document.documentElement);
+var K={};['ink','muted','line','cyan','violet','green','amber','red'].forEach(function(n){K[n]=CS.getPropertyValue('--'+n).trim();});
+function $(i){return document.getElementById('s16f1-'+i);}
+function el(t,a,p){var e=document.createElementNS(NS,t);if(a){for(var k in a){if(a[k]!==undefined&&a[k]!==null)e.setAttribute(k,a[k]);}}if(p)p.appendChild(e);return e;}
+function tx(p,x,y,s,a){a=a||{};a.x=x;a.y=y;var e=el('text',a,p);e.textContent=s;return e;}
+var SUP={'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','-':'⁻'};
+function p10(e){return '10'+String(e).split('').map(function(c){return SUP[c];}).join('');}
+function sci(v){var e=Math.floor(Math.log10(v)+1e-9),m=v/Math.pow(10,e);return (Math.abs(m-1)<1e-6?'':(m.toFixed(1).replace(/\.0$/,'')+' × '))+p10(e);}
+function big(v){var u=[[1e12,'T'],[1e9,'B'],[1e6,'M'],[1e3,'K']];for(var i=0;i<u.length;i++){if(v>=u[i][0]){var x=v/u[i][0];return (x>=100?x.toFixed(0):x>=10?x.toFixed(1):x.toFixed(2))+u[i][1];}}return v.toFixed(0);}
+function lg(lo,hi,a,b){var l0=Math.log10(lo),l1=Math.log10(hi);var f=function(v){return a+(Math.log10(v)-l0)/(l1-l0)*(b-a);};f.inv=function(px){return Math.pow(10,l0+(px-a)/(b-a)*(l1-l0));};return f;}
+function ln(lo,hi,a,b){var f=function(v){return a+(v-lo)/(hi-lo)*(b-a);};f.inv=function(px){return lo+(px-a)/(b-a)*(hi-lo);};return f;}
+function tipAt(tip,card,html,cx,cy){tip.innerHTML=html;tip.hidden=false;var w=tip.offsetWidth,h=tip.offsetHeight,W=card.clientWidth;var x=cx+16,y=cy-h-12;if(x+w>W-6)x=cx-w-16;if(y<6)y=cy+16;tip.style.left=x+'px';tip.style.top=y+'px';}
+function svgPt(svg,ev){var r=svg.getBoundingClientRect(),vb=svg.viewBox.baseVal;return {x:(ev.clientX-r.left)*vb.width/r.width,y:(ev.clientY-r.top)*vb.height/r.height,s:r.width/vb.width,ox:r.left,oy:r.top};}
+function cardPt(card,ev){var r=card.getBoundingClientRect();return {x:ev.clientX-r.left,y:ev.clientY-r.top};}
+var svg=$('svg');
+var defs=el('defs',null,svg);
+var mk=el('marker',{id:'s16f1-ar',viewBox:'0 0 10 10',refX:'8.5',refY:'5',markerWidth:'8',markerHeight:'8',orient:'auto-start-reverse'},defs);
+el('path',{d:'M1,1.5 L8.5,5 L1,8.5 z',fill:K.muted},mk);
+var sh=el('filter',{id:'s16f1-sh',x:'-10%',y:'-10%',width:'120%',height:'140%'},defs);
+el('feDropShadow',{dx:'0',dy:'4',stdDeviation:'6','flood-color':K.ink,'flood-opacity':'0.08'},sh);
+
+var ICON={
+ chip:function(g,c){el('rect',{x:6,y:6,width:12,height:12,rx:2.5,fill:'none',stroke:c,'stroke-width':1.8},g);el('rect',{x:9.5,y:9.5,width:5,height:5,rx:1,fill:c},g);[9,12,15].forEach(function(v){['M'+v+' 2.5V6','M'+v+' 18V21.5','M2.5 '+v+'H6','M18 '+v+'H21.5'].forEach(function(d){el('path',{d:d,stroke:c,'stroke-width':1.6,'stroke-linecap':'round'},g);});});},
+ layers:function(g,c){[4,10,16].forEach(function(y,i){el('rect',{x:3+i*0,y:y,width:18,height:4.2,rx:1.6,fill:i===1?c:'none',stroke:c,'stroke-width':1.7},g);});},
+ doc:function(g,c){el('path',{d:'M6 2.5H14.5L19 7V21.5H6Z',fill:'none',stroke:c,'stroke-width':1.8,'stroke-linejoin':'round'},g);el('path',{d:'M14.5 2.5V7H19',fill:'none',stroke:c,'stroke-width':1.6,'stroke-linejoin':'round'},g);[11,14.5,18].forEach(function(y,i){el('path',{d:'M9 '+y+'H'+(i===2?13.5:16),stroke:c,'stroke-width':1.6,'stroke-linecap':'round'},g);});},
+ grid:function(g,c){[3.5,10,16.5].forEach(function(y,j){[3.5,10,16.5].forEach(function(x,i){el('rect',{x:x,y:y,width:4.5,height:4.5,rx:1.1,fill:(j===0)?c:'none',stroke:c,'stroke-width':1.5},g);});});},
+ descent:function(g,c){el('path',{d:'M3 4.5C5 15 9.5 19.5 21 19.5',fill:'none',stroke:c,'stroke-width':1.8,'stroke-linecap':'round'},g);[[4.6,10.2],[8.4,15.8],[14.2,18.9]].forEach(function(p){el('circle',{cx:p[0],cy:p[1],r:2.1,fill:c},g);});},
+ target:function(g,c){el('circle',{cx:12,cy:12,r:9.2,fill:'none',stroke:c,'stroke-width':1.8},g);el('circle',{cx:12,cy:12,r:5.2,fill:'none',stroke:c,'stroke-width':1.8},g);el('circle',{cx:12,cy:12,r:1.9,fill:c},g);}
+};
+function icon(name,cx,cy,c,r){var g=el('g',null,svg);el('circle',{cx:cx,cy:cy,r:r||22,fill:c,'fill-opacity':0.1,stroke:c,'stroke-opacity':0.35},g);var gi=el('g',{transform:'translate('+(cx-12)+','+(cy-12)+')'},g);ICON[name](gi,c);return g;}
+function card(x,y,w,h,c){var g=el('g',{filter:'url(#s16f1-sh)'},svg);el('rect',{x:x,y:y,width:w,height:h,rx:13,fill:'#fff',stroke:K.line},g);if(c){el('path',{d:'M'+(x+13)+' '+y+'H'+(x+w-13)+'A13 13 0 0 1 '+(x+w)+' '+(y+13)+'V'+(y+4)+'H'+x+'V'+(y+13)+'A13 13 0 0 1 '+(x+13)+' '+y+'Z',fill:c},svg);}return g;}
+function wire(d,arrow){el('path',{d:d,fill:'none',stroke:K.muted,'stroke-opacity':0.75,'stroke-width':1.4,'stroke-linejoin':'round','marker-end':arrow?'url(#s16f1-ar)':null},svg);}
+function elbow(x0,y0,x1,y1,ym,arrow){var r=10;if(Math.abs(x1-x0)<1){wire('M'+x0+' '+y0+'V'+y1,arrow);return;}var s=x1>x0?1:-1;wire('M'+x0+' '+y0+'V'+(ym-r)+'Q'+x0+' '+ym+' '+(x0+s*r)+' '+ym+'H'+(x1-s*r)+'Q'+x1+' '+ym+' '+x1+' '+(ym+r)+'V'+y1,arrow);}
+
+// top node
+var TW=420,TX=550-TW/2,TY=4,TH=78;
+card(TX,TY,TW,TH,null);
+icon('chip',TX+46,TY+TH/2,K.ink);
+tx(svg,TX+84,TY+33,'A fixed compute budget',{'font-size':17,'font-weight':800,fill:K.ink});
+tx(svg,TX+84,TY+56,'The GPUs and the days are booked before the run.',{'font-size':13.5,fill:K.muted});
+
+// four decision cards
+var D=[
+ {ic:'layers',c:K.cyan,t:'Model size',q:['How many parameters','does the model have?'],s:'N  parameters'},
+ {ic:'doc',c:K.violet,t:'Tokens',q:['How much data','does the model read?'],s:'D  tokens'},
+ {ic:'grid',c:K.green,t:'Batch size',q:['How many tokens','go into each step?'],s:'B  tokens per step'},
+ {ic:'descent',c:K.amber,t:'Learning rate',q:['How large','is each step?'],s:'η  step size'}
+];
+var CW=238,CY=124,CH=156,BUS1=103,BUS2=310;
+D.forEach(function(d,i){
+  var cx=137.5+i*275,x=cx-CW/2;
+  elbow(550,TY+TH,cx,CY-2,BUS1,true);
+  card(x,CY,CW,CH,d.c);
+  icon(d.ic,x+40,CY+44,d.c,21);
+  tx(svg,x+72,CY+50,d.t,{'font-size':16,'font-weight':800,fill:K.ink});
+  tx(svg,x+20,CY+92,d.q[0],{'font-size':14,fill:K.ink});
+  tx(svg,x+20,CY+111,d.q[1],{'font-size':14,fill:K.ink});
+  var cw=d.s.length*7.9+22;
+  el('rect',{x:x+20,y:CY+120,width:cw,height:24,rx:12,fill:d.c,'fill-opacity':0.09,stroke:d.c,'stroke-opacity':0.35},svg);
+  tx(svg,x+31,CY+136.5,d.s,{'font-size':13,'font-weight':700,fill:d.c,'font-family':'ui-monospace,SFMono-Regular,Consolas,monospace','xml:space':'preserve'}).style.fontFamily='ui-monospace,SFMono-Regular,Consolas,monospace';
+  elbow(cx,CY+CH,550,BUS2,BUS2,false);
+});
+wire('M550 '+BUS2+'V'+(BUS2+24),true);
+
+// bottom node
+var BW=470,BX=550-BW/2,BY=BUS2+28,BH=72;
+card(BX,BY,BW,BH,null);
+el('rect',{x:BX,y:BY,width:BW,height:BH,rx:13,fill:K.red,'fill-opacity':0.04,stroke:K.red,'stroke-opacity':0.45},svg);
+icon('target',BX+46,BY+BH/2,K.red);
+tx(svg,BX+84,BY+31,'One run. You cannot repeat it.',{'font-size':17,'font-weight':800,fill:K.ink});
+tx(svg,BX+84,BY+53,'So we predict the four answers from small runs.',{'font-size':13.5,fill:K.muted});
+
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

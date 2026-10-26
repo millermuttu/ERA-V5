@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 16 Widget 4 - Inference-Aware Sizing</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s16w4-w{max-width:1180px;margin:0 auto;padding:18px 22px 20px}
+.s16w4-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.s16w4-w h1{font-size:26px;line-height:1.12;margin:4px 0 10px}
+.s16w4-say{border:1px solid #bae6f0;background:#f0fbfd;border-radius:10px;padding:12px 14px;color:#155e75;font-size:13.5px;line-height:1.55;margin:0 0 14px}
+.s16w4-say b{color:#0e7490;font-weight:800}
+.s16w4-bar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.s16w4-lb{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.s16w4-bar button{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;padding:6px 14px;font:800 11.5px Inter,sans-serif;cursor:pointer}
+.s16w4-bar button.s16w4-q.on{border-color:var(--cyan);color:#0e7490;background:#effbfe;box-shadow:inset 0 0 0 1px var(--cyan)}
+.s16w4-bar button.s16w4-n.on{border-color:var(--ink);color:var(--ink);background:#eef2f7;box-shadow:inset 0 0 0 1px var(--ink)}
+.s16w4-sep{width:1px;height:20px;background:var(--line);margin:0 5px}
+.s16w4-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:13px 16px 12px}
+.s16w4-card h2{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px;font-weight:800}
+.s16w4-card svg{display:block;width:100%;height:auto}
+.s16w4-leg{margin:6px 0 0;font-size:12px;color:var(--muted);line-height:1.4;display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.s16w4-leg b{color:var(--ink)}
+.s16w4-chip{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:6px;vertical-align:3px}
+.s16w4-met{display:grid;grid-template-columns:1.1fr 1.1fr 1.3fr;gap:8px;margin-top:12px}
+.s16w4-box{border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.9);padding:10px 12px}
+.s16w4-box>span:not(.s16w4-rd){display:block;color:var(--muted);font-size:10.5px;line-height:1.3;font-weight:700;letter-spacing:.03em;text-transform:uppercase}
+.s16w4-rd{display:block;margin-top:3px;font:700 12.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.s16w4-rd b{font-size:17px;font-weight:800;color:var(--ink)}
+.s16w4-note{margin:10px 0 0;font-size:12.5px;line-height:1.5;min-height:20px}
+@media(max-width:1000px){.s16w4-met{grid-template-columns:1fr}.s16w4-rd{white-space:normal}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s16w4-w">
+<div class="s16w4-k">ERA V5 Session 16 &middot; inference-aware sizing</div>
+<h1>Inference-Aware Sizing</h1>
+<p class="s16w4-say">Each point on the curves is a dense model that reaches the <b>target loss</b>. A smaller model needs more training tokens. Each token that a smaller model serves costs less. The total cost is <b>6 &middot; N &middot; D + 2 &middot; N &middot; T</b>, where T is the number of tokens served. The loss law uses the Epoch refit coefficients. These are example numbers.</p>
+
+<div class="s16w4-bar">
+<span class="s16w4-lb">tokens served</span>
+<button type="button" class="s16w4-q" data-v="0" aria-label="Tokens served: none">none</button>
+<button type="button" class="s16w4-q" data-v="1e12" aria-label="Tokens served: 1 trillion">1T</button>
+<button type="button" class="s16w4-q" data-v="1e13" aria-label="Tokens served: 10 trillion">10T</button>
+<button type="button" class="s16w4-q" data-v="1e14" aria-label="Tokens served: 100 trillion">100T</button>
+<button type="button" class="s16w4-q" data-v="1e15" aria-label="Tokens served: 1,000 trillion">1,000T</button>
+<span class="s16w4-sep" aria-hidden="true"></span>
+<span class="s16w4-lb">target loss</span>
+<button type="button" class="s16w4-n" data-v="2.1" aria-label="Target loss 2.10">2.10</button>
+<button type="button" class="s16w4-n" data-v="2" aria-label="Target loss 2.00">2.00</button>
+<button type="button" class="s16w4-n" data-v="1.95" aria-label="Target loss 1.95">1.95</button>
+</div>
+
+<div class="s16w4-card">
+<h2 id="s16w4-h2">cost against model size at fixed loss</h2>
+<svg id="s16w4-svg" viewBox="0 0 1100 320" role="img" aria-label="Training, inference and total cost against model size"></svg>
+<p class="s16w4-leg"><span><i class="s16w4-chip" style="background:#0891b2" aria-hidden="true"></i><b>training</b> 6 &middot; N &middot; D</span><span><i class="s16w4-chip" style="background:#d97706" aria-hidden="true"></i><b>inference</b> 2 &middot; N &middot; T</span><span><i class="s16w4-chip" style="background:#7c3aed" aria-hidden="true"></i><b>total</b>, dot at the minimum</span><span><i class="s16w4-chip" style="background:#9aa8bb" aria-hidden="true"></i><b>ring</b> at the compute-optimal size</span></p>
+</div>
+
+<div class="s16w4-met">
+<div class="s16w4-box"><span>best model size</span><span class="s16w4-rd" id="s16w4-r1"></span></div>
+<div class="s16w4-box"><span>best tokens per parameter</span><span class="s16w4-rd" id="s16w4-r2"></span></div>
+<div class="s16w4-box"><span>total cost at the best size</span><span class="s16w4-rd" id="s16w4-r3"></span></div>
+</div>
+<p class="s16w4-note" id="s16w4-note"></p>
+</main>
+
+<script>
+(function(){
+'use strict';
+var F={A:482.01,B:2085.43,E:1.8172,a:0.3478,b:0.3658},
+    VIO='#7c3aed',CYAN='#0891b2',AMB='#d97706',GREY='#9aa8bb',GREEN='#159447',
+    X0=80,X1=1080,Y0=14,Y1=284,
+    T=1e13,Lt=2;
+function $(i){return document.getElementById('s16w4-'+i);}
+function sci(v){if(v===0)return '0';var e=Math.floor(Math.log10(v)),m=v/Math.pow(10,e);m=+m.toFixed(2);if(m>=10){m=1;e+=1;}return (m===1?'1':m.toFixed(2))+'e'+e;}
+function trim(v){return v>=100?v.toFixed(0):(v>=10?v.toFixed(1):v.toFixed(2));}
+function big(v){if(v>=1e12)return trim(v/1e12)+'T';if(v>=1e9)return trim(v/1e9)+'B';return trim(v/1e6)+'M';}
+function comma(n){return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+function nfloor(){return Math.pow(F.A/(Lt-F.E),1/F.a);}
+function dneed(N){var r=Lt-F.E-F.A/Math.pow(N,F.a);return r>0?Math.pow(F.B/r,1/F.b):Infinity;}
+function cost(N){var D=dneed(N);return {N:N,D:D,tr:6*N*D,inf:2*N*T,tot:6*N*D+2*N*T};}
+function search(key,lo,hi){var b=null,lg,c;for(lg=Math.log10(lo);lg<=Math.log10(hi);lg+=0.001){c=cost(Math.pow(10,lg));if(!b||c[key]<b[key])b=c;}return b;}
+function draw(){
+  var nf=nfloor(),lo=nf*1.02,opt=search('tr',lo,nf*1e3),hi=opt.N*4,best=search('tot',lo,hi),
+      lx0=Math.log10(lo),lx1=Math.log10(hi),
+      ly0=Math.floor(Math.log10(Math.min(opt.tr,best.inf>0?best.inf:opt.tr))-0.3),ly1=Math.log10(best.tot)+1.6,
+      sx=function(N){return X0+(Math.log10(N)-lx0)/(lx1-lx0)*(X1-X0);},
+      sy=function(v){var l=v>0?Math.log10(v):ly0-1;return Y1-(l-ly0)/(ly1-ly0)*(Y1-Y0);},
+      s='',i,e,yv,v;
+  s+='<defs><clipPath id="s16w4-cl"><rect x="'+X0+'" y="'+Y0+'" width="'+(X1-X0)+'" height="'+(Y1-Y0)+'"/></clipPath></defs>';
+  for(e=Math.ceil(ly0);e<=Math.floor(ly1);e++){yv=sy(Math.pow(10,e));
+    s+='<line x1="'+X0+'" x2="'+X1+'" y1="'+yv.toFixed(1)+'" y2="'+yv.toFixed(1)+'" stroke="#e4ebf4"/>';
+    s+='<text x="'+(X0-8)+'" y="'+(yv+4).toFixed(1)+'" text-anchor="end" font-size="11" font-family="ui-monospace,monospace" fill="#93a3b6">1e'+e+'</text>';}
+  [1e9,2e9,5e9,1e10,2e10,5e10,1e11,2e11,5e11,1e12].forEach(function(N){
+    if(N<lo||N>hi)return;v=sx(N);
+    s+='<line x1="'+v.toFixed(1)+'" x2="'+v.toFixed(1)+'" y1="'+Y0+'" y2="'+Y1+'" stroke="#e4ebf4"/>';
+    s+='<text x="'+v.toFixed(1)+'" y="'+(Y1+17)+'" text-anchor="middle" font-size="11" font-family="ui-monospace,monospace" fill="#93a3b6">'+(N>=1e12?N/1e12+'T':N/1e9+'B')+'</text>';});
+  s+='<text x="'+((X0+X1)/2)+'" y="'+(Y1+34)+'" text-anchor="middle" font-size="11.5" font-weight="700" fill="#65758b">model size N (parameters, log scale)</text>';
+  s+='<text x="16" y="'+((Y0+Y1)/2)+'" text-anchor="middle" font-size="11.5" font-weight="700" fill="#65758b" transform="rotate(-90 16 '+((Y0+Y1)/2)+')">FLOPs (log scale)</text>';
+  [['tr',CYAN,2.5,''],['inf',AMB,2.5,'6 4'],['tot',VIO,3.5,'']].forEach(function(r){
+    if(r[0]==='inf'&&T===0)return;
+    var p='',first=true,lg,c;
+    for(lg=lx0;lg<=lx1+1e-9;lg+=0.004){c=cost(Math.pow(10,lg));yv=Math.max(Y0-40,Math.min(Y1+40,sy(c[r[0]])));
+      p+=(first?'M':'L')+sx(c.N).toFixed(1)+' '+yv.toFixed(1);first=false;}
+    s+='<path d="'+p+'" fill="none" stroke="'+r[1]+'" stroke-width="'+r[2]+'"'+(r[3]?' stroke-dasharray="'+r[3]+'"':'')+' clip-path="url(#s16w4-cl)"/>';
+  });
+  var oc=cost(opt.N);
+  s+='<circle cx="'+sx(opt.N).toFixed(1)+'" cy="'+sy(oc.tot).toFixed(1)+'" r="6" fill="#fff" stroke="'+GREY+'" stroke-width="2.2"/>';
+  s+='<circle cx="'+sx(best.N).toFixed(1)+'" cy="'+sy(best.tot).toFixed(1)+'" r="6.5" fill="'+VIO+'"/>';
+  var tx=sx(best.N),anc=tx>760?'end':'start',dx=anc==='end'?-8:8;
+  s+='<line x1="'+tx.toFixed(1)+'" x2="'+tx.toFixed(1)+'" y1="'+(Y0+4)+'" y2="'+(sy(best.tot)-8).toFixed(1)+'" stroke="'+VIO+'" stroke-dasharray="3 3"/>';
+  s+='<text x="'+(tx+dx).toFixed(1)+'" y="'+(Y0+16)+'" text-anchor="'+anc+'" font-size="12" font-weight="800" fill="'+VIO+'" stroke="#fff" stroke-width="4" paint-order="stroke">best: N = '+big(best.N)+', '+comma(best.D/best.N)+' tokens per parameter</text>';
+  $('svg').innerHTML=s;
+
+  var tpp=best.D/best.N,save=oc.tot/best.tot;
+  $('h2').textContent='cost against model size at target loss '+Lt.toFixed(2)+' with '+(T===0?'no':sci(T))+' tokens served';
+  $('r1').innerHTML='<b style="color:'+VIO+'">'+big(best.N)+'</b> = arg min of 6 &middot; N &middot; D + 2 &middot; N &middot; T';
+  $('r2').innerHTML='<b style="color:'+GREEN+'">'+comma(tpp)+'</b> = '+big(best.D)+' / '+big(best.N);
+  $('r3').innerHTML='<b>'+sci(best.tot)+'</b> = '+sci(best.tr)+' + '+sci(best.inf);
+  var msg;
+  if(T===0){
+    msg='With no use, the best size is the compute-optimal size, at <b>'+comma(tpp)+'</b> tokens per parameter. This is the Chinchilla answer of about 20.';
+  }else{
+    msg='The compute-optimal model has <b>'+big(opt.N)+'</b> parameters and costs <b>'+sci(oc.tot)+'</b> FLOPs in total. The best model is <b>'+(opt.N/best.N).toFixed(1)+' times smaller</b>, trains on more tokens and saves <b>'+((1-1/save)*100).toFixed(0)+'%</b> of the total cost.';
+    if(tpp>10000)msg+=' Sardana et al. saw gains up to 10,000 tokens per parameter. Past that point, the fit gives a gain that is too large.';
+    else msg+=' Frontier MoE models train at about 400 to 700 tokens per active parameter.';
+  }
+  $('note').innerHTML=msg;
+}
+function marks(){
+  Array.prototype.forEach.call(document.querySelectorAll('.s16w4-q'),function(b){b.classList.toggle('on',+b.getAttribute('data-v')===T);});
+  Array.prototype.forEach.call(document.querySelectorAll('.s16w4-n'),function(b){b.classList.toggle('on',+b.getAttribute('data-v')===Lt);});
+}
+Array.prototype.forEach.call(document.querySelectorAll('.s16w4-q'),function(b){
+  b.addEventListener('click',function(){T=+b.getAttribute('data-v');marks();draw();});
+});
+Array.prototype.forEach.call(document.querySelectorAll('.s16w4-n'),function(b){
+  b.addEventListener('click',function(){Lt=+b.getAttribute('data-v');marks();draw();});
+});
+marks();draw();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

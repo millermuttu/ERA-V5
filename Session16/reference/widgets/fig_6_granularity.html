@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 16 Figure 6 - Granularity: Same Active Size, Smaller Experts</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;font-variant-numeric:tabular-nums}
+.s16f6-w{max-width:1180px;margin:0 auto;padding:16px 22px 16px}
+.s16f6-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.s16f6-w h1{font-size:22px;line-height:1.15;margin:3px 0 12px}
+.s16f6-card{position:relative;background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:14px 16px 12px}
+.s16f6-card svg{display:block;width:100%;height:auto;overflow:visible}
+.s16f6-card svg text{font-family:Inter,ui-sans-serif,system-ui,sans-serif;font-variant-numeric:tabular-nums}
+.s16f6-note{margin:10px 2px 0;font-size:13px;line-height:1.5;color:var(--muted)}
+.s16f6-note b{color:var(--ink)}
+.s16f6-tip{position:absolute;pointer-events:none;background:#fff;border:1px solid var(--line);border-radius:9px;box-shadow:0 8px 22px rgba(20,42,75,.13);padding:8px 11px;font:600 13px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--ink);white-space:nowrap;z-index:5}
+.s16f6-tip b{font-family:Inter,sans-serif;font-weight:800}
+.s16f6-tip span{color:var(--muted)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+</style>
+</head>
+<body>
+<main class="s16f6-w">
+<div class="s16f6-k">ERA V5 Session 16 &middot; MoE granularity</div>
+<h1>Granularity: Same Active Size, Smaller Experts</h1>
+<div class="s16f6-card"><svg id="s16f6-svg" viewBox="0 0 1100 352" role="img" aria-label="Granularity. At G equal to 1, four wide experts and the router picks one. At G equal to 8, thirty-two narrow experts and the router picks eight. The active size is the same."></svg></div>
+<p class="s16f6-note">Example numbers. <b>G = d<sub>ff</sub> / d<sub>expert</sub></b>. At a higher G the experts are smaller, the router picks more of them for each token, and the active parameters stay the same.</p>
+
+</main>
+<script>
+(function(){
+'use strict';
+var NS='http://www.w3.org/2000/svg';
+var CS=getComputedStyle(document.documentElement);
+var K={};['ink','muted','line','cyan','violet','green','amber','red'].forEach(function(n){K[n]=CS.getPropertyValue('--'+n).trim();});
+function $(i){return document.getElementById('s16f6-'+i);}
+function el(t,a,p){var e=document.createElementNS(NS,t);if(a){for(var k in a){if(a[k]!==undefined&&a[k]!==null)e.setAttribute(k,a[k]);}}if(p)p.appendChild(e);return e;}
+function tx(p,x,y,s,a){a=a||{};a.x=x;a.y=y;var e=el('text',a,p);e.textContent=s;return e;}
+var SUP={'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','-':'⁻'};
+function p10(e){return '10'+String(e).split('').map(function(c){return SUP[c];}).join('');}
+function sci(v){var e=Math.floor(Math.log10(v)+1e-9),m=v/Math.pow(10,e);return (Math.abs(m-1)<1e-6?'':(m.toFixed(1).replace(/\.0$/,'')+' × '))+p10(e);}
+function big(v){var u=[[1e12,'T'],[1e9,'B'],[1e6,'M'],[1e3,'K']];for(var i=0;i<u.length;i++){if(v>=u[i][0]){var x=v/u[i][0];return (x>=100?x.toFixed(0):x>=10?x.toFixed(1):x.toFixed(2))+u[i][1];}}return v.toFixed(0);}
+function lg(lo,hi,a,b){var l0=Math.log10(lo),l1=Math.log10(hi);var f=function(v){return a+(Math.log10(v)-l0)/(l1-l0)*(b-a);};f.inv=function(px){return Math.pow(10,l0+(px-a)/(b-a)*(l1-l0));};return f;}
+function ln(lo,hi,a,b){var f=function(v){return a+(v-lo)/(hi-lo)*(b-a);};f.inv=function(px){return lo+(px-a)/(b-a)*(hi-lo);};return f;}
+function tipAt(tip,card,html,cx,cy){tip.innerHTML=html;tip.hidden=false;var w=tip.offsetWidth,h=tip.offsetHeight,W=card.clientWidth;var x=cx+16,y=cy-h-12;if(x+w>W-6)x=cx-w-16;if(y<6)y=cy+16;tip.style.left=x+'px';tip.style.top=y+'px';}
+function svgPt(svg,ev){var r=svg.getBoundingClientRect(),vb=svg.viewBox.baseVal;return {x:(ev.clientX-r.left)*vb.width/r.width,y:(ev.clientY-r.top)*vb.height/r.height,s:r.width/vb.width,ox:r.left,oy:r.top};}
+function cardPt(card,ev){var r=card.getBoundingClientRect();return {x:ev.clientX-r.left,y:ev.clientY-r.top};}
+var svg=$('svg');
+function txs(p,x,y,str,a){var e=tx(p,x,y,'',a);str.split(/(_ff)/).forEach(function(part){if(!part)return;var t=el('tspan',part==='_ff'?{'font-size':'10','dy':'4'}:{'dy':e.lastChild&&e.lastChild.getAttribute('font-size')?'-4':'0'},e);t.textContent=part==='_ff'?'ff':part;});return e;}
+function wire(d,c,w){el('path',{d:d,fill:'none',stroke:c||K.muted,'stroke-opacity':0.8,'stroke-width':w||1.3,'stroke-linejoin':'round'},svg);}
+function elbow(x0,y0,x1,y1,ym,c){var r=6;if(Math.abs(x1-x0)<1){wire('M'+x0+' '+y0+'V'+y1,c);return;}var s=x1>x0?1:-1;var rr=Math.min(r,Math.abs(x1-x0)/2);wire('M'+x0+' '+y0+'V'+(ym-rr)+'Q'+x0+' '+ym+' '+(x0+s*rr)+' '+ym+'H'+(x1-s*rr)+'Q'+x1+' '+ym+' '+x1+' '+(ym+rr)+'V'+y1,c);}
+function panel(X,W,G,nE,act,col,title,sub,actLab){
+  var cx=X+W/2;
+  tx(svg,X,24,title,{'font-size':20,'font-weight':800,fill:col,'font-family':'ui-monospace,SFMono-Regular,Consolas,monospace'});
+  tx(svg,X+ (G===1?92:92),24,sub,{'font-size':14,fill:K.ink});
+  // token and router
+  el('rect',{x:cx-46,y:46,width:92,height:28,rx:14,fill:K.ink},svg);
+  tx(svg,cx,65,'one token',{'text-anchor':'middle','font-size':13,'font-weight':700,fill:'#fff'});
+  wire('M'+cx+' 74V90');
+  el('rect',{x:cx-60,y:90,width:120,height:32,rx:8,fill:'#fff',stroke:K.muted,'stroke-opacity':0.6},svg);
+  tx(svg,cx,111,'router',{'text-anchor':'middle','font-size':13.5,'font-weight':700,fill:K.ink});
+  var gap=G===1?16:3.2,ew=(W-gap*(nE-1))/nE,EY=176,EH=96;
+  for(var i=0;i<nE;i++){
+    var ex=X+i*(ew+gap),on=act.indexOf(i)>=0;
+    if(on)elbow(cx,122,ex+ew/2,EY-2,148,col);
+    el('rect',{x:ex,y:EY,width:ew,height:EH,rx:G===1?9:3,fill:on?col:'#fff','fill-opacity':on?0.85:1,stroke:on?col:K.line,'stroke-width':1.2},svg);
+  }
+  if(G===1){for(var j=0;j<nE;j++){var ex2=X+j*(ew+gap);tx(svg,ex2+ew/2,EY+EH/2+5,'expert '+(j+1),{'text-anchor':'middle','font-size':13,'font-weight':700,fill:act.indexOf(j)>=0?'#fff':K.muted});}}
+  // width brace for one expert
+  var bx=X,by=EY+EH+12;
+  el('path',{d:'M'+bx+' '+(by-4)+'V'+by+'H'+(bx+ew)+'V'+(by-4),fill:'none',stroke:K.muted,'stroke-width':1.2},svg);
+  txs(svg,bx+(G===1?ew/2:0),by+18,G===1?'width d_ff':'width d_ff / 8',{'text-anchor':G===1?'middle':'start','font-size':13,fill:K.muted});
+  // active size bar
+  var ay=EY+EH+44;
+  tx(svg,X,ay+15,'active size',{'font-size':13,'font-weight':700,fill:K.ink});
+  var aw=ew*(G===1?1:8)+(G===1?0:0),ax=X+92;
+  el('rect',{x:ax,y:ay+2,width:W/4,height:18,rx:4,fill:col,'fill-opacity':0.85},svg);
+  txs(svg,ax+W/4+10,ay+15,actLab,{'font-size':13,fill:K.muted});
+}
+panel(30,470,1,4,[2],K.cyan,'G = 1','4 wide experts. The router picks 1.','1 expert × d_ff');
+el('line',{x1:550,x2:550,y1:6,y2:340,stroke:K.line,'stroke-dasharray':'4 5'},svg);
+panel(600,470,8,32,[1,5,6,11,17,20,26,30],K.violet,'G = 8','32 narrow experts. The router picks 8.','8 experts × d_ff / 8 = the same size');
+
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

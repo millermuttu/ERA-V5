@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 16 Widget 8 - Ladder and Forecast</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s16w8-w{max-width:1180px;margin:0 auto;padding:18px 22px 20px}
+.s16w8-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.s16w8-w h1{font-size:26px;line-height:1.12;margin:4px 0 10px}
+.s16w8-say{border:1px solid #bae6f0;background:#f0fbfd;border-radius:10px;padding:12px 14px;color:#155e75;font-size:13.5px;line-height:1.55;margin:0 0 14px}
+.s16w8-say b{color:#0e7490;font-weight:800}
+.s16w8-bar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.s16w8-lb{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.s16w8-bar button{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;padding:6px 12px;font:800 11.5px Inter,sans-serif;cursor:pointer}
+.s16w8-bar button.on{border-color:var(--cyan);color:#0e7490;background:#effbfe;box-shadow:inset 0 0 0 1px var(--cyan)}
+.s16w8-sep{width:1px;height:20px;background:var(--line);margin:0 5px}
+.s16w8-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:13px 16px 10px}
+.s16w8-card h2{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px;font-weight:800}
+.s16w8-card svg{display:block;width:100%;height:auto}
+.s16w8-leg{margin:8px 0 0;font-size:12px;color:var(--muted);line-height:1.4;display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.s16w8-leg b{color:var(--ink)}
+.s16w8-chip{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.s16w8-met{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px}
+.s16w8-box{border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.9);padding:9px 12px}
+.s16w8-box>span:not(.s16w8-rd){display:block;color:var(--muted);font-size:10.5px;line-height:1.3;font-weight:700;letter-spacing:.03em;text-transform:uppercase}
+.s16w8-rd{display:block;margin-top:3px;font:700 12px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--muted);line-height:1.4}
+.s16w8-rd b{font-size:15px;font-weight:800;color:var(--ink)}
+.s16w8-note{margin:10px 0 0;font-size:12.5px;line-height:1.5;min-height:20px}
+@media(max-width:1000px){.s16w8-met{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s16w8-w">
+<div class="s16w8-k">ERA V5 Session 16 &middot; ladder and forecast</div>
+<h1>Ladder and Forecast</h1>
+<p class="s16w8-say">A ladder of small runs measures held-out <b>bits per byte (BPB)</b> against training FLOPs. A fit through the rungs forecasts a large run at <b>1e24 FLOPs</b>. Hold out one rung and check that it lands inside the <b>bootstrap band</b>. All values are <b>illustrative example numbers</b> from a seeded simulation.</p>
+
+<div class="s16w8-bar">
+<span class="s16w8-lb">rungs</span>
+<button type="button" class="s16w8-n" data-v="4" aria-label="Ladder with 4 rungs">4</button>
+<button type="button" class="s16w8-n" data-v="5" aria-label="Ladder with 5 rungs">5</button>
+<button type="button" class="s16w8-n" data-v="6" aria-label="Ladder with 6 rungs">6</button>
+<button type="button" class="s16w8-n" data-v="7" aria-label="Ladder with 7 rungs">7</button>
+<button type="button" class="s16w8-n" data-v="8" aria-label="Ladder with 8 rungs">8</button>
+<span class="s16w8-sep" aria-hidden="true"></span>
+<span class="s16w8-lb">noise</span>
+<button type="button" class="s16w8-z" data-v="0.01" aria-label="Low noise, 1 percent">low</button>
+<button type="button" class="s16w8-z" data-v="0.03" aria-label="Medium noise, 3 percent">medium</button>
+<button type="button" class="s16w8-z" data-v="0.06" aria-label="High noise, 6 percent">high</button>
+<span class="s16w8-sep" aria-hidden="true"></span>
+<span class="s16w8-lb">test</span>
+<button type="button" class="s16w8-h" data-v="1" aria-label="Hold out the top rung">hold out top rung</button>
+<button type="button" class="s16w8-h" data-v="2" aria-label="Hold out the second rung from the top">hold out second rung</button>
+<button type="button" class="s16w8-s" data-v="1" aria-label="Source scaling on">source scaling on</button>
+<button type="button" class="s16w8-s" data-v="0" aria-label="Source scaling off">source scaling off</button>
+</div>
+
+<div class="s16w8-card">
+<h2 id="s16w8-h2">held-out BPB against training FLOPs</h2>
+<svg id="s16w8-g" viewBox="0 0 1136 300" role="img" aria-label="BPB against training FLOPs with fit, band and forecast"></svg>
+<p class="s16w8-leg"><span><i class="s16w8-chip" style="background:#0891b2" aria-hidden="true"></i><b>fit rungs</b></span><span><i class="s16w8-chip" style="background:#fff;box-shadow:inset 0 0 0 2px #152033" aria-hidden="true"></i><b>held-out rung</b>, kept out of the fit</span><span><i class="s16w8-chip" style="background:#7c3aed" aria-hidden="true"></i><b>fit</b> with the 5% to 95% bootstrap band plus 0.005 BPB of eval error</span><span><i class="s16w8-chip" style="background:#fff;box-shadow:inset 0 0 0 2px #d97706" aria-hidden="true"></i><b>large run result</b>, illustrative</span></p>
+</div>
+
+<div class="s16w8-met">
+<div class="s16w8-box"><span>fitted law, floor E fixed at 0.60</span><span class="s16w8-rd" id="s16w8-r1"></span><span class="s16w8-rd" id="s16w8-r1b"></span></div>
+<div class="s16w8-box"><span id="s16w8-l2">held-out rung check</span><span class="s16w8-rd" id="s16w8-r2"></span><span class="s16w8-rd" id="s16w8-r2b"></span></div>
+<div class="s16w8-box"><span>forecast for the large run at 1e24</span><span class="s16w8-rd" id="s16w8-r3"></span><span class="s16w8-rd" id="s16w8-r3b"></span></div>
+</div>
+<p class="s16w8-note" id="s16w8-note"></p>
+</main>
+
+<script>
+(function(){
+'use strict';
+var E=0.60,A=0.90,AL=0.18,REP=1.25,TOL=0.005,LO=19,HI=22,TGT=24,NB=400,
+    CY='#0891b2',VI='#7c3aed',AM='#d97706',GR='#159447',RD='#dc2626',INK='#152033',
+    W=1136,H=300,L=56,R=16,T=10,B=36,X0=18.5,X1=24.5,Y0=0.6,Y1=1.8,
+    n=6,sig=0.03,hold=1,src=1;
+function $(i){return document.getElementById('s16w8-'+i);}
+function sci(v){var e=Math.floor(Math.log10(v)+1e-9),m=v/Math.pow(10,e);return m.toFixed(1)+'e'+e;}
+function rng(seed){var a=seed>>>0;return function(){a=(a+0x6D2B79F5)>>>0;var t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;};}
+function gauss(r){var u=Math.max(1e-12,r()),v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+function truth(lc,rep){return E+rep*A*Math.pow(10,-AL*(lc-19));}
+function fit(pts){
+  var k=pts.length,su=0,sy=0,suu=0,suy=0,i,u,y,d;
+  for(i=0;i<k;i++){u=pts[i].lc-19;y=Math.log(pts[i].b-E);su+=u;sy+=y;suu+=u*u;suy+=u*y;}
+  d=k*suu-su*su;if(Math.abs(d)<1e-9)return null;
+  var sl=(k*suy-su*sy)/d,ic=(sy-sl*su)/k;
+  return {a:Math.exp(ic),al:-sl/Math.LN10};
+}
+function pred(f,lc){return E+f.a*Math.pow(10,-f.al*(lc-19));}
+function pct(arr,p){var s=arr.slice().sort(function(x,y){return x-y;});return s[Math.min(s.length-1,Math.floor(p*(s.length-1)+0.5))];}
+function px(lx){return L+(lx-X0)/(X1-X0)*(W-L-R);}
+function py(v){v=Math.max(Y0,Math.min(Y1,v));return T+(Y1-v)/(Y1-Y0)*(H-T-B);}
+function draw(){
+  var zr=rng(1000+n),rungs=[],i,j,k,rep=src?REP:1,train=[],held,f,boots=[],br=rng(77+n*13+hold),s='',lx,
+      xs=[],lo=[],hi=[],grid=60,hi24,lo24,p24,ph,hl,hh,inside,real24,real24in;
+  for(i=0;i<n;i++){var lc=LO+(HI-LO)*i/(n-1),z=gauss(zr);
+    rungs.push({lc:lc,b:E+(truth(lc,rep)-E)*Math.exp(sig*z)});}
+  held=rungs[n-hold];
+  for(i=0;i<n;i++){if(i!==n-hold)train.push(rungs[i]);}
+  f=fit(train);
+  for(k=0;k<NB;k++){var smp=[],seen={},cnt=0;
+    for(j=0;j<train.length;j++){var r=train[Math.floor(br()*train.length)];smp.push(r);if(!seen[r.lc]){seen[r.lc]=1;cnt++;}}
+    if(cnt<2)continue;var bf=fit(smp);if(bf)boots.push(bf);}
+  for(k=0;k<=grid;k++){lx=X0+0.5+(X1-X0-0.5)*k/grid;xs.push(lx);
+    var v=boots.map(function(b){return pred(b,lx);});lo.push(pct(v,0.05)-TOL);hi.push(pct(v,0.95)+TOL);}
+  var bh=boots.map(function(b){return pred(b,held.lc);}),b24=boots.map(function(b){return pred(b,TGT);});
+  hl=pct(bh,0.05)-TOL;hh=pct(bh,0.95)+TOL;ph=pred(f,held.lc);inside=held.b>=hl&&held.b<=hh;
+  lo24=pct(b24,0.05)-TOL;hi24=pct(b24,0.95)+TOL;p24=pred(f,TGT);
+  real24=truth(TGT,REP);real24in=real24>=lo24&&real24<=hi24;
+  // axes
+  for(i=0;i<=6;i++){var yv=Y0+(Y1-Y0)*i/6,y=py(yv);
+    s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y+'" y2="'+y+'" stroke="#e4ebf4"/><text x="'+(L-6)+'" y="'+(y+3.5)+'" text-anchor="end" font-size="10" font-family="ui-monospace,monospace" fill="#93a3b6">'+yv.toFixed(1)+'</text>';}
+  for(i=19;i<=24;i++){s+='<text x="'+px(i)+'" y="'+(H-B+15)+'" text-anchor="middle" font-size="10" font-family="ui-monospace,monospace" fill="#93a3b6">1e'+i+'</text>';}
+  s+='<text x="'+((L+W-R)/2)+'" y="'+(H-4)+'" text-anchor="middle" font-size="10.5" font-weight="700" fill="#65758b">training compute C in FLOPs</text>';
+  s+='<text x="12" y="'+((T+H-B)/2)+'" text-anchor="middle" font-size="10.5" font-weight="700" fill="#65758b" transform="rotate(-90 12 '+((T+H-B)/2)+')">held-out BPB</text>';
+  s+='<rect x="'+px(LO-0.15)+'" y="'+T+'" width="'+(px(HI+0.15)-px(LO-0.15))+'" height="'+(H-T-B)+'" fill="#f4f7fb"/>';
+  s+='<text x="'+px((LO+HI)/2)+'" y="'+(T+14)+'" text-anchor="middle" font-size="10.5" font-weight="700" fill="#93a3b6">ladder, 1e19 to 1e22</text>';
+  s+='<text x="'+px(TGT)+'" y="'+(T+14)+'" text-anchor="middle" font-size="10.5" font-weight="700" fill="#93a3b6">large run</text>';
+  // band
+  var up='',dn='';
+  for(k=0;k<xs.length;k++){up+=(k?'L':'M')+px(xs[k]).toFixed(1)+' '+py(hi[k]).toFixed(1)+' ';dn=' L'+px(xs[k]).toFixed(1)+' '+py(lo[k]).toFixed(1)+dn;}
+  s+='<path d="'+up+dn+' Z" fill="#7c3aed" opacity=".16"/>';
+  var fl='';for(k=0;k<xs.length;k++){fl+=(k?'L':'M')+px(xs[k]).toFixed(1)+' '+py(pred(f,xs[k])).toFixed(1)+' ';}
+  s+='<path d="'+fl+'" fill="none" stroke="'+VI+'" stroke-width="2.2"/>';
+  // forecast bar
+  s+='<line x1="'+px(TGT)+'" x2="'+px(TGT)+'" y1="'+py(hi24)+'" y2="'+py(lo24)+'" stroke="'+VI+'" stroke-width="3"/>';
+  s+='<circle cx="'+px(TGT)+'" cy="'+py(p24)+'" r="4.5" fill="'+VI+'"/>';
+  s+='<circle cx="'+(px(TGT)+16)+'" cy="'+py(real24)+'" r="6" fill="#fff" stroke="'+AM+'" stroke-width="2.6"/>';
+  for(i=0;i<train.length;i++){s+='<circle cx="'+px(train[i].lc)+'" cy="'+py(train[i].b)+'" r="5.5" fill="'+CY+'"/>';}
+  s+='<circle cx="'+px(held.lc)+'" cy="'+py(held.b)+'" r="7" fill="#fff" stroke="'+(inside?GR:RD)+'" stroke-width="2.8"/>';
+  $('g').innerHTML=s;
+  $('h2').textContent='held-out BPB against training FLOPs, '+n+' rungs, noise '+Math.round(sig*100)+'%, source scaling '+(src?'on':'off');
+  $('r1').innerHTML='<b style="color:'+VI+'">BPB = 0.60 + '+f.a.toFixed(3)+' &middot; (C / 1e19)^&minus;'+f.al.toFixed(3)+'</b>';
+  $('r1b').innerHTML='fit on '+train.length+' rungs, '+boots.length+' bootstrap resamples';
+  $('l2').textContent='held-out rung at '+sci(Math.pow(10,held.lc))+' FLOPs, '+(inside?'inside the band':'outside the band');
+  $('r2').innerHTML='<b style="color:'+(inside?GR:RD)+'">measured '+held.b.toFixed(3)+'</b>, predicted '+ph.toFixed(3);
+  $('r2b').innerHTML='band '+hl.toFixed(3)+' to '+hh.toFixed(3);
+  $('r3').innerHTML='<b style="color:'+VI+'">'+p24.toFixed(3)+'</b> = 0.60 + '+f.a.toFixed(3)+' &middot; (1e5)^&minus;'+f.al.toFixed(3);
+  $('r3b').innerHTML='band '+lo24.toFixed(3)+' to '+hi24.toFixed(3)+', large run result <b style="color:'+AM+'">'+real24.toFixed(3)+'</b>';
+  var msg;
+  if(!inside){
+    msg='<span style="color:'+RD+'">The held-out rung is outside the band. Do not trust this forecast. Add rungs or reduce the noise, then test again.</span>';
+  }else if(!src){
+    msg='<span style="color:'+RD+'">The held-out rung is inside the band. The large run result is '+real24.toFixed(3)+(real24in?', near the top of the forecast band.':', above the forecast band.')+' Without source scaling, the small rungs see no repeated data. The large run repeats its sources. Thus the forecast is too low.</span>';
+  }else if(real24in){
+    msg='<span style="color:'+GR+'">The held-out rung is inside the band. Each rung repeats each source as often as the large run does. The large run result lands inside the forecast band.</span>';
+  }else{
+    msg='<span style="color:'+AM+'">The held-out rung is inside the band. The large run result is '+real24.toFixed(3)+', outside the forecast band. The forecast reaches two orders of compute past the top rung. Use a wider band or add a higher rung.</span>';
+  }
+  $('note').innerHTML=msg;
+}
+function marks(){
+  [['n',n],['z',sig],['h',hold],['s',src]].forEach(function(p){
+    Array.prototype.forEach.call(document.querySelectorAll('.s16w8-'+p[0]),function(b){b.classList.toggle('on',+b.getAttribute('data-v')===p[1]);});
+  });
+}
+function bind(cls,set){
+  Array.prototype.forEach.call(document.querySelectorAll('.s16w8-'+cls),function(b){
+    b.addEventListener('click',function(){set(+b.getAttribute('data-v'));marks();draw();});
+  });
+}
+bind('n',function(v){n=v;});bind('z',function(v){sig=v;});bind('h',function(v){hold=v;});bind('s',function(v){src=v;});
+marks();draw();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

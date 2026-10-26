@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 16 Widget 2 - The Compute Budget</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s16w2-w{max-width:1180px;margin:0 auto;padding:18px 22px 20px}
+.s16w2-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.s16w2-w h1{font-size:26px;line-height:1.12;margin:4px 0 10px}
+.s16w2-say{border:1px solid #bae6f0;background:#f0fbfd;border-radius:10px;padding:12px 14px;color:#155e75;font-size:13.5px;line-height:1.55;margin:0 0 14px}
+.s16w2-say b{color:#0e7490;font-weight:800}
+.s16w2-bar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.s16w2-lb{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.s16w2-bar button{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;padding:6px 14px;font:800 11.5px Inter,sans-serif;cursor:pointer}
+.s16w2-bar button.on{border-color:var(--cyan);color:#0e7490;background:#effbfe;box-shadow:inset 0 0 0 1px var(--cyan)}
+.s16w2-sep{width:1px;height:20px;background:var(--line);margin:0 5px}
+.s16w2-sl{display:inline-flex;align-items:center;gap:8px;margin:0 10px 0 8px}
+.s16w2-sl input{width:180px;accent-color:var(--cyan)}
+.s16w2-v{font:800 12.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--ink);min-width:58px}
+.s16w2-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:13px 16px 12px;margin-top:4px}
+.s16w2-card h2{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;font-weight:800}
+.s16w2-row{display:grid;grid-template-columns:210px 1fr 96px;gap:10px;align-items:center;margin:0 0 8px}
+.s16w2-rl{font-size:12px;color:var(--muted);line-height:1.3}
+.s16w2-rl b{color:var(--ink)}
+.s16w2-rv{font:800 13px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--ink);text-align:right}
+.s16w2-tk{position:relative;height:30px;border-radius:8px;background:#f4f7fb;border:1px solid #e4ebf4;overflow:hidden;
+ background-image:repeating-linear-gradient(to right,#dde6f2 0,#dde6f2 1px,transparent 1px,transparent 10%)}
+.s16w2-f{position:absolute;left:0;top:5px;bottom:5px;border-radius:5px;transition:width .4s ease-in-out}
+.s16w2-ref{position:absolute;top:0;bottom:0;width:2px;background:var(--ink)}
+.s16w2-leg{margin:6px 0 0;font-size:12px;color:var(--muted);line-height:1.4}
+.s16w2-leg b{color:var(--ink)}
+.s16w2-met{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.s16w2-box{border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.9);padding:9px 12px}
+.s16w2-box>span:not(.s16w2-rd){display:block;color:var(--muted);font-size:10.5px;line-height:1.3;font-weight:700;letter-spacing:.03em;text-transform:uppercase}
+.s16w2-rd{display:block;margin-top:3px;font:700 12.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.s16w2-rd b{font-size:16px;font-weight:800;color:var(--ink)}
+.s16w2-note{margin:10px 0 0;font-size:12.5px;line-height:1.5;min-height:20px}
+@media(max-width:1000px){.s16w2-met{grid-template-columns:1fr}.s16w2-row{grid-template-columns:1fr}.s16w2-rd{white-space:normal}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s16w2-w">
+<div class="s16w2-k">ERA V5 Session 16 &middot; the compute budget</div>
+<h1>The Compute Budget</h1>
+<p class="s16w2-say">The compute that a cluster gives is a product: <b>C = GPUs &times; peak FLOP/s &times; MFU &times; seconds &times; goodput</b>. The sliders start at <b>example numbers</b>. Push <b>check</b> to load the published MAI-Base-2 run and compare its budget with <b>6ND</b> for 80B active parameters and 50T tokens.</p>
+
+<div class="s16w2-bar">
+<span class="s16w2-lb">hardware</span>
+<label class="s16w2-sl"><span class="s16w2-lb">GPUs</span><input type="range" id="s16w2-g" min="1000" max="32000" step="1000" value="4000" aria-label="Number of GPUs"><span class="s16w2-v" id="s16w2-gv"></span></label>
+<label class="s16w2-sl"><span class="s16w2-lb">peak PFLOP/s per GPU</span><input type="range" id="s16w2-p" min="0.5" max="5" step="0.1" value="2.5" aria-label="Peak BF16 PFLOP per second per GPU"><span class="s16w2-v" id="s16w2-pv"></span></label>
+</div>
+<div class="s16w2-bar">
+<span class="s16w2-lb">efficiency</span>
+<label class="s16w2-sl"><span class="s16w2-lb">MFU</span><input type="range" id="s16w2-m" min="5" max="60" step="1" value="30" aria-label="Model FLOPs utilization in percent"><span class="s16w2-v" id="s16w2-mv"></span></label>
+<label class="s16w2-sl"><span class="s16w2-lb">goodput</span><input type="range" id="s16w2-u" min="50" max="100" step="1" value="90" aria-label="Goodput in percent"><span class="s16w2-v" id="s16w2-uv"></span></label>
+</div>
+<div class="s16w2-bar">
+<span class="s16w2-lb">time and check</span>
+<label class="s16w2-sl"><span class="s16w2-lb">days</span><input type="range" id="s16w2-t" min="1" max="120" step="1" value="30" aria-label="Wall-clock days"><span class="s16w2-v" id="s16w2-tv"></span></label>
+<span class="s16w2-sep" aria-hidden="true"></span>
+<button type="button" id="s16w2-chk" aria-label="Check: load the MAI-Base-2 numbers">check: MAI-Base-2</button>
+<button type="button" id="s16w2-ex" aria-label="Load the example numbers again">example</button>
+</div>
+
+<div class="s16w2-card">
+<h2 id="s16w2-h2">from peak compute to useful compute</h2>
+<div class="s16w2-row"><span class="s16w2-rl"><b>peak</b>, GPUs &times; peak &times; seconds</span><div class="s16w2-tk"><div class="s16w2-f" id="s16w2-b1" style="background:#94a3b8"></div><div class="s16w2-ref" id="s16w2-k1"></div></div><span class="s16w2-rv" id="s16w2-v1"></span></div>
+<div class="s16w2-row"><span class="s16w2-rl"><b>after MFU</b>, model FLOPs done</span><div class="s16w2-tk"><div class="s16w2-f" id="s16w2-b2" style="background:var(--violet)"></div><div class="s16w2-ref" id="s16w2-k2"></div></div><span class="s16w2-rv" id="s16w2-v2"></span></div>
+<div class="s16w2-row"><span class="s16w2-rl"><b>after goodput</b>, useful FLOPs</span><div class="s16w2-tk"><div class="s16w2-f" id="s16w2-b3" style="background:var(--cyan)"></div><div class="s16w2-ref" id="s16w2-k3"></div></div><span class="s16w2-rv" id="s16w2-v3"></span></div>
+<p class="s16w2-leg">The bars use a log scale from <b>1e22</b> to <b>1e27</b> FLOPs. The black line marks <b>6ND = 2.40e25</b> for MAI-Base-2.</p>
+</div>
+
+<div class="s16w2-met">
+<div class="s16w2-box"><span>seconds of wall clock</span><span class="s16w2-rd" id="s16w2-r1"></span></div>
+<div class="s16w2-box"><span>useful compute C</span><span class="s16w2-rd" id="s16w2-r2"></span></div>
+<div class="s16w2-box"><span>lost to MFU and goodput</span><span class="s16w2-rd" id="s16w2-r3"></span></div>
+<div class="s16w2-box"><span>MAI-Base-2 first estimate</span><span class="s16w2-rd" id="s16w2-r4"></span></div>
+<div class="s16w2-box"><span>budget against 6ND</span><span class="s16w2-rd" id="s16w2-r5"></span></div>
+<div class="s16w2-box"><span>tokens for 80B active</span><span class="s16w2-rd" id="s16w2-r6"></span></div>
+</div>
+<p class="s16w2-note" id="s16w2-note"></p>
+</main>
+
+<script>
+(function(){
+'use strict';
+var C6=6*80e9*50e12,LO=22,HI=27,GREEN='#159447',AMBER='#d97706',RED='#dc2626',CYAN='#0891b2',
+    EX={g:4000,p:2.5,m:30,u:90,t:30},MAI={g:16000,p:2.5,m:21,u:89,t:38},mode='ex';
+function $(i){return document.getElementById('s16w2-'+i);}
+function comma(n){return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+function sci(v){var e=Math.floor(Math.log10(v)),m=v/Math.pow(10,e);if(m>=9.995){m/=10;e+=1;}return m.toFixed(2)+'e'+e;}
+function lw(v){return Math.max(0,Math.min(100,(Math.log10(v)-LO)/(HI-LO)*100));}
+function load(s){$('g').value=s.g;$('p').value=s.p;$('m').value=s.m;$('u').value=s.u;$('t').value=s.t;}
+function marks(){$('chk').classList.toggle('on',mode==='mai');$('ex').classList.toggle('on',mode==='ex');}
+function same(s){return +$('g').value===s.g&&Math.abs(+$('p').value-s.p)<1e-9&&+$('m').value===s.m&&+$('u').value===s.u&&+$('t').value===s.t;}
+function draw(){
+  var g=+$('g').value,p=+$('p').value,m=+$('m').value,u=+$('u').value,t=+$('t').value,
+      sec=t*86400,peak=g*p*1e15*sec,afterM=peak*m/100,C=afterM*u/100,ratio=C/C6,toks=C/(6*80e9),idle=g*(1-u/100),
+      ref=lw(C6),col;
+  mode=same(MAI)?'mai':(same(EX)?'ex':'own');marks();
+  $('gv').textContent=comma(g);$('pv').textContent=p.toFixed(1);$('mv').textContent=m+'%';$('uv').textContent=u+'%';$('tv').textContent=t;
+  $('h2').textContent=mode==='mai'?'MAI-Base-2, published numbers':(mode==='ex'?'example numbers':'your numbers');
+  $('b1').style.width=lw(peak)+'%';$('b2').style.width=lw(afterM)+'%';$('b3').style.width=lw(C)+'%';
+  ['k1','k2','k3'].forEach(function(k){$(k).style.left='calc('+ref+'% - 1px)';});
+  $('v1').textContent=sci(peak);$('v2').textContent=sci(afterM);$('v3').textContent=sci(C);
+  col=Math.abs(ratio-1)<=0.05?GREEN:(ratio<1?RED:AMBER);
+  $('r1').innerHTML='<b>'+sci(sec)+'</b> = '+t+' &times; 86,400';
+  $('r2').innerHTML='<b style="color:'+CYAN+'">'+sci(C)+'</b> = '+comma(g)+' &times; '+p.toFixed(1)+'e15 &times; '+m+'% &times; '+sci(sec)+' &times; '+u+'%';
+  $('r3').innerHTML='<b>'+(100-m*u/100).toFixed(1)+'%</b> = 1 &minus; '+m+'% &times; '+u+'%';
+  $('r4').innerHTML='<b>2.40e25</b> = 6 &times; 80e9 &times; 50e12';
+  $('r5').innerHTML='<b style="color:'+col+'">'+ratio.toFixed(3)+'</b> = '+sci(C)+' / 2.40e25';
+  $('r6').innerHTML='<b>'+(toks/1e12).toFixed(1)+'T</b> = '+sci(C)+' / (6 &times; 80e9)';
+  if(mode==='mai'){
+    $('note').innerHTML='<span style="color:'+GREEN+'">The hardware budget and 6ND agree to about '+Math.round((ratio-1)*100)+'%. Goodput of '+u+'% means about '+comma(Math.round(idle))+' of the '+comma(g)+' GPUs make no progress on average.</span>';
+  }else if(Math.abs(ratio-1)<=0.05){
+    $('note').innerHTML='<span style="color:'+GREEN+'">This budget matches the MAI-Base-2 compute. Only '+(m*u/100).toFixed(1)+'% of the peak FLOPs become training progress.</span>';
+  }else if(ratio<1){
+    $('note').innerHTML='<span style="color:'+RED+'">This budget is '+(ratio*100).toFixed(0)+'% of the MAI-Base-2 compute. A change in MFU from '+m+'% to '+Math.min(60,2*m)+'% changes the budget by the same factor as '+(Math.min(60,2*m)/m).toFixed(2)+' times the GPUs.</span>';
+  }else{
+    $('note').innerHTML='<span style="color:'+AMBER+'">This budget is '+ratio.toFixed(2)+' times the MAI-Base-2 compute. Each factor in the product has the same effect on C.</span>';
+  }
+}
+['g','p','m','u','t'].forEach(function(k){$(k).addEventListener('input',draw);});
+$('chk').addEventListener('click',function(){load(MAI);draw();});
+$('ex').addEventListener('click',function(){load(EX);draw();});
+draw();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

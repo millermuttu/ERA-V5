@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 16 Figure 8 - As the Run Grows</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;font-variant-numeric:tabular-nums}
+.s16f8-w{max-width:1180px;margin:0 auto;padding:16px 22px 16px}
+.s16f8-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.s16f8-w h1{font-size:22px;line-height:1.15;margin:3px 0 12px}
+.s16f8-card{position:relative;background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:14px 16px 12px}
+.s16f8-card svg{display:block;width:100%;height:auto;overflow:visible}
+.s16f8-card svg text{font-family:Inter,ui-sans-serif,system-ui,sans-serif;font-variant-numeric:tabular-nums}
+.s16f8-note{margin:10px 2px 0;font-size:13px;line-height:1.5;color:var(--muted)}
+.s16f8-note b{color:var(--ink)}
+.s16f8-tip{position:absolute;pointer-events:none;background:#fff;border:1px solid var(--line);border-radius:9px;box-shadow:0 8px 22px rgba(20,42,75,.13);padding:8px 11px;font:600 13px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--ink);white-space:nowrap;z-index:5}
+.s16f8-tip b{font-family:Inter,sans-serif;font-weight:800}
+.s16f8-tip span{color:var(--muted)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+</style>
+</head>
+<body>
+<main class="s16f8-w">
+<div class="s16f8-k">ERA V5 Session 16 &middot; hyperparameter laws</div>
+<h1>As the Run Grows</h1>
+<div class="s16f8-card" id="s16f8-card"><svg id="s16f8-svg" viewBox="0 0 1100 372" role="img" aria-label="Three charts. The learning rate falls as compute grows. The batch size rises as compute grows. The loss stays near the best value for a learning rate error of 2 times."></svg><div class="s16f8-tip" id="s16f8-tip" hidden></div></div>
+<p class="s16f8-note">Left and middle: the DeepSeek LLM laws <b>&eta;<sub>opt</sub> = 0.3118 &middot; C<sup>&minus;0.1250</sup></b> and <b>B<sub>opt</sub> = 0.2920 &middot; C<sup>0.3271</sup></b>, fit from 10<sup>17</sup> to 2 &times; 10<sup>19</sup> FLOPs. Right: an illustrative curve. Hover to read the values.</p>
+
+</main>
+<script>
+(function(){
+'use strict';
+var NS='http://www.w3.org/2000/svg';
+var CS=getComputedStyle(document.documentElement);
+var K={};['ink','muted','line','cyan','violet','green','amber','red'].forEach(function(n){K[n]=CS.getPropertyValue('--'+n).trim();});
+function $(i){return document.getElementById('s16f8-'+i);}
+function el(t,a,p){var e=document.createElementNS(NS,t);if(a){for(var k in a){if(a[k]!==undefined&&a[k]!==null)e.setAttribute(k,a[k]);}}if(p)p.appendChild(e);return e;}
+function tx(p,x,y,s,a){a=a||{};a.x=x;a.y=y;var e=el('text',a,p);e.textContent=s;return e;}
+var SUP={'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','-':'⁻'};
+function p10(e){return '10'+String(e).split('').map(function(c){return SUP[c];}).join('');}
+function sci(v){var e=Math.floor(Math.log10(v)+1e-9),m=v/Math.pow(10,e);return (Math.abs(m-1)<1e-6?'':(m.toFixed(1).replace(/\.0$/,'')+' × '))+p10(e);}
+function big(v){var u=[[1e12,'T'],[1e9,'B'],[1e6,'M'],[1e3,'K']];for(var i=0;i<u.length;i++){if(v>=u[i][0]){var x=v/u[i][0];return (x>=100?x.toFixed(0):x>=10?x.toFixed(1):x.toFixed(2))+u[i][1];}}return v.toFixed(0);}
+function lg(lo,hi,a,b){var l0=Math.log10(lo),l1=Math.log10(hi);var f=function(v){return a+(Math.log10(v)-l0)/(l1-l0)*(b-a);};f.inv=function(px){return Math.pow(10,l0+(px-a)/(b-a)*(l1-l0));};return f;}
+function ln(lo,hi,a,b){var f=function(v){return a+(v-lo)/(hi-lo)*(b-a);};f.inv=function(px){return lo+(px-a)/(b-a)*(hi-lo);};return f;}
+function tipAt(tip,card,html,cx,cy){tip.innerHTML=html;tip.hidden=false;var w=tip.offsetWidth,h=tip.offsetHeight,W=card.clientWidth;var x=cx+16,y=cy-h-12;if(x+w>W-6)x=cx-w-16;if(y<6)y=cy+16;tip.style.left=x+'px';tip.style.top=y+'px';}
+function svgPt(svg,ev){var r=svg.getBoundingClientRect(),vb=svg.viewBox.baseVal;return {x:(ev.clientX-r.left)*vb.width/r.width,y:(ev.clientY-r.top)*vb.height/r.height,s:r.width/vb.width,ox:r.left,oy:r.top};}
+function cardPt(card,ev){var r=card.getBoundingClientRect();return {x:ev.clientX-r.left,y:ev.clientY-r.top};}
+function eta(C){return 0.3118*Math.pow(C,-0.125);}
+function bat(C){return 0.2920*Math.pow(C,0.3271);}
+function pen(m){var l=Math.log10(m);return 0.02*l*l+0.06*l*l*l*l;}
+var svg=$('svg'),card=$('card'),tip=$('tip');
+var Y0=44,Y1=300,H=[];
+function frame(X0,X1,x,y,xt,xf,yt,yf,xtitle,ytitle,title,col){
+  var g=el('g',null,svg);
+  yt.forEach(function(v){el('line',{x1:X0,x2:X1,y1:y(v),y2:y(v),stroke:K.line},g);tx(g,X0-10,y(v)+4.5,yf(v),{'text-anchor':'end','font-size':13,fill:K.muted});});
+  xt.forEach(function(v){el('line',{x1:x(v),x2:x(v),y1:Y1,y2:Y1+5,stroke:K.muted,'stroke-opacity':0.6},g);tx(g,x(v),Y1+21,xf(v),{'text-anchor':'middle','font-size':13,fill:K.muted});});
+  el('line',{x1:X0,x2:X1,y1:Y1,y2:Y1,stroke:K.muted,'stroke-opacity':0.6},g);el('line',{x1:X0,x2:X0,y1:Y0,y2:Y1,stroke:K.muted,'stroke-opacity':0.6},g);
+  tx(g,(X0+X1)/2,Y1+46,xtitle,{'text-anchor':'middle','font-size':13.5,'font-weight':700,fill:K.ink});
+  var ym=(Y0+Y1)/2,ax=X0-58;tx(g,ax,ym,ytitle,{'text-anchor':'middle','font-size':13.5,'font-weight':700,fill:K.ink,transform:'rotate(-90 '+ax+' '+ym+')'});
+  tx(g,X0-66,18,title,{'font-size':15,'font-weight':800,fill:col});
+  return g;
+}
+function law(g,x,y,f,col,fmt,name){
+  el('rect',{x:x(1e17),y:Y0,width:x(2e19)-x(1e17),height:Y1-Y0,fill:col,'fill-opacity':0.07},g);
+  tx(g,(x(1e17)+x(2e19))/2,Y0+16,'fit range',{'text-anchor':'middle','font-size':13,'font-weight':700,fill:col});
+  var d1='',d2='',k;
+  for(k=17;k<=25.001;k+=0.05){var C=Math.pow(10,k),s=x(C).toFixed(1)+' '+y(f(C)).toFixed(1);if(k<=19.31)d1+=(d1?'L':'M')+s;if(k>=19.3)d2+=(d2?'L':'M')+s;}
+  el('path',{d:d1,fill:'none',stroke:col,'stroke-width':2.6},g);
+  el('path',{d:d2,fill:'none',stroke:col,'stroke-width':2.3,'stroke-dasharray':'7 6'},g);
+  [1e17,1e19,1e21,1e23,1e25].forEach(function(C){H.push({x:x(C),y:y(f(C)),h:'<b>'+name+'</b><br>C = '+p10(Math.round(Math.log10(C)))+' <span>FLOPs</span><br>'+fmt(f(C))});el('circle',{cx:x(C),cy:y(f(C)),r:3.6,fill:'#fff',stroke:col,'stroke-width':2},g);});
+}
+var cT=[1e17,1e19,1e21,1e23,1e25],cF=function(v){return p10(Math.round(Math.log10(v)));};
+// A: learning rate
+var xa=lg(1e17,1e25,95,345),ya=lg(1e-4,1e-2,Y1,Y0);
+var ga=frame(95,345,xa,ya,cT,cF,[1e-4,1e-3,1e-2],function(v){return v>=1e-2?'0.01':v>=1e-3?'0.001':'0.0001';},'compute C (FLOPs)','learning rate','Learning rate falls',K.cyan);
+law(ga,xa,ya,eta,K.cyan,function(v){return 'η = '+v.toPrecision(3);},'learning rate');
+// B: batch
+var xb=lg(1e17,1e25,470,720),yb=lg(1e5,1e8,Y1,Y0);
+var gb=frame(470,720,xb,yb,cT,cF,[1e5,1e6,1e7,1e8],function(v){return {100000:'100K',1000000:'1M',10000000:'10M',100000000:'100M'}[Math.round(v)];},'compute C (FLOPs)','batch (tokens per step)','Batch size rises',K.green);
+law(gb,xb,yb,bat,K.green,function(v){return 'B = '+big(v)+' tokens';},'batch size');
+// C: broad optimum
+var xc=lg(0.1,10,845,1080),yc=ln(0,0.1,Y1,Y0);
+var gc=frame(845,1080,xc,yc,[0.1,0.5,1,2,10],function(v){return v+'×';},[0,0.025,0.05,0.075,0.1],function(v){return v.toFixed(3);},'LR as a multiple of the best LR','extra loss','The optimum is broad',K.violet);
+el('rect',{x:xc(0.5),y:Y0,width:xc(2)-xc(0.5),height:Y1-Y0,fill:K.green,'fill-opacity':0.08},gc);
+var dc='';for(var m=-1;m<=1.0001;m+=0.02){var mm=Math.pow(10,m);dc+=(dc?'L':'M')+xc(mm).toFixed(1)+' '+yc(pen(mm)).toFixed(1);}
+el('path',{d:dc,fill:'none',stroke:K.violet,'stroke-width':2.6},gc);
+[[2,K.green],[0.5,K.green],[10,K.red],[0.1,K.red]].forEach(function(q){el('circle',{cx:xc(q[0]),cy:yc(pen(q[0])),r:5,fill:q[1],stroke:'#fff','stroke-width':1.5},gc);H.push({x:xc(q[0]),y:yc(pen(q[0])),h:'<b>LR = '+q[0]+'× the best</b><br>extra loss = '+pen(q[0]).toFixed(3)+'<br><span>illustrative</span>'});});
+tx(gc,xc(1),yc(0.04),'2× error:',{'text-anchor':'middle','font-size':13,'font-weight':800,fill:K.green});
+tx(gc,xc(1),yc(0.04)+17,'small cost',{'text-anchor':'middle','font-size':13,fill:K.green});
+tx(gc,xc(10)-12,yc(0.08)+4,'10×: large cost',{'text-anchor':'end','font-size':13,'font-weight':800,fill:K.red});
+// hover
+var hit=el('rect',{x:0,y:0,width:1100,height:372,fill:'transparent'},svg),ring=el('circle',{r:8,fill:'none',stroke:K.ink,'stroke-width':1.6,'pointer-events':'none'},svg);ring.style.display='none';
+hit.addEventListener('mousemove',function(ev){var p=svgPt(svg,ev),b=null,bd=18;H.forEach(function(q){var dd=Math.hypot(q.x-p.x,q.y-p.y);if(dd<bd){bd=dd;b=q;}});if(!b){ring.style.display='none';tip.hidden=true;return;}ring.style.display='';ring.setAttribute('cx',b.x);ring.setAttribute('cy',b.y);var cp=cardPt(card,ev);tipAt(tip,card,b.h,cp.x,cp.y);});
+hit.addEventListener('mouseleave',function(){ring.style.display='none';tip.hidden=true;});
+
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>
