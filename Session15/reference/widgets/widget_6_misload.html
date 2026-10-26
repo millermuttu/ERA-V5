@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 15 Widget 6 - A Silent Checkpoint Misload</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s15w6-w{max-width:1180px;margin:0 auto;padding:18px 22px 20px}
+.s15w6-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.s15w6-w h1{font-size:26px;line-height:1.12;margin:4px 0 10px}
+.s15w6-say{border:1px solid #bae6f0;background:#f0fbfd;border-radius:10px;padding:12px 14px;color:#155e75;font-size:13.5px;line-height:1.55;margin:0 0 14px}
+.s15w6-say b{color:#0e7490;font-weight:800}
+.s15w6-bar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.s15w6-lb{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.s15w6-bar button{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;padding:6px 14px;font:800 11.5px Inter,sans-serif;cursor:pointer}
+.s15w6-bar button.on{border-color:var(--cyan);color:#0e7490;background:#effbfe;box-shadow:inset 0 0 0 1px var(--cyan)}
+.s15w6-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:13px 16px 12px}
+.s15w6-card h2{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;font-weight:800}
+.s15w6-svg{display:block;width:100%;height:auto}
+.s15w6-svg text{font:700 10px ui-monospace,SFMono-Regular,Consolas,monospace;fill:#93a3b6}
+.s15w6-svg .s15w6-tl{font:800 11px Inter,sans-serif}
+.s15w6-leg{margin:6px 0 0;font-size:12px;color:var(--muted);line-height:1.4;display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.s15w6-leg b{color:var(--ink)}
+.s15w6-chip{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.s15w6-met{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-top:12px}
+.s15w6-box{border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.9);padding:10px 12px}
+.s15w6-box>span:not(.s15w6-rd){display:block;color:var(--muted);font-size:10.5px;line-height:1.3;font-weight:700;letter-spacing:.03em;text-transform:uppercase}
+.s15w6-rd{display:block;margin-top:3px;font:700 12.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.s15w6-rd b{font-size:17px;font-weight:800;color:var(--ink)}
+.s15w6-note{margin:10px 0 0;font-size:12.5px;line-height:1.5}
+.s15w6-note b{color:var(--ink)}
+@media(max-width:1000px){.s15w6-met{grid-template-columns:1fr 1fr}.s15w6-rd{white-space:normal}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s15w6-w">
+<div class="s15w6-k">ERA V5 Session 15 &middot; checkpoint misload</div>
+<h1>A Silent Checkpoint Misload</h1>
+<p class="s15w6-say">A bad load left some weights of our model <b>random</b>, and no check reported an error. The only sign was a step-one loss of <b>2.95</b> where a correct load gives <b>2.55</b>. Show one curve or both to compare them with the normal noise.</p>
+
+<div class="s15w6-bar">
+<span class="s15w6-lb">show</span>
+<button type="button" class="s15w6-q" data-v="good" aria-label="Show the correct load only">correct load</button>
+<button type="button" class="s15w6-q" data-v="bad" aria-label="Show the bad load only">bad load</button>
+<button type="button" class="s15w6-q" data-v="both" aria-label="Show both loads">both</button>
+</div>
+
+<div class="s15w6-card">
+<h2 id="s15w6-h2">training loss, steps 1 to 200</h2>
+<svg class="s15w6-svg" id="s15w6-svg" viewBox="0 0 1136 300" role="img" aria-label="Loss curves for the correct load and the bad load"></svg>
+<p class="s15w6-leg"><span><i class="s15w6-chip" style="background:var(--violet)" aria-hidden="true"></i><b>correct load</b></span><span><i class="s15w6-chip" style="background:var(--red)" aria-hidden="true"></i><b>bad load</b>, some weights left random</span><span><i class="s15w6-chip" style="background:#cbd5e1" aria-hidden="true"></i><b>normal noise band</b> of the correct load, mean &plusmn; 2 std</span><span>Step 1 values are measured. The curves after step 1 are a simulation with made-up numbers.</span></p>
+</div>
+
+<div class="s15w6-met">
+<div class="s15w6-box"><span>step-one loss, correct load</span><span class="s15w6-rd" id="s15w6-r1"></span></div>
+<div class="s15w6-box"><span>step-one loss, bad load</span><span class="s15w6-rd" id="s15w6-r2"></span></div>
+<div class="s15w6-box"><span>difference</span><span class="s15w6-rd" id="s15w6-r3"></span></div>
+<div class="s15w6-box"><span>difference in noise units</span><span class="s15w6-rd" id="s15w6-r4"></span></div>
+</div>
+
+<p class="s15w6-note"><b>Five cheap checks passed:</b> the file existed, the file had the right size, the load returned no error, the parameter count was correct, and the loss was finite.</p>
+<p class="s15w6-note"><b>The fix:</b> a strict load stops on any missing name or wrong name.</p>
+</main>
+
+<script>
+(function(){
+'use strict';
+var N=200,L1G=2.55,L1B=2.95,SD=0.05,W=1136,H=300,PL=52,PR=16,PT=12,PB=30,YMIN=2.15,YMAX=3.05,
+    mode='both',good=[],bad=[],mean=[],i;
+function $(i){return document.getElementById('s15w6-'+i);}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+var rng=mulberry32(2026),z=[],m=0,v=0,u1,u2;
+for(i=0;i<N-1;i++){u1=rng()||1e-9;u2=rng();z.push(Math.sqrt(-2*Math.log(u1))*Math.cos(2*Math.PI*u2));}
+for(i=0;i<z.length;i++)m+=z[i];m/=z.length;
+for(i=0;i<z.length;i++)v+=(z[i]-m)*(z[i]-m);v=Math.sqrt(v/z.length);
+for(i=0;i<z.length;i++)z[i]=(z[i]-m)/v;
+for(i=1;i<=N;i++){
+  mean.push(L1G-0.028*Math.log(i));
+  if(i===1){good.push(L1G);bad.push(L1B);}
+  else{
+    good.push(mean[i-1]+SD*z[i-2]);
+    bad.push(mean[i-1]+0.05+(L1B-L1G-0.05)*Math.exp(-(i-1)/30)+SD*z[i-2]);
+  }
+}
+/* noise std measured live from the simulated correct curve, steps 2 to 200 */
+var sd=0;for(i=1;i<N;i++)sd+=(good[i]-mean[i])*(good[i]-mean[i]);sd=Math.sqrt(sd/(N-1));
+function X(s){return PL+(s-1)/(N-1)*(W-PL-PR);}
+function Y(l){return PT+(YMAX-l)/(YMAX-YMIN)*(H-PT-PB);}
+function path(a){var s='',j;for(j=0;j<a.length;j++){s+=(j?'L':'M')+X(j+1).toFixed(1)+' '+Y(a[j]).toFixed(1);}return s;}
+function draw(){
+  var s='',j,y,band='',sg=mode!=='bad',sb=mode!=='good';
+  for(y=2.2;y<=3.0001;y+=0.2){s+='<line x1="'+PL+'" x2="'+(W-PR)+'" y1="'+Y(y)+'" y2="'+Y(y)+'" stroke="#e4ebf4"/><text x="'+(PL-8)+'" y="'+(Y(y)+3)+'" text-anchor="end">'+y.toFixed(1)+'</text>';}
+  [1,50,100,150,200].forEach(function(t){s+='<text x="'+X(t)+'" y="'+(H-10)+'" text-anchor="middle">'+(t===1?'step 1':t)+'</text>';});
+  for(j=0;j<N;j++)band+=(j?'L':'M')+X(j+1).toFixed(1)+' '+Y(mean[j]+2*sd).toFixed(1);
+  for(j=N-1;j>=0;j--)band+='L'+X(j+1).toFixed(1)+' '+Y(mean[j]-2*sd).toFixed(1);
+  s+='<path d="'+band+'Z" fill="#cbd5e1" opacity=".55"/>';
+  if(sg){s+='<path d="'+path(good)+'" fill="none" stroke="#7c3aed" stroke-width="1.6"/><circle cx="'+X(1)+'" cy="'+Y(L1G)+'" r="5" fill="#7c3aed"/>'+
+    '<line x1="'+X(1)+'" x2="'+X(1)+'" y1="'+(Y(L1G)+6)+'" y2="'+(Y(2.27)-4)+'" stroke="#7c3aed" stroke-dasharray="2 2"/>'+
+    '<text class="s15w6-tl" x="'+(X(1)+6)+'" y="'+Y(2.27)+'" style="fill:#7c3aed">2.55 measured</text>';}
+  if(sb){s+='<path d="'+path(bad)+'" fill="none" stroke="#dc2626" stroke-width="1.6"/><circle cx="'+X(1)+'" cy="'+Y(L1B)+'" r="5" fill="#dc2626"/>'+
+    '<text class="s15w6-tl" x="'+(X(1)+10)+'" y="'+(Y(L1B)-6)+'" style="fill:#dc2626">2.95 measured</text>';}
+  s+='<text class="s15w6-tl" x="'+(W-PR-4)+'" y="'+(PT+12)+'" text-anchor="end" style="fill:#65758b">steps 2 to 200: simulation with made-up numbers</text>';
+  $('svg').innerHTML=s;
+  $('h2').textContent='training loss, steps 1 to 200: '+(mode==='both'?'both loads':mode==='good'?'correct load':'bad load');
+  $('r1').innerHTML='<b style="color:var(--violet)">'+L1G.toFixed(2)+'</b> nats, measured';
+  $('r2').innerHTML='<b style="color:var(--red)">'+L1B.toFixed(2)+'</b> nats, measured';
+  $('r3').innerHTML='<b>'+(L1B-L1G).toFixed(2)+' nats</b> = 2.95 &minus; 2.55';
+  $('r4').innerHTML='<b>'+((L1B-L1G)/sd).toFixed(1)+'</b> = 0.40 / '+sd.toFixed(3);
+}
+function marks(){Array.prototype.forEach.call(document.querySelectorAll('.s15w6-q'),function(b){b.classList.toggle('on',b.getAttribute('data-v')===mode);});}
+Array.prototype.forEach.call(document.querySelectorAll('.s15w6-q'),function(b){
+  b.addEventListener('click',function(){mode=b.getAttribute('data-v');marks();draw();});
+});
+marks();draw();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

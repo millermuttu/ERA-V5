@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 15 Widget 7 - Downsampling a Full Run</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s15w7-w{max-width:1180px;margin:0 auto;padding:18px 22px 20px}
+.s15w7-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.s15w7-w h1{font-size:26px;line-height:1.12;margin:4px 0 10px}
+.s15w7-say{border:1px solid #bae6f0;background:#f0fbfd;border-radius:10px;padding:12px 14px;color:#155e75;font-size:13.5px;line-height:1.55;margin:0 0 12px}
+.s15w7-say b{color:#0e7490;font-weight:800}
+.s15w7-bar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.s15w7-lb{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.s15w7-bar button{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;padding:6px 14px;font:800 11.5px Inter,sans-serif;cursor:pointer}
+.s15w7-bar button.s15w7-m.on{border-color:var(--cyan);color:#0e7490;background:#effbfe;box-shadow:inset 0 0 0 1px var(--cyan)}
+.s15w7-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:13px 16px 12px}
+.s15w7-card h2{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;font-weight:800}
+.s15w7-cv{display:block;width:1080px;height:264px;max-width:100%}
+.s15w7-leg{margin:6px 0 0;font-size:12px;color:var(--muted);line-height:1.4;display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.s15w7-leg b{color:var(--ink)}
+.s15w7-chip{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.s15w7-met{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr) minmax(0,1.45fr) minmax(0,.95fr) minmax(0,.95fr);gap:8px;margin-top:12px}
+.s15w7-box{border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.9);padding:10px 12px}
+.s15w7-box>span:not(.s15w7-rd){display:block;color:var(--muted);font-size:10.5px;line-height:1.3;font-weight:700;letter-spacing:.03em;text-transform:uppercase}
+.s15w7-rd{display:block;margin-top:3px;font:700 12px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--muted);white-space:normal}
+.s15w7-rd b{font-size:17px;font-weight:800;color:var(--ink)}
+.s15w7-note{margin:10px 0 0;font-size:13px;line-height:1.5;min-height:20px}
+.s15w7-facts{margin:10px 0 0;padding:0;list-style:none;font-size:12.5px;line-height:1.5;color:var(--muted)}
+.s15w7-facts li{margin:3px 0}
+.s15w7-facts b{color:var(--ink)}
+.s15w7-tag{display:inline-block;min-width:54px;font:800 10px Inter,sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--cyan)}
+@media(max-width:1000px){.s15w7-met{grid-template-columns:1fr 1fr}.s15w7-rd{white-space:normal}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s15w7-w">
+<div class="s15w7-k">ERA V5 Session 15 &middot; downsampling a full run</div>
+<h1>Downsampling a Full Run</h1>
+<p class="s15w7-say">A graph of the full run must put <b>300,000 steps</b> into about <b>1,000 pixel columns</b>, so each column holds <b>300 steps</b>. Select a method to see which spikes stay visible. This is an illustrative loss curve with made-up numbers.</p>
+
+<div class="s15w7-bar">
+<span class="s15w7-lb">method for each column</span>
+<button type="button" class="s15w7-m" data-v="mean" aria-label="Mean of each bucket of 300 steps">mean</button>
+<button type="button" class="s15w7-m" data-v="dec" aria-label="Decimation, keep every 300th point">every 300th point</button>
+<button type="button" class="s15w7-m" data-v="mm" aria-label="Minimum and maximum of each bucket">min and max</button>
+<button type="button" class="s15w7-m" data-v="m4" aria-label="M4, minimum, maximum, first and last value of each bucket">M4</button>
+</div>
+
+<div class="s15w7-card">
+<h2 id="s15w7-h2">loss for steps 0 to 300,000</h2>
+<canvas class="s15w7-cv" id="s15w7-cv" width="1080" height="264" aria-label="Loss chart of the full run"></canvas>
+<p class="s15w7-leg"><span><i class="s15w7-chip" id="s15w7-c1" aria-hidden="true"></i><b id="s15w7-lgn">drawn line</b></span><span><i class="s15w7-chip" style="background:#dc2626" aria-hidden="true"></i><b>true maximum 8.0</b> at step 187,431</span><span>markers show the two spikes in the stored data</span></p>
+</div>
+
+<div class="s15w7-met">
+<div class="s15w7-box"><span>points stored</span><span class="s15w7-rd" id="s15w7-r1"></span></div>
+<div class="s15w7-box"><span>points drawn</span><span class="s15w7-rd" id="s15w7-r2"></span></div>
+<div class="s15w7-box"><span>largest value drawn, column of step 187,431</span><span class="s15w7-rd" id="s15w7-r3"></span></div>
+<div class="s15w7-box"><span>single-step spike visible</span><span class="s15w7-rd" id="s15w7-r4"></span></div>
+<div class="s15w7-box"><span>5-step spike visible</span><span class="s15w7-rd" id="s15w7-r5"></span></div>
+</div>
+
+<p class="s15w7-note" id="s15w7-note"></p>
+<ul class="s15w7-facts">
+<li id="s15w7-f1"></li>
+<li><span class="s15w7-tag">fact</span>The <b>M4 method (2014)</b> keeps the minimum, maximum, first and last value of each pixel column.</li>
+<li id="s15w7-f3"></li>
+</ul>
+</main>
+
+<script>
+(function(){
+'use strict';
+var N=300000,B=300,C=N/B,S1=187431,S5=62000,S5LEN=5,V1=8.0,V5=4.5,
+    YMIN=1.5,YMAX=8.5,PL=50,PW=1000,PT=10,PH=216,
+    COL={mean:'#0891b2',dec:'#7c3aed',mm:'#159447',m4:'#d97706'},
+    NAME={mean:'mean of each column',dec:'every 300th point',mm:'min and max of each column',m4:'M4 points of each column'},
+    method='mean',y=new Float32Array(N),base=new Float32Array(N);
+function $(i){return document.getElementById('s15w7-'+i);}
+function comma(n){return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+var rnd=mulberry32(15007);
+function gauss(){var u=1-rnd(),v=rnd();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+(function gen(){
+  var i;
+  for(i=0;i<N;i++){base[i]=2.0+2.0*Math.exp(-i/30000);y[i]=base[i]+0.04*gauss();}
+  y[S1]=V1;
+  for(i=S5;i<S5+S5LEN;i++){y[i]=V5;}
+}());
+/* each method returns, for every column, a list of [index,value] in time order */
+function columns(m){
+  var out=new Array(C),c,i,s,e,sum,mn,mx,imn,imx,pts,set;
+  for(c=0;c<C;c++){
+    s=c*B;e=s+B;
+    if(m==='dec'){out[c]=[[s,y[s]]];continue;}
+    sum=0;mn=Infinity;mx=-Infinity;imn=s;imx=s;
+    for(i=s;i<e;i++){var v=y[i];sum+=v;if(v<mn){mn=v;imn=i;}if(v>mx){mx=v;imx=i;}}
+    if(m==='mean'){out[c]=[[s+B/2,sum/B]];continue;}
+    if(m==='mm'){out[c]=[[imn,mn],[imx,mx]];continue;}
+    set={};pts=[];
+    [s,imn,imx,e-1].forEach(function(k){if(!set[k]){set[k]=1;pts.push([k,y[k]]);}});
+    pts.sort(function(a,b){return a[0]-b[0];});
+    out[c]=pts;
+  }
+  return out;
+}
+function colMax(col){var m=-Infinity;col.forEach(function(p){if(p[1]>m)m=p[1];});return m;}
+function visible(cols,step,peak){
+  var c=Math.floor(step/B),thr=(base[step]+peak)/2;
+  return colMax(cols[c])>=thr;
+}
+var cv=$('cv'),ctx,dpr=window.devicePixelRatio||1;
+cv.width=1080*dpr;cv.height=264*dpr;ctx=cv.getContext('2d');ctx.scale(dpr,dpr);
+function Y(v){return PT+PH*(1-(v-YMIN)/(YMAX-YMIN));}
+function X(step){return PL+step/N*PW;}
+function frame(){
+  var v,k;
+  ctx.clearRect(0,0,1080,264);
+  ctx.fillStyle='#f4f7fb';ctx.fillRect(PL,PT,PW,PH);
+  ctx.font='700 10px ui-monospace,SFMono-Regular,Consolas,monospace';ctx.textBaseline='middle';
+  for(v=2;v<=8;v++){
+    ctx.strokeStyle='#dde6f2';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(PL,Math.round(Y(v))+.5);ctx.lineTo(PL+PW,Math.round(Y(v))+.5);ctx.stroke();
+    ctx.fillStyle='#93a3b6';ctx.textAlign='right';ctx.fillText(v.toFixed(1),PL-6,Y(v));
+  }
+  ctx.textAlign='center';ctx.textBaseline='top';
+  for(k=0;k<=6;k++){ctx.fillStyle='#93a3b6';ctx.fillText(comma(k*50000),Math.min(Math.max(X(k*50000),PL+14),PL+PW-20),PT+PH+5);}
+  ctx.strokeStyle='#dc2626';ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(PL,Y(V1)+.5);ctx.lineTo(PL+PW,Y(V1)+.5);ctx.stroke();ctx.setLineDash([]);
+  /* spike markers below the axis */
+  [[S5,'5-step spike to 4.5, step 62,000'],[S1,'single-step spike to 8.0, step 187,431']].forEach(function(p){
+    var x=X(p[0]);
+    ctx.fillStyle='#dc2626';ctx.beginPath();ctx.moveTo(x,PT+PH+18);ctx.lineTo(x-5,PT+PH+26);ctx.lineTo(x+5,PT+PH+26);ctx.closePath();ctx.fill();
+    ctx.font='800 10px Inter,sans-serif';ctx.fillText(p[1],x,PT+PH+27);
+    ctx.font='700 10px ui-monospace,SFMono-Regular,Consolas,monospace';
+  });
+}
+function draw(){
+  var cols=columns(method),drawn=0,c,col=COL[method],i,p,mx1,vis1,vis5,cs=Math.floor(S1/B),cs5=Math.floor(S5/B);
+  frame();
+  ctx.save();ctx.beginPath();ctx.rect(PL,PT,PW,PH);ctx.clip();
+  ctx.strokeStyle=col;ctx.lineWidth=1;
+  if(method==='mm'){
+    for(c=0;c<C;c++){
+      var lo=Math.min(cols[c][0][1],cols[c][1][1]),hi=Math.max(cols[c][0][1],cols[c][1][1]),x=PL+c+.5;
+      ctx.beginPath();ctx.moveTo(x,Y(lo)+.5);ctx.lineTo(x,Y(hi)-.5);ctx.stroke();
+    }
+  }else{
+    ctx.beginPath();
+    for(c=0;c<C;c++){
+      for(i=0;i<cols[c].length;i++){
+        p=cols[c][i];
+        if(c===0&&i===0)ctx.moveTo(X(p[0]),Y(p[1]));else ctx.lineTo(X(p[0]),Y(p[1]));
+      }
+    }
+    ctx.stroke();
+  }
+  ctx.restore();
+  for(c=0;c<C;c++)drawn+=cols[c].length;
+  mx1=colMax(cols[cs]);vis1=visible(cols,S1,V1);vis5=visible(cols,S5,V5);
+  $('c1').style.background=col;$('lgn').textContent=NAME[method];
+  $('h2').textContent='loss for steps 0 to 300,000, '+NAME[method]+', 1,000 columns of 300 steps';
+  $('r1').innerHTML='<b>'+comma(N)+'</b> = 300,000 steps &times; 1 value';
+  var f;
+  if(method==='mean')f='1,000 columns &times; 1';
+  else if(method==='dec')f='1,000 columns &times; 1';
+  else if(method==='mm')f='1,000 columns &times; 2';
+  else f="1,000 columns &times; up to 4";
+  $('r2').innerHTML='<b>'+comma(drawn)+'</b> = '+f;
+  var ff;
+  if(method==='mean')ff='mean of steps '+comma(cs*B)+' to '+comma(cs*B+B-1);
+  else if(method==='dec')ff='value at step '+comma(cs*B);
+  else ff='maximum of steps '+comma(cs*B)+' to '+comma(cs*B+B-1);
+  $('r3').innerHTML='<b style="color:'+(vis1?'#159447':'#dc2626')+'">'+mx1.toFixed(3)+'</b> = '+ff;
+  $('r4').innerHTML='<b style="color:'+(vis1?'#159447':'#dc2626')+'">'+(vis1?'yes':'no')+'</b> = drawn '+mx1.toFixed(2)+(vis1?' &ge; ':' &lt; ')+((base[S1]+V1)/2).toFixed(2);
+  var mx5=colMax(cols[cs5]);
+  $('r5').innerHTML='<b style="color:'+(vis5?'#159447':'#dc2626')+'">'+(vis5?'yes':'no')+'</b> = drawn '+mx5.toFixed(2)+(vis5?' &ge; ':' &lt; ')+((base[S5]+V5)/2).toFixed(2);
+  var n;
+  if(method==='mean')n='The mean divides each spike by 300. The 8.0 spike becomes a bump of '+(mx1-base[S1]).toFixed(3)+' above the curve, and the 5-step spike becomes a bump of '+(mx5-base[S5]).toFixed(3)+'.';
+  else if(method==='dec')n='Decimation keeps only steps 0, 300, 600 and so on. Step 187,431 and steps 62,000 to 62,004 fall between two kept points, so this seed shows neither spike.';
+  else if(method==='mm')n='Min and max keep the 8.0 value and the 4.5 value. Each column becomes a vertical bar from its lowest to its highest value, so the noise band also stays visible.';
+  else n='M4 keeps the 8.0 value and the 4.5 value. It also keeps the first and last value of each column, so the line joins each column to the next at the correct height.';
+  $('note').innerHTML='<span style="color:'+((vis1&&vis5)?'#159447':'#dc2626')+'">'+n+'</span>';
+  /* fact and design lines, computed live */
+  var m=(999*2.0+8.0)/1000;
+  $('f1').innerHTML='<span class="s15w7-tag">fact</span><b>'+m.toFixed(3)+'</b> = (999 &times; 2.0 + 8.0) / 1,000. The mean of 1,000 steps at 2.0 with one step at 8.0 is '+m.toFixed(3)+'.';
+  var lv=[10,100,1000,10000],rows=0;lv.forEach(function(L){rows+=N/L;});
+  $('f3').innerHTML='<span class="s15w7-tag">design</span>Store rollup tables of min, max, first, last and mean for every 10, 100, 1,000 and 10,000 steps. <b>'+comma(rows)+' extra rows</b> = 30,000 + 3,000 + 300 + 30, which is <b>'+(rows/N*100).toFixed(1)+'%</b> of 300,000.';
+}
+function marks(){
+  Array.prototype.forEach.call(document.querySelectorAll('.s15w7-m'),function(b){b.classList.toggle('on',b.getAttribute('data-v')===method);});
+}
+Array.prototype.forEach.call(document.querySelectorAll('.s15w7-m'),function(b){
+  b.addEventListener('click',function(){method=b.getAttribute('data-v');marks();draw();});
+});
+marks();draw();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>

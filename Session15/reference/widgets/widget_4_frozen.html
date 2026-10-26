@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 15 Widget 4 - Freezing Parts of the Model</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#152033;--muted:#65758b;--line:#d9e2ef;--cyan:#0891b2;--violet:#7c3aed;--green:#159447;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#f8fbff,#eef5fb);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.s15w4-w{max-width:1180px;margin:0 auto;padding:18px 22px 20px}
+.s15w4-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}
+.s15w4-w h1{font-size:26px;line-height:1.12;margin:4px 0 10px}
+.s15w4-say{border:1px solid #bae6f0;background:#f0fbfd;border-radius:10px;padding:12px 14px;color:#155e75;font-size:13.5px;line-height:1.55;margin:0 0 14px}
+.s15w4-say b{color:#0e7490;font-weight:800}
+.s15w4-bar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.s15w4-lb{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.s15w4-bar button{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;padding:6px 14px;font:800 11.5px Inter,sans-serif;cursor:pointer}
+.s15w4-bar button.on{border-color:var(--cyan);color:#0e7490;background:#effbfe;box-shadow:inset 0 0 0 1px var(--cyan)}
+.s15w4-card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 26px rgba(20,42,75,.07);padding:13px 16px 12px}
+.s15w4-card h2{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;font-weight:800}
+.s15w4-tk{position:relative;height:34px;border-radius:8px;background:#f4f7fb;border:1px solid #e4ebf4;overflow:hidden;
+ background-image:repeating-linear-gradient(to right,#dde6f2 0,#dde6f2 1px,transparent 1px,transparent 16.6667%)}
+.s15w4-fs,.s15w4-fa{position:absolute;top:5px;bottom:5px;transition:left .4s ease-in-out,width .4s ease-in-out}
+.s15w4-fs{left:0;border-radius:5px 0 0 5px;background:var(--violet)}
+.s15w4-fa{border-radius:0 5px 5px 0;background:#94a3b8}
+.s15w4-ax{position:relative;height:14px;margin-top:5px}
+.s15w4-ax i{position:absolute;top:0;transform:translateX(-50%);font:700 9.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:#93a3b6;font-style:normal;white-space:nowrap}
+.s15w4-ax i:first-child{transform:none}.s15w4-ax i:last-child{transform:translateX(-100%)}
+.s15w4-leg{margin:6px 0 0;font-size:12px;color:var(--muted);line-height:1.4;display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.s15w4-leg b{color:var(--ink)}
+.s15w4-chip{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.s15w4-met{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px}
+.s15w4-box{border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.9);padding:10px 12px}
+.s15w4-box>span:not(.s15w4-rd){display:block;color:var(--muted);font-size:10.5px;line-height:1.3;font-weight:700;letter-spacing:.03em;text-transform:uppercase}
+.s15w4-rd{display:block;margin-top:3px;font:700 12.5px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.s15w4-rd b{font-size:17px;font-weight:800;color:var(--ink)}
+.s15w4-two{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.s15w4-tb{width:100%;border-collapse:collapse;font-size:12.5px}
+.s15w4-tb th{text-align:left;font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:800;padding:0 6px 6px;border-bottom:1px solid var(--line)}
+.s15w4-tb td{padding:5px 6px;border-bottom:1px solid #eef2f7}
+.s15w4-tb td.s15w4-num{font:700 12px ui-monospace,SFMono-Regular,Consolas,monospace;text-align:right}
+.s15w4-tb th.s15w4-num{text-align:right}
+.s15w4-ts{display:inline-block;font:800 10px Inter,sans-serif;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:2px 8px}
+.s15w4-on{background:#eafaf0;color:#0f7a39;border:1px solid #a9e3c1}
+.s15w4-off{background:#f2f5f9;color:#7c8aa0;border:1px solid #dde5ef}
+.s15w4-sim{margin:7px 0 0;font-size:11.5px;color:var(--muted)}
+.s15w4-cl{margin:0;padding:0 0 0 18px;font-size:12.5px;line-height:1.45}
+.s15w4-cl li{margin:0 0 5px}
+.s15w4-cl li b{color:var(--ink)}
+.s15w4-none{color:var(--green)}
+@media(max-width:1000px){.s15w4-met,.s15w4-two{grid-template-columns:1fr}.s15w4-rd{white-space:normal}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="s15w4-w">
+<div class="s15w4-k">ERA V5 Session 15 &middot; frozen parts</div>
+<h1>Freezing Parts of the Model</h1>
+<p class="s15w4-say">Our model has <b>78.1 billion parameters</b>. A trainable weight costs <b>16 bytes</b> (2 weight + 2 gradient + 4 master copy + 8 Adam state), and a frozen weight costs <b>2 bytes</b>. Freeze one or more parts to see the memory saving and the constraints that each frozen part adds.</p>
+
+<div class="s15w4-bar">
+<span class="s15w4-lb">freeze</span>
+<button type="button" class="s15w4-t" data-k="routed" aria-pressed="false" aria-label="Freeze the routed experts">routed experts</button>
+<button type="button" class="s15w4-t" data-k="attn" aria-pressed="false" aria-label="Freeze the attention weights">attention</button>
+<button type="button" class="s15w4-t" data-k="router" aria-pressed="false" aria-label="Freeze the routers">routers</button>
+<button type="button" class="s15w4-t" data-k="embed" aria-pressed="false" aria-label="Freeze the embeddings and LM head">embeddings</button>
+</div>
+
+<div class="s15w4-card">
+<h2 id="s15w4-h2">training memory for the full model</h2>
+<div class="s15w4-tk"><div class="s15w4-fs" id="s15w4-fs"></div><div class="s15w4-fa" id="s15w4-fa"></div></div>
+<div class="s15w4-ax" id="s15w4-ax"></div>
+<p class="s15w4-leg"><span><i class="s15w4-chip" style="background:var(--violet)" aria-hidden="true"></i><b>trainable</b> weights at 16 bytes each</span><span><i class="s15w4-chip" style="background:#94a3b8" aria-hidden="true"></i><b>frozen</b> weights at 2 bytes each</span><span>the axis is fixed from <b>0</b> to <b>1,200 GiB</b></span></p>
+</div>
+
+<div class="s15w4-met">
+<div class="s15w4-box"><span id="s15w4-l1"></span><span class="s15w4-rd" id="s15w4-r1"></span></div>
+<div class="s15w4-box"><span id="s15w4-l2"></span><span class="s15w4-rd" id="s15w4-r2"></span></div>
+<div class="s15w4-box"><span id="s15w4-l3"></span><span class="s15w4-rd" id="s15w4-r3"></span></div>
+</div>
+
+<div class="s15w4-two">
+<div class="s15w4-card">
+<h2>parts of our model</h2>
+<table class="s15w4-tb">
+<thead><tr><th>part</th><th class="s15w4-num">parameters</th><th>status</th><th class="s15w4-num">zero-gradient count</th></tr></thead>
+<tbody id="s15w4-tbody"></tbody>
+</table>
+<p class="s15w4-sim">The zero-gradient counts are a simulation with made-up numbers. They show the weights with a gradient of exactly zero after one backward pass.</p>
+</div>
+<div class="s15w4-card">
+<h2 id="s15w4-ch">constraints</h2>
+<ul class="s15w4-cl" id="s15w4-cl"></ul>
+</div>
+</div>
+</main>
+
+<script>
+(function(){
+'use strict';
+var GIB=1073741824,AXMAX=1200,
+    PARTS=[
+      {k:'routed',name:'routed experts',n:75497472000},
+      {k:'shared',name:'shared experts',n:196608000},
+      {k:'attn',name:'attention',n:1703936000},
+      {k:'router',name:'routers',n:49152000},
+      {k:'embed',name:'embeddings and LM head',n:655360000},
+      {k:'norm',name:'norms and biases',n:546560}
+    ],
+    frozen={routed:false,attn:false,router:false,embed:false};
+function $(i){return document.getElementById('s15w4-'+i);}
+function comma(n){return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+function g1(v){return comma(v.toFixed(1).split('.')[0])+'.'+v.toFixed(1).split('.')[1];}
+function e9(n){return (n/1e9).toFixed(2)+'e9';}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+var rng=mulberry32(1515),i;
+for(i=0;i<PARTS.length;i++){PARTS[i].z=3+Math.floor(rng()*58);}
+function isFrozen(p){return !!frozen[p.k];}
+function axis(){
+  var s='',j;
+  for(j=0;j<=6;j++){s+='<i style="left:'+(j/6*100)+'%">'+comma(j*200)+' GiB</i>';}
+  $('ax').innerHTML=s;
+}
+function draw(){
+  var nt=0,nf=0,j,p,rows='',mt,mf,list=[];
+  for(j=0;j<PARTS.length;j++){p=PARTS[j];if(isFrozen(p))nf+=p.n;else nt+=p.n;}
+  mt=nt*16/GIB;mf=nf*2/GIB;
+  $('fs').style.width=(mt/AXMAX*100)+'%';
+  $('fa').style.left=(mt/AXMAX*100)+'%';$('fa').style.width=(mf/AXMAX*100)+'%';
+  $('h2').textContent='training memory for the full model: '+g1(mt+mf)+' GiB';
+  $('l1').textContent='trainable parameters: '+comma(nt);
+  $('r1').innerHTML='<b style="color:var(--violet)">'+g1(mt)+' GiB</b> = '+e9(nt)+' &times; 16 B / 2^30';
+  $('l2').textContent='frozen parameters: '+comma(nf);
+  $('r2').innerHTML='<b style="color:#64748b">'+g1(mf)+' GiB</b> = '+e9(nf)+' &times; 2 B / 2^30';
+  $('l3').textContent='training memory';
+  $('r3').innerHTML='<b style="color:var(--green)">'+g1(mt+mf)+' GiB</b> = '+g1(mt)+' + '+g1(mf);
+  for(j=0;j<PARTS.length;j++){
+    p=PARTS[j];
+    rows+='<tr><td>'+p.name+'</td><td class="s15w4-num">'+comma(p.n)+'</td><td><span class="s15w4-ts '+(isFrozen(p)?'s15w4-off">frozen':'s15w4-on">trainable')+'</span></td>'+
+      '<td class="s15w4-num">'+(isFrozen(p)?'no gradient':String(p.z))+'</td></tr>';
+  }
+  $('tbody').innerHTML=rows;
+  if(nf>0){
+    list.push('<b>Any part frozen:</b> build the optimizer from the trainable weights only.');
+    list.push('<b>Any part frozen:</b> check the grad norm limits again. The grad norm now leaves out the frozen weights.');
+    list.push('<b>Any part frozen:</b> hash the frozen weights at each checkpoint.');
+  }
+  if(frozen.embed)list.push('<b>Embeddings frozen:</b> old-style (reentrant) activation checkpointing gives the first block no gradients. Use the non-reentrant form.');
+  if(frozen.router)list.push('<b>Routers frozen:</b> MiMo-V2.6 did this during RL to stop router drift.');
+  if(frozen.routed)list.push('<b>Routed experts frozen:</b> a quantized base with low-rank adapters uses this memory saving. Merge the adapters with a learning-rate re-warm.');
+  if(frozen.attn)list.push('<b>Attention frozen:</b> FSDP version 1 needs the frozen weights and the trainable weights in separate wrapped units.');
+  if(!list.length)list.push('<span class="s15w4-none">No part is frozen. All weights train, and no extra constraint applies.</span>');
+  $('ch').textContent='constraints ('+(list.length-(nf>0?0:1))+')';
+  $('cl').innerHTML='<li>'+list.join('</li><li>')+'</li>';
+}
+Array.prototype.forEach.call(document.querySelectorAll('.s15w4-t'),function(b){
+  b.addEventListener('click',function(){
+    var k=b.getAttribute('data-k');frozen[k]=!frozen[k];
+    b.classList.toggle('on',frozen[k]);b.setAttribute('aria-pressed',frozen[k]?'true':'false');draw();
+  });
+});
+axis();draw();
+}());
+</script>
+<script>
+(function(){
+  var fe; try{ fe=window.frameElement; }catch(e){ return; }
+  if(!fe) return;
+  var last=0;
+  function fit(){ var h=Math.ceil(document.body.scrollHeight)+8; if(Math.abs(h-last)>2){ last=h; fe.style.height=h+'px'; } }
+  if(window.ResizeObserver){ new ResizeObserver(fit).observe(document.body); }
+  window.addEventListener('load',fit);
+  document.addEventListener('click',function(){ setTimeout(fit,60); setTimeout(fit,260); },true);
+  document.addEventListener('input',function(){ setTimeout(fit,60); },true);
+  [0,120,400,900,1800].forEach(function(t){ setTimeout(fit,t); });
+})();
+</script>
+</body>
+</html>
